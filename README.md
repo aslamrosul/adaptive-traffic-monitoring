@@ -265,10 +265,91 @@ Project ini dikembangkan oleh **Kelompok 4** - PBL Semester 6:
 
 | Nama | Role | Kontribusi |
 |------|------|------------|
-| **[Nama Anggota 1]** | Project Lead & Frontend | Dashboard, Persimpangan, State Management |
-| **[Nama Anggota 2]** | Frontend Developer | Analitik, Peta, Charts & Visualizations |
-| **[Nama Anggota 3]** | IoT & Backend | ESP32 Integration, MQTT, API Routes |
-| **[Nama Anggota 4]** | Cloud & Big Data | Azure/GCP Setup, Database, Analytics |
+| **Zilan Zalilan** | Core Dashboard & Real-time Alerts | Dashboard utama, Bar chart, Peringatan real-time, Mini map preview |
+| **Azzahra Attaqina** | Intersection Control & IoT Logic | Persimpangan detail, CCTV & AI visualization, Manual override, Status perangkat |
+| **Tri Sukma Sarah** | Data Analytics & Strategic Insights | Analitik, Heatmap kepadatan, Efisiensi sistem, Export data |
+| **Aslam Rosul Ahmad** | Map Systems & Infrastructure | Peta GIS, Manajemen pengguna, Global navigation, Settings & Support |
+
+### 📋 Pembagian Detail per Menu
+
+#### 🎯 Zilan Zalilan - Core Dashboard & Real-time Alerts
+**Menu yang dikerjakan:**
+- ✅ **Dashboard (/)** - Halaman utama
+  - High-Level Stats (4 cards: Total Kendaraan, Status IoT, Waktu Tunggu, Skor)
+  - Bar chart tren lalu lintas dengan filter periode
+  - Peringatan terbaru (sidebar alerts)
+  - Mini map preview status simpangan
+
+**Tech Stack:**
+- Recharts untuk bar chart
+- Framer Motion untuk animasi cards
+- Real-time data updates
+
+---
+
+#### 🚦 Azzahra Attaqina - Intersection Control & IoT Logic
+**Menu yang dikerjakan:**
+- ✅ **Persimpangan (/persimpangan)** - Kontrol detail
+  - Visualisasi 4 jalur (Utara, Timur, Selatan, Barat)
+  - Traffic light visualization dengan warna aktual
+  - CCTV feed info & AI analysis status
+  - Manual override button dengan konfirmasi
+  - Tabel kejadian & anomali
+  - Status perangkat & latensi
+
+**Tech Stack:**
+- Custom traffic light components
+- Real-time IoT status indicators
+- Event logging system
+
+---
+
+#### 📊 Tri Sukma Sarah - Data Analytics & Strategic Insights
+**Menu yang dikerjakan:**
+- ✅ **Analitik (/analitik)** - Data visualization
+  - Chart volume kendaraan mingguan
+  - Heatmap intensitas kemacetan per jam
+  - Efisiensi sistem (AI vs Manual)
+  - Indeks kemacetan
+  - Export data ke CSV
+
+**Tech Stack:**
+- Recharts untuk charts
+- Custom heatmap visualization
+- Data export functionality
+
+---
+
+#### 🗺️ Aslam Rosul Ahmad - Map Systems & Infrastructure
+**Menu yang dikerjakan:**
+- ✅ **Peta (/peta)** - GIS visualization
+  - Interactive map dengan 4 markers
+  - Hover tooltips dengan detail
+  - Legend kepadatan (V/C ratio)
+  - Map controls (zoom)
+- ✅ **Manajemen Pengguna (/pengguna)** - User management
+  - CRUD pengguna lengkap
+  - Role management (Admin, Operator)
+  - Search & filter
+  - Statistik pengguna
+- ✅ **Pengaturan (/pengaturan)** - System settings
+  - Toggle switches (Mode otomatis, Notifikasi, Dark mode)
+  - IoT connection settings
+- ✅ **Bantuan (/bantuan)** - Help center
+  - FAQ accordion
+  - Contact cards
+- ✅ **Profil (/profil)** - User profile
+  - Edit mode
+  - Activity statistics
+- ✅ **Global Components**
+  - Sidebar navigation
+  - Header dengan notifications & profile dropdown
+  - Toast notifications
+
+**Tech Stack:**
+- Map visualization
+- User management system
+- Global navigation components
 
 ---
 

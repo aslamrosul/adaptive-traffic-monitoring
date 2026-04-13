@@ -1,41 +1,73 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
 
-# production
+# Production
 /build
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Local env files
+.env*.local
+.env
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# ============================================
+# EXCLUDE HALAMAN YANG BUKAN BAGIAN ANDA
+# ============================================
+
+# Halaman Persimpangan (bukan bagian Anda)
+/app/persimpangan/
+
+# Halaman Analitik (bukan bagian Anda)
+/app/analitik/
+
+# Halaman Dashboard utama (bukan bagian Anda - kecuali template)
+# Uncomment jika tidak mau commit dashboard
+# /app/page.tsx
+
+# Halaman Pengaturan (bukan bagian Anda)
+/app/pengaturan/
+
+# Halaman Bantuan (bukan bagian Anda)
+/app/bantuan/
+
+# Halaman Profil (bukan bagian Anda)
+/app/profil/
+
+# Modal yang bukan bagian Anda
+/components/ModalLaporan.tsx
+/components/ModalTambahSimpangan.tsx
+/components/NotificationDropdown.tsx
+/components/ProfileDropdown.tsx
+
+# Dokumentasi lengkap (optional - bisa di-commit nanti)
+# PROJECT_STATUS.md
+# FITUR_LENGKAP.md
+# TESTING_CHECKLIST.md
+# INTEGRATION_GUIDE.md
+# NAVIGATION_MAP.md
+# SUMMARY.md
+# QUICK_START.md
+# INDEX.md
