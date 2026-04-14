@@ -1,15 +1,15 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import { useState } from "react";
 import ModalLaporan from "./ModalLaporan";
 
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
-  { icon: "analytics", label: "Analitik", href: "/analitik" },
+  { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "map", label: "Peta", href: "/peta" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];
@@ -41,7 +41,9 @@ export default function Sidebar() {
 
         <nav className="flex-1 space-y-1">
           {menuItems.map((item, idx) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(item.href));
             return (
               <motion.div
                 key={item.href}
