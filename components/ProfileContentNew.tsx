@@ -185,7 +185,7 @@ export default function ProfileContent() {
     toast.success("Data profil berhasil diexport!");
   };
 
-  const handleToggleSetting = async (key: keyof typeof profile.settings) => {
+  const handleToggleSetting = async (key: "publicProfile" | "showEmail" | "showActivity") => {
     if (!profile) return;
     
     try {
