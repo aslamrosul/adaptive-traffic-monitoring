@@ -2,6 +2,7 @@
 
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
+import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -39,14 +40,7 @@ export default function Header({ title, dateRange }: { title: string; dateRange?
         <h2 className="font-headline font-extrabold text-xl tracking-tight text-slate-900">
           {title}
         </h2>
-        <div className="hidden md:flex items-center bg-slate-100 rounded-full px-4 py-1.5 gap-2 border border-outline-variant/10">
-          <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
-          <input
-            className="bg-transparent border-none focus:ring-0 text-sm font-label w-48 text-on-surface-variant placeholder:text-slate-400"
-            placeholder="Cari simpangan..."
-            type="text"
-          />
-        </div>
+        <SearchBar />
       </div>
 
       <div className="flex items-center gap-4">
