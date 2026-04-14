@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModalLaporan from "./ModalLaporan";
+import { useProfileStore } from "@/lib/store";
 
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/" },
@@ -18,6 +19,11 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
+  const { profile, fetchProfile } = useProfileStore();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   return (
     <>

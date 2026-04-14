@@ -4,11 +4,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Image from "next/image";
+import { useProfileStore } from "@/lib/store";
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { profile, fetchProfile } = useProfileStore();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,6 +64,11 @@ export default function ProfileDropdown() {
     },
   ];
 
+  const displayName = profile?.name || "Admin Pusat";
+  const displayEmail = profile?.email || "admin@traffic-command.go.id";
+  const displayAvatar = profile?.avatar || "https://ui-avatars.com/api/?name=Admin+Pusat&background=0040a1&color=fff";
+  const displayId = profile?.id ? `#${profile.id.split("-")[1].toUpperCase()}` : "#8829";
+
   return (
     <div ref={dropdownRef} className="relative">
       <motion.button
@@ -67,15 +79,18 @@ export default function ProfileDropdown() {
       >
         <div className="text-right hidden sm:block">
           <p className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors">
-            Admin Pusat
+            {displayName}
           </p>
-          <p className="text-[10px] text-slate-500">ID: #8829</p>
+          <p className="text-[10px] text-slate-500">{displayId}</p>
         </div>
-        <img
-          alt="Profil Pengguna"
-          className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
-          src="https://ui-avatars.com/api/?name=Admin+Pusat&background=0040a1&color=fff"
-        />
+        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm relative">
+          <Image
+            alt="Profil Pengguna"
+            src={displayAvatar}
+            fill
+            className="object-cover"
+          />
+        </div>
       </motion.button>
 
       <AnimatePresence>
@@ -89,14 +104,17 @@ export default function ProfileDropdown() {
             {/* Profile Header */}
             <div className="p-4 bg-gradient-to-br from-primary to-primary-container text-white">
               <div className="flex items-center gap-3">
-                <img
-                  alt="Profil"
-                  className="w-12 h-12 rounded-full border-2 border-white"
-                  src="https://ui-avatars.com/api/?name=Admin+Pusat&background=fff&color=0040a1"
-                />
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white relative">
+                  <Image
+                    alt="Profil"
+                    src={displayAvatar}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
                 <div>
-                  <p className="font-bold text-sm">Admin Pusat</p>
-                  <p className="text-xs text-primary-fixed/80">admin@traffic-command.go.id</p>
+                  <p className="font-bold text-sm">{displayName}</p>
+                  <p className="text-xs text-primary-fixed/80">{displayEmail}</p>
                 </div>
               </div>
             </div>

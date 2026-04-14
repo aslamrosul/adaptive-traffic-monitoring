@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import ProfileContent from "@/components/ProfileContent";
+import ProfileContent from "@/components/ProfileContentNew";
 
 export default function ProfilePage() {
   return (
