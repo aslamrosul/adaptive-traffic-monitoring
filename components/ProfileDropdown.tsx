@@ -26,7 +26,7 @@ export default function ProfileDropdown() {
       icon: "person",
       label: "Profil Saya",
       action: () => {
-        router.push("/profil");
+        router.push("/profile");
         setIsOpen(false);
       },
     },
