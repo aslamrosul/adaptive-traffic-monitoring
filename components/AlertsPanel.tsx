@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const alerts = [
   {
@@ -12,6 +13,7 @@ const alerts = [
     iconBg: "bg-tertiary/10",
     iconColor: "text-tertiary",
     action: "Buka Live Feed",
+    actionLink: "/persimpangan/1",
     live: true,
   },
   {
@@ -32,11 +34,13 @@ const alerts = [
     icon: "engineering",
     iconBg: "bg-yellow-100",
     iconColor: "text-yellow-700",
+    actionLink: "/persimpangan/2",
     live: false,
   },
 ];
 
 export default function AlertsPanel() {
+  const router = useRouter();
   const liveCount = alerts.filter((a) => a.live).length;
 
   return (
@@ -62,6 +66,7 @@ export default function AlertsPanel() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
             className="p-6 border-b border-slate-50 hover:bg-slate-50 transition-colors group cursor-pointer"
+            onClick={() => alert.actionLink && router.push(alert.actionLink)}
           >
             <div className="flex gap-4">
               <div
@@ -89,7 +94,10 @@ export default function AlertsPanel() {
       </div>
 
       <footer className="p-4 bg-slate-50 text-center">
-        <button className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+        <button
+          onClick={() => router.push("/persimpangan")}
+          className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+        >
           Lihat Semua Riwayat
         </button>
       </footer>

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const stats = [
   {
@@ -12,6 +13,7 @@ const stats = [
     bgColor: "bg-surface-container-lowest",
     iconBg: "bg-primary-fixed",
     iconColor: "text-primary",
+    link: "/Analist",
   },
   {
     label: "Status IoT",
@@ -21,6 +23,7 @@ const stats = [
     bgColor: "bg-surface-container-lowest",
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-700",
+    link: "/persimpangan",
   },
   {
     label: "Waktu Tunggu (Rerata)",
@@ -32,6 +35,7 @@ const stats = [
     bgColor: "bg-surface-container-lowest",
     iconBg: "bg-secondary-fixed",
     iconColor: "text-secondary",
+    link: "/Analist",
   },
   {
     label: "Skor Kelancaran",
@@ -43,10 +47,13 @@ const stats = [
     iconColor: "text-primary-fixed",
     textColor: "text-on-primary",
     special: true,
+    link: "/peta",
   },
 ];
 
 export default function DashboardStats() {
+  const router = useRouter();
+
   return (
     <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
       {stats.map((stat, idx) => (
@@ -55,9 +62,11 @@ export default function DashboardStats() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.1 }}
+          whileHover={{ scale: 1.02, y: -4 }}
+          onClick={() => router.push(stat.link)}
           className={`${stat.bgColor} p-6 rounded-xl shadow-sm ${
             stat.special ? "shadow-primary/20" : "border border-outline-variant/15"
-          } flex flex-col justify-between overflow-hidden relative group`}
+          } flex flex-col justify-between overflow-hidden relative group cursor-pointer`}
         >
           {!stat.special && (
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
@@ -109,6 +118,13 @@ export default function DashboardStats() {
                 {stat.subtitle}
               </p>
             )}
+          </div>
+
+          {/* Hover indicator */}
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className={`material-symbols-outlined text-sm ${stat.special ? "text-primary-fixed/50" : "text-slate-400"}`}>
+              arrow_forward
+            </span>
           </div>
         </motion.div>
       ))}
