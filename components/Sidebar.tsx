@@ -9,7 +9,7 @@ import ModalLaporan from "./ModalLaporan";
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
-  { icon: "analytics", label: "Analitik", href: "/analitik" },
+  { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "map", label: "Peta", href: "/peta" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];
