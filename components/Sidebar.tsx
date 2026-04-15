@@ -3,20 +3,27 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModalLaporan from "./ModalLaporan";
+import { useProfileStore } from "@/lib/store";
 
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
   { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "map", label: "Peta", href: "/peta" },
+  { icon: "group_work", label: "Tim Kami", href: "/tim" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
+  const { profile, fetchProfile } = useProfileStore();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   return (
     <>

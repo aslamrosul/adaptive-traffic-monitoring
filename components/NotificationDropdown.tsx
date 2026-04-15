@@ -267,10 +267,19 @@ export default function NotificationDropdown() {
             </div>
 
             {/* Footer */}
-            <div className="p-3 bg-slate-50 border-t border-slate-200">
+            <div className="p-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  window.location.href = "/notifikasi";
+                }}
+                className="flex-1 text-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                Lihat Semua
+              </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                className="flex-1 text-center text-sm font-semibold text-slate-600 hover:text-slate-800 transition-colors"
               >
                 Tutup
               </button>
