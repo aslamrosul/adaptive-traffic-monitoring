@@ -1,6 +1,8 @@
 import { containers } from '@/lib/azure-cosmos';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Fetch all intersections
 export async function GET() {
   try {

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { CosmosClient } from "@azure/cosmos";
 
+export const dynamic = 'force-dynamic';
+
 // Initialize Cosmos DB client
 const client = new CosmosClient({
   endpoint: process.env.AZURE_COSMOS_ENDPOINT!,

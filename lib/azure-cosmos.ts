@@ -6,10 +6,15 @@ let database: Database | null = null;
 
 function getClient() {
   if (!client) {
-    const endpoint = process.env.AZURE_COSMOS_ENDPOINT || '';
-    const key = process.env.AZURE_COSMOS_KEY || '';
+    const endpoint = process.env.AZURE_COSMOS_ENDPOINT;
+    const key = process.env.AZURE_COSMOS_KEY;
     
     if (!endpoint || !key) {
+      // Return a dummy client during build time
+      if (process.env.NODE_ENV === 'production' && !process.env.AZURE_COSMOS_ENDPOINT) {
+        console.warn('Azure Cosmos DB credentials not available during build');
+        return null as any;
+      }
       throw new Error('Azure Cosmos DB credentials not configured');
     }
     
@@ -21,35 +26,45 @@ function getClient() {
 function getDatabase() {
   if (!database) {
     const databaseId = process.env.AZURE_COSMOS_DATABASE || 'TrafficDB';
-    database = getClient().database(databaseId);
+    const cosmosClient = getClient();
+    if (!cosmosClient) return null as any;
+    database = cosmosClient.database(databaseId);
   }
   return database;
 }
 
 export const containers = {
   get trafficData() {
-    return getDatabase().container('traffic_data');
+    const db = getDatabase();
+    return db ? db.container('traffic_data') : null as any;
   },
   get intersections() {
-    return getDatabase().container('intersections');
+    const db = getDatabase();
+    return db ? db.container('intersections') : null as any;
   },
   get events() {
-    return getDatabase().container('events');
+    const db = getDatabase();
+    return db ? db.container('events') : null as any;
   },
   get reports() {
-    return getDatabase().container('reports');
+    const db = getDatabase();
+    return db ? db.container('reports') : null as any;
   },
   get notifications() {
-    return getDatabase().container('notifications');
+    const db = getDatabase();
+    return db ? db.container('notifications') : null as any;
   },
   get users() {
-    return getDatabase().container('users');
+    const db = getDatabase();
+    return db ? db.container('users') : null as any;
   },
   get deviceStatus() {
-    return getDatabase().container('device_status');
+    const db = getDatabase();
+    return db ? db.container('device_status') : null as any;
   },
   get analyticsDaily() {
-    return getDatabase().container('analytics_daily');
+    const db = getDatabase();
+    return db ? db.container('analytics_daily') : null as any;
   },
 };
 

@@ -33,6 +33,16 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          AZURE_COSMOS_ENDPOINT: "https://dummy.documents.azure.com:443/"
+          AZURE_COSMOS_KEY: "dummy-key-for-build"
+          AZURE_COSMOS_DATABASE: "TrafficDB"
+          # Dummy values for build-time (actual values set in Azure)
+          AZURE_COSMOS_ENDPOINT: https://dummy.documents.azure.com:443/
+          AZURE_COSMOS_KEY: dummy_key_for_build_only
+          AZURE_COSMOS_DATABASE: TrafficDB
+          AZURE_STORAGE_ACCOUNT_NAME: dummy
+          AZURE_STORAGE_ACCOUNT_KEY: dummy_key
+          AZURE_STORAGE_CONTAINER_NAME: avatars
 
       - name: Prepare deployment package
         run: |
