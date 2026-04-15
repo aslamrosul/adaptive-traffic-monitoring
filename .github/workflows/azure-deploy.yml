@@ -32,23 +32,31 @@ jobs:
       - name: Prepare deployment package
         run: |
           mkdir -p deploy
+          # Copy standalone server files
           if [ -d ".next/standalone" ]; then
-            cp -r .next/standalone/* deploy/
+            cp -r .next/standalone/. deploy/
           fi
+          # Copy static files to the correct location
           if [ -d ".next/static" ]; then
-            mkdir -p deploy/.next
-            cp -r .next/static deploy/.next/static
+            mkdir -p deploy/.next/static
+            cp -r .next/static/. deploy/.next/static/
           fi
+          # Copy public files
           if [ -d "public" ]; then
-            cp -r public deploy/public
+            mkdir -p deploy/public
+            cp -r public/. deploy/public/
           fi
+          # Copy web.config if exists
           if [ -f "web.config" ]; then
             cp web.config deploy/
           fi
-          cp package.json deploy/
-          cp package-lock.json deploy/
+          # List structure for debugging
+          echo "=== Deploy directory structure ==="
           ls -la deploy/
+          echo "=== .next directory ==="
           ls -la deploy/.next/ || echo "No .next directory"
+          echo "=== Static files ==="
+          ls -la deploy/.next/static/ || echo "No static directory"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
