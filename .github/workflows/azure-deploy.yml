@@ -15,6 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify route file
+        run: |
+          echo "Checking route file params type..."
+          grep -A 2 "export async function GET" app/api/intersections/\[id\]/route.ts || true
+
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
