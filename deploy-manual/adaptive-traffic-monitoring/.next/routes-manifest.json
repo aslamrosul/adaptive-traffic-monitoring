@@ -1,0 +1,188 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/intersections/[id]",
+      "regex": "^/api/intersections/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/intersections/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/persimpangan/[id]",
+      "regex": "^/persimpangan/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/persimpangan/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/Analist",
+      "regex": "^/Analist(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/Analist(?:/)?$"
+    },
+    {
+      "page": "/api/analytics/daily",
+      "regex": "^/api/analytics/daily(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/analytics/daily(?:/)?$"
+    },
+    {
+      "page": "/api/events",
+      "regex": "^/api/events(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/events(?:/)?$"
+    },
+    {
+      "page": "/api/intersections",
+      "regex": "^/api/intersections(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/intersections(?:/)?$"
+    },
+    {
+      "page": "/api/notifications",
+      "regex": "^/api/notifications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/notifications(?:/)?$"
+    },
+    {
+      "page": "/api/profile",
+      "regex": "^/api/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/profile(?:/)?$"
+    },
+    {
+      "page": "/api/profile/avatar",
+      "regex": "^/api/profile/avatar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/profile/avatar(?:/)?$"
+    },
+    {
+      "page": "/api/reports",
+      "regex": "^/api/reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/reports(?:/)?$"
+    },
+    {
+      "page": "/api/traffic/realtime",
+      "regex": "^/api/traffic/realtime(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/traffic/realtime(?:/)?$"
+    },
+    {
+      "page": "/api/users",
+      "regex": "^/api/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/users(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/laporan",
+      "regex": "^/laporan(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/laporan(?:/)?$"
+    },
+    {
+      "page": "/notifikasi",
+      "regex": "^/notifikasi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/notifikasi(?:/)?$"
+    },
+    {
+      "page": "/pengguna",
+      "regex": "^/pengguna(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/pengguna(?:/)?$"
+    },
+    {
+      "page": "/persimpangan",
+      "regex": "^/persimpangan(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/persimpangan(?:/)?$"
+    },
+    {
+      "page": "/peta",
+      "regex": "^/peta(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/peta(?:/)?$"
+    },
+    {
+      "page": "/profile",
+      "regex": "^/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/tim",
+      "regex": "^/tim(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tim(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
