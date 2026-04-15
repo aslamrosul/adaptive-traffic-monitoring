@@ -1,0 +1,283 @@
+==============================================
+DATABASE STRUCTURE - TRAFFIC MONITORING SYSTEM
+==============================================
+
+TABLE 1: users
+--------------
+id VARCHAR(255) PRIMARY KEY
+email VARCHAR(255) UNIQUE NOT NULL
+name VARCHAR(255) NOT NULL
+role ENUM('admin_pusat', 'operator_lapangan') NOT NULL
+phone VARCHAR(20)
+photo_url TEXT
+location VARCHAR(255)
+status ENUM('active', 'inactive', 'offline') DEFAULT 'active'
+reports_created INTEGER DEFAULT 0
+reports_completed INTEGER DEFAULT 0
+active_hours INTEGER DEFAULT 0
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+last_login TIMESTAMP
+
+TABLE 2: intersections
+----------------------
+id VARCHAR(255) PRIMARY KEY
+name VARCHAR(255) NOT NULL
+address TEXT NOT NULL
+latitude DECIMAL(10, 8) NOT NULL
+longitude DECIMAL(11, 8) NOT NULL
+device_id VARCHAR(255) UNIQUE NOT NULL
+status ENUM('active', 'inactive', 'maintenance') DEFAULT 'active'
+lanes_count INTEGER NOT NULL
+lanes_directions JSON
+config_mode ENUM('auto', 'manual') DEFAULT 'auto'
+threshold_low INTEGER DEFAULT 50
+threshold_medium INTEGER DEFAULT 100
+threshold_high INTEGER DEFAULT 200
+threshold_critical INTEGER DEFAULT 300
+alert_enabled BOOLEAN DEFAULT TRUE
+cycle_time_min INTEGER DEFAULT 30
+cycle_time_max INTEGER DEFAULT 120
+cctv_enabled BOOLEAN DEFAULT FALSE
+cctv_stream_url TEXT
+cctv_recording_enabled BOOLEAN DEFAULT FALSE
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+last_update TIMESTAMP
+
+TABLE 3: traffic_data
+---------------------
+id VARCHAR(255) PRIMARY KEY
+intersection_id VARCHAR(255) NOT NULL
+device_id VARCHAR(255) NOT NULL
+timestamp TIMESTAMP NOT NULL
+north_vehicle_count INTEGER
+north_speed DECIMAL(5, 2)
+north_density DECIMAL(5, 2)
+north_queue_length DECIMAL(6, 2)
+north_light_status ENUM('red', 'yellow', 'green')
+north_green_time INTEGER
+east_vehicle_count INTEGER
+east_speed DECIMAL(5, 2)
+east_density DECIMAL(5, 2)
+east_queue_length DECIMAL(6, 2)
+east_light_status ENUM('red', 'yellow', 'green')
+east_green_time INTEGER
+south_vehicle_count INTEGER
+south_speed DECIMAL(5, 2)
+south_density DECIMAL(5, 2)
+south_queue_length DECIMAL(6, 2)
+south_light_status ENUM('red', 'yellow', 'green')
+south_green_time INTEGER
+west_vehicle_count INTEGER
+west_speed DECIMAL(5, 2)
+west_density DECIMAL(5, 2)
+west_queue_length DECIMAL(6, 2)
+west_light_status ENUM('red', 'yellow', 'green')
+west_green_time INTEGER
+total_vehicles INTEGER NOT NULL
+average_speed DECIMAL(5, 2)
+congestion_level ENUM('low', 'medium', 'high', 'critical') NOT NULL
+congestion_index INTEGER
+density DECIMAL(5, 2)
+vc_ratio DECIMAL(4, 2)
+cycle_time INTEGER
+wait_time INTEGER
+temperature DECIMAL(4, 1)
+humidity DECIMAL(4, 1)
+weather VARCHAR(50)
+visibility INTEGER
+ai_prediction ENUM('increasing', 'stable', 'decreasing')
+ai_confidence DECIMAL(3, 2)
+ai_recommendation TEXT
+FOREIGN KEY (intersection_id) REFERENCES intersections(id)
+
+TABLE 4: events
+---------------
+id VARCHAR(255) PRIMARY KEY
+intersection_id VARCHAR(255) NOT NULL
+type ENUM('congestion', 'accident', 'sensor_error', 'manual_override', 'system_alert', 'maintenance') NOT NULL
+priority ENUM('low', 'medium', 'high', 'critical') NOT NULL
+status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open'
+title VARCHAR(255) NOT NULL
+description TEXT NOT NULL
+timestamp TIMESTAMP NOT NULL
+resolved_at TIMESTAMP
+reported_by_user_id VARCHAR(255)
+reported_by_user_name VARCHAR(255)
+reported_by_user_role VARCHAR(50)
+assigned_to_user_id VARCHAR(255)
+assigned_to_user_name VARCHAR(255)
+location_lane VARCHAR(50)
+location_latitude DECIMAL(10, 8)
+location_longitude DECIMAL(11, 8)
+vehicle_count INTEGER
+congestion_level VARCHAR(50)
+duration INTEGER
+affected_lanes JSON
+images JSON
+actions JSON
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+FOREIGN KEY (intersection_id) REFERENCES intersections(id)
+FOREIGN KEY (reported_by_user_id) REFERENCES users(id)
+FOREIGN KEY (assigned_to_user_id) REFERENCES users(id)
+
+TABLE 5: reports
+----------------
+id VARCHAR(255) PRIMARY KEY
+intersection_id VARCHAR(255) NOT NULL
+type ENUM('congestion', 'accident', 'sensor_malfunction', 'other') NOT NULL
+priority ENUM('low', 'medium', 'high', 'critical') NOT NULL
+status ENUM('submitted', 'reviewed', 'in_progress', 'completed', 'rejected') DEFAULT 'submitted'
+title VARCHAR(255) NOT NULL
+description TEXT NOT NULL
+reported_by_user_id VARCHAR(255) NOT NULL
+reported_by_user_name VARCHAR(255) NOT NULL
+reported_by_user_email VARCHAR(255) NOT NULL
+reported_by_user_role VARCHAR(50) NOT NULL
+attachments JSON
+location_latitude DECIMAL(10, 8)
+location_longitude DECIMAL(11, 8)
+reviewed_by_user_id VARCHAR(255)
+reviewed_by_user_name VARCHAR(255)
+reviewed_at TIMESTAMP
+review_notes TEXT
+resolved_by VARCHAR(255)
+resolved_at TIMESTAMP
+solution TEXT
+resolution_notes TEXT
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+FOREIGN KEY (intersection_id) REFERENCES intersections(id)
+FOREIGN KEY (reported_by_user_id) REFERENCES users(id)
+FOREIGN KEY (reviewed_by_user_id) REFERENCES users(id)
+
+TABLE 6: notifications
+----------------------
+id VARCHAR(255) PRIMARY KEY
+user_id VARCHAR(255) NOT NULL
+type ENUM('alert', 'info', 'warning', 'success') NOT NULL
+category ENUM('traffic', 'system', 'report', 'maintenance') NOT NULL
+title VARCHAR(255) NOT NULL
+message TEXT NOT NULL
+read BOOLEAN DEFAULT FALSE
+read_at TIMESTAMP
+action_url TEXT
+related_to_type ENUM('intersection', 'event', 'report')
+related_to_id VARCHAR(255)
+metadata JSON
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+expires_at TIMESTAMP
+FOREIGN KEY (user_id) REFERENCES users(id)
+
+TABLE 7: analytics_daily
+------------------------
+id VARCHAR(255) PRIMARY KEY
+intersection_id VARCHAR(255) NOT NULL
+date DATE NOT NULL
+total_vehicles INTEGER
+average_speed DECIMAL(5, 2)
+average_congestion_index DECIMAL(5, 2)
+average_wait_time DECIMAL(6, 2)
+peak_hour VARCHAR(5)
+peak_vehicle_count INTEGER
+hourly_data JSON
+auto_mode_time INTEGER
+manual_mode_time INTEGER
+auto_mode_efficiency DECIMAL(5, 2)
+manual_mode_efficiency DECIMAL(5, 2)
+total_events INTEGER
+events_low INTEGER
+events_medium INTEGER
+events_high INTEGER
+events_critical INTEGER
+events_congestion INTEGER
+events_accident INTEGER
+events_sensor_error INTEGER
+events_other INTEGER
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+FOREIGN KEY (intersection_id) REFERENCES intersections(id)
+UNIQUE KEY (intersection_id, date)
+
+TABLE 8: system_config
+----------------------
+id VARCHAR(255) PRIMARY KEY DEFAULT 'global_config'
+auto_mode BOOLEAN DEFAULT TRUE
+notifications_enabled BOOLEAN DEFAULT TRUE
+dark_mode BOOLEAN DEFAULT FALSE
+mqtt_broker_url VARCHAR(255)
+api_key TEXT
+connection_timeout INTEGER DEFAULT 30
+heartbeat_interval INTEGER DEFAULT 60
+congestion_threshold INTEGER DEFAULT 70
+response_time INTEGER DEFAULT 15
+escalation_time INTEGER DEFAULT 30
+email_enabled BOOLEAN DEFAULT TRUE
+sms_enabled BOOLEAN DEFAULT FALSE
+scheduled_downtime_start TIMESTAMP
+scheduled_downtime_end TIMESTAMP
+scheduled_downtime_reason TEXT
+last_maintenance TIMESTAMP
+next_maintenance TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+updated_by VARCHAR(255)
+FOREIGN KEY (updated_by) REFERENCES users(id)
+
+TABLE 9: device_status
+----------------------
+id VARCHAR(255) PRIMARY KEY
+intersection_id VARCHAR(255) NOT NULL
+status ENUM('online', 'offline', 'error') DEFAULT 'offline'
+last_heartbeat TIMESTAMP
+hardware_model VARCHAR(100)
+firmware_version VARCHAR(50)
+uptime INTEGER
+free_memory BIGINT
+cpu_usage DECIMAL(5, 2)
+signal_strength INTEGER
+ip_address VARCHAR(45)
+latency INTEGER
+packet_loss DECIMAL(5, 2)
+sensors JSON
+errors JSON
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+FOREIGN KEY (intersection_id) REFERENCES intersections(id)
+
+TABLE 10: audit_logs
+--------------------
+id VARCHAR(255) PRIMARY KEY
+user_id VARCHAR(255) NOT NULL
+user_name VARCHAR(255) NOT NULL
+user_role VARCHAR(50) NOT NULL
+action ENUM('create', 'update', 'delete', 'login', 'logout') NOT NULL
+resource ENUM('user', 'intersection', 'report', 'config', 'event') NOT NULL
+resource_id VARCHAR(255)
+details_before JSON
+details_after JSON
+changes JSON
+ip_address VARCHAR(45)
+user_agent TEXT
+timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+FOREIGN KEY (user_id) REFERENCES users(id)
+
+==============================================
+RELASI ANTAR TABEL
+==============================================
+
+users (1) -----> (N) reports (reported_by_user_id)
+users (1) -----> (N) events (reported_by_user_id, assigned_to_user_id)
+users (1) -----> (N) notifications (user_id)
+users (1) -----> (N) audit_logs (user_id)
+
+intersections (1) -----> (N) traffic_data (intersection_id)
+intersections (1) -----> (N) events (intersection_id)
+intersections (1) -----> (N) reports (intersection_id)
+intersections (1) -----> (N) analytics_daily (intersection_id)
+intersections (1) -----> (1) device_status (intersection_id)
+
+==============================================
+TOTAL: 10 TABEL
+==============================================

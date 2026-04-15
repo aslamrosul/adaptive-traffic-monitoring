@@ -1,0 +1,371 @@
+// Database Schema for Adaptive Traffic Light Monitoring System
+// Use this at: https://dbdiagram.io/
+
+Table users {
+  id varchar(255) [pk]
+  email varchar(255) [unique, not null]
+  name varchar(255) [not null]
+  role varchar(50) [not null, note: 'admin_pusat or operator_lapangan']
+  phone varchar(20)
+  photo_url text
+  location varchar(255)
+  status varchar(20) [default: 'active', note: 'active, inactive, offline']
+  reports_created integer [default: 0]
+  reports_completed integer [default: 0]
+  active_hours integer [default: 0]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  last_login timestamp
+}
+
+Table intersections {
+  id varchar(255) [pk]
+  name varchar(255) [not null]
+  address text [not null]
+  latitude decimal(10,8) [not null]
+  longitude decimal(11,8) [not null]
+  device_id varchar(255) [unique, not null]
+  status varchar(20) [default: 'active', note: 'active, inactive, maintenance']
+  lanes_count integer [not null]
+  lanes_directions json
+  config_mode varchar(20) [default: 'auto', note: 'auto or manual']
+  threshold_low integer [default: 50]
+  threshold_medium integer [default: 100]
+  threshold_high integer [default: 200]
+  threshold_critical integer [default: 300]
+  alert_enabled boolean [default: true]
+  cycle_time_min integer [default: 30]
+  cycle_time_max integer [default: 120]
+  cctv_enabled boolean [default: false]
+  cctv_stream_url text
+  cctv_recording_enabled boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  last_update timestamp
+}
+
+Table traffic_data {
+  id varchar(255) [pk]
+  intersection_id varchar(255) [not null, ref: > intersections.id]
+  device_id varchar(255) [not null]
+  timestamp timestamp [not null]
+  
+  // North Lane
+  north_vehicle_count integer
+  north_speed decimal(5,2)
+  north_density decimal(5,2)
+  north_queue_length decimal(6,2)
+  north_light_status varchar(10) [note: 'red, yellow, green']
+  north_green_time integer
+  
+  // East Lane
+  east_vehicle_count integer
+  east_speed decimal(5,2)
+  east_density decimal(5,2)
+  east_queue_length decimal(6,2)
+  east_light_status varchar(10) [note: 'red, yellow, green']
+  east_green_time integer
+  
+  // South Lane
+  south_vehicle_count integer
+  south_speed decimal(5,2)
+  south_density decimal(5,2)
+  south_queue_length decimal(6,2)
+  south_light_status varchar(10) [note: 'red, yellow, green']
+  south_green_time integer
+  
+  // West Lane
+  west_vehicle_count integer
+  west_speed decimal(5,2)
+  west_density decimal(5,2)
+  west_queue_length decimal(6,2)
+  west_light_status varchar(10) [note: 'red, yellow, green']
+  west_green_time integer
+  
+  // Aggregate Data
+  total_vehicles integer [not null]
+  average_speed decimal(5,2)
+  congestion_level varchar(20) [not null, note: 'low, medium, high, critical']
+  congestion_index integer
+  density decimal(5,2)
+  vc_ratio decimal(4,2)
+  cycle_time integer
+  wait_time integer
+  
+  // Metadata
+  temperature decimal(4,1)
+  humidity decimal(4,1)
+  weather varchar(50)
+  visibility integer
+  
+  // AI Analysis
+  ai_prediction varchar(20) [note: 'increasing, stable, decreasing']
+  ai_confidence decimal(3,2)
+  ai_recommendation text
+  
+  indexes {
+    (intersection_id, timestamp) [name: 'idx_intersection_timestamp']
+    timestamp [name: 'idx_timestamp']
+    congestion_level [name: 'idx_congestion_level']
+  }
+}
+
+Table events {
+  id varchar(255) [pk]
+  intersection_id varchar(255) [not null, ref: > intersections.id]
+  type varchar(50) [not null, note: 'congestion, accident, sensor_error, manual_override, system_alert, maintenance']
+  priority varchar(20) [not null, note: 'low, medium, high, critical']
+  status varchar(20) [default: 'open', note: 'open, in_progress, resolved, closed']
+  title varchar(255) [not null]
+  description text [not null]
+  timestamp timestamp [not null]
+  resolved_at timestamp
+  
+  // Reported By
+  reported_by_user_id varchar(255) [ref: > users.id]
+  reported_by_user_name varchar(255)
+  reported_by_user_role varchar(50)
+  
+  // Assigned To
+  assigned_to_user_id varchar(255) [ref: > users.id]
+  assigned_to_user_name varchar(255)
+  
+  // Location
+  location_lane varchar(50)
+  location_latitude decimal(10,8)
+  location_longitude decimal(11,8)
+  
+  // Metadata
+  vehicle_count integer
+  congestion_level varchar(50)
+  duration integer
+  affected_lanes json
+  images json
+  actions json
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    (intersection_id, status) [name: 'idx_intersection_status']
+    type [name: 'idx_type']
+    priority [name: 'idx_priority']
+    timestamp [name: 'idx_timestamp']
+  }
+}
+
+Table reports {
+  id varchar(255) [pk]
+  intersection_id varchar(255) [not null, ref: > intersections.id]
+  type varchar(50) [not null, note: 'congestion, accident, sensor_malfunction, other']
+  priority varchar(20) [not null, note: 'low, medium, high, critical']
+  status varchar(20) [default: 'submitted', note: 'submitted, reviewed, in_progress, completed, rejected']
+  title varchar(255) [not null]
+  description text [not null]
+  
+  // Reported By
+  reported_by_user_id varchar(255) [not null, ref: > users.id]
+  reported_by_user_name varchar(255) [not null]
+  reported_by_user_email varchar(255) [not null]
+  reported_by_user_role varchar(50) [not null]
+  
+  // Attachments
+  attachments json
+  
+  // Location
+  location_latitude decimal(10,8)
+  location_longitude decimal(11,8)
+  
+  // Reviewed By
+  reviewed_by_user_id varchar(255) [ref: > users.id]
+  reviewed_by_user_name varchar(255)
+  reviewed_at timestamp
+  review_notes text
+  
+  // Resolution
+  resolved_by varchar(255)
+  resolved_at timestamp
+  solution text
+  resolution_notes text
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    intersection_id [name: 'idx_intersection']
+    type [name: 'idx_type']
+    priority [name: 'idx_priority']
+    status [name: 'idx_status']
+    reported_by_user_id [name: 'idx_reported_by']
+    created_at [name: 'idx_created_at']
+  }
+}
+
+Table notifications {
+  id varchar(255) [pk]
+  user_id varchar(255) [not null, ref: > users.id]
+  type varchar(20) [not null, note: 'alert, info, warning, success']
+  category varchar(20) [not null, note: 'traffic, system, report, maintenance']
+  title varchar(255) [not null]
+  message text [not null]
+  read boolean [default: false]
+  read_at timestamp
+  action_url text
+  
+  // Related To
+  related_to_type varchar(20) [note: 'intersection, event, report']
+  related_to_id varchar(255)
+  
+  // Metadata
+  metadata json
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  expires_at timestamp
+  
+  indexes {
+    (user_id, read) [name: 'idx_user_read']
+    created_at [name: 'idx_created_at']
+  }
+}
+
+Table analytics_daily {
+  id varchar(255) [pk]
+  intersection_id varchar(255) [not null, ref: > intersections.id]
+  date date [not null]
+  
+  // Summary
+  total_vehicles integer
+  average_speed decimal(5,2)
+  average_congestion_index decimal(5,2)
+  average_wait_time decimal(6,2)
+  peak_hour varchar(5)
+  peak_vehicle_count integer
+  
+  // Hourly Data
+  hourly_data json
+  
+  // Efficiency
+  auto_mode_time integer
+  manual_mode_time integer
+  auto_mode_efficiency decimal(5,2)
+  manual_mode_efficiency decimal(5,2)
+  
+  // Events
+  total_events integer
+  events_low integer
+  events_medium integer
+  events_high integer
+  events_critical integer
+  events_congestion integer
+  events_accident integer
+  events_sensor_error integer
+  events_other integer
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    (intersection_id, date) [unique, name: 'unique_intersection_date']
+    date [name: 'idx_date']
+  }
+}
+
+Table system_config {
+  id varchar(255) [pk, default: 'global_config']
+  
+  // Settings
+  auto_mode boolean [default: true]
+  notifications_enabled boolean [default: true]
+  dark_mode boolean [default: false]
+  
+  // IoT
+  mqtt_broker_url varchar(255)
+  api_key text
+  connection_timeout integer [default: 30]
+  heartbeat_interval integer [default: 60]
+  
+  // Alerts
+  congestion_threshold integer [default: 70]
+  response_time integer [default: 15]
+  escalation_time integer [default: 30]
+  email_enabled boolean [default: true]
+  sms_enabled boolean [default: false]
+  
+  // Maintenance
+  scheduled_downtime_start timestamp
+  scheduled_downtime_end timestamp
+  scheduled_downtime_reason text
+  last_maintenance timestamp
+  next_maintenance timestamp
+  
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_by varchar(255) [ref: > users.id]
+}
+
+Table device_status {
+  id varchar(255) [pk, note: 'Device ID (e.g., ESP32_001)']
+  intersection_id varchar(255) [not null, ref: > intersections.id]
+  status varchar(20) [default: 'offline', note: 'online, offline, error']
+  last_heartbeat timestamp
+  
+  // Hardware
+  hardware_model varchar(100)
+  firmware_version varchar(50)
+  uptime integer
+  free_memory bigint
+  cpu_usage decimal(5,2)
+  
+  // Network
+  signal_strength integer
+  ip_address varchar(45)
+  latency integer
+  packet_loss decimal(5,2)
+  
+  // Sensors
+  sensors json
+  
+  // Errors
+  errors json
+  
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    intersection_id [name: 'idx_intersection']
+    status [name: 'idx_status']
+    last_heartbeat [name: 'idx_last_heartbeat']
+  }
+}
+
+Table audit_logs {
+  id varchar(255) [pk]
+  user_id varchar(255) [not null, ref: > users.id]
+  user_name varchar(255) [not null]
+  user_role varchar(50) [not null]
+  action varchar(20) [not null, note: 'create, update, delete, login, logout']
+  resource varchar(20) [not null, note: 'user, intersection, report, config, event']
+  resource_id varchar(255)
+  
+  // Details
+  details_before json
+  details_after json
+  changes json
+  
+  // Request Info
+  ip_address varchar(45)
+  user_agent text
+  
+  timestamp timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    user_id [name: 'idx_user']
+    action [name: 'idx_action']
+    resource [name: 'idx_resource']
+    timestamp [name: 'idx_timestamp']
+  }
+}
+
+// Relationships are defined inline with ref: > syntax above
+// Summary of relationships:
+// - users (1) -> (N) reports, events, notifications, audit_logs
+// - intersections (1) -> (N) traffic_data, events, reports, analytics_daily, device_status
