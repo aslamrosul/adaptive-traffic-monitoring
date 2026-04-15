@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server';
 // GET: Fetch single intersection by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { resource } = await containers.intersections.item(params.id, params.id).read();
+    const { id } = await params;
+    const { resource } = await containers.intersections.item(id, id).read();
 
     if (!resource) {
       return NextResponse.json(
@@ -38,14 +39,15 @@ export async function GET(
 // PATCH: Update intersection
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
     // Read existing item
     const { resource: existing } = await containers.intersections
-      .item(params.id, params.id)
+      .item(id, id)
       .read();
 
     if (!existing) {
@@ -66,7 +68,7 @@ export async function PATCH(
     };
 
     const { resource } = await containers.intersections
-      .item(params.id, params.id)
+      .item(id, id)
       .replace(updated);
 
     return NextResponse.json({
@@ -89,10 +91,11 @@ export async function PATCH(
 // DELETE: Delete intersection
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await containers.intersections.item(params.id, params.id).delete();
+    const { id } = await params;
+    await containers.intersections.item(id, id).delete();
 
     return NextResponse.json({
       success: true,
