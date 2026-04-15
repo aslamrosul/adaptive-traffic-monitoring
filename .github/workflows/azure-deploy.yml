@@ -32,23 +32,22 @@ jobs:
       - name: Prepare deployment package
         run: |
           mkdir -p deploy
-          # Copy standalone server files
+          # Copy standalone server files (includes .next directory)
           if [ -d ".next/standalone" ]; then
             cp -r .next/standalone/. deploy/
           fi
-          # Copy static files to the correct location
+          # Copy static files - standalone already has .next, just add static
           if [ -d ".next/static" ]; then
-            mkdir -p deploy/.next/static
-            cp -r .next/static/. deploy/.next/static/
+            cp -r .next/static deploy/.next/static
           fi
           # Copy public files
           if [ -d "public" ]; then
-            mkdir -p deploy/public
-            cp -r public/. deploy/public/
+            cp -r public deploy/public
           fi
-          # Copy web.config if exists
-          if [ -f "web.config" ]; then
-            cp web.config deploy/
+          # Copy startup script
+          if [ -f "startup.sh" ]; then
+            cp startup.sh deploy/
+            chmod +x deploy/startup.sh
           fi
           # List structure for debugging
           echo "=== Deploy directory structure ==="
