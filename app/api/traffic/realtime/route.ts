@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
-import { CosmosClient } from "@azure/cosmos";
+import { containers } from "@/lib/azure-cosmos";
 
 export const dynamic = 'force-dynamic';
-
-// Initialize Cosmos DB client
-const client = new CosmosClient({
-  endpoint: process.env.AZURE_COSMOS_ENDPOINT!,
-  key: process.env.AZURE_COSMOS_KEY!,
-});
-
-const database = client.database(process.env.AZURE_COSMOS_DATABASE || "TrafficDB");
-const container = database.container("TrafficData");
 
 // GET: Fetch real-time traffic data
 export async function GET(request: Request) {
@@ -29,7 +20,7 @@ export async function GET(request: Request) {
 
     query += ` OFFSET 0 LIMIT ${limit}`;
 
-    const { resources } = await container.items
+    const { resources } = await containers.trafficData.items
       .query({
         query,
         parameters,
@@ -83,7 +74,7 @@ export async function POST(request: Request) {
     };
 
     // Save to Cosmos DB
-    const { resource } = await container.items.create(item);
+    const { resource } = await containers.trafficData.items.create(item);
 
     return NextResponse.json({
       success: true,
