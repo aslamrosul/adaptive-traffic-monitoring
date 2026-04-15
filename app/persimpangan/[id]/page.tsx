@@ -200,20 +200,29 @@ const priorityBadge: Record<string, string> = {
 export default function DetailPersimpanganPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const data = intersectionData[params.id];
-  const [isOnline] = useState(data?.latency > 0);
+  const [id, setId] = useState<string>("");
+  const [data, setData] = useState<IntersectionDetail | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
 
   useEffect(() => {
-    if (!data) {
-      toast.error("Persimpangan tidak ditemukan");
-      router.push("/persimpangan");
-    }
-  }, [data, router]);
+    params.then((resolvedParams) => {
+      const intersectionId = resolvedParams.id;
+      setId(intersectionId);
+      const foundData = intersectionData[intersectionId];
+      setData(foundData);
+      setIsOnline(foundData?.latency > 0);
+      
+      if (!foundData) {
+        toast.error("Persimpangan tidak ditemukan");
+        router.push("/persimpangan");
+      }
+    });
+  }, [params, router]);
 
-  if (!data) return null;
+  if (!data || !id) return null;
 
   const handleManualOverride = () => {
     toast((t) => (

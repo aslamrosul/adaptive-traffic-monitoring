@@ -37,30 +37,30 @@ next-env.d.ts
 # EXCLUDE HALAMAN YANG BUKAN BAGIAN ANDA
 # ============================================
 
-# Halaman Persimpangan (bukan bagian Anda)
-/app/persimpangan/
+# # Halaman Persimpangan (bukan bagian Anda)
+# /app/persimpangan/
 
-# Halaman Analitik (bukan bagian Anda)
-/app/analitik/
+# # Halaman Analitik (bukan bagian Anda)
+# /app/analitik/
 
-# Halaman Dashboard utama (bukan bagian Anda - kecuali template)
-# Uncomment jika tidak mau commit dashboard
-# /app/page.tsx
+# # Halaman Dashboard utama (bukan bagian Anda - kecuali template)
+# # Uncomment jika tidak mau commit dashboard
+# # /app/page.tsx
 
-# Halaman Pengaturan (bukan bagian Anda)
-/app/pengaturan/
+# # Halaman Pengaturan (bukan bagian Anda)
+# /app/pengaturan/
 
-# Halaman Bantuan (bukan bagian Anda)
-/app/bantuan/
+# # Halaman Bantuan (bukan bagian Anda)
+# /app/bantuan/
 
-# Halaman Profil (bukan bagian Anda)
-/app/profil/
+# # Halaman Profil (bukan bagian Anda)
+# /app/profil/
 
-# Modal yang bukan bagian Anda
-/components/ModalLaporan.tsx
-/components/ModalTambahSimpangan.tsx
-/components/NotificationDropdown.tsx
-/components/ProfileDropdown.tsx
+# # Modal yang bukan bagian Anda
+# /components/ModalLaporan.tsx
+# /components/ModalTambahSimpangan.tsx
+# /components/NotificationDropdown.tsx
+# /components/ProfileDropdown.tsx
 
 # Dokumentasi lengkap (optional - bisa di-commit nanti)
 # PROJECT_STATUS.md

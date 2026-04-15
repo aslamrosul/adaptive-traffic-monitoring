@@ -1,26 +1,57 @@
 // Azure Cosmos DB Configuration
-import { CosmosClient } from '@azure/cosmos';
+import { CosmosClient, Database } from '@azure/cosmos';
 
-const endpoint = process.env.AZURE_COSMOS_ENDPOINT || '';
-const key = process.env.AZURE_COSMOS_KEY || '';
-const databaseId = process.env.AZURE_COSMOS_DATABASE || 'TrafficDB';
+let client: CosmosClient | null = null;
+let database: Database | null = null;
 
-// Initialize Cosmos Client
-const client = new CosmosClient({ endpoint, key });
+function getClient() {
+  if (!client) {
+    const endpoint = process.env.AZURE_COSMOS_ENDPOINT || '';
+    const key = process.env.AZURE_COSMOS_KEY || '';
+    
+    if (!endpoint || !key) {
+      throw new Error('Azure Cosmos DB credentials not configured');
+    }
+    
+    client = new CosmosClient({ endpoint, key });
+  }
+  return client;
+}
 
-// Database and Container references
-const database = client.database(databaseId);
+function getDatabase() {
+  if (!database) {
+    const databaseId = process.env.AZURE_COSMOS_DATABASE || 'TrafficDB';
+    database = getClient().database(databaseId);
+  }
+  return database;
+}
 
 export const containers = {
-  trafficData: database.container('traffic_data'),
-  intersections: database.container('intersections'),
-  events: database.container('events'),
-  reports: database.container('reports'),
-  notifications: database.container('notifications'),
-  users: database.container('users'),
-  deviceStatus: database.container('device_status'),
-  analyticsDaily: database.container('analytics_daily'),
+  get trafficData() {
+    return getDatabase().container('traffic_data');
+  },
+  get intersections() {
+    return getDatabase().container('intersections');
+  },
+  get events() {
+    return getDatabase().container('events');
+  },
+  get reports() {
+    return getDatabase().container('reports');
+  },
+  get notifications() {
+    return getDatabase().container('notifications');
+  },
+  get users() {
+    return getDatabase().container('users');
+  },
+  get deviceStatus() {
+    return getDatabase().container('device_status');
+  },
+  get analyticsDaily() {
+    return getDatabase().container('analytics_daily');
+  },
 };
 
-export { client, database };
+export { getClient as client, getDatabase as database };
 
