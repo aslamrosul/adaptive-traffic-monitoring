@@ -116,7 +116,6 @@ export default function PetaPage() {
               const statusLabel = getStatusLabel(intersection.status);
 
               return (
-              return (
               <div
                 key={intersection.id}
                 className="absolute group cursor-pointer z-10"
