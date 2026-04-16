@@ -89,14 +89,14 @@ export default function Sidebar() {
             Laporan Baru
           </motion.button>
           <Link
-            href="/pengaturan"
+            href="/profile?tab=settings"
             className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg font-manrope font-semibold text-sm transition-all duration-300"
           >
             <span className="material-symbols-outlined">settings</span>
             <span>Pengaturan</span>
           </Link>
           <Link
-            href="/bantuan"
+            href="/profile?tab=help"
             className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg font-manrope font-semibold text-sm transition-all duration-300"
           >
             <span className="material-symbols-outlined">help</span>
