@@ -1,9 +1,7 @@
-name: Build and deploy Node.js app to Azure Web App - traffic-monitoring-app
+name: Build and deploy Node.js app to Azure Web App - traffic-monitoring-app (DISABLED)
 
+# Disabled - using Docker deployment instead
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
