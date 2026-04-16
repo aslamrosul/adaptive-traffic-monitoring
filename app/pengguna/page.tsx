@@ -3,6 +3,7 @@
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import ModalTambahUser from "@/components/ModalTambahUser";
+import ModalEditUser from "@/components/ModalEditUser";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -10,6 +11,8 @@ import toast from "react-hot-toast";
 export default function PenggunaPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -61,8 +64,21 @@ export default function PenggunaPage() {
     }
   };
 
-  const handleEdit = (userId: string) => {
-    toast.success(`Edit pengguna ${userId}`);
+  const handleEdit = (user: any) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (updatedUser: any) => {
+    try {
+      // In production, implement PUT endpoint
+      // For now, update local state
+      setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+      toast.success("Pengguna berhasil diperbarui");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Gagal memperbarui pengguna");
+    }
   };
 
   const handleDelete = (userId: string) => {
@@ -252,7 +268,7 @@ export default function PenggunaPage() {
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
-                                onClick={() => handleEdit(user.id)}
+                                onClick={() => handleEdit(user)}
                                 className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all"
                               >
                                 <span className="material-symbols-outlined text-lg">edit</span>
@@ -345,6 +361,16 @@ export default function PenggunaPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onAdd={handleAddUser}
+      />
+
+      <ModalEditUser
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedUser(null);
+        }}
+        onUpdate={handleUpdateUser}
+        user={selectedUser}
       />
     </>
   );
