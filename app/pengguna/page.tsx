@@ -71,10 +71,22 @@ export default function PenggunaPage() {
 
   const handleUpdateUser = async (updatedUser: any) => {
     try {
-      // In production, implement PUT endpoint
-      // For now, update local state
-      setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
-      toast.success("Pengguna berhasil diperbarui");
+      const response = await fetch(`/api/users/${updatedUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Pengguna berhasil diperbarui");
+        fetchUsers(); // Refresh list
+      } else {
+        toast.error(result.error || "Gagal memperbarui pengguna");
+      }
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error("Gagal memperbarui pengguna");
@@ -89,12 +101,21 @@ export default function PenggunaPage() {
           <button
             onClick={async () => {
               try {
-                // In production, implement DELETE endpoint
-                // For now, just remove from local state
-                setUsers(users.filter((u) => u.id !== userId));
-                toast.dismiss(t.id);
-                toast.success("Pengguna berhasil dihapus");
+                const response = await fetch(`/api/users/${userId}`, {
+                  method: "DELETE",
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                  toast.dismiss(t.id);
+                  toast.success("Pengguna berhasil dihapus");
+                  fetchUsers(); // Refresh list
+                } else {
+                  toast.error(result.error || "Gagal menghapus pengguna");
+                }
               } catch (error) {
+                console.error("Error deleting user:", error);
                 toast.error("Gagal menghapus pengguna");
               }
             }}
