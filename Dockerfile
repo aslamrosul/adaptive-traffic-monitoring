@@ -1,3 +1,4 @@
+# Multi-stage build for Next.js standalone deployment
 FROM node:20-alpine AS base
 
 # Install dependencies only when needed
