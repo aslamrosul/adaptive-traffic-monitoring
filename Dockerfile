@@ -20,8 +20,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build Next.js (standalone mode)
-RUN npm run build
+# Build Next.js (standalone mode) - use webpack instead of turbopack for Alpine
+RUN npm run build -- --webpack
 
 # Production image, copy all the files and run next
 FROM base AS runner
