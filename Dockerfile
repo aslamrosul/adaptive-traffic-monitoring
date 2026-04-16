@@ -34,12 +34,14 @@ ENV PORT=8080
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy public assets
-COPY --from=builder /app/public ./public
-
-# Copy standalone output
+# Copy standalone output - Next.js creates nested folder with package name
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy static files to the nested project folder
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./adaptive-traffic-monitoring/.next/static
+
+# Copy public assets to the nested project folder
+COPY --from=builder --chown=nextjs:nodejs /app/public ./adaptive-traffic-monitoring/public
 
 USER nextjs
 
@@ -49,4 +51,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD node -e "require('http').get('http://localhost:8080/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
+# Run from the nested project directory where server.js is located
+WORKDIR /app/adaptive-traffic-monitoring
 CMD ["node", "server.js"]
