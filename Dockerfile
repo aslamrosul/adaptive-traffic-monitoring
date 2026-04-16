@@ -35,11 +35,10 @@ ENV PORT=8080
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone output - Next.js creates a folder named after the project
-# We need to copy the contents of that folder, not the folder itself
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/adaptive-traffic-monitoring ./
+# Copy standalone output - copy everything from standalone
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
-# Copy static files
+# Copy static files to .next/static
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy public assets
