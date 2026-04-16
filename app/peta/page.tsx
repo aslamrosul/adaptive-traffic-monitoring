@@ -1,42 +1,76 @@
+"use client";
+
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-
-const markers = [
-  {
-    name: "Simpang Sudirman",
-    status: "Macet Parah",
-    volume: "4,200/jam",
-    density: 89,
-    color: "tertiary",
-    position: { top: "35%", left: "45%" },
-  },
-  {
-    name: "Simpang Thamrin",
-    status: "Lancar",
-    volume: "850/jam",
-    density: 12,
-    color: "green-600",
-    position: { top: "20%", left: "25%" },
-  },
-  {
-    name: "Simpang Kuningan",
-    status: "Padat Merayap",
-    volume: "2,100/jam",
-    density: 55,
-    color: "amber-500",
-    position: { top: "60%", left: "60%" },
-  },
-  {
-    name: "Simpang Gatot Subroto",
-    status: "Macet Parah",
-    volume: "3,850/jam",
-    density: 82,
-    color: "tertiary",
-    position: { top: "75%", left: "30%" },
-  },
-];
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function PetaPage() {
+  const [intersections, setIntersections] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchIntersections();
+  }, []);
+
+  const fetchIntersections = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/intersections");
+      const result = await response.json();
+
+      if (result.success) {
+        setIntersections(result.data);
+      } else {
+        toast.error("Gagal memuat data persimpangan");
+      }
+    } catch (error) {
+      console.error("Error fetching intersections:", error);
+      toast.error("Gagal memuat data persimpangan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "green-600";
+      case "maintenance":
+        return "amber-500";
+      case "offline":
+        return "tertiary";
+      default:
+        return "slate-400";
+    }
+  };
+
+  // Helper function to get status label
+  const getStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "Lancar";
+      case "maintenance":
+        return "Pemeliharaan";
+      case "offline":
+        return "Offline";
+      default:
+        return status;
+    }
+  };
+
+  // Helper function to calculate position (simple grid layout)
+  const getPosition = (index: number, total: number) => {
+    const cols = Math.ceil(Math.sqrt(total));
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    
+    return {
+      top: `${20 + (row * 60 / Math.ceil(total / cols))}%`,
+      left: `${20 + (col * 60 / cols)}%`,
+    };
+  };
   return (
     <>
       <Sidebar />
@@ -59,19 +93,41 @@ export default function PetaPage() {
               />
             </svg>
 
+            {/* Loading State */}
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-300/50">
+                <div className="bg-white p-6 rounded-xl shadow-xl">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-slate-600 text-sm">Memuat peta...</p>
+                </div>
+              </div>
+            )}
+
             {/* Markers */}
-            {markers.map((marker, idx) => (
+            {!isLoading && intersections.map((intersection, idx) => {
+              const position = intersection.location 
+                ? { 
+                    top: `${50 + (intersection.location.lat + 6.2) * 100}%`, 
+                    left: `${50 + (intersection.location.lng - 106.8) * 100}%` 
+                  }
+                : getPosition(idx, intersections.length);
+              
+              const statusColor = getStatusColor(intersection.status);
+              const statusLabel = getStatusLabel(intersection.status);
+
+              return (
+              return (
               <div
-                key={idx}
+                key={intersection.id}
                 className="absolute group cursor-pointer z-10"
-                style={marker.position}
+                style={position}
               >
                 <div className="relative flex flex-col items-center">
-                  {marker.color === "tertiary" && (
+                  {statusColor === "tertiary" && (
                     <div className="marker-pulse absolute -inset-2 bg-tertiary/20 rounded-full blur-sm"></div>
                   )}
                   <div
-                    className={`w-10 h-10 bg-${marker.color} rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white relative z-10`}
+                    className={`w-10 h-10 bg-${statusColor} rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white relative z-10`}
                   >
                     <span
                       className="material-symbols-outlined text-xl"
@@ -84,45 +140,38 @@ export default function PetaPage() {
                   {/* Tooltip */}
                   <div className="absolute bottom-full mb-4 w-64 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-100">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-headline font-bold text-slate-900">{marker.name}</h4>
+                      <h4 className="font-headline font-bold text-slate-900">{intersection.name}</h4>
                       <span
                         className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-tighter ${
-                          marker.status === "Lancar"
+                          statusLabel === "Lancar"
                             ? "bg-green-100 text-green-700"
-                            : marker.status === "Padat Merayap"
+                            : statusLabel === "Pemeliharaan"
                             ? "bg-amber-100 text-amber-700"
                             : "bg-tertiary/10 text-tertiary"
                         }`}
                       >
-                        {marker.status}
+                        {statusLabel}
                       </span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Volume Kendaraan</span>
-                        <span className="font-bold text-slate-900">{marker.volume}</span>
+                        <span className="text-slate-500">Device ID</span>
+                        <span className="font-bold text-slate-900">{intersection.deviceId}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Kepadatan</span>
-                        <span className="font-bold text-slate-900">{marker.density}%</span>
+                        <span className="text-slate-500">Jalur</span>
+                        <span className="font-bold text-slate-900">{intersection.lanes?.count || 4} jalur</span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            marker.density > 70
-                              ? "bg-tertiary"
-                              : marker.density > 40
-                              ? "bg-amber-500"
-                              : "bg-green-500"
-                          }`}
-                          style={{ width: `${marker.density}%` }}
-                        ></div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">Mode</span>
+                        <span className="font-bold text-slate-900 uppercase">{intersection.config?.mode || "auto"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           {/* Map Controls */}

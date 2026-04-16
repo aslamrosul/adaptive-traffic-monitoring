@@ -1,301 +1,344 @@
-# 🚀 Quick Start Guide - Adaptive Traffic Light Monitoring
+# Quick Start Guide - Backend & Database
 
-## ⚡ TL;DR - Cara Cepat Mulai
+Panduan cepat untuk setup dan mengelola backend dengan Azure Cosmos DB.
 
-```bash
-cd traffic-monitoring
-npm install
+## 🚀 Setup Database (Pertama Kali)
+
+### Opsi 1: Otomatis dengan Script
+
+```powershell
+# Setup collections + seed data sekaligus
+.\scripts\setup-database.ps1
+```
+
+### Opsi 2: Manual Step-by-Step
+
+```powershell
+# 1. Buat collections
+npm run db:setup
+
+# 2. Isi data awal
+npm run db:seed
+
+# 3. Test API
 npm run dev
+# Di terminal lain:
+.\scripts\test-api.ps1
 ```
 
-Buka browser: **http://localhost:3000**
+## 📊 Lihat Data di Azure Portal
 
----
+1. Buka https://portal.azure.com
+2. Search: `traffic-cosmos-slam`
+3. Klik **Data Explorer**
+4. Expand **TrafficDB** untuk lihat collections
+5. Klik **Items** untuk lihat data
 
-## 📂 Struktur Project
+## ✏️ Edit Data
 
-```
-traffic-monitoring/
-├── app/                          # Next.js App Router
-│   ├── page.tsx                  # 🏠 Dashboard
-│   ├── persimpangan/page.tsx     # 🚦 Detail Persimpangan
-│   ├── analitik/page.tsx         # 📊 Analytics
-│   ├── peta/page.tsx             # 🗺️ Map View
-│   ├── pengguna/page.tsx         # 👥 User Management
-│   ├── pengaturan/page.tsx       # ⚙️ Settings
-│   ├── bantuan/page.tsx          # ❓ Help Center
-│   └── profil/page.tsx           # 👤 Profile
-│
-├── components/                   # Reusable Components
-│   ├── Sidebar.tsx               # Navigation
-│   ├── Header.tsx                # Top bar
-│   ├── ModalLaporan.tsx          # Report modal
-│   ├── ModalTambahSimpangan.tsx  # Add intersection
-│   ├── ModalTambahUser.tsx       # Add user
-│   ├── NotificationDropdown.tsx  # Notifications
-│   ├── ProfileDropdown.tsx       # Profile menu
-│   └── Toast.tsx                 # Toast provider
-│
-├── lib/
-│   └── store.ts                  # Zustand state management
-│
-├── public/                       # Static assets
-├── tailwind.config.ts            # Tailwind config
-├── package.json                  # Dependencies
-├── README.md                     # Main documentation
-├── PROJECT_STATUS.md             # ✅ Status lengkap
-└── INTEGRATION_GUIDE.md          # 🔌 Panduan integrasi
+### Via Azure Portal (Recommended untuk Manual Edit)
+
+1. Buka Data Explorer
+2. Navigate: `TrafficDB` > `users` > `Items`
+3. Klik item yang ingin diedit
+4. Edit JSON di panel kanan
+5. Klik **Update**
+
+### Via Script (Recommended untuk Bulk Changes)
+
+```powershell
+# Edit file scripts/seed-data.ts
+# Lalu jalankan:
+npm run db:seed
 ```
 
----
+### Via API (Production)
 
-## 🎯 Fitur yang Sudah Jadi
+```powershell
+# Test dengan PowerShell
+$body = @{
+    name = "Nama Baru"
+    email = "email@baru.com"
+} | ConvertTo-Json
 
-### ✅ Dashboard (/)
-- 4 stat cards (Total Kendaraan, Status IoT, Waktu Tunggu, Skor)
-- Bar chart dengan gradient + filter periode
-- Daftar simpangan dengan map images
-- Filter status + tambah simpangan
-- Panel peringatan
-
-### ✅ Persimpangan (/persimpangan)
-- Custom header dengan IoT status badge
-- 4 metric cards
-- Kontrol 4 jalur dengan traffic light visualization
-- Visualisasi persimpangan + CCTV info
-- Manual override button dengan konfirmasi
-- Tabel kejadian & anomali
-
-### ✅ Analitik (/analitik)
-- Chart volume mingguan
-- Efisiensi sistem (AI vs Manual)
-- Indeks kemacetan
-- Heatmap per jam
-
-### ✅ Peta (/peta)
-- 4 marker persimpangan
-- Hover tooltip dengan detail
-- Map controls (zoom)
-- Legend kepadatan
-
-### ✅ Pengguna (/pengguna)
-- Tabel user dengan foto
-- Search bar
-- Add/Edit/Delete user
-- Role management
-- Statistik
-
----
-
-## 🎨 Tech Stack
-
-| Category | Technology | Purpose |
-|----------|-----------|---------|
-| Framework | Next.js 15 | React framework |
-| Language | TypeScript | Type safety |
-| Styling | Tailwind CSS v3 | Utility-first CSS |
-| Animations | Framer Motion | Smooth animations |
-| Charts | Recharts | Data visualization |
-| State | Zustand | State management |
-| Notifications | React Hot Toast | Toast messages |
-| Data Fetching | SWR | API integration ready |
-| Icons | Material Symbols | Icon library |
-| Fonts | Inter + Manrope | Typography |
-
----
-
-## 🎨 Design System
-
-### Colors (Material Design 3)
-```css
-Primary:   #0040a1  /* Blue - Main actions */
-Secondary: #525f73  /* Slate - Secondary elements */
-Tertiary:  #93000d  /* Red - Alerts */
-Surface:   #f7f9fc  /* Light gray - Backgrounds */
+Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
+    -Method PUT `
+    -Body $body `
+    -ContentType "application/json"
 ```
 
-### Typography
-- **Headlines**: Manrope (Bold, Extrabold)
-- **Body**: Inter (Regular, Medium, Semibold)
-- **Labels**: Inter (Bold, Uppercase)
+## 💾 Backup & Restore
 
-### Spacing
-- Base unit: 4px (0.25rem)
-- Common: 8px, 12px, 16px, 24px, 32px
+### Export Data (Backup)
 
----
-
-## 🔧 Commands
-
-```bash
-# Development
-npm run dev          # Start dev server (localhost:3000)
-
-# Production
-npm run build        # Build for production
-npm start            # Start production server
-
-# Linting
-npm run lint         # Run ESLint
+```powershell
+npm run db:export
 ```
 
----
+File akan tersimpan di folder `exports/cosmos-backup-YYYY-MM-DD/`
 
-## 📱 Responsive Breakpoints
+### Import Data (Restore)
 
-```css
-Mobile:  < 768px
-Tablet:  768px - 1024px
-Desktop: > 1024px
+```powershell
+npm run db:import exports/cosmos-backup-2024-01-25
 ```
 
-Semua halaman sudah responsive!
+## 🔍 Query Data
 
----
+### Via Azure Portal
 
-## 🎯 Next Steps (Integrasi)
+Buka Data Explorer > New SQL Query:
 
-### 1. Database Setup
-```bash
-npm install prisma @prisma/client
-npx prisma init
-# Edit schema.prisma
-npx prisma migrate dev
+```sql
+-- Lihat semua users
+SELECT * FROM c
+
+-- Filter by role
+SELECT * FROM c WHERE c.role = "admin"
+
+-- Count items
+SELECT VALUE COUNT(1) FROM c
+
+-- Sort by date
+SELECT * FROM c ORDER BY c.createdAt DESC
 ```
 
-### 2. API Routes
-Create `app/api/traffic/route.ts` untuk terima data dari ESP32
+### Via API
 
-### 3. MQTT Real-time
-```bash
-npm install mqtt
-```
-Setup di `lib/mqtt.ts`
+```powershell
+# Get all users
+Invoke-RestMethod -Uri "http://localhost:3000/api/users"
 
-### 4. ESP32 Integration
-Upload code ke ESP32 dengan sensor & LED
+# Get users by role
+Invoke-RestMethod -Uri "http://localhost:3000/api/users?role=admin"
 
-### 5. Cloud (Azure/GCP)
-- IoT Hub untuk device management
-- Blob Storage untuk CCTV footage
-- Functions untuk serverless
+# Get all intersections
+Invoke-RestMethod -Uri "http://localhost:3000/api/intersections"
 
-### 6. Big Data Analytics
-Python + FastAPI untuk ML predictions
-
-📖 **Lihat INTEGRATION_GUIDE.md untuk detail lengkap!**
-
----
-
-## 🐛 Troubleshooting
-
-### Port sudah digunakan
-```bash
-npm run dev -- -p 3001
+# Get specific intersection
+Invoke-RestMethod -Uri "http://localhost:3000/api/intersections/int_001"
 ```
 
-### Module not found
-```bash
-rm -rf node_modules package-lock.json
-npm install
+## 📝 Tambah Data Baru
+
+### Via Azure Portal
+
+1. Buka container (misal: `users`)
+2. Klik **New Item**
+3. Paste JSON:
+
+```json
+{
+  "id": "user_new_001",
+  "email": "newuser@traffic.com",
+  "name": "User Baru",
+  "role": "operator",
+  "phone": "+62812345682",
+  "status": "active",
+  "reportsCreated": 0,
+  "reportsCompleted": 0,
+  "activeHours": 0,
+  "createdAt": "2024-01-25T10:00:00Z",
+  "updatedAt": "2024-01-25T10:00:00Z"
+}
 ```
 
-### Tailwind tidak load
-```bash
-rm -rf .next
+4. Klik **Save**
+
+### Via API
+
+```powershell
+$newUser = @{
+    email = "newuser@traffic.com"
+    name = "User Baru"
+    role = "operator"
+    phone = "+62812345682"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
+    -Method POST `
+    -Body $newUser `
+    -ContentType "application/json"
+```
+
+## 🗑️ Hapus Data
+
+### Via Azure Portal
+
+1. Buka container > Items
+2. Klik item yang ingin dihapus
+3. Klik **Delete Item**
+4. Konfirmasi
+
+### Via API
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/users/user_001" `
+    -Method DELETE
+```
+
+## 🧪 Testing
+
+### Test All APIs
+
+```powershell
 npm run dev
+# Di terminal lain:
+.\scripts\test-api.ps1
 ```
 
-### Build error
-```bash
-npm run build
-# Check error messages
+### Test Specific Endpoint
+
+```powershell
+# Health check
+Invoke-RestMethod -Uri "http://localhost:3000/api/health"
+
+# Users
+Invoke-RestMethod -Uri "http://localhost:3000/api/users"
+
+# Intersections
+Invoke-RestMethod -Uri "http://localhost:3000/api/intersections"
+
+# Reports
+Invoke-RestMethod -Uri "http://localhost:3000/api/reports"
+
+# Settings
+Invoke-RestMethod -Uri "http://localhost:3000/api/settings?userId=user_admin_001"
+
+# FAQs
+Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs"
+
+# Guides
+Invoke-RestMethod -Uri "http://localhost:3000/api/help/guides"
 ```
 
----
+## 📚 Available Collections
 
-## 📚 Documentation Files
+| Collection | Partition Key | Purpose |
+|------------|---------------|---------|
+| `users` | `/email` | Data pengguna (admin, operator) |
+| `intersections` | `/deviceId` | Data persimpangan |
+| `traffic_data` | `/intersectionId` | Data lalu lintas real-time |
+| `events` | `/intersectionId` | Event log sistem |
+| `reports` | `/intersectionId` | Laporan dari operator |
+| `notifications` | `/userId` | Notifikasi untuk user |
+| `device_status` | `/deviceId` | Status perangkat IoT |
+| `analytics_daily` | `/intersectionId` | Analitik harian |
 
-| File | Description |
-|------|-------------|
-| `README.md` | Main documentation |
-| `PROJECT_STATUS.md` | ✅ Complete status & achievements |
-| `INTEGRATION_GUIDE.md` | 🔌 IoT, Cloud, Big Data integration |
-| `QUICK_START.md` | ⚡ This file - quick reference |
+## 🎯 Common Tasks
 
----
+### Task 1: Tambah User Baru
 
-## 🎓 Untuk Demo PBL
+```powershell
+# Via API
+$user = @{
+    email = "operator4@traffic.com"
+    name = "Operator 4"
+    role = "operator"
+    phone = "+62812345683"
+} | ConvertTo-Json
 
-### Demo Flow (10 menit):
+Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
+    -Method POST -Body $user -ContentType "application/json"
+```
 
-1. **Dashboard** (2 min)
-   - Show real-time stats
-   - Filter chart
-   - Add intersection
+### Task 2: Update Intersection Status
 
-2. **Persimpangan** (3 min)
-   - 4-lane control
-   - Traffic lights
-   - Manual override
-   - Events table
+```powershell
+# Via API
+$update = @{
+    status = "maintenance"
+} | ConvertTo-Json
 
-3. **Analytics** (2 min)
-   - Weekly chart
-   - Efficiency
-   - Heatmap
+Invoke-RestMethod -Uri "http://localhost:3000/api/intersections/int_001" `
+    -Method PUT -Body $update -ContentType "application/json"
+```
 
-4. **Map** (1 min)
-   - Markers
-   - Tooltips
+### Task 3: Buat Laporan Baru
 
-5. **Users** (2 min)
-   - CRUD operations
-   - Roles
+```powershell
+# Via API
+$report = @{
+    intersectionId = "int_001"
+    type = "congestion"
+    priority = "high"
+    title = "Kemacetan Parah"
+    description = "Kemacetan di jam sibuk"
+    userId = "user_operator_001"
+    userName = "Operator 1"
+} | ConvertTo-Json
 
-### Key Points:
-- ✅ Modern UI/UX (Material Design 3)
-- ✅ Smooth animations (Framer Motion)
-- ✅ Responsive design
-- ✅ Ready untuk IoT integration
-- ✅ Cloud-ready architecture
-- ✅ Big Data analytics ready
+Invoke-RestMethod -Uri "http://localhost:3000/api/reports" `
+    -Method POST -Body $report -ContentType "application/json"
+```
 
----
+### Task 4: Search FAQs
+
+```powershell
+# Search by keyword
+Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs?search=sensor"
+
+# Filter by category
+Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs?category=IoT & Sensor"
+```
+
+## 🔧 Troubleshooting
+
+### Database Connection Error
+
+```powershell
+# Check environment variables
+cat .env.local
+
+# Test connection
+npm run db:setup
+```
+
+### API Returns Empty Data
+
+```powershell
+# Seed data
+npm run db:seed
+
+# Verify in Azure Portal
+# Open Data Explorer > TrafficDB > users > Items
+```
+
+### Frontend Not Showing Data
+
+1. ✅ Check API works: `.\scripts\test-api.ps1`
+2. ✅ Check data exists in Azure Portal
+3. ✅ Check browser console for errors
+4. ✅ Refresh page (Ctrl+F5)
+
+## 📖 Documentation
+
+- [AZURE_DATA_EXPLORER_GUIDE.md](./AZURE_DATA_EXPLORER_GUIDE.md) - Panduan lengkap Azure Data Explorer
+- [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md) - Setup database detail
+- [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - API reference lengkap
+- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Schema database
 
 ## 💡 Tips
 
-1. **Development**: Gunakan `npm run dev` untuk hot reload
-2. **Testing**: Test di Chrome DevTools responsive mode
-3. **Performance**: Check Lighthouse score
-4. **Deployment**: Vercel untuk frontend, Azure untuk backend
-5. **Documentation**: Update README saat ada perubahan
+1. **Backup Sebelum Edit**: Selalu export data sebelum edit besar
+   ```powershell
+   npm run db:export
+   ```
 
----
+2. **Test di Local Dulu**: Test perubahan di local sebelum deploy
+   ```powershell
+   npm run dev
+   ```
 
-## 🏆 Achievement Summary
+3. **Gunakan Query untuk Validasi**: Setelah edit, validasi dengan query di Data Explorer
 
-✅ **7 pages** fully functional
-✅ **10 components** reusable
-✅ **60+ colors** Material Design 3
-✅ **Smooth animations** everywhere
-✅ **Responsive** all devices
-✅ **TypeScript** type-safe
-✅ **Ready for integration** IoT + Cloud + Big Data
+4. **Monitor Logs**: Check Azure Portal logs untuk troubleshooting
 
----
+5. **Version Control**: Commit perubahan script ke git untuk tracking
 
-## 📞 Need Help?
+## 🆘 Need Help?
 
-1. Check `README.md` untuk setup lengkap
-2. Check `PROJECT_STATUS.md` untuk status detail
-3. Check `INTEGRATION_GUIDE.md` untuk integrasi
-4. Check browser console untuk error messages
-5. Check Next.js docs: https://nextjs.org/docs
-
----
-
-**Status**: ✅ PRODUCTION READY (Frontend)
-**Next**: Backend Integration (IoT + Cloud + Big Data)
-
-**Good luck! 🚀**
+- Check [AZURE_DATA_EXPLORER_GUIDE.md](./AZURE_DATA_EXPLORER_GUIDE.md) untuk panduan detail
+- Check [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md) untuk troubleshooting
+- Test API dengan `.\scripts\test-api.ps1`
+- Lihat logs di Azure Portal

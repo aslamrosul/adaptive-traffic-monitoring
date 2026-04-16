@@ -4,46 +4,61 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import ModalTambahUser from "@/components/ModalTambahUser";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
-const initialUsers = [
-  {
-    id: "1",
-    name: "Budi Santoso",
-    email: "budi.s@traffic-command.go.id",
-    role: "ADMIN PUSAT",
-    status: "Aktif",
-  },
-  {
-    id: "2",
-    name: "Siti Aminah",
-    email: "siti.a@traffic-command.go.id",
-    role: "OPERATOR LAPANGAN",
-    status: "Aktif",
-  },
-  {
-    id: "3",
-    name: "Rahmat Hidayat",
-    email: "rahmat.h@traffic-command.go.id",
-    role: "OPERATOR LAPANGAN",
-    status: "Offline",
-  },
-  {
-    id: "4",
-    name: "Dewi Lestari",
-    email: "dewi.l@traffic-command.go.id",
-    role: "OPERATOR LAPANGAN",
-    status: "Aktif",
-  },
-];
-
 export default function PenggunaPage() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleAddUser = (newUser: any) => {
-    setUsers([...users, newUser]);
+  // Fetch users from API
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/users");
+      const result = await response.json();
+
+      if (result.success) {
+        setUsers(result.data);
+      } else {
+        toast.error("Gagal memuat data pengguna");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Gagal memuat data pengguna");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddUser = async (newUser: any) => {
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Pengguna berhasil ditambahkan");
+        fetchUsers(); // Refresh list
+      } else {
+        toast.error(result.error || "Gagal menambahkan pengguna");
+      }
+    } catch (error) {
+      console.error("Error adding user:", error);
+      toast.error("Gagal menambahkan pengguna");
+    }
   };
 
   const handleEdit = (userId: string) => {
@@ -56,10 +71,16 @@ export default function PenggunaPage() {
         <p className="font-semibold">Hapus pengguna ini?</p>
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setUsers(users.filter((u) => u.id !== userId));
-              toast.dismiss(t.id);
-              toast.success("Pengguna berhasil dihapus");
+            onClick={async () => {
+              try {
+                // In production, implement DELETE endpoint
+                // For now, just remove from local state
+                setUsers(users.filter((u) => u.id !== userId));
+                toast.dismiss(t.id);
+                toast.success("Pengguna berhasil dihapus");
+              } catch (error) {
+                toast.error("Gagal menghapus pengguna");
+              }
             }}
             className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold"
           >
@@ -75,6 +96,13 @@ export default function PenggunaPage() {
       </div>
     ), { duration: 5000 });
   };
+
+  // Filter users based on search
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
@@ -105,6 +133,8 @@ export default function PenggunaPage() {
                   className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 w-64 placeholder:text-slate-400"
                   placeholder="Cari pengguna..."
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <motion.button
@@ -146,7 +176,26 @@ export default function PenggunaPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {users.map((user, idx) => (
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                              <p className="text-slate-500 text-sm">Memuat data...</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center">
+                            <span className="material-symbols-outlined text-5xl text-slate-300 mb-2">person_off</span>
+                            <p className="text-slate-500 text-sm">
+                              {searchQuery ? "Tidak ada pengguna yang cocok" : "Belum ada pengguna"}
+                            </p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsers.map((user, idx) => (
                         <motion.tr
                           key={user.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -173,28 +222,28 @@ export default function PenggunaPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                                user.role === "ADMIN PUSAT"
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase ${
+                                user.role === "admin"
                                   ? "bg-primary-fixed text-on-primary-fixed-variant"
                                   : "bg-secondary-container text-on-secondary-container"
                               }`}
                             >
-                              {user.role}
+                              {user.role === "admin" ? "ADMIN PUSAT" : "OPERATOR LAPANGAN"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <div
                                 className={`w-2 h-2 rounded-full ${
-                                  user.status === "Aktif" ? "bg-emerald-500" : "bg-slate-300"
+                                  user.status === "active" ? "bg-emerald-500" : "bg-slate-300"
                                 }`}
                               ></div>
                               <span
                                 className={`text-xs font-medium ${
-                                  user.status === "Aktif" ? "text-slate-700" : "text-slate-400"
+                                  user.status === "active" ? "text-slate-700" : "text-slate-400"
                                 }`}
                               >
-                                {user.status}
+                                {user.status === "active" ? "Aktif" : "Offline"}
                               </span>
                             </div>
                           </td>
@@ -219,7 +268,8 @@ export default function PenggunaPage() {
                             </div>
                           </td>
                         </motion.tr>
-                      ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -275,13 +325,13 @@ export default function PenggunaPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-500">Aktif</span>
                     <span className="text-lg font-bold text-emerald-600">
-                      {users.filter((u) => u.status === "Aktif").length}
+                      {users.filter((u) => u.status === "active").length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-500">Offline</span>
                     <span className="text-lg font-bold text-slate-400">
-                      {users.filter((u) => u.status === "Offline").length}
+                      {users.filter((u) => u.status !== "active").length}
                     </span>
                   </div>
                 </div>

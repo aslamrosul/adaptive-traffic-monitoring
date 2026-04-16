@@ -71,3 +71,7 @@ next-env.d.ts
 # SUMMARY.md
 # QUICK_START.md
 # INDEX.md
+
+# Database exports and reports (auto-generated)
+/exports/
+/database-structure/
