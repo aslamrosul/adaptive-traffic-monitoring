@@ -116,11 +116,11 @@ export default function PetaPage() {
               const statusLabel = getStatusLabel(intersection.status);
 
               return (
-              <div
-                key={intersection.id}
-                className="absolute group cursor-pointer z-10"
-                style={position}
-              >
+                <div
+                  key={intersection.id}
+                  className="absolute group cursor-pointer z-10"
+                  style={position}
+                >
                 <div className="relative flex flex-col items-center">
                   {statusColor === "tertiary" && (
                     <div className="marker-pulse absolute -inset-2 bg-tertiary/20 rounded-full blur-sm"></div>

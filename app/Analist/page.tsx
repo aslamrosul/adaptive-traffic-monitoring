@@ -105,15 +105,15 @@ export default function AnalitikPage() {
   // Hitung total kendaraan dari data real
   const totalVehicles = useMemo(() => {
     if (analytics.length > 0) {
-      return analytics.reduce((sum, a) => sum + (a.summary?.totalVehicles || 0), 0);
+      return analytics.reduce((sum: number, a: any) => sum + (a.summary?.totalVehicles || 0), 0);
     }
-    return trafficData.reduce((sum, t) => sum + t.vehicleCount, 0);
+    return trafficData.reduce((sum: number, t: any) => sum + t.vehicleCount, 0);
   }, [analytics, trafficData]);
 
   // Hitung congestion index rata-rata
   const avgCongestionIndex = useMemo(() => {
     if (analytics.length > 0) {
-      const avg = analytics.reduce((sum, a) => sum + (a.summary?.averageCongestionIndex || 0), 0) / analytics.length;
+      const avg = analytics.reduce((sum: number, a: any) => sum + (a.summary?.averageCongestionIndex || 0), 0) / analytics.length;
       return Math.round(avg * 10) / 10;
     }
     return 6.4; // Default
@@ -121,7 +121,7 @@ export default function AnalitikPage() {
 
   // Hitung IoT performance
   const iotPerformance = useMemo(() => {
-    const activeDevices = intersections.filter((i) => i.status === "active").length;
+    const activeDevices = intersections.filter((i: any) => i.status === "active").length;
     const totalDevices = intersections.length;
     const accuracy = totalDevices > 0 ? (activeDevices / totalDevices) * 100 : 98.4;
     return {
@@ -134,7 +134,7 @@ export default function AnalitikPage() {
 
   const handleIntersectionChange = (value: string) => {
     setSelectedIntersection(value);
-    const intersection = intersections.find((i) => i.id === value);
+    const intersection = intersections.find((i: any) => i.id === value);
     toast.success(`Filter diubah ke: ${intersection?.name || "Semua Persimpangan"}`);
   };
 
@@ -209,7 +209,7 @@ export default function AnalitikPage() {
                   disabled={loadingIntersections}
                 >
                   <option value="all">Semua Persimpangan</option>
-                  {intersections.map((intersection) => (
+                  {intersections.map((intersection: any) => (
                     <option key={intersection.id} value={intersection.id}>
                       {intersection.name}
                     </option>
@@ -557,7 +557,7 @@ export default function AnalitikPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {events.slice(0, 5).map((event, idx) => (
+                  {events.slice(0, 5).map((event: any, idx: number) => (
                     <motion.div
                       key={event.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -569,7 +569,7 @@ export default function AnalitikPage() {
                       <div>
                         <h4 className="text-sm font-bold">{event.title}</h4>
                         <p className="text-xs text-slate-500 mt-1">
-                          {intersections.find((i) => i.id === event.intersectionId)?.name || event.intersectionId}
+                          {intersections.find((i: any) => i.id === event.intersectionId)?.name || event.intersectionId}
                         </p>
                       </div>
                       <div className="flex flex-col items-end ml-4">

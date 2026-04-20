@@ -45,8 +45,8 @@ const intersectionsData = [
 ];
 
 // Generate traffic data untuk hari ini (reduced untuk avoid timeout)
-function generateTrafficData() {
-  const data = [];
+function generateTrafficData(): any[] {
+  const data: any[] = [];
   const now = new Date();
   const devices = ['lane-north', 'lane-south', 'lane-east', 'lane-west'];
   const lanes = ['north', 'south', 'east', 'west'];
