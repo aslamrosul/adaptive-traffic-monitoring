@@ -1,17 +1,20 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { motion } from "framer-motion";
-import { useState, useEffect, useMemo } from "react";
-import toast from "react-hot-toast";
-import { useAnalytics, useRealtimeTraffic, useIntersections, useEvents } from "@/lib/hooks/useAnalytics";
-import { 
-  calculateHourlyStats, 
-  calculateWeeklyStats, 
-  formatDate,
-  getWeekRange
+import Sidebar from "@/components/Sidebar";
+import { useAnalytics } from "@/lib/hooks/useAnalytics";
+import { useEvents } from "@/lib/hooks/useEvents";
+import { useIntersections } from "@/lib/hooks/useIntersections";
+import { useRealtimeTraffic } from "@/lib/hooks/useTraffic";
+import {
+    calculateHourlyStats,
+    calculateWeeklyStats,
+    formatDate,
+    getWeekRange
 } from "@/lib/utils/analytics";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function AnalitikPage() {
   const [selectedIntersection, setSelectedIntersection] = useState<string>("all");

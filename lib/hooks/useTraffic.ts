@@ -2,22 +2,22 @@ import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function useAnalytics(intersectionId?: string, date?: string) {
+export function useRealtimeTraffic(intersectionId?: string, limit: number = 100) {
   const params = new URLSearchParams();
   if (intersectionId) params.append('intersectionId', intersectionId);
-  if (date) params.append('date', date);
+  params.append('limit', limit.toString());
 
   const { data, error, isLoading, mutate } = useSWR(
-    `/api/analytics/daily?${params.toString()}`,
+    `/api/traffic/realtime?${params.toString()}`,
     fetcher,
     {
-      refreshInterval: 60000, // Refresh setiap 1 menit
+      refreshInterval: 5000, // Refresh setiap 5 detik untuk real-time
       revalidateOnFocus: true,
     }
   );
 
   return {
-    analytics: data?.data || [],
+    trafficData: data?.data || [],
     isLoading,
     isError: error,
     mutate,

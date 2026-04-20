@@ -1,142 +1,11 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import { useEvents, useIntersection, useRealtimeTraffic } from "@/lib/hooks";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const intersectionData: Record<string, IntersectionDetail> = {
-  "thamrin-sudirman": {
-    id: "thamrin-sudirman",
-    name: "Persimpangan Thamrin-Sudirman",
-    totalVolume: 4821,
-    congestion: "Sedang",
-    vcRatio: 0.65,
-    cycleTime: 120,
-    latency: 14,
-    algorithm: "Adaptive-Flow v2.4",
-    lanes: [
-      { direction: "Utara", street: "Sudirman", volume: 1240, duration: 45, light: "green" },
-      { direction: "Timur", street: "Imam Bonjol", volume: 850, duration: 25, light: "red" },
-      { direction: "Selatan", street: "Thamrin", volume: 1410, duration: 12, light: "yellow" },
-      { direction: "Barat", street: "Kebon Sirih", volume: 621, duration: 30, light: "red" },
-    ],
-    logs: [
-      {
-        time: "14:22:10",
-        type: "Anomali IoT",
-        description: "Sensor Jalur Selatan kehilangan paket data sementara (200ms)",
-        priority: "LOW",
-        status: "Auto-resolved",
-      },
-      {
-        time: "14:15:00",
-        type: "Penyesuaian Fase",
-        description: "Penambahan durasi hijau Jalur Utara (+5s) karena lonjakan volume",
-        priority: "INFO",
-        status: "Sistem",
-      },
-      {
-        time: "13:45:22",
-        type: "Kendaraan Prioritas",
-        description: "Deteksi Ambulans (B 1234 ABC) arah Utara, Prioritas Hijau Aktif",
-        priority: "CRITICAL",
-        status: "Selesai",
-      },
-    ],
-  },
-  "kuningan-rasuna": {
-    id: "kuningan-rasuna",
-    name: "Persimpangan Kuningan-Rasuna Said",
-    totalVolume: 3210,
-    congestion: "Padat",
-    vcRatio: 0.78,
-    cycleTime: 90,
-    latency: 22,
-    algorithm: "Adaptive-Flow v2.4",
-    lanes: [
-      { direction: "Utara", street: "Rasuna Said", volume: 980, duration: 35, light: "red" },
-      { direction: "Timur", street: "Kuningan", volume: 720, duration: 40, light: "green" },
-      { direction: "Selatan", street: "Gatot Subroto", volume: 1100, duration: 10, light: "yellow" },
-      { direction: "Barat", street: "HR Rasuna", volume: 410, duration: 25, light: "red" },
-    ],
-    logs: [
-      {
-        time: "14:10:05",
-        type: "Penyesuaian Fase",
-        description: "Durasi merah Jalur Utara diperpanjang (+8s) akibat antrian panjang",
-        priority: "INFO",
-        status: "Sistem",
-      },
-      {
-        time: "13:55:30",
-        type: "Anomali IoT",
-        description: "Koneksi sensor Jalur Barat terputus selama 500ms",
-        priority: "LOW",
-        status: "Auto-resolved",
-      },
-    ],
-  },
-  "gatot-subroto": {
-    id: "gatot-subroto",
-    name: "Persimpangan Gatot Subroto",
-    totalVolume: 5100,
-    congestion: "Macet Parah",
-    vcRatio: 0.91,
-    cycleTime: 150,
-    latency: 18,
-    algorithm: "Manual Override",
-    lanes: [
-      { direction: "Utara", street: "Gatot Subroto", volume: 1800, duration: 55, light: "green" },
-      { direction: "Timur", street: "Semanggi", volume: 1200, duration: 20, light: "red" },
-      { direction: "Selatan", street: "Slipi", volume: 1500, duration: 8, light: "yellow" },
-      { direction: "Barat", street: "S. Parman", volume: 600, duration: 35, light: "red" },
-    ],
-    logs: [
-      {
-        time: "14:20:00",
-        type: "Manual Override",
-        description: "Operator mengaktifkan mode manual karena kepadatan ekstrem",
-        priority: "CRITICAL",
-        status: "Aktif",
-      },
-      {
-        time: "14:05:15",
-        type: "Kendaraan Prioritas",
-        description: "Deteksi Pemadam Kebakaran (B 9876 XY) arah Selatan",
-        priority: "CRITICAL",
-        status: "Selesai",
-      },
-    ],
-  },
-  "imam-bonjol": {
-    id: "imam-bonjol",
-    name: "Persimpangan Imam Bonjol",
-    totalVolume: 0,
-    congestion: "-",
-    vcRatio: 0,
-    cycleTime: 0,
-    latency: 0,
-    algorithm: "-",
-    lanes: [
-      { direction: "Utara", street: "Imam Bonjol", volume: 0, duration: 0, light: "red" },
-      { direction: "Timur", street: "Diponegoro", volume: 0, duration: 0, light: "red" },
-      { direction: "Selatan", street: "Cikini", volume: 0, duration: 0, light: "red" },
-    ],
-    logs: [
-      {
-        time: "12:00:00",
-        type: "Perangkat Offline",
-        description: "Semua sensor dan kontroler tidak merespons. Pemeriksaan lapangan diperlukan.",
-        priority: "CRITICAL",
-        status: "Pending",
-      },
-    ],
-  },
-};
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -204,25 +73,103 @@ export default function DetailPersimpanganPage({
 }) {
   const router = useRouter();
   const [id, setId] = useState<string>("");
-  const [data, setData] = useState<IntersectionDetail | null>(null);
-  const [isOnline, setIsOnline] = useState(false);
-
+  
   useEffect(() => {
     params.then((resolvedParams) => {
-      const intersectionId = resolvedParams.id;
-      setId(intersectionId);
-      const foundData = intersectionData[intersectionId];
-      setData(foundData);
-      setIsOnline(foundData?.latency > 0);
-      
-      if (!foundData) {
-        toast.error("Persimpangan tidak ditemukan");
-        router.push("/persimpangan");
-      }
+      setId(resolvedParams.id);
     });
-  }, [params, router]);
+  }, [params]);
 
-  if (!data || !id) return null;
+  const { intersection, isLoading: loadingIntersection } = useIntersection(id);
+  const { trafficData, isLoading: loadingTraffic } = useRealtimeTraffic(id, 10);
+  const { events, isLoading: loadingEvents } = useEvents(id, undefined, undefined, 10);
+
+  if (!id) return null;
+
+  if (loadingIntersection) {
+    return (
+      <>
+        <Sidebar />
+        <main className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-slate-600">Memuat data persimpangan...</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (!intersection) {
+    return (
+      <>
+        <Sidebar />
+        <main className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+          <div className="text-center">
+            <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
+            <p className="text-slate-900 font-bold text-xl mb-2">Persimpangan tidak ditemukan</p>
+            <button
+              onClick={() => router.push('/persimpangan')}
+              className="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+            >
+              Kembali ke Daftar
+            </button>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const isOnline = intersection.status === 'active';
+  
+  // Calculate lane data from traffic data
+  const laneDirections = ['Utara', 'Timur', 'Selatan', 'Barat'];
+  const lanes = laneDirections.map((direction, idx) => {
+    const laneTraffic = trafficData.filter((t: any) => 
+      t.direction?.toLowerCase() === direction.toLowerCase()
+    );
+    const totalVolume = laneTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
+    
+    // Simulate traffic light status based on volume
+    let light: LightColor = 'red';
+    if (idx === 0) light = 'green'; // First lane is green
+    else if (idx === 2) light = 'yellow'; // Third lane is yellow
+    
+    return {
+      direction,
+      street: intersection.address?.split(',')[0] || direction,
+      volume: totalVolume,
+      duration: light === 'green' ? 45 : light === 'yellow' ? 12 : 30,
+      light,
+    };
+  });
+
+  // Calculate metrics
+  const totalVolume = trafficData.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
+  const avgCongestion = trafficData.length > 0
+    ? trafficData.reduce((sum: number, t: any) => sum + (t.congestionIndex || 0), 0) / trafficData.length
+    : 0;
+  const congestionLevel = avgCongestion > 70 ? 'Macet Parah' : avgCongestion > 50 ? 'Padat' : avgCongestion > 30 ? 'Sedang' : 'Lancar';
+  const vcRatio = avgCongestion / 100;
+
+  const data: IntersectionDetail = {
+    id: intersection.id,
+    name: intersection.name,
+    totalVolume,
+    congestion: congestionLevel,
+    vcRatio,
+    cycleTime: intersection.config?.cycleTime?.max || 120,
+    latency: isOnline ? 14 : 0,
+    algorithm: intersection.config?.mode === 'auto' ? 'Adaptive-Flow v2.4' : 'Manual Override',
+    lanes,
+    logs: events.map((event: any) => ({
+      time: new Date(event.timestamp).toLocaleTimeString('id-ID'),
+      type: event.type,
+      description: event.description,
+      priority: event.priority.toUpperCase(),
+      status: event.status,
+    })),
+  };
 
   const handleManualOverride = () => {
     toast((t) => (
@@ -303,7 +250,7 @@ export default function DetailPersimpanganPage({
             <MetricCard
               label="Indeks Kemacetan"
               value={data.congestion}
-              sub={data.vcRatio > 0 ? `V/C Ratio: ${data.vcRatio}` : "Tidak tersedia"}
+              sub={data.vcRatio > 0 ? `V/C Ratio: ${data.vcRatio.toFixed(2)}` : "Tidak tersedia"}
               subIcon="speed"
               subColor="text-orange-500"
             />
@@ -532,29 +479,37 @@ export default function DetailPersimpanganPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-container">
-                  {data.logs.map((log, idx) => (
-                    <motion.tr
-                      key={idx}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.35 + idx * 0.07 }}
-                      className="hover:bg-surface-container-low transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500">{log.time}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{log.type}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{log.description}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${priorityBadge[log.priority]}`}>
-                          {log.priority}
-                        </span>
+                  {data.logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                        Tidak ada kejadian tercatat
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-xs font-bold ${log.status === "Auto-resolved" || log.status === "Selesai" ? "text-green-600" : log.status === "Aktif" ? "text-orange-500" : "text-slate-500"}`}>
-                          {log.status}
-                        </span>
-                      </td>
-                    </motion.tr>
-                  ))}
+                    </tr>
+                  ) : (
+                    data.logs.map((log, idx) => (
+                      <motion.tr
+                        key={idx}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.35 + idx * 0.07 }}
+                        className="hover:bg-surface-container-low transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-slate-500">{log.time}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-900">{log.type}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{log.description}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold ${priorityBadge[log.priority]}`}>
+                            {log.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-xs font-bold ${log.status === "resolved" || log.status === "Selesai" ? "text-green-600" : log.status === "in_progress" || log.status === "Aktif" ? "text-orange-500" : "text-slate-500"}`}>
+                            {log.status}
+                          </span>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
