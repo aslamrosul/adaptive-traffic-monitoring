@@ -1,22 +1,14 @@
 "use client";
 
-import ModalTambahPersimpangan from "@/components/ModalTambahPersimpangan";
+import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function PersimpanganPage() {
   const router = useRouter();
-  const { intersections, isLoading, isError, mutate } = useIntersections();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const filteredIntersections = intersections.filter((intersection: any) =>
-    intersection.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    intersection.address?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { intersections, isLoading, isError } = useIntersections();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -48,43 +40,7 @@ export default function PersimpanganPage() {
     <>
       <Sidebar />
       <main className="ml-64 min-h-screen bg-slate-50">
-        <header className="sticky top-0 z-30 w-full h-16 bg-white/80 backdrop-blur-md shadow-sm px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => router.push('/')}
-              className="p-2 hover:bg-slate-50 rounded-full transition-colors"
-            >
-              <span className="material-symbols-outlined text-slate-500">arrow_back</span>
-            </button>
-            <h2 className="font-headline font-bold text-lg text-slate-900">
-              Daftar Persimpangan
-            </h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Cari persimpangan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                search
-              </span>
-            </div>
-            <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <div className="w-8 h-8 rounded-full bg-slate-200">
-              <img
-                alt="Profil"
-                className="w-full h-full rounded-full object-cover"
-                src="https://ui-avatars.com/api/?name=Admin&background=0040a1&color=fff"
-              />
-            </div>
-          </div>
-        </header>
+        <Header title="Daftar Persimpangan" />
 
         <div className="p-8 space-y-6">
           {/* Stats Overview */}
@@ -167,13 +123,6 @@ export default function PersimpanganPage() {
               <h3 className="font-headline font-bold text-slate-900 text-lg">
                 Semua Persimpangan
               </h3>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-sm">add</span>
-                Tambah Persimpangan
-              </button>
             </div>
 
             {isLoading ? (
@@ -192,15 +141,15 @@ export default function PersimpanganPage() {
                 <p className="text-red-700 font-bold">Gagal memuat data persimpangan</p>
                 <p className="text-red-600 text-sm mt-1">Silakan coba lagi nanti</p>
               </div>
-            ) : filteredIntersections.length === 0 ? (
+            ) : intersections.length === 0 ? (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-12 text-center">
-                <span className="material-symbols-outlined text-slate-400 text-5xl mb-4">search_off</span>
-                <p className="text-slate-600 font-bold">Tidak ada persimpangan ditemukan</p>
-                <p className="text-slate-500 text-sm mt-1">Coba ubah kata kunci pencarian</p>
+                <span className="material-symbols-outlined text-slate-400 text-5xl mb-4">inbox</span>
+                <p className="text-slate-600 font-bold">Belum ada persimpangan</p>
+                <p className="text-slate-500 text-sm mt-1">Tambahkan persimpangan pertama Anda</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredIntersections.map((intersection: any, idx: number) => (
+                {intersections.map((intersection: any, idx: number) => (
                   <motion.div
                     key={intersection.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -258,15 +207,6 @@ export default function PersimpanganPage() {
           </div>
         </div>
       </main>
-
-      {/* Modal Tambah Persimpangan */}
-      <ModalTambahPersimpangan
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {
-          mutate(); // Refresh data setelah berhasil tambah
-        }}
-      />
     </>
   );
 }

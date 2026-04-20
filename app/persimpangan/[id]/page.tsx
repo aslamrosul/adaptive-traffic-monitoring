@@ -1,5 +1,6 @@
 "use client";
 
+import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { useEvents, useIntersection, useRealtimeTraffic } from "@/lib/hooks";
 import { motion } from "framer-motion";
@@ -252,31 +253,26 @@ export default function DetailPersimpanganPage({
     <>
       <Sidebar />
       <main className="ml-64 min-h-screen">
-        {/* Top App Bar */}
-        <header className="sticky top-0 z-30 w-full h-16 bg-white/80 backdrop-blur-md shadow-sm flex justify-between items-center px-8">
-          <div className="flex items-center gap-4">
+        <Header title={`Detail: ${data.name}`} />
+
+        <div className="p-8 space-y-8">
+          {/* Back Button & Status Badge */}
+          <div className="flex items-center justify-between">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push("/persimpangan")}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 rounded-lg transition-colors shadow-sm border border-slate-200"
             >
               <span className="material-symbols-outlined text-slate-500">arrow_back</span>
+              <span className="text-sm font-semibold text-slate-700">Kembali</span>
             </motion.button>
-            <h2 className="font-headline font-bold text-xl tracking-tight text-slate-900">
-              {data.name}
-            </h2>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${isOnline ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${isOnline ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
               {isOnline ? `IoT Aktif: ${data.algorithm}` : "IoT Offline"}
             </div>
           </div>
-        </header>
-
-        <div className="p-8 space-y-8">
           {/* Metric Row */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
