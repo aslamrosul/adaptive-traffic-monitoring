@@ -1,60 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, getUserByEmail } from "@/lib/azure-cosmos";
+import { containers } from "@/lib/azure-cosmos";
+import bcrypt from "bcryptjs";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    const body = await request.json();
+    const { name, email, password, role = "operator" } = body;
 
-    // Validasi input
+    // Validation
     if (!name || !email || !password) {
       return NextResponse.json(
-        { message: "Semua field harus diisi" },
+        { success: false, error: "Semua field harus diisi" },
         { status: 400 }
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
-        { message: "Password minimal 6 karakter" },
+        { success: false, error: "Password minimal 6 karakter" },
         { status: 400 }
       );
     }
 
-    // Cek email sudah terdaftar
-    const existingUser = await getUserByEmail(email);
-    if (existingUser) {
+    const container = containers.users;
+
+    // Check if email already exists
+    const { resources: existingUsers } = await container.items
+      .query({
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: email }],
+      })
+      .fetchAll();
+
+    if (existingUsers.length > 0) {
       return NextResponse.json(
-        { message: "Email sudah terdaftar" },
+        { success: false, error: "Email sudah terdaftar" },
         { status: 400 }
       );
     }
 
-    // TODO: Hash password dengan bcryptjs
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Simpan user baru ke database
-    const newUser = await createUser({
+    // Create new user
+    const newUser = {
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name,
       email,
-      password, // TODO: Gunakan hashedPassword
-      provider: "credentials",
-    });
+      password: hashedPassword,
+      role,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0040a1&color=fff`,
+      status: "active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    return NextResponse.json(
-      {
-        message: "Akun berhasil dibuat",
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-        },
-      },
-      { status: 201 }
-    );
-  } catch (error) {
+    const { resource: createdUser } = await container.items.create(newUser);
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = createdUser as any;
+
+    return NextResponse.json({
+      success: true,
+      data: userWithoutPassword,
+      message: "Registrasi berhasil",
+    });
+  } catch (error: any) {
     console.error("Register error:", error);
     return NextResponse.json(
-      { message: "Terjadi kesalahan saat mendaftar" },
+      { success: false, error: error.message || "Gagal registrasi" },
       { status: 500 }
     );
   }

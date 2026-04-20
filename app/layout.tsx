@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/Toast";
 import { Providers } from "./providers";
+import SessionProvider from "@/components/SessionProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -33,10 +34,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${manrope.variable} font-body antialiased`}>
-        <Providers>
-          <ToastProvider />
-          {children}
-        </Providers>
+        <SessionProvider>
+          <Providers>
+            <ToastProvider />
+            {children}
+          </Providers>
+        </SessionProvider>
       </body>
     </html>
   );

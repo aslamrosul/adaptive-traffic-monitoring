@@ -3,19 +3,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import toast from "react-hot-toast";
 import Image from "next/image";
-import { useProfileStore } from "@/lib/store";
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { profile, fetchProfile } = useProfileStore();
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -27,6 +23,14 @@ export default function ProfileDropdown() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    toast.loading("Logging out...");
+    await signOut({ callbackUrl: "/landing" });
+    toast.dismiss();
+    toast.success("Berhasil keluar dari sistem");
+  };
 
   const menuItems = [
     {
@@ -41,7 +45,7 @@ export default function ProfileDropdown() {
       icon: "settings",
       label: "Pengaturan",
       action: () => {
-        router.push("/pengaturan");
+        router.push("/profile?tab=settings");
         setIsOpen(false);
       },
     },
@@ -49,25 +53,23 @@ export default function ProfileDropdown() {
       icon: "help",
       label: "Bantuan",
       action: () => {
-        router.push("/bantuan");
+        router.push("/profile?tab=help");
         setIsOpen(false);
       },
     },
     {
       icon: "logout",
       label: "Keluar",
-      action: () => {
-        toast.success("Berhasil keluar dari sistem");
-        setIsOpen(false);
-      },
+      action: handleLogout,
       danger: true,
     },
   ];
 
-  const displayName = profile?.name || "Admin Pusat";
-  const displayEmail = profile?.email || "admin@traffic-command.go.id";
-  const displayAvatar = profile?.avatar || "https://ui-avatars.com/api/?name=Admin+Pusat&background=0040a1&color=fff";
-  const displayId = profile?.id ? `#${profile.id.split("-")[1].toUpperCase()}` : "#8829";
+  const displayName = session?.user?.name || "User";
+  const displayEmail = session?.user?.email || "user@example.com";
+  const displayAvatar = (session?.user as any)?.avatar || session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0040a1&color=fff`;
+  const displayRole = (session?.user as any)?.role || "operator";
+  const displayId = (session?.user as any)?.id ? `#${(session?.user as any).id.split("-")[1]?.toUpperCase() || "USER"}` : "#USER";
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -81,7 +83,7 @@ export default function ProfileDropdown() {
           <p className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors">
             {displayName}
           </p>
-          <p className="text-[10px] text-slate-500">{displayId}</p>
+          <p className="text-[10px] text-slate-500 capitalize">{displayRole}</p>
         </div>
         <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm relative">
           <Image
@@ -112,9 +114,10 @@ export default function ProfileDropdown() {
                     className="object-cover"
                   />
                 </div>
-                <div>
-                  <p className="font-bold text-sm">{displayName}</p>
-                  <p className="text-xs text-primary-fixed/80">{displayEmail}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm truncate">{displayName}</p>
+                  <p className="text-xs text-primary-fixed/80 truncate">{displayEmail}</p>
+                  <p className="text-[10px] text-primary-fixed/60 mt-0.5">{displayId}</p>
                 </div>
               </div>
             </div>

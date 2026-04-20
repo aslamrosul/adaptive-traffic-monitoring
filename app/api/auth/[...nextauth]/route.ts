@@ -1,17 +1,15 @@
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import { containers } from "@/lib/azure-cosmos";
+import bcrypt from "bcryptjs";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
-    // Google OAuth
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-
-    // Manual Login dengan Email & Password
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -19,59 +17,149 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (credentials?.email && credentials?.password) {
-          const user = {
-            id: "1",
-            email: credentials.email,
-            name: credentials.email.split("@")[0],
-            image: `https://ui-avatars.com/api/?name=${credentials.email}`,
-          };
-          return user;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email dan password harus diisi");
         }
-        return null;
+
+        try {
+          const container = containers.users;
+          
+          // Query user by email
+          const { resources: users } = await container.items
+            .query({
+              query: "SELECT * FROM c WHERE c.email = @email",
+              parameters: [{ name: "@email", value: credentials.email }],
+            })
+            .fetchAll();
+
+          const user = users[0];
+
+          if (!user) {
+            throw new Error("Email atau password salah");
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            throw new Error("Email atau password salah");
+          }
+
+          // Return user object (without password)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            avatar: user.avatar,
+          };
+        } catch (error: any) {
+          console.error("Auth error:", error);
+          throw new Error(error.message || "Gagal login");
+        }
       },
     }),
   ],
-
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: "/login",
-    error: "/auth-error",
+    error: "/login",
   },
-
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Handle Google sign in
+      if (account?.provider === "google") {
+        try {
+          const container = containers.users;
+
+          // Check if user exists
+          const { resources: existingUsers } = await container.items
+            .query({
+              query: "SELECT * FROM c WHERE c.email = @email",
+              parameters: [{ name: "@email", value: user.email }],
+            })
+            .fetchAll();
+
+          if (existingUsers.length === 0) {
+            // Create new user from Google account
+            const newUser = {
+              id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: user.name || "User",
+              email: user.email!,
+              password: "", // No password for OAuth users
+              role: "operator",
+              avatar: user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=0040a1&color=fff`,
+              status: "active",
+              provider: "google",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+
+            await container.items.create(newUser);
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Error in Google sign in:", error);
+          return false;
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.provider = account?.provider;
+        // For Google OAuth, fetch user from database
+        if (account?.provider === "google") {
+          try {
+            const container = containers.users;
+            const { resources: users } = await container.items
+              .query({
+                query: "SELECT * FROM c WHERE c.email = @email",
+                parameters: [{ name: "@email", value: user.email }],
+              })
+              .fetchAll();
+
+            if (users.length > 0) {
+              const dbUser = users[0];
+              token.id = dbUser.id;
+              token.email = dbUser.email;
+              token.name = dbUser.name;
+              token.role = dbUser.role;
+              token.avatar = dbUser.avatar;
+            }
+          } catch (error) {
+            console.error("Error fetching user in JWT callback:", error);
+          }
+        } else {
+          // For credentials login
+          token.id = user.id;
+          token.email = user.email;
+          token.name = user.name;
+          token.role = (user as any).role;
+          token.avatar = (user as any).avatar;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
+        (session.user as any).avatar = token.avatar;
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Redirect ke home setelah login
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
   },
-
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
-  },
-
-  jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
-    maxAge: 30 * 24 * 60 * 60,
-  },
-
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
