@@ -3,62 +3,105 @@ import { create } from 'zustand';
 interface TrafficData {
   id: string;
   name: string;
-  volume: number;
-  status: 'Lancar' | 'Sedang' | 'Padat' | 'Macet Parah';
-  density: number;
-  avgWaitTime: number;
+  address?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  status: string;
+  deviceId?: string;
+  lanes?: any;
+  config?: any;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface TrafficStore {
   intersections: TrafficData[];
   selectedIntersection: string | null;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  fetchIntersections: () => Promise<void>;
+  searchIntersections: (query: string) => Promise<void>;
   setSelectedIntersection: (id: string | null) => void;
-  updateIntersection: (id: string, data: Partial<TrafficData>) => void;
+  updateIntersection: (id: string, data: Partial<TrafficData>) => Promise<void>;
+  clearError: () => void;
 }
 
-export const useTrafficStore = create<TrafficStore>((set) => ({
-  intersections: [
-    {
-      id: '1',
-      name: 'Simpang Sudirman',
-      volume: 4200,
-      status: 'Macet Parah',
-      density: 89,
-      avgWaitTime: 78,
-    },
-    {
-      id: '2',
-      name: 'Simpang Thamrin',
-      volume: 850,
-      status: 'Lancar',
-      density: 12,
-      avgWaitTime: 25,
-    },
-    {
-      id: '3',
-      name: 'Simpang Kuningan',
-      volume: 2100,
-      status: 'Sedang',
-      density: 55,
-      avgWaitTime: 45,
-    },
-    {
-      id: '4',
-      name: 'Simpang Gatot Subroto',
-      volume: 3850,
-      status: 'Macet Parah',
-      density: 82,
-      avgWaitTime: 72,
-    },
-  ],
+export const useTrafficStore = create<TrafficStore>((set, get) => ({
+  intersections: [],
   selectedIntersection: null,
+  isLoading: false,
+  error: null,
+
+  fetchIntersections: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('/api/intersections');
+      const result = await response.json();
+
+      if (result.success) {
+        set({ intersections: result.data, isLoading: false });
+      } else {
+        set({ error: result.error, isLoading: false });
+      }
+    } catch (error) {
+      set({ error: 'Failed to fetch intersections', isLoading: false });
+    }
+  },
+
+  searchIntersections: async (query: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`/api/intersections?search=${encodeURIComponent(query)}`);
+      const result = await response.json();
+
+      if (result.success) {
+        set({ intersections: result.data, isLoading: false });
+      } else {
+        set({ error: result.error, isLoading: false });
+      }
+    } catch (error) {
+      set({ error: 'Failed to search intersections', isLoading: false });
+    }
+  },
+
   setSelectedIntersection: (id) => set({ selectedIntersection: id }),
-  updateIntersection: (id, data) =>
-    set((state) => ({
-      intersections: state.intersections.map((intersection) =>
-        intersection.id === id ? { ...intersection, ...data } : intersection
-      ),
-    })),
+
+  updateIntersection: async (id: string, data: Partial<TrafficData>) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`/api/intersections/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        set((state) => ({
+          intersections: state.intersections.map((intersection) =>
+            intersection.id === id ? { ...intersection, ...result.data } : intersection
+          ),
+          isLoading: false,
+        }));
+      } else {
+        set({ error: result.error, isLoading: false });
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      set({ error: 'Failed to update intersection', isLoading: false });
+      throw error;
+    }
+  },
+
+  clearError: () => set({ error: null }),
 }));
 
 // Profile Store
@@ -229,6 +272,120 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
     };
 
     await get().updateProfile({ settings: updatedSettings });
+  },
+
+  clearError: () => set({ error: null }),
+}));
+
+
+// Notification Store
+interface NotificationData {
+  id: string;
+  userId: string;
+  type: string;
+  category?: string;
+  title: string;
+  message: string;
+  read: boolean;
+  actionUrl?: string | null;
+  relatedTo?: string | null;
+  metadata?: any;
+  createdAt: string;
+}
+
+interface NotificationStore {
+  notifications: NotificationData[];
+  isLoading: boolean;
+  error: string | null;
+  unreadCount: number;
+
+  // Actions
+  fetchNotifications: (userId?: string, unreadOnly?: boolean) => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: (userId?: string) => Promise<void>;
+  clearError: () => void;
+}
+
+export const useNotificationStore = create<NotificationStore>((set, get) => ({
+  notifications: [],
+  isLoading: false,
+  error: null,
+  unreadCount: 0,
+
+  fetchNotifications: async (userId = 'user-001', unreadOnly = false) => {
+    set({ isLoading: true, error: null });
+    try {
+      const params = new URLSearchParams({
+        userId,
+        ...(unreadOnly && { unreadOnly: 'true' }),
+      });
+
+      const response = await fetch(`/api/notifications?${params}`);
+      const result = await response.json();
+
+      if (result.success) {
+        set({
+          notifications: result.data,
+          unreadCount: result.unreadCount,
+          isLoading: false,
+        });
+      } else {
+        set({ error: result.error, isLoading: false });
+      }
+    } catch (error) {
+      set({ error: 'Failed to fetch notifications', isLoading: false });
+    }
+  },
+
+  markAsRead: async (id: string) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, read: true }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
+          ),
+          unreadCount: Math.max(0, state.unreadCount - 1),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  },
+
+  markAllAsRead: async (userId = 'user-001') => {
+    try {
+      const unreadNotifications = get().notifications.filter((n) => !n.read);
+
+      // Mark all as read in parallel
+      await Promise.all(
+        unreadNotifications.map((n) =>
+          fetch('/api/notifications', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: n.id, read: true }),
+          })
+        )
+      );
+
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        unreadCount: 0,
+      }));
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   },
 
   clearError: () => set({ error: null }),

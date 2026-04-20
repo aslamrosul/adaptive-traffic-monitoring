@@ -2,54 +2,85 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-
-const intersections = [
-  {
-    id: 1,
-    name: "Simpangan Sarinah",
-    status: "PADAT",
-    statusColor: "bg-tertiary-container text-on-tertiary-container",
-    waitTime: "78s",
-    volume: "450 unit/jam",
-  },
-  {
-    id: 2,
-    name: "Bundaran HI",
-    status: "LANCAR",
-    statusColor: "bg-on-primary-container text-primary-fixed",
-    waitTime: "32s",
-    volume: "320 unit/jam",
-  },
-  {
-    id: 3,
-    name: "Slipi Jaya",
-    status: "RAMAI",
-    statusColor: "bg-yellow-100 text-yellow-800",
-    waitTime: "55s",
-    volume: "280 unit/jam",
-  },
-  {
-    id: 4,
-    name: "Kelapa Gading",
-    status: "LANCAR",
-    statusColor: "bg-on-primary-container text-primary-fixed",
-    waitTime: "25s",
-    volume: "150 unit/jam",
-  },
-];
+import { useEffect } from "react";
+import { useTrafficStore } from "@/lib/store";
 
 export default function IntersectionGrid() {
   const router = useRouter();
+  const { intersections, fetchIntersections, isLoading } = useTrafficStore();
 
-  const handleClick = (id: number) => {
+  useEffect(() => {
+    if (intersections.length === 0) {
+      fetchIntersections();
+    }
+  }, [intersections.length, fetchIntersections]);
+
+  const handleClick = (id: string) => {
     router.push(`/persimpangan/${id}`);
   };
 
+  const getStatusColor = (status: string) => {
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower.includes('padat') || statusLower.includes('macet') || statusLower.includes('critical')) {
+      return "bg-red-100 text-red-800";
+    } else if (statusLower.includes('ramai') || statusLower.includes('sedang') || statusLower.includes('medium')) {
+      return "bg-yellow-100 text-yellow-800";
+    } else if (statusLower.includes('lancar') || statusLower.includes('active')) {
+      return "bg-green-100 text-green-800";
+    }
+    return "bg-slate-100 text-slate-800";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower.includes('active')) return 'AKTIF';
+    if (statusLower.includes('inactive')) return 'NONAKTIF';
+    return status?.toUpperCase() || 'AKTIF';
+  };
+
+  if (isLoading && intersections.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-pulse">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-slate-200"></div>
+                <div>
+                  <div className="h-5 w-32 bg-slate-200 rounded mb-2"></div>
+                  <div className="h-4 w-16 bg-slate-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="h-12 bg-slate-100 rounded-lg"></div>
+              <div className="h-12 bg-slate-100 rounded-lg"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Show first 4 intersections for dashboard
+  const displayIntersections = intersections.slice(0, 4);
+
+  if (displayIntersections.length === 0) {
+    return (
+      <div className="bg-white rounded-xl p-12 text-center">
+        <span className="material-symbols-outlined text-6xl text-slate-300 mb-4 inline-block">
+          traffic
+        </span>
+        <p className="text-slate-500">Belum ada data simpangan</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {intersections.map((intersection, idx) => (
+      {displayIntersections.map((intersection, idx) => (
         <motion.div
-          key={intersection.name}
+          key={intersection.id}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: idx * 0.1 }}
@@ -66,9 +97,9 @@ export default function IntersectionGrid() {
                   {intersection.name}
                 </h5>
                 <span
-                  className={`inline-block mt-1 px-2 py-0.5 ${intersection.statusColor} text-[10px] font-bold rounded-full`}
+                  className={`inline-block mt-1 px-2 py-0.5 ${getStatusColor(intersection.status)} text-[10px] font-bold rounded-full`}
                 >
-                  {intersection.status}
+                  {getStatusLabel(intersection.status)}
                 </span>
               </div>
             </div>
@@ -77,18 +108,22 @@ export default function IntersectionGrid() {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <span className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                <span className="material-symbols-outlined text-lg">timer</span>
-                Waktu Tunggu
+                <span className="material-symbols-outlined text-lg">location_on</span>
+                Lokasi
               </span>
-              <span className="text-sm font-bold text-slate-900">{intersection.waitTime}</span>
+              <span className="text-sm font-bold text-slate-900 truncate max-w-[150px]">
+                {intersection.address || 'Jakarta'}
+              </span>
             </div>
             
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <span className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                <span className="material-symbols-outlined text-lg">directions_car</span>
-                Volume
+                <span className="material-symbols-outlined text-lg">sensors</span>
+                Device ID
               </span>
-              <span className="text-sm font-bold text-slate-900">{intersection.volume}</span>
+              <span className="text-sm font-bold text-slate-900 font-mono">
+                {intersection.deviceId || 'N/A'}
+              </span>
             </div>
           </div>
           

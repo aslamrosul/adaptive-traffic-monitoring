@@ -3,38 +3,37 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-
-// Data simpangan untuk pencarian
-const intersections = [
-  { id: 1, name: "Simpangan Sarinah", location: "Jakarta Pusat", status: "PADAT" },
-  { id: 2, name: "Bundaran HI", location: "Jakarta Pusat", status: "LANCAR" },
-  { id: 3, name: "Slipi Jaya", location: "Jakarta Barat", status: "RAMAI" },
-  { id: 4, name: "Kelapa Gading", location: "Jakarta Utara", status: "LANCAR" },
-  { id: 5, name: "Taman Mini", location: "Jakarta Timur", status: "LANCAR" },
-  { id: 6, name: "Blok M", location: "Jakarta Selatan", status: "RAMAI" },
-  { id: 7, name: "Senayan", location: "Jakarta Pusat", status: "LANCAR" },
-  { id: 8, name: "Kuningan", location: "Jakarta Selatan", status: "PADAT" },
-];
+import { useTrafficStore } from "@/lib/store";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [filteredResults, setFilteredResults] = useState(intersections);
+  const [filteredResults, setFilteredResults] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  
+  const { intersections, fetchIntersections, isLoading } = useTrafficStore();
 
+  // Fetch intersections on mount
+  useEffect(() => {
+    if (intersections.length === 0) {
+      fetchIntersections();
+    }
+  }, [intersections.length, fetchIntersections]);
+
+  // Filter results based on query
   useEffect(() => {
     if (query.trim() === "") {
-      setFilteredResults(intersections);
+      setFilteredResults(intersections.slice(0, 8)); // Show first 8
     } else {
       const filtered = intersections.filter(
         (item) =>
           item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.location.toLowerCase().includes(query.toLowerCase())
+          (item.address && item.address.toLowerCase().includes(query.toLowerCase()))
       );
       setFilteredResults(filtered);
     }
-  }, [query]);
+  }, [query, intersections]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,23 +46,22 @@ export default function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectIntersection = (id: number, name: string) => {
+  const handleSelectIntersection = (id: string, name: string) => {
     setQuery(name);
     setShowResults(false);
     router.push(`/persimpangan/${id}`);
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PADAT":
-        return "bg-red-100 text-red-700";
-      case "RAMAI":
-        return "bg-yellow-100 text-yellow-700";
-      case "LANCAR":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-slate-100 text-slate-700";
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower.includes('padat') || statusLower.includes('macet')) {
+      return "bg-red-100 text-red-700";
+    } else if (statusLower.includes('ramai') || statusLower.includes('sedang')) {
+      return "bg-yellow-100 text-yellow-700";
+    } else if (statusLower.includes('lancar')) {
+      return "bg-green-100 text-green-700";
     }
+    return "bg-slate-100 text-slate-700";
   };
 
   return (
@@ -101,12 +99,17 @@ export default function SearchBar() {
           >
             <div className="p-3 border-b border-slate-100">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {filteredResults.length} Simpangan Ditemukan
+                {isLoading ? 'Mencari...' : `${filteredResults.length} Simpangan Ditemukan`}
               </p>
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {filteredResults.length > 0 ? (
+              {isLoading ? (
+                <div className="p-8 text-center">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                  <p className="text-sm text-slate-500">Memuat data...</p>
+                </div>
+              ) : filteredResults.length > 0 ? (
                 filteredResults.map((item) => (
                   <button
                     key={item.id}
@@ -123,7 +126,7 @@ export default function SearchBar() {
                         <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">
                           {item.name}
                         </p>
-                        <p className="text-xs text-slate-500">{item.location}</p>
+                        <p className="text-xs text-slate-500">{item.address || 'Jakarta'}</p>
                       </div>
                     </div>
                     <span
@@ -131,7 +134,7 @@ export default function SearchBar() {
                         item.status
                       )}`}
                     >
-                      {item.status}
+                      {item.status || 'AKTIF'}
                     </span>
                   </button>
                 ))

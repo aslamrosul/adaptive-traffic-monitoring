@@ -2,62 +2,27 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
-
-interface Notification {
-  id: number;
-  type: string;
-  title: string;
-  message: string;
-  time: string;
-  unread: boolean;
-  detail: string;
-}
-
-const initialNotifications: Notification[] = [
-  {
-    id: 1,
-    type: "warning",
-    title: "Kepadatan Ekstrem",
-    message: "Simpang Sudirman mengalami lonjakan volume",
-    time: "2 menit lalu",
-    unread: true,
-    detail: "Volume kendaraan di Simpang Sudirman mencapai 450 unit/jam, melebihi kapasitas normal 300 unit/jam. Disarankan untuk mengaktifkan protokol kemacetan tinggi dan mengalihkan arus ke jalur alternatif.",
-  },
-  {
-    id: 2,
-    type: "info",
-    title: "Pembaruan Sistem",
-    message: "Firmware IoT v2.4 berhasil diperbarui",
-    time: "1 jam lalu",
-    unread: true,
-    detail: "Sistem telah berhasil memperbarui firmware IoT ke versi 2.4. Pembaruan ini mencakup peningkatan akurasi sensor sebesar 15%, optimasi konsumsi daya, dan perbaikan bug pada modul komunikasi jaringan.",
-  },
-  {
-    id: 3,
-    type: "success",
-    title: "Laporan Selesai",
-    message: "Laporan insiden #1234 telah diselesaikan",
-    time: "3 jam lalu",
-    unread: true,
-    detail: "Laporan insiden kecelakaan ringan di Simpang Tugu telah diselesaikan. Jalur telah dibersihkan dan lalu lintas kembali normal. Tidak ada korban jiwa, hanya kerusakan material ringan.",
-  },
-  {
-    id: 4,
-    type: "error",
-    title: "Sensor Offline",
-    message: "Sensor CCTV-04 tidak merespons",
-    time: "5 jam lalu",
-    unread: true,
-    detail: "Sensor CCTV-04 di Simpang Gatot Subroto tidak merespons sejak pukul 14:30 WIB. Tim teknisi telah dikirim untuk melakukan pemeriksaan dan perbaikan. Estimasi waktu perbaikan: 2 jam.",
-  },
-];
+import { useNotificationStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const router = useRouter();
+  
+  const {
+    notifications,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationStore();
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications('user-001', false);
+  }, [fetchNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,52 +35,49 @@ export default function NotificationDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleNotificationClick = (id: number) => {
+  const handleNotificationClick = (notif: any) => {
     // Toggle expand/collapse
-    if (expandedId === id) {
+    if (expandedId === notif.id) {
       setExpandedId(null);
     } else {
-      setExpandedId(id);
-      // Tandai sebagai dibaca
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === id ? { ...notif, unread: false } : notif
-        )
-      );
+      setExpandedId(notif.id);
+      // Mark as read
+      if (!notif.read) {
+        markAsRead(notif.id);
+      }
     }
   };
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) =>
-      prev.map((notif) => ({ ...notif, unread: false }))
-    );
+    markAllAsRead('user-001');
   };
 
-  const handleDeleteNotification = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-    setExpandedId(null);
-  };
-
-  const handleClearAll = () => {
-    setNotifications([]);
-    setExpandedId(null);
-  };
-
-  const getIcon = (type: string) => {
+  const getIcon = (type: string, category?: string) => {
+    if (category === 'traffic') {
+      return { icon: "traffic", color: "text-orange-500 bg-orange-100" };
+    }
+    if (category === 'system') {
+      return { icon: "settings", color: "text-blue-500 bg-blue-100" };
+    }
+    
     switch (type) {
       case "warning":
+      case "alert":
         return { icon: "warning", color: "text-orange-500 bg-orange-100" };
       case "info":
         return { icon: "info", color: "text-blue-500 bg-blue-100" };
       case "success":
         return { icon: "check_circle", color: "text-green-500 bg-green-100" };
       case "error":
+      case "critical":
         return { icon: "error", color: "text-red-500 bg-red-100" };
       default:
         return { icon: "notifications", color: "text-slate-500 bg-slate-100" };
     }
   };
+
+  // Show only first 5 notifications in dropdown
+  const displayNotifications = notifications.slice(0, 5);
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -132,7 +94,7 @@ export default function NotificationDropdown() {
             animate={{ scale: 1 }}
             className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
           >
-            {unreadCount}
+            {unreadCount > 9 ? '9+' : unreadCount}
           </motion.span>
         )}
       </motion.button>
@@ -158,20 +120,11 @@ export default function NotificationDropdown() {
                   </button>
                 )}
               </div>
-              {notifications.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs font-semibold text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                  Hapus Semua Notifikasi
-                </button>
-              )}
             </div>
 
             {/* Notifications List */}
             <div className="max-h-[500px] overflow-y-auto">
-              {notifications.length === 0 ? (
+              {displayNotifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <span className="material-symbols-outlined text-5xl text-slate-300 mb-2">
                     notifications_off
@@ -179,8 +132,8 @@ export default function NotificationDropdown() {
                   <p className="text-sm text-slate-500 font-semibold">Tidak ada notifikasi</p>
                 </div>
               ) : (
-                notifications.map((notif, idx) => {
-                  const iconData = getIcon(notif.type);
+                displayNotifications.map((notif, idx) => {
+                  const iconData = getIcon(notif.type, notif.category);
                   const isExpanded = expandedId === notif.id;
                   return (
                     <div key={notif.id}>
@@ -188,9 +141,9 @@ export default function NotificationDropdown() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        onClick={() => handleNotificationClick(notif.id)}
+                        onClick={() => handleNotificationClick(notif)}
                         className={`p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
-                          notif.unread ? "bg-blue-50/30" : ""
+                          !notif.read ? "bg-blue-50/30" : ""
                         } ${isExpanded ? "bg-slate-50" : ""}`}
                       >
                         <div className="flex gap-3">
@@ -201,25 +154,23 @@ export default function NotificationDropdown() {
                             <div className="flex items-start justify-between gap-2">
                               <p className="font-semibold text-sm text-slate-900">{notif.title}</p>
                               <div className="flex items-center gap-2">
-                                {notif.unread && (
+                                {!notif.read && (
                                   <div className="w-2 h-2 bg-primary rounded-full shrink-0"></div>
                                 )}
-                                <button
-                                  onClick={(e) => handleDeleteNotification(notif.id, e)}
-                                  className="p-1 hover:bg-red-100 rounded-full transition-colors group"
-                                  title="Hapus notifikasi"
-                                >
-                                  <span className="material-symbols-outlined text-slate-400 group-hover:text-red-600 text-sm">
-                                    close
-                                  </span>
-                                </button>
                                 <span className="material-symbols-outlined text-slate-400 text-sm">
                                   {isExpanded ? "expand_less" : "expand_more"}
                                 </span>
                               </div>
                             </div>
                             <p className="text-xs text-slate-600 mt-1 line-clamp-2">{notif.message}</p>
-                            <p className="text-[10px] text-slate-400 mt-2">{notif.time}</p>
+                            <p className="text-[10px] text-slate-400 mt-2">
+                              {new Date(notif.createdAt).toLocaleString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
                           </div>
                         </div>
                       </motion.div>
@@ -236,26 +187,31 @@ export default function NotificationDropdown() {
                           >
                             <div className="p-4 pl-16">
                               <p className="text-sm text-slate-700 leading-relaxed">
-                                {notif.detail}
+                                {notif.message}
                               </p>
-                              <div className="flex gap-2 mt-4">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedId(null);
-                                  }}
-                                  className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-semibold text-xs hover:bg-slate-100 transition-colors"
-                                >
-                                  Tutup
-                                </button>
-                                <button
-                                  onClick={(e) => handleDeleteNotification(notif.id, e)}
-                                  className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-lg font-semibold text-xs hover:bg-red-100 transition-colors flex items-center gap-1"
-                                >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
-                                  Hapus
-                                </button>
-                              </div>
+                              {notif.actionUrl && (
+                                <div className="flex gap-2 mt-4">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(notif.actionUrl);
+                                      setIsOpen(false);
+                                    }}
+                                    className="px-3 py-1.5 bg-primary text-white rounded-lg font-semibold text-xs hover:bg-blue-700 transition-colors"
+                                  >
+                                    Lihat Detail
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpandedId(null);
+                                    }}
+                                    className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-semibold text-xs hover:bg-slate-100 transition-colors"
+                                  >
+                                    Tutup
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -271,7 +227,7 @@ export default function NotificationDropdown() {
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  window.location.href = "/notifikasi";
+                  router.push("/notifikasi");
                 }}
                 className="flex-1 text-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >

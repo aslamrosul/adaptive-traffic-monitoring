@@ -30,7 +30,7 @@
     "test:api": "npx tsx scripts/test-api.ts"
   },
   "dependencies": {
-    "@azure/cosmos": "^4.9.2",
+    "@azure/cosmos": "^4.9.3",
     "@azure/identity": "^4.13.1",
     "@azure/storage-blob": "^12.31.0",
     "@tailwindcss/forms": "^0.5.11",

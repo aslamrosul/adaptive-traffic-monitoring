@@ -2,61 +2,102 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-
-const stats = [
-  {
-    label: "Total Kendaraan",
-    value: "1.248.092",
-    change: "+12% vs Kemarin",
-    changeType: "positive",
-    icon: "directions_car",
-    bgColor: "bg-surface-container-lowest",
-    iconBg: "bg-primary-fixed",
-    iconColor: "text-primary",
-    link: "/Analist",
-  },
-  {
-    label: "Status IoT",
-    value: "98.4%",
-    subtitle: "42/43 Perangkat Aktif",
-    icon: "cloud_done",
-    bgColor: "bg-surface-container-lowest",
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-700",
-    link: "/persimpangan",
-  },
-  {
-    label: "Waktu Tunggu (Rerata)",
-    value: "42",
-    unit: "detik",
-    change: "+5 detik hari ini",
-    changeType: "negative",
-    icon: "timer",
-    bgColor: "bg-surface-container-lowest",
-    iconBg: "bg-secondary-fixed",
-    iconColor: "text-secondary",
-    link: "/Analist",
-  },
-  {
-    label: "Skor Kelancaran",
-    value: "B+",
-    subtitle: "Stabil dalam 2 jam terakhir",
-    icon: "speed",
-    bgColor: "bg-primary",
-    iconBg: "",
-    iconColor: "text-primary-fixed",
-    textColor: "text-on-primary",
-    special: true,
-    link: "/peta",
-  },
-];
+import { useEffect, useState } from "react";
+import { useTrafficStore } from "@/lib/store";
 
 export default function DashboardStats() {
   const router = useRouter();
+  const { intersections, fetchIntersections } = useTrafficStore();
+  const [stats, setStats] = useState({
+    totalVehicles: "0",
+    iotStatus: "0%",
+    activeDevices: "0/0",
+    avgWaitTime: "0",
+    flowScore: "N/A",
+  });
+
+  useEffect(() => {
+    if (intersections.length === 0) {
+      fetchIntersections();
+    }
+  }, [intersections.length, fetchIntersections]);
+
+  useEffect(() => {
+    if (intersections.length > 0) {
+      // Calculate stats from intersections data
+      const activeCount = intersections.filter(i => 
+        i.status?.toLowerCase().includes('active') || 
+        !i.status?.toLowerCase().includes('inactive')
+      ).length;
+      const totalCount = intersections.length;
+      const iotPercentage = totalCount > 0 ? ((activeCount / totalCount) * 100).toFixed(1) : "0";
+
+      // Mock calculations - in production, fetch from analytics API
+      const totalVehicles = (Math.random() * 500000 + 1000000).toFixed(0);
+      const avgWait = (Math.random() * 20 + 30).toFixed(0);
+      const score = iotPercentage > 90 ? "A" : iotPercentage > 80 ? "B+" : iotPercentage > 70 ? "B" : "C";
+
+      setStats({
+        totalVehicles: parseInt(totalVehicles).toLocaleString(),
+        iotStatus: `${iotPercentage}%`,
+        activeDevices: `${activeCount}/${totalCount}`,
+        avgWaitTime: avgWait,
+        flowScore: score,
+      });
+    }
+  }, [intersections]);
+
+  const statsConfig = [
+    {
+      label: "Total Kendaraan",
+      value: stats.totalVehicles,
+      change: "+12% vs Kemarin",
+      changeType: "positive",
+      icon: "directions_car",
+      bgColor: "bg-surface-container-lowest",
+      iconBg: "bg-primary-fixed",
+      iconColor: "text-primary",
+      link: "/Analist",
+    },
+    {
+      label: "Status IoT",
+      value: stats.iotStatus,
+      subtitle: `${stats.activeDevices} Perangkat Aktif`,
+      icon: "cloud_done",
+      bgColor: "bg-surface-container-lowest",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-700",
+      link: "/persimpangan",
+    },
+    {
+      label: "Waktu Tunggu (Rerata)",
+      value: stats.avgWaitTime,
+      unit: "detik",
+      change: "+5 detik hari ini",
+      changeType: "negative",
+      icon: "timer",
+      bgColor: "bg-surface-container-lowest",
+      iconBg: "bg-secondary-fixed",
+      iconColor: "text-secondary",
+      link: "/Analist",
+    },
+    {
+      label: "Skor Kelancaran",
+      value: stats.flowScore,
+      subtitle: "Stabil dalam 2 jam terakhir",
+      icon: "speed",
+      bgColor: "bg-primary",
+      iconBg: "",
+      iconColor: "text-primary-fixed",
+      textColor: "text-on-primary",
+      special: true,
+      link: "/peta",
+    },
+  ];
 
   return (
     <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      {stats.map((stat, idx) => (
+      {statsConfig.map((stat, idx) => (
         <motion.div
           key={stat.label}
           initial={{ opacity: 0, y: 20 }}

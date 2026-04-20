@@ -1,91 +1,43 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-const notifications = [
-  {
-    id: 1,
-    type: "critical",
-    title: "Kepadatan Ekstrem di Simpangan Sarinah",
-    description: "Volume kendaraan mencapai 450 unit/jam, waktu tunggu 78 detik",
-    time: "2 menit yang lalu",
-    icon: "warning",
-    read: false,
-    link: "/persimpangan/1",
-  },
-  {
-    id: 2,
-    type: "info",
-    title: "Pembaruan Sistem Berhasil",
-    description: "Firmware IoT v2.4 telah diperbarui di seluruh simpangan Jakarta Barat",
-    time: "1 jam yang lalu",
-    icon: "info",
-    read: false,
-    link: null,
-  },
-  {
-    id: 3,
-    type: "warning",
-    title: "Pemeliharaan Rutin Dijadwalkan",
-    description: "Kamera CCTV 04 di Bundaran HI akan dibersihkan pukul 23:00",
-    time: "3 jam yang lalu",
-    icon: "engineering",
-    read: true,
-    link: "/persimpangan/2",
-  },
-  {
-    id: 4,
-    type: "success",
-    title: "Sensor Kembali Online",
-    description: "Sensor Jalur Selatan telah kembali normal setelah gangguan singkat",
-    time: "5 jam yang lalu",
-    icon: "check_circle",
-    read: true,
-    link: null,
-  },
-  {
-    id: 5,
-    type: "info",
-    title: "Laporan Harian Tersedia",
-    description: "Laporan analitik untuk tanggal 14 April 2026 sudah dapat diunduh",
-    time: "1 hari yang lalu",
-    icon: "description",
-    read: true,
-    link: "/Analist",
-  },
-];
+import { useNotificationStore } from "@/lib/store";
 
 export default function NotificationList() {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [notifs, setNotifs] = useState(notifications);
+  
+  const {
+    notifications,
+    isLoading,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationStore();
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications('user-001', false);
+  }, [fetchNotifications]);
 
   const filteredNotifs = filter === "unread" 
-    ? notifs.filter((n) => !n.read)
-    : notifs;
+    ? notifications.filter((n) => !n.read)
+    : notifications;
 
-  const markAsRead = (id: number) => {
-    setNotifs(notifs.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const markAllAsRead = () => {
-    setNotifs(notifs.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (notif: typeof notifications[0]) => {
+  const handleNotificationClick = (notif: any) => {
     markAsRead(notif.id);
-    if (notif.link) {
-      router.push(notif.link);
+    if (notif.actionUrl) {
+      router.push(notif.actionUrl);
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case "critical":
+      case "error":
         return "bg-red-100 text-red-600";
       case "warning":
         return "bg-yellow-100 text-yellow-600";
@@ -95,6 +47,35 @@ export default function NotificationList() {
         return "bg-blue-100 text-blue-600";
     }
   };
+
+  const getIcon = (type: string, category?: string) => {
+    if (category === 'traffic') return 'traffic';
+    if (category === 'system') return 'settings';
+    if (category === 'alert') return 'warning';
+    
+    switch (type) {
+      case "critical":
+      case "error":
+        return "error";
+      case "warning":
+        return "warning";
+      case "success":
+        return "check_circle";
+      default:
+        return "info";
+    }
+  };
+
+  if (isLoading && notifications.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Memuat notifikasi...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -107,8 +88,9 @@ export default function NotificationList() {
           </p>
         </div>
         <button
-          onClick={markAllAsRead}
-          className="px-4 py-2 text-sm font-semibold text-primary hover:bg-blue-50 rounded-lg transition-colors"
+          onClick={() => markAllAsRead('user-001')}
+          disabled={unreadCount === 0}
+          className="px-4 py-2 text-sm font-semibold text-primary hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Tandai Semua Dibaca
         </button>
@@ -124,7 +106,7 @@ export default function NotificationList() {
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
-          Semua ({notifs.length})
+          Semua ({notifications.length})
         </button>
         <button
           onClick={() => setFilter("unread")}
@@ -161,7 +143,7 @@ export default function NotificationList() {
             >
               <div className="flex gap-4">
                 <div className={`w-12 h-12 rounded-lg ${getTypeColor(notif.type)} flex items-center justify-center shrink-0`}>
-                  <span className="material-symbols-outlined">{notif.icon}</span>
+                  <span className="material-symbols-outlined">{getIcon(notif.type, notif.category)}</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-1">
@@ -172,10 +154,17 @@ export default function NotificationList() {
                       <span className="w-2 h-2 bg-primary rounded-full"></span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{notif.description}</p>
+                  <p className="text-sm text-slate-600 mb-2">{notif.message}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">{notif.time}</span>
-                    {notif.link && (
+                    <span className="text-xs text-slate-400">
+                      {new Date(notif.createdAt).toLocaleString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                    {notif.actionUrl && (
                       <span className="text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                         Lihat Detail
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
