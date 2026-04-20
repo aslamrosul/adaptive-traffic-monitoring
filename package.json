@@ -17,6 +17,11 @@
     "db:seed:traffic": "npx tsx scripts/seed-traffic-data.ts",
     "db:seed:events": "npx tsx scripts/seed-events.ts",
     "db:seed:all": "npx tsx scripts/seed-all.ts",
+    "db:seed:admin": "npx tsx scripts/seed-admin-user.ts",
+    "db:standardize": "npx tsx scripts/standardize-data.ts",
+    "db:test-profile": "npx tsx scripts/test-profile-api.ts",
+    "db:view:users": "npx tsx scripts/view-users.ts",
+    "db:view:intersections": "npx tsx scripts/view-intersections.ts",
     "db:simulate": "npx tsx scripts/simulate-realtime.ts",
     "db:test": "npx tsx scripts/test-azure-connection.ts",
     "db:init": "npm run db:setup && npm run db:seed && npm run db:seed:analytics",
@@ -43,6 +48,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

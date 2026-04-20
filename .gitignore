@@ -33,6 +33,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Uploaded files
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep
+
 # ============================================
 # EXCLUDE HALAMAN YANG BUKAN BAGIAN ANDA
 # ============================================

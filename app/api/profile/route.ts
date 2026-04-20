@@ -1,55 +1,88 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { containers } from "@/lib/azure-cosmos";
 
-// Simulasi database (dalam production, gunakan database real)
-let profileData = {
-  id: "user-001",
-  name: "Admin Pusat",
-  email: "admin@aerialcommand.id",
-  phone: "+62 812-3456-7890",
-  position: "Operator Senior",
-  department: "Traffic Control Center",
-  bio: "Operator berpengalaman dengan spesialisasi dalam manajemen lalu lintas perkotaan dan sistem IoT.",
-  avatar: "https://ui-avatars.com/api/?name=Admin+Pusat&background=0040a1&color=fff",
-  memberSince: "2024-01-15",
-  lastLogin: new Date().toISOString(),
-  accountType: "Premium",
-  stats: {
-    totalLogin: 1247,
-    incidentsHandled: 89,
-    reportsCreated: 156,
-    activeHours: 2340,
-  },
-  performance: {
-    responseTime: 95,
-    accuracy: 98,
-    efficiency: 92,
-  },
-  skills: [
-    "Traffic Management",
-    "IoT Systems",
-    "Data Analysis",
-    "Emergency Response",
-    "System Administration",
-    "Report Generation",
-  ],
-  settings: {
-    publicProfile: true,
-    showEmail: false,
-    showActivity: true,
-  },
-};
-
-// GET - Ambil data profile
+// GET - Ambil data profile dari Cosmos DB
 export async function GET(request: NextRequest) {
   try {
-    // Simulasi delay network
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
+    const container = containers.users;
+
+    // Query user by email
+    const { resources: users } = await container.items
+      .query({
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: session.user.email }],
+      })
+      .fetchAll();
+
+    if (users.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    const user = users[0];
+
+    // Transform database user to profile format
+    const profileData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || "+62 812-3456-7890",
+      position: user.role === "admin" ? "Administrator" : "Operator",
+      department: "Traffic Control Center",
+      bio: user.bio || "Operator sistem monitoring lalu lintas.",
+      avatar: user.avatar,
+      memberSince: user.createdAt,
+      lastLogin: user.updatedAt,
+      accountType: user.role === "admin" ? "Premium" : "Standard",
+      stats: {
+        totalLogin: user.reportsCreated || 0,
+        incidentsHandled: 0,
+        reportsCreated: user.reportsCreated || 0,
+        activeHours: user.activeHours || 0,
+      },
+      performance: {
+        responseTime: 95,
+        accuracy: 98,
+        efficiency: 92,
+      },
+      skills: [
+        "Traffic Management",
+        "IoT Systems",
+        "Data Analysis",
+        "Emergency Response",
+      ],
+      settings: {
+        publicProfile: true,
+        showEmail: false,
+        showActivity: true,
+      },
+    };
 
     return NextResponse.json({
       success: true,
       data: profileData,
     });
   } catch (error) {
+    console.error("Profile fetch error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -60,9 +93,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT - Update data profile
+// PUT - Update data profile di Cosmos DB
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     // Validasi data
@@ -76,19 +121,76 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update data
-    profileData = {
-      ...profileData,
-      ...body,
-      // Jangan izinkan update fields tertentu
-      id: profileData.id,
-      memberSince: profileData.memberSince,
-      stats: profileData.stats,
-      performance: profileData.performance,
+    const container = containers.users;
+
+    // Get current user
+    const { resources: users } = await container.items
+      .query({
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: session.user.email }],
+      })
+      .fetchAll();
+
+    if (users.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    const user = users[0];
+
+    // Update allowed fields only
+    const updatedUser = {
+      ...user,
+      name: body.name || user.name,
+      phone: body.phone || user.phone,
+      bio: body.bio || user.bio,
+      updatedAt: new Date().toISOString(),
     };
 
-    // Simulasi delay network
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Update in database
+    await container.item(user.id, user.email).replace(updatedUser);
+
+    // Return updated profile
+    const profileData = {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone || "+62 812-3456-7890",
+      position: updatedUser.role === "admin" ? "Administrator" : "Operator",
+      department: "Traffic Control Center",
+      bio: updatedUser.bio || "Operator sistem monitoring lalu lintas.",
+      avatar: updatedUser.avatar,
+      memberSince: updatedUser.createdAt,
+      lastLogin: updatedUser.updatedAt,
+      accountType: updatedUser.role === "admin" ? "Premium" : "Standard",
+      stats: {
+        totalLogin: updatedUser.reportsCreated || 0,
+        incidentsHandled: 0,
+        reportsCreated: updatedUser.reportsCreated || 0,
+        activeHours: updatedUser.activeHours || 0,
+      },
+      performance: {
+        responseTime: 95,
+        accuracy: 98,
+        efficiency: 92,
+      },
+      skills: [
+        "Traffic Management",
+        "IoT Systems",
+        "Data Analysis",
+        "Emergency Response",
+      ],
+      settings: {
+        publicProfile: true,
+        showEmail: false,
+        showActivity: true,
+      },
+    };
 
     return NextResponse.json({
       success: true,
@@ -96,6 +198,7 @@ export async function PUT(request: NextRequest) {
       data: profileData,
     });
   } catch (error) {
+    console.error("Profile update error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -109,16 +212,55 @@ export async function PUT(request: NextRequest) {
 // DELETE - Hapus akun (soft delete)
 export async function DELETE(request: NextRequest) {
   try {
-    // Dalam production, ini akan soft delete atau hard delete
-    // Untuk demo, kita hanya return success
-    
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
+    const container = containers.users;
+
+    // Get current user
+    const { resources: users } = await container.items
+      .query({
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: session.user.email }],
+      })
+      .fetchAll();
+
+    if (users.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    const user = users[0];
+
+    // Soft delete - update status to inactive
+    const updatedUser = {
+      ...user,
+      status: "inactive",
+      updatedAt: new Date().toISOString(),
+    };
+
+    await container.item(user.id, user.email).replace(updatedUser);
 
     return NextResponse.json({
       success: true,
       message: "Account deleted successfully",
     });
   } catch (error) {
+    console.error("Account delete error:", error);
     return NextResponse.json(
       {
         success: false,
