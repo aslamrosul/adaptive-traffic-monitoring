@@ -182,13 +182,13 @@ export default function AnalitikPage() {
   return (
     <>
       <Sidebar />
-      <main className="ml-64 min-h-screen pb-12">
+      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen pb-12">
         <Header 
           title="Analitik Lalu Lintas" 
           dateRange={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`} 
         />
 
-        <div className="p-8 space-y-8 max-w-7xl mx-auto">
+        <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
 
           {/* Filters & Quick Actions */}
           <motion.section
@@ -242,21 +242,21 @@ export default function AnalitikPage() {
           </motion.section>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-12 gap-3 lg:gap-6">
 
             {/* Hero Chart: Analisis Kepadatan Kendaraan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="col-span-12 lg:col-span-8 bg-white rounded-xl p-6 shadow-sm border border-slate-100"
+              className="col-span-12 lg:col-span-8 bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-100"
             >
-              <div className="flex justify-between items-start mb-8">
+              <div className="flex justify-between items-start mb-4 lg:mb-8">
                 <div>
-                  <h3 className="text-lg font-bold font-headline text-on-surface">
+                  <h3 className="text-base lg:text-lg font-bold font-headline text-on-surface">
                     Analisis Kepadatan Kendaraan
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs lg:text-sm text-slate-500">
                     Detail volume unit per meter persegi berdasarkan data sensor IoT.
                   </p>
                 </div>
@@ -350,7 +350,7 @@ export default function AnalitikPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-inverse-surface to-slate-800 rounded-xl p-6 text-white shadow-xl"
+                className="bg-gradient-to-br from-inverse-surface to-slate-800 rounded-xl p-4 lg:p-6 text-white shadow-xl"
               >
                 <h3 className="text-sm font-bold opacity-60 uppercase tracking-widest font-label mb-4">
                   Performa Sensor IoT
@@ -400,7 +400,7 @@ export default function AnalitikPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.25 }}
-                className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 flex-1"
+                className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-100 flex-1"
               >
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest font-label mb-4">
                   Indeks Kemacetan
@@ -455,9 +455,9 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="col-span-12 bg-white rounded-xl p-8 shadow-sm border border-slate-100"
+              className="col-span-12 bg-white rounded-xl p-4 lg:p-8 shadow-sm border border-slate-100"
             >
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 lg:mb-8 gap-4">
                 <div>
                   <h3 className="text-xl font-bold font-headline text-on-surface">
                     Laporan Kepadatan Per Jam
@@ -531,7 +531,7 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-12 lg:col-span-6 bg-white rounded-xl p-6 shadow-sm border-r-4 border-tertiary"
+              className="col-span-12 lg:col-span-6 bg-white rounded-xl p-4 lg:p-6 shadow-sm border-r-4 border-tertiary"
             >
               <div className="flex items-center gap-3 mb-6">
                 <span
@@ -599,7 +599,7 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="col-span-12 lg:col-span-6 bg-primary-container rounded-xl p-6 text-on-primary-container flex flex-col justify-center relative overflow-hidden"
+              className="col-span-12 lg:col-span-6 bg-primary-container rounded-xl p-4 lg:p-6 text-on-primary-container flex flex-col justify-center relative overflow-hidden"
             >
               <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
                 <span className="material-symbols-outlined text-[180px]">insights</span>

@@ -144,17 +144,17 @@ export default function PenggunaPage() {
   return (
     <>
       <Sidebar />
-      <main className="ml-64 min-h-screen">
+      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
         <Header title="Sistem Pantauan Lalu Lintas" />
 
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8"
           >
             <div>
-              <h3 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">
+              <h3 className="text-xl lg:text-3xl font-headline font-extrabold text-on-surface tracking-tight">
                 Manajemen Pengguna
               </h3>
               <p className="text-slate-500 mt-1">
@@ -186,7 +186,7 @@ export default function PenggunaPage() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

@@ -39,12 +39,12 @@ export default function PersimpanganPage() {
   return (
     <>
       <Sidebar />
-      <main className="ml-64 min-h-screen bg-slate-50">
+      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50">
         <Header title="Daftar Persimpangan" />
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 lg:p-8 space-y-4 lg:space-y-6">
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -128,7 +128,7 @@ export default function PersimpanganPage() {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                  <div key={i} className="bg-white rounded-xl p-4 lg:p-6 shadow-sm animate-pulse">
                     <div className="h-4 bg-slate-200 rounded w-3/4 mb-4"></div>
                     <div className="h-3 bg-slate-200 rounded w-1/2 mb-2"></div>
                     <div className="h-3 bg-slate-200 rounded w-2/3"></div>
@@ -136,13 +136,13 @@ export default function PersimpanganPage() {
                 ))}
               </div>
             ) : isError ? (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 lg:p-6 text-center">
                 <span className="material-symbols-outlined text-red-500 text-4xl mb-2">error</span>
                 <p className="text-red-700 font-bold">Gagal memuat data persimpangan</p>
                 <p className="text-red-600 text-sm mt-1">Silakan coba lagi nanti</p>
               </div>
             ) : intersections.length === 0 ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-12 text-center">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 lg:p-12 text-center">
                 <span className="material-symbols-outlined text-slate-400 text-5xl mb-4">inbox</span>
                 <p className="text-slate-600 font-bold">Belum ada persimpangan</p>
                 <p className="text-slate-500 text-sm mt-1">Tambahkan persimpangan pertama Anda</p>
@@ -155,7 +155,7 @@ export default function PersimpanganPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group"
                     onClick={() => router.push(`/persimpangan/${intersection.id}`)}
                   >
                     <div className="flex items-start justify-between mb-4">

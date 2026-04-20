@@ -92,7 +92,7 @@ export default function DetailPersimpanganPage({
     return (
       <>
         <Sidebar />
-        <main className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+        <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-slate-600">Memuat data persimpangan...</p>
@@ -106,7 +106,7 @@ export default function DetailPersimpanganPage({
     return (
       <>
         <Sidebar />
-        <main className="ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+        <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
           <div className="text-center">
             <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
             <p className="text-slate-900 font-bold text-xl mb-2">Persimpangan tidak ditemukan</p>
@@ -252,10 +252,10 @@ export default function DetailPersimpanganPage({
   return (
     <>
       <Sidebar />
-      <main className="ml-64 min-h-screen">
+      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
         <Header title={`Detail: ${data.name}`} />
 
-        <div className="p-8 space-y-8">
+        <div className="p-4 lg:p-8 space-y-4 lg:space-y-8">
           {/* Back Button & Status Badge */}
           <div className="flex items-center justify-between">
             <motion.button

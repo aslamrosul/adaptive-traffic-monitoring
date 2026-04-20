@@ -10,10 +10,10 @@ export default function Home() {
     <div className="flex min-h-screen bg-surface">
       <Sidebar />
       
-      <main className="ml-64 flex-1 min-h-screen">
+      <main className="pt-16 lg:pt-0 lg:ml-64 flex-1 min-h-screen">
         <Header title="Sistem Pantauan Lalu Lintas" />
         
-        <div className="p-8 space-y-8 max-w-7xl mx-auto">
+        <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
           <DashboardStats />
           
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">

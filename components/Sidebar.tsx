@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -18,15 +18,79 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { profile, fetchProfile } = useProfileStore();
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
+  // Auto-close sidebar on mobile when route changes
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <>
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200 flex flex-col p-4 z-50">
+      {/* Mobile Header with Logo - Always Visible */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-[55] flex items-center px-4 gap-3">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 transition-colors"
+          aria-label="Toggle Menu"
+        >
+          <span className="material-symbols-outlined text-xl">
+            {isSidebarOpen ? "close" : "menu"}
+          </span>
+        </button>
+        <div className="flex-1">
+          <h1 className="text-base font-black text-blue-800 tracking-tighter font-headline">
+            Aerial Command
+          </h1>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay - Mobile Only */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{
+          x: isSidebarOpen ? 0 : -256,
+        }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200 flex flex-col p-4 z-50 lg:translate-x-0"
+      >
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +166,7 @@ export default function Sidebar() {
             <span>Bantuan</span>
           </Link>
         </div>
-      </aside>
+      </motion.aside>
 
       <ModalLaporan isOpen={showModal} onClose={() => setShowModal(false)} />
     </>
