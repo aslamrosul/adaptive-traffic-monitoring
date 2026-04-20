@@ -10,9 +10,18 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const { resource } = await containers.intersections.item(id, id).read();
+    
+    console.log('Fetching intersection with ID:', id);
+    
+    // Query by id since partition key is deviceId
+    const { resources } = await containers.intersections.items
+      .query({
+        query: 'SELECT * FROM c WHERE c.id = @id',
+        parameters: [{ name: '@id', value: id }],
+      })
+      .fetchAll();
 
-    if (!resource) {
+    if (!resources || resources.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -24,7 +33,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: resource,
+      data: resources[0],
     });
   } catch (error: any) {
     console.error('Error fetching intersection:', error);
@@ -47,12 +56,15 @@ export async function PATCH(
     const { id } = await params;
     const data = await request.json();
 
-    // Read existing item
-    const { resource: existing } = await containers.intersections
-      .item(id, id)
-      .read();
+    // Query to find the item first
+    const { resources } = await containers.intersections.items
+      .query({
+        query: 'SELECT * FROM c WHERE c.id = @id',
+        parameters: [{ name: '@id', value: id }],
+      })
+      .fetchAll();
 
-    if (!existing) {
+    if (!resources || resources.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -62,15 +74,19 @@ export async function PATCH(
       );
     }
 
+    const existing = resources[0];
+
     // Update item
     const updated = {
       ...existing,
       ...data,
+      id: existing.id, // Keep original id
       updatedAt: new Date().toISOString(),
     };
 
+    // Use deviceId as partition key
     const { resource } = await containers.intersections
-      .item(id, id)
+      .item(existing.id, existing.deviceId)
       .replace(updated);
 
     return NextResponse.json({
@@ -97,7 +113,29 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await containers.intersections.item(id, id).delete();
+    
+    // Query to find the item first
+    const { resources } = await containers.intersections.items
+      .query({
+        query: 'SELECT * FROM c WHERE c.id = @id',
+        parameters: [{ name: '@id', value: id }],
+      })
+      .fetchAll();
+
+    if (!resources || resources.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Intersection not found',
+        },
+        { status: 404 }
+      );
+    }
+
+    const existing = resources[0];
+    
+    // Use deviceId as partition key
+    await containers.intersections.item(existing.id, existing.deviceId).delete();
 
     return NextResponse.json({
       success: true,

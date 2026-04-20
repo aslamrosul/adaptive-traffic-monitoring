@@ -1,16 +1,17 @@
 "use client";
 
+import ModalTambahPersimpangan from "@/components/ModalTambahPersimpangan";
 import Sidebar from "@/components/Sidebar";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import toast from "react-hot-toast";
 
 export default function PersimpanganPage() {
   const router = useRouter();
-  const { intersections, isLoading, isError } = useIntersections();
+  const { intersections, isLoading, isError, mutate } = useIntersections();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredIntersections = intersections.filter((intersection: any) =>
     intersection.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -167,7 +168,7 @@ export default function PersimpanganPage() {
                 Semua Persimpangan
               </h3>
               <button 
-                onClick={() => toast.success('Fitur tambah persimpangan akan segera hadir')}
+                onClick={() => setIsModalOpen(true)}
                 className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-sm">add</span>
@@ -257,6 +258,15 @@ export default function PersimpanganPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal Tambah Persimpangan */}
+      <ModalTambahPersimpangan
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          mutate(); // Refresh data setelah berhasil tambah
+        }}
+      />
     </>
   );
 }

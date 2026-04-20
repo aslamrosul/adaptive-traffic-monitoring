@@ -73,6 +73,7 @@ export default function DetailPersimpanganPage({
 }) {
   const router = useRouter();
   const [id, setId] = useState<string>("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -80,7 +81,7 @@ export default function DetailPersimpanganPage({
     });
   }, [params]);
 
-  const { intersection, isLoading: loadingIntersection } = useIntersection(id);
+  const { intersection, isLoading: loadingIntersection, mutate } = useIntersection(id);
   const { trafficData, isLoading: loadingTraffic } = useRealtimeTraffic(id, 10);
   const { events, isLoading: loadingEvents } = useEvents(id, undefined, undefined, 10);
 
@@ -202,7 +203,49 @@ export default function DetailPersimpanganPage({
   };
 
   const handleConfigureLane = () => {
-    toast.success("Membuka konfigurasi jalur...");
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = () => {
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold text-sm text-red-600">Hapus Persimpangan?</p>
+        <p className="text-xs text-slate-500">
+          Data persimpangan akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                const response = await fetch(`/api/intersections/${id}`, {
+                  method: "DELETE",
+                });
+                const data = await response.json();
+                if (data.success) {
+                  toast.success("Persimpangan berhasil dihapus");
+                  router.push("/persimpangan");
+                } else {
+                  toast.error(data.error || "Gagal menghapus persimpangan");
+                }
+              } catch (error) {
+                console.error("Error deleting intersection:", error);
+                toast.error("Terjadi kesalahan saat menghapus persimpangan");
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700"
+          >
+            Hapus
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300"
+          >
+            Batal
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
   };
 
   return (
