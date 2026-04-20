@@ -9,10 +9,10 @@ export default function TeamPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       
-      <main className="ml-64 flex-1 min-h-screen">
+      <main className="pt-16 lg:pt-0 lg:ml-64 flex-1 min-h-screen">
         <Header title="Tim Kami" />
         
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
           <TeamHero />
           <TeamGrid />
           <TeamFooter />

@@ -35,17 +35,19 @@ export default function Header({ title, dateRange }: { title: string; dateRange?
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full h-16 glass-header px-8 flex justify-between items-center shadow-sm">
-      <div className="flex items-center gap-4">
-        <h2 className="font-headline font-extrabold text-xl tracking-tight text-slate-900">
+    <header className="sticky top-0 lg:top-0 top-16 z-30 w-full h-16 glass-header px-4 lg:px-8 flex justify-between items-center shadow-sm">
+      <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
+        <h2 className="font-headline font-extrabold text-sm lg:text-xl tracking-tight text-slate-900 truncate">
           {title}
         </h2>
-        <SearchBar />
+        <div className="hidden md:block flex-1 max-w-md">
+          <SearchBar />
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1 lg:gap-4">
         {dateRange && (
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
               className="flex items-center gap-2 bg-slate-100 rounded-full px-4 py-1.5 border border-outline-variant/20 hover:bg-slate-200 transition-colors"
@@ -113,10 +115,10 @@ export default function Header({ title, dateRange }: { title: string; dateRange?
         )}
         
         <NotificationDropdown />
-        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors active:scale-95">
+        <button className="hidden sm:flex p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors active:scale-95">
           <span className="material-symbols-outlined">sensors</span>
         </button>
-        <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
+        <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-2"></div>
         <ProfileDropdown />
       </div>
     </header>

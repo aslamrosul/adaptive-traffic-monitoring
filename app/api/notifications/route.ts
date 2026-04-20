@@ -1,6 +1,8 @@
 import { containers } from '@/lib/azure-cosmos';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Fetch notifications for a user
 export async function GET(request: Request) {
   try {
@@ -35,7 +37,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       count: resources.length,
-      unreadCount: resources.filter((n) => !n.read).length,
+      unreadCount: resources.filter((n: any) => !n.read).length,
       data: resources,
     });
   } catch (error: any) {

@@ -1,80 +1,66 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
-
-const faqs = [
-  {
-    category: "Umum",
-    questions: [
-      {
-        q: "Apa itu Aerial Command?",
-        a: "Aerial Command adalah sistem manajemen lalu lintas cerdas yang menggunakan IoT dan AI untuk mengoptimalkan aliran kendaraan di persimpangan.",
-      },
-      {
-        q: "Bagaimana cara mengakses dashboard?",
-        a: "Login menggunakan kredensial Anda, kemudian Anda akan diarahkan ke dashboard utama yang menampilkan statistik real-time.",
-      },
-    ],
-  },
-  {
-    category: "Fitur",
-    questions: [
-      {
-        q: "Bagaimana cara melihat detail simpangan?",
-        a: "Klik pada card simpangan di dashboard atau gunakan search bar untuk mencari simpangan tertentu.",
-      },
-      {
-        q: "Apa itu Manual Override?",
-        a: "Manual Override memungkinkan operator mengambil alih kontrol lampu lalu lintas secara manual saat kondisi darurat.",
-      },
-    ],
-  },
-  {
-    category: "Troubleshooting",
-    questions: [
-      {
-        q: "Sensor IoT tidak terhubung, apa yang harus dilakukan?",
-        a: "Periksa koneksi internet, restart perangkat IoT, dan pastikan firmware sudah update. Jika masalah berlanjut, hubungi tim teknis.",
-      },
-      {
-        q: "Data tidak update real-time?",
-        a: "Refresh halaman browser Anda. Jika masalah berlanjut, periksa pengaturan interval pengambilan data di menu Pengaturan > IoT & Sensor.",
-      },
-    ],
-  },
-];
-
-const guides = [
-  {
-    title: "Panduan Memulai",
-    description: "Pelajari dasar-dasar menggunakan Aerial Command",
-    icon: "rocket_launch",
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    title: "Video Tutorial",
-    description: "Tonton video panduan lengkap",
-    icon: "play_circle",
-    color: "bg-purple-100 text-purple-600",
-  },
-  {
-    title: "API Documentation",
-    description: "Dokumentasi lengkap untuk developer",
-    icon: "code",
-    color: "bg-green-100 text-green-600",
-  },
-  {
-    title: "Hubungi Support",
-    description: "Tim kami siap membantu 24/7",
-    icon: "support_agent",
-    color: "bg-orange-100 text-orange-600",
-  },
-];
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function HelpContent() {
   const [openIndex, setOpenIndex] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [guides, setGuides] = useState<any[]>([]);
+  const [isLoadingFaqs, setIsLoadingFaqs] = useState(true);
+  const [isLoadingGuides, setIsLoadingGuides] = useState(true);
+
+  useEffect(() => {
+    fetchFaqs();
+    fetchGuides();
+  }, []);
+
+  const fetchFaqs = async () => {
+    try {
+      setIsLoadingFaqs(true);
+      const response = await fetch("/api/help/faqs");
+      const result = await response.json();
+
+      if (result.success) {
+        setFaqs(result.data);
+      } else {
+        toast.error("Gagal memuat FAQ");
+      }
+    } catch (error) {
+      console.error("Error fetching FAQs:", error);
+      toast.error("Gagal memuat FAQ");
+    } finally {
+      setIsLoadingFaqs(false);
+    }
+  };
+
+  const fetchGuides = async () => {
+    try {
+      setIsLoadingGuides(true);
+      const response = await fetch("/api/help/guides");
+      const result = await response.json();
+
+      if (result.success) {
+        // Map guides to match component structure
+        const mappedGuides = result.data.map((guide: any) => ({
+          title: guide.title,
+          description: guide.description,
+          icon: guide.icon,
+          color: guide.color,
+        }));
+        setGuides(mappedGuides);
+      } else {
+        toast.error("Gagal memuat panduan");
+      }
+    } catch (error) {
+      console.error("Error fetching guides:", error);
+      toast.error("Gagal memuat panduan");
+    } finally {
+      setIsLoadingGuides(false);
+    }
+  };
 
   const toggleFAQ = (index: string) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -111,23 +97,29 @@ export default function HelpContent() {
       {/* Quick Guides */}
       <div>
         <h2 className="text-xl font-bold text-slate-900 mb-4">Panduan Cepat</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {guides.map((guide, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-            >
-              <div className={`w-12 h-12 rounded-lg ${guide.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <span className="material-symbols-outlined text-2xl">{guide.icon}</span>
-              </div>
-              <h3 className="font-bold text-slate-900 mb-1">{guide.title}</h3>
-              <p className="text-sm text-slate-500">{guide.description}</p>
-            </motion.div>
-          ))}
-        </div>
+        {isLoadingGuides ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {guides.map((guide, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+              >
+                <div className={`w-12 h-12 rounded-lg ${guide.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <span className="material-symbols-outlined text-2xl">{guide.icon}</span>
+                </div>
+                <h3 className="font-bold text-slate-900 mb-1">{guide.title}</h3>
+                <p className="text-sm text-slate-500">{guide.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* FAQs */}
@@ -135,58 +127,64 @@ export default function HelpContent() {
         <h2 className="text-xl font-bold text-slate-900 mb-4">
           Pertanyaan yang Sering Diajukan
         </h2>
-        <div className="space-y-6">
-          {faqs.map((category, catIdx) => (
-            <motion.div
-              key={catIdx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: catIdx * 0.1 }}
-            >
-              <h3 className="font-bold text-primary mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">folder</span>
-                {category.category}
-              </h3>
-              <div className="space-y-2">
-                {category.questions.map((faq, qIdx) => {
-                  const index = `${catIdx}-${qIdx}`;
-                  const isOpen = openIndex === index;
-                  
-                  return (
-                    <div
-                      key={qIdx}
-                      className="bg-white rounded-xl shadow-sm overflow-hidden"
-                    >
-                      <button
-                        onClick={() => toggleFAQ(index)}
-                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+        {isLoadingFaqs ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {faqs.map((category, catIdx) => (
+              <motion.div
+                key={catIdx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: catIdx * 0.1 }}
+              >
+                <h3 className="font-bold text-primary mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">folder</span>
+                  {category.category}
+                </h3>
+                <div className="space-y-2">
+                  {category.questions.map((faq: any, qIdx: number) => {
+                    const index = `${catIdx}-${qIdx}`;
+                    const isOpen = openIndex === index;
+                    
+                    return (
+                      <div
+                        key={qIdx}
+                        className="bg-white rounded-xl shadow-sm overflow-hidden"
                       >
-                        <span className="font-semibold text-slate-900">{faq.q}</span>
-                        <span
-                          className={`material-symbols-outlined transition-transform ${
-                            isOpen ? "rotate-180" : ""
-                          }`}
+                        <button
+                          onClick={() => toggleFAQ(index)}
+                          className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
                         >
-                          expand_more
-                        </span>
-                      </button>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="px-6 pb-4"
-                        >
-                          <p className="text-slate-600 leading-relaxed">{faq.a}</p>
-                        </motion.div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                          <span className="font-semibold text-slate-900">{faq.question}</span>
+                          <span
+                            className={`material-symbols-outlined transition-transform ${
+                              isOpen ? "rotate-180" : ""
+                            }`}
+                          >
+                            expand_more
+                          </span>
+                        </button>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-6 pb-4"
+                          >
+                            <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
+                          </motion.div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Contact Support */}
