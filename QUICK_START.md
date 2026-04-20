@@ -1,344 +1,324 @@
-# Quick Start Guide - Backend & Database
+# 🚀 Quick Start Guide - Adaptive Traffic Monitoring
 
-Panduan cepat untuk setup dan mengelola backend dengan Azure Cosmos DB.
+## 📋 Prerequisites
 
-## 🚀 Setup Database (Pertama Kali)
+- Node.js 18+ installed
+- Azure Cosmos DB account (sudah ada: `traffic-cosmos-slam`)
+- Access ke Azure Portal untuk mendapatkan Cosmos DB key
 
-### Opsi 1: Otomatis dengan Script
+---
 
-```powershell
-# Setup collections + seed data sekaligus
-.\scripts\setup-database.ps1
+## ⚡ Quick Start (5 Menit)
+
+### 1. Install Dependencies
+
+```bash
+npm install
 ```
 
-### Opsi 2: Manual Step-by-Step
+### 2. Configure Azure Credentials
 
-```powershell
-# 1. Buat collections
-npm run db:setup
+Edit file `.env.local` dan pastikan `AZURE_COSMOS_KEY` benar:
 
-# 2. Isi data awal
-npm run db:seed
+```env
+AZURE_COSMOS_ENDPOINT=https://traffic-cosmos-slam.documents.azure.com:443/
+AZURE_COSMOS_KEY=<PASTE_KEY_DARI_AZURE_PORTAL>
+AZURE_COSMOS_DATABASE=TrafficDB
+```
 
-# 3. Test API
+**Cara mendapatkan key:**
+1. Login ke https://portal.azure.com
+2. Cari "traffic-cosmos-slam"
+3. Klik "Keys" di sidebar
+4. Copy "Primary Key" atau "Secondary Key"
+5. Paste ke `.env.local`
+
+### 3. Test Koneksi Azure
+
+```bash
+npm run db:test
+```
+
+**Output yang diharapkan:**
+```
+✅ Connected to database: TrafficDB
+✅ All containers exist
+✅ Query successful
+```
+
+**Jika error 401:**
+- Key salah → Update `.env.local` dengan key yang benar
+- Restart terminal setelah update
+
+### 4. Seed Data Awal
+
+```bash
+npm run db:seed:azure
+```
+
+Ini akan mengisi database dengan:
+- 3 persimpangan (intersections)
+- ~7000 traffic data records (24 jam)
+- 7 hari analytics data
+- 20 sample events
+
+**Durasi:** ~2-3 menit
+
+### 5. Start Development Server
+
+```bash
 npm run dev
-# Di terminal lain:
-.\scripts\test-api.ps1
 ```
 
-## 📊 Lihat Data di Azure Portal
+Buka browser: http://localhost:3000
 
-1. Buka https://portal.azure.com
-2. Search: `traffic-cosmos-slam`
-3. Klik **Data Explorer**
-4. Expand **TrafficDB** untuk lihat collections
-5. Klik **Items** untuk lihat data
+### 6. Start Real-Time Simulation (Optional)
 
-## ✏️ Edit Data
+Buka **terminal baru** (jangan tutup terminal server):
 
-### Via Azure Portal (Recommended untuk Manual Edit)
-
-1. Buka Data Explorer
-2. Navigate: `TrafficDB` > `users` > `Items`
-3. Klik item yang ingin diedit
-4. Edit JSON di panel kanan
-5. Klik **Update**
-
-### Via Script (Recommended untuk Bulk Changes)
-
-```powershell
-# Edit file scripts/seed-data.ts
-# Lalu jalankan:
-npm run db:seed
+```bash
+npm run db:simulate
 ```
 
-### Via API (Production)
+Ini akan:
+- 📡 Insert traffic data baru setiap 5 detik
+- 📊 Update analytics setiap 1 menit
+- ⚠️ Generate random events
+- 🔄 Frontend akan auto-refresh dan menampilkan perubahan
 
-```powershell
-# Test dengan PowerShell
-$body = @{
-    name = "Nama Baru"
-    email = "email@baru.com"
-} | ConvertTo-Json
+**Cara stop:** Tekan `Ctrl+C`
 
-Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
-    -Method PUT `
-    -Body $body `
-    -ContentType "application/json"
+---
+
+## 🎯 Halaman yang Tersedia
+
+| URL | Deskripsi | Status |
+|-----|-----------|--------|
+| `/` | Dashboard utama | ✅ Complete |
+| `/Analist` | **Halaman Analytics** | ✅ Complete |
+| `/persimpangan` | Daftar persimpangan | ✅ Complete |
+| `/persimpangan/[id]` | Detail persimpangan | ✅ Complete |
+| `/laporan` | Laporan | ✅ Complete |
+| `/notifikasi` | Notifikasi | ✅ Complete |
+| `/pengguna` | Manajemen user | ✅ Complete |
+| `/profile` | Profile user | ✅ Complete |
+| `/peta` | Peta traffic | ✅ Complete |
+| `/tim` | Halaman tim | ✅ Complete |
+
+---
+
+## 📊 Halaman Analytics (`/Analist`)
+
+Halaman ini menampilkan:
+
+### 1. **Analisis Kepadatan Kendaraan** (Chart Utama)
+- Bar chart mingguan per jalur (Utara, Timur, Barat, Selatan)
+- Filter berdasarkan persimpangan dan jalur
+- Data dari `analytics_daily` container
+
+### 2. **Performa Sensor IoT**
+- Akurasi deteksi kepadatan
+- Jumlah perangkat aktif
+- Progress bar visual
+
+### 3. **Indeks Kemacetan**
+- Circular progress indicator
+- Status: Lancar / Moderat / Padat / Macet
+- Perbandingan dengan hari sebelumnya
+
+### 4. **Laporan Kepadatan Per Jam**
+- Heatmap 24 jam
+- Intensitas warna berdasarkan kepadatan
+- Highlight jam puncak
+
+### 5. **Peringatan Kritis Lalu Lintas**
+- List events dengan prioritas
+- Real-time updates
+- Filter berdasarkan status
+
+### 6. **Wawasan Strategis IoT**
+- Prediksi dan rekomendasi
+- Action button untuk apply konfigurasi
+
+---
+
+## 🔄 Auto-Refresh Intervals
+
+| Data | Refresh Interval | Hook |
+|------|------------------|------|
+| Traffic Real-time | 5 detik | `useRealtimeTraffic` |
+| Events | 10 detik | `useEvents` |
+| Intersections | 30 detik | `useIntersections` |
+| Analytics Daily | 1 menit | `useAnalytics` |
+
+Semua menggunakan **SWR** untuk caching dan auto-revalidation.
+
+---
+
+## 🛠️ Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run db:test` | Test Azure connection |
+| `npm run db:seed:azure` | Seed initial data |
+| `npm run db:simulate` | Start real-time simulation |
+
+---
+
+## 🔍 Troubleshooting
+
+### ❌ Error 401: Unauthorized
+
+**Penyebab:** Azure Cosmos DB key salah atau expired
+
+**Solusi:**
+1. Dapatkan key baru dari Azure Portal
+2. Update `.env.local`
+3. Restart server (`Ctrl+C` lalu `npm run dev`)
+
+### ❌ Error 404: Container not found
+
+**Penyebab:** Container belum dibuat di Azure
+
+**Solusi:**
+```bash
+npm run db:seed:azure
 ```
 
-## 💾 Backup & Restore
+### ❌ Data tidak muncul di frontend
 
-### Export Data (Backup)
+**Solusi:**
+1. Cek console browser (F12) untuk error
+2. Cek terminal server untuk error API
+3. Pastikan data sudah di-seed: `npm run db:test`
+4. Refresh browser (F5)
 
-```powershell
-npm run db:export
+### ❌ Module not found: @azure/cosmos
+
+**Solusi:**
+```bash
+npm install
 ```
 
-File akan tersimpan di folder `exports/cosmos-backup-YYYY-MM-DD/`
+---
 
-### Import Data (Restore)
+## 📁 Struktur Project
 
-```powershell
-npm run db:import exports/cosmos-backup-2024-01-25
+```
+adaptive-traffic-monitoring/
+├── app/
+│   ├── Analist/              # 📊 Halaman Analytics
+│   │   └── page.tsx
+│   ├── api/                  # API Routes
+│   │   ├── analytics/
+│   │   ├── traffic/
+│   │   ├── events/
+│   │   └── intersections/
+│   └── ...
+├── components/               # React Components
+├── lib/
+│   ├── azure-cosmos.ts      # Azure Cosmos DB client
+│   ├── hooks/
+│   │   └── useAnalytics.ts  # SWR hooks
+│   └── utils/
+│       └── analytics.ts     # Analytics utilities
+├── scripts/
+│   ├── seed-azure-data.ts   # Seed script
+│   ├── simulate-realtime.ts # Real-time simulation
+│   └── test-azure-connection.ts
+├── .env.local               # Environment variables
+└── package.json
 ```
 
-## 🔍 Query Data
+---
 
-### Via Azure Portal
+## 🎨 Tech Stack
 
-Buka Data Explorer > New SQL Query:
+- **Frontend:** Next.js 16, React 19, TypeScript
+- **Styling:** Tailwind CSS, Framer Motion
+- **State:** SWR (data fetching), Zustand
+- **Backend:** Next.js API Routes
+- **Database:** Azure Cosmos DB (NoSQL)
+- **Charts:** Recharts
+- **Notifications:** React Hot Toast
 
-```sql
--- Lihat semua users
-SELECT * FROM c
+---
 
--- Filter by role
-SELECT * FROM c WHERE c.role = "admin"
+## 📝 Environment Variables
 
--- Count items
-SELECT VALUE COUNT(1) FROM c
+```env
+# Azure Cosmos DB (REQUIRED)
+AZURE_COSMOS_ENDPOINT=https://traffic-cosmos-slam.documents.azure.com:443/
+AZURE_COSMOS_KEY=<YOUR_KEY_HERE>
+AZURE_COSMOS_DATABASE=TrafficDB
 
--- Sort by date
-SELECT * FROM c ORDER BY c.createdAt DESC
+# Azure Storage (Optional - untuk data lake)
+AZURE_STORAGE_CONNECTION_STRING=...
+AZURE_STORAGE_ACCOUNT=trafficdatalakeslam
+AZURE_STORAGE_CONTAINER=processed-data
+
+# Azure IoT Hub (Optional - untuk ESP32)
+AZURE_IOT_HUB_NAME=traffic-iot-slam
+ESP32_LANE_NORTH=...
+ESP32_LANE_SOUTH=...
+ESP32_LANE_EAST=...
+ESP32_LANE_WEST=...
+
+# Next.js
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
+NODE_ENV=development
 ```
 
-### Via API
+---
 
-```powershell
-# Get all users
-Invoke-RestMethod -Uri "http://localhost:3000/api/users"
+## 🚀 Production Deployment
 
-# Get users by role
-Invoke-RestMethod -Uri "http://localhost:3000/api/users?role=admin"
+### Build
 
-# Get all intersections
-Invoke-RestMethod -Uri "http://localhost:3000/api/intersections"
-
-# Get specific intersection
-Invoke-RestMethod -Uri "http://localhost:3000/api/intersections/int_001"
+```bash
+npm run build
 ```
 
-## 📝 Tambah Data Baru
+### Start
 
-### Via Azure Portal
-
-1. Buka container (misal: `users`)
-2. Klik **New Item**
-3. Paste JSON:
-
-```json
-{
-  "id": "user_new_001",
-  "email": "newuser@traffic.com",
-  "name": "User Baru",
-  "role": "operator",
-  "phone": "+62812345682",
-  "status": "active",
-  "reportsCreated": 0,
-  "reportsCompleted": 0,
-  "activeHours": 0,
-  "createdAt": "2024-01-25T10:00:00Z",
-  "updatedAt": "2024-01-25T10:00:00Z"
-}
+```bash
+npm run start
 ```
 
-4. Klik **Save**
+### Environment
 
-### Via API
+Pastikan semua environment variables sudah di-set di production environment.
 
-```powershell
-$newUser = @{
-    email = "newuser@traffic.com"
-    name = "User Baru"
-    role = "operator"
-    phone = "+62812345682"
-} | ConvertTo-Json
+---
 
-Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
-    -Method POST `
-    -Body $newUser `
-    -ContentType "application/json"
-```
+## 📞 Support
 
-## 🗑️ Hapus Data
+Jika ada masalah:
 
-### Via Azure Portal
+1. **Cek dokumentasi:** `AZURE_FIX_GUIDE.md`
+2. **Test koneksi:** `npm run db:test`
+3. **Cek logs:** Terminal server dan browser console
+4. **Cek Azure Portal:** Status Cosmos DB
 
-1. Buka container > Items
-2. Klik item yang ingin dihapus
-3. Klik **Delete Item**
-4. Konfirmasi
+---
 
-### Via API
+## ✅ Checklist Deployment
 
-```powershell
-Invoke-RestMethod -Uri "http://localhost:3000/api/users/user_001" `
-    -Method DELETE
-```
+- [ ] Dependencies installed (`npm install`)
+- [ ] `.env.local` configured dengan key yang benar
+- [ ] Azure connection tested (`npm run db:test`)
+- [ ] Data seeded (`npm run db:seed:azure`)
+- [ ] Development server running (`npm run dev`)
+- [ ] Frontend accessible (http://localhost:3000)
+- [ ] Analytics page working (http://localhost:3000/Analist)
+- [ ] Real-time simulation running (optional: `npm run db:simulate`)
 
-## 🧪 Testing
+---
 
-### Test All APIs
+**🎉 Selamat! Project sudah siap digunakan.**
 
-```powershell
-npm run dev
-# Di terminal lain:
-.\scripts\test-api.ps1
-```
-
-### Test Specific Endpoint
-
-```powershell
-# Health check
-Invoke-RestMethod -Uri "http://localhost:3000/api/health"
-
-# Users
-Invoke-RestMethod -Uri "http://localhost:3000/api/users"
-
-# Intersections
-Invoke-RestMethod -Uri "http://localhost:3000/api/intersections"
-
-# Reports
-Invoke-RestMethod -Uri "http://localhost:3000/api/reports"
-
-# Settings
-Invoke-RestMethod -Uri "http://localhost:3000/api/settings?userId=user_admin_001"
-
-# FAQs
-Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs"
-
-# Guides
-Invoke-RestMethod -Uri "http://localhost:3000/api/help/guides"
-```
-
-## 📚 Available Collections
-
-| Collection | Partition Key | Purpose |
-|------------|---------------|---------|
-| `users` | `/email` | Data pengguna (admin, operator) |
-| `intersections` | `/deviceId` | Data persimpangan |
-| `traffic_data` | `/intersectionId` | Data lalu lintas real-time |
-| `events` | `/intersectionId` | Event log sistem |
-| `reports` | `/intersectionId` | Laporan dari operator |
-| `notifications` | `/userId` | Notifikasi untuk user |
-| `device_status` | `/deviceId` | Status perangkat IoT |
-| `analytics_daily` | `/intersectionId` | Analitik harian |
-
-## 🎯 Common Tasks
-
-### Task 1: Tambah User Baru
-
-```powershell
-# Via API
-$user = @{
-    email = "operator4@traffic.com"
-    name = "Operator 4"
-    role = "operator"
-    phone = "+62812345683"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:3000/api/users" `
-    -Method POST -Body $user -ContentType "application/json"
-```
-
-### Task 2: Update Intersection Status
-
-```powershell
-# Via API
-$update = @{
-    status = "maintenance"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:3000/api/intersections/int_001" `
-    -Method PUT -Body $update -ContentType "application/json"
-```
-
-### Task 3: Buat Laporan Baru
-
-```powershell
-# Via API
-$report = @{
-    intersectionId = "int_001"
-    type = "congestion"
-    priority = "high"
-    title = "Kemacetan Parah"
-    description = "Kemacetan di jam sibuk"
-    userId = "user_operator_001"
-    userName = "Operator 1"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:3000/api/reports" `
-    -Method POST -Body $report -ContentType "application/json"
-```
-
-### Task 4: Search FAQs
-
-```powershell
-# Search by keyword
-Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs?search=sensor"
-
-# Filter by category
-Invoke-RestMethod -Uri "http://localhost:3000/api/help/faqs?category=IoT & Sensor"
-```
-
-## 🔧 Troubleshooting
-
-### Database Connection Error
-
-```powershell
-# Check environment variables
-cat .env.local
-
-# Test connection
-npm run db:setup
-```
-
-### API Returns Empty Data
-
-```powershell
-# Seed data
-npm run db:seed
-
-# Verify in Azure Portal
-# Open Data Explorer > TrafficDB > users > Items
-```
-
-### Frontend Not Showing Data
-
-1. ✅ Check API works: `.\scripts\test-api.ps1`
-2. ✅ Check data exists in Azure Portal
-3. ✅ Check browser console for errors
-4. ✅ Refresh page (Ctrl+F5)
-
-## 📖 Documentation
-
-- [AZURE_DATA_EXPLORER_GUIDE.md](./AZURE_DATA_EXPLORER_GUIDE.md) - Panduan lengkap Azure Data Explorer
-- [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md) - Setup database detail
-- [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - API reference lengkap
-- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Schema database
-
-## 💡 Tips
-
-1. **Backup Sebelum Edit**: Selalu export data sebelum edit besar
-   ```powershell
-   npm run db:export
-   ```
-
-2. **Test di Local Dulu**: Test perubahan di local sebelum deploy
-   ```powershell
-   npm run dev
-   ```
-
-3. **Gunakan Query untuk Validasi**: Setelah edit, validasi dengan query di Data Explorer
-
-4. **Monitor Logs**: Check Azure Portal logs untuk troubleshooting
-
-5. **Version Control**: Commit perubahan script ke git untuk tracking
-
-## 🆘 Need Help?
-
-- Check [AZURE_DATA_EXPLORER_GUIDE.md](./AZURE_DATA_EXPLORER_GUIDE.md) untuk panduan detail
-- Check [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md) untuk troubleshooting
-- Test API dengan `.\scripts\test-api.ps1`
-- Lihat logs di Azure Portal
+Buka http://localhost:3000/Analist untuk melihat halaman analytics dengan data real-time!

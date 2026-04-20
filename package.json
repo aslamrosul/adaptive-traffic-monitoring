@@ -11,7 +11,11 @@
     "db:cleanup": "tsx scripts/cleanup-collections.ts",
     "db:setup": "tsx scripts/setup-cosmos-db.ts",
     "db:seed": "tsx scripts/seed-data.ts",
-    "db:init": "npm run db:setup && npm run db:seed",
+    "db:seed:analytics": "tsx scripts/seed-analytics-data.ts",
+    "db:seed:azure": "tsx scripts/seed-azure-data.ts",
+    "db:simulate": "tsx scripts/simulate-realtime.ts",
+    "db:test": "tsx scripts/test-azure-connection.ts",
+    "db:init": "npm run db:setup && npm run db:seed && npm run db:seed:analytics",
     "db:export": "tsx scripts/export-cosmos-data.ts",
     "db:import": "tsx scripts/import-cosmos-data.ts",
     "test:api": "tsx scripts/test-api.ts"

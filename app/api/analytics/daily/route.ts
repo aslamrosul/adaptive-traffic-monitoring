@@ -37,12 +37,31 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     console.error('Error fetching analytics:', error);
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message || 'Failed to fetch analytics';
+    let statusCode = 500;
+    
+    if (error.code === 401) {
+      errorMessage = 'Azure Cosmos DB authentication failed. Please check AZURE_COSMOS_KEY in .env.local';
+      statusCode = 401;
+    } else if (error.code === 404) {
+      errorMessage = 'Container "analytics_daily" not found. Please run: npm run db:seed:azure';
+      statusCode = 404;
+    }
+    
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch analytics',
+        error: errorMessage,
+        code: error.code,
+        hint: error.code === 401 
+          ? 'Get the correct key from Azure Portal > Cosmos DB > Keys' 
+          : error.code === 404
+          ? 'Run "npm run db:seed:azure" to create containers and seed data'
+          : 'Check server logs for more details',
       },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }

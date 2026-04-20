@@ -3,102 +3,163 @@
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
-
-const weeklyData = [
-  { day: "SENIN", utara: 60, timur: 45, barat: 30, selatan: 50 },
-  { day: "SELASA", utara: 75, timur: 60, barat: 40, selatan: 65 },
-  { day: "RABU", utara: 90, timur: 70, barat: 55, selatan: 80 },
-  { day: "KAMIS", utara: 85, timur: 75, barat: 50, selatan: 70 },
-  { day: "JUMAT", utara: 95, timur: 85, barat: 60, selatan: 90 },
-  { day: "SABTU", utara: 40, timur: 35, barat: 25, selatan: 35 },
-  { day: "MINGGU", utara: 30, timur: 25, barat: 20, selatan: 28 },
-];
-
-const heatmapData = [
-  { time: "00:00", intensity: 10 },
-  { time: "02:00", intensity: 5 },
-  { time: "04:00", intensity: 5 },
-  { time: "06:00", intensity: 40 },
-  { time: "08:00", intensity: 80 },
-  { time: "10:00", intensity: 100 },
-  { time: "12:00", intensity: 60 },
-  { time: "14:00", intensity: 50 },
-  { time: "16:00", intensity: 90 },
-  { time: "18:00", intensity: 70 },
-  { time: "20:00", intensity: 30 },
-  { time: "22:00", intensity: 10 },
-];
-
-const alerts = [
-  {
-    id: 1,
-    title: "Kemacetan Parah (V/C Ratio > 1.0)",
-    location: "Simpangan Sudirman - Arus Masuk Selatan",
-    time: "12 MENIT LALU",
-    severity: "critical",
-  },
-  {
-    id: 2,
-    title: "Sensor IoT Tidak Sinkron",
-    location: "Simpangan Gatsu - Node IoT Unit A02",
-    time: "45 MENIT LALU",
-    severity: "warning",
-  },
-];
-
-const simpanganOptions = [
-  "Semua Jalur",
-  "Jalur Utara",
-  "Jalur Timur",
-  "Jalur Barat",
-  "Jalur Selatan",
-];
+import { useAnalytics, useRealtimeTraffic, useIntersections, useEvents } from "@/lib/hooks/useAnalytics";
+import { 
+  calculateHourlyStats, 
+  calculateWeeklyStats, 
+  formatDate,
+  getWeekRange
+} from "@/lib/utils/analytics";
 
 export default function AnalitikPage() {
-  const [selectedSimpangan, setSelectedSimpangan] = useState("Semua Jalur");
+  const [selectedIntersection, setSelectedIntersection] = useState<string>("all");
+  const [selectedLane, setSelectedLane] = useState("Semua Jalur");
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(getWeekRange(0));
 
-  // Filter data berdasarkan simpangan yang dipilih
-  const getFilteredData = () => {
-    return weeklyData.map((d) => {
-      if (selectedSimpangan === "Jalur Utara") {
+  // Fetch data dari backend
+  const { intersections, isLoading: loadingIntersections } = useIntersections();
+  const { trafficData, isLoading: loadingTraffic } = useRealtimeTraffic(
+    selectedIntersection !== "all" ? selectedIntersection : undefined,
+    500
+  );
+  const { analytics, isLoading: loadingAnalytics } = useAnalytics(
+    selectedIntersection !== "all" ? selectedIntersection : undefined
+  );
+  const { events, isLoading: loadingEvents } = useEvents(
+    selectedIntersection !== "all" ? selectedIntersection : undefined,
+    "open"
+  );
+
+  // Update date range ketika week berubah
+  useEffect(() => {
+    setDateRange(getWeekRange(currentWeek));
+  }, [currentWeek]);
+
+  // Hitung statistik dari data real-time
+  const hourlyStats = useMemo(() => {
+    if (trafficData.length === 0) {
+      // Fallback data jika belum ada data
+      return [
+        { time: "00:00", hour: 0, intensity: 10, vehicleCount: 50, congestionIndex: 10 },
+        { time: "02:00", hour: 2, intensity: 5, vehicleCount: 25, congestionIndex: 5 },
+        { time: "04:00", hour: 4, intensity: 5, vehicleCount: 30, congestionIndex: 5 },
+        { time: "06:00", hour: 6, intensity: 40, vehicleCount: 200, congestionIndex: 40 },
+        { time: "08:00", hour: 8, intensity: 80, vehicleCount: 450, congestionIndex: 80 },
+        { time: "10:00", hour: 10, intensity: 100, vehicleCount: 560, congestionIndex: 100 },
+        { time: "12:00", hour: 12, intensity: 60, vehicleCount: 320, congestionIndex: 60 },
+        { time: "14:00", hour: 14, intensity: 50, vehicleCount: 280, congestionIndex: 50 },
+        { time: "16:00", hour: 16, intensity: 90, vehicleCount: 480, congestionIndex: 90 },
+        { time: "18:00", hour: 18, intensity: 70, vehicleCount: 380, congestionIndex: 70 },
+        { time: "20:00", hour: 20, intensity: 30, vehicleCount: 150, congestionIndex: 30 },
+        { time: "22:00", hour: 22, intensity: 10, vehicleCount: 60, congestionIndex: 10 },
+      ];
+    }
+    return calculateHourlyStats(trafficData);
+  }, [trafficData]);
+
+  // Hitung statistik mingguan
+  const weeklyStats = useMemo(() => {
+    if (analytics.length === 0) {
+      // Fallback data
+      return [
+        { day: "SENIN", utara: 60, timur: 45, barat: 30, selatan: 50, total: 185 },
+        { day: "SELASA", utara: 75, timur: 60, barat: 40, selatan: 65, total: 240 },
+        { day: "RABU", utara: 90, timur: 70, barat: 55, selatan: 80, total: 295 },
+        { day: "KAMIS", utara: 85, timur: 75, barat: 50, selatan: 70, total: 280 },
+        { day: "JUMAT", utara: 95, timur: 85, barat: 60, selatan: 90, total: 330 },
+        { day: "SABTU", utara: 40, timur: 35, barat: 25, selatan: 35, total: 135 },
+        { day: "MINGGU", utara: 30, timur: 25, barat: 20, selatan: 28, total: 103 },
+      ];
+    }
+    return calculateWeeklyStats(analytics);
+  }, [analytics]);
+
+  // Filter data berdasarkan jalur yang dipilih
+  const filteredWeeklyData = useMemo(() => {
+    return weeklyStats.map((d) => {
+      if (selectedLane === "Jalur Utara") {
         return { ...d, timur: 0, barat: 0, selatan: 0 };
-      } else if (selectedSimpangan === "Jalur Timur") {
+      } else if (selectedLane === "Jalur Timur") {
         return { ...d, utara: 0, barat: 0, selatan: 0 };
-      } else if (selectedSimpangan === "Jalur Barat") {
+      } else if (selectedLane === "Jalur Barat") {
         return { ...d, utara: 0, timur: 0, selatan: 0 };
-      } else if (selectedSimpangan === "Jalur Selatan") {
+      } else if (selectedLane === "Jalur Selatan") {
         return { ...d, utara: 0, timur: 0, barat: 0 };
       }
       return d; // Semua Jalur
     });
+  }, [weeklyStats, selectedLane]);
+
+  // Cek jalur mana yang aktif untuk legend
+  const showUtara = selectedLane === "Semua Jalur" || selectedLane === "Jalur Utara";
+  const showTimur = selectedLane === "Semua Jalur" || selectedLane === "Jalur Timur";
+  const showBarat = selectedLane === "Semua Jalur" || selectedLane === "Jalur Barat";
+  const showSelatan = selectedLane === "Semua Jalur" || selectedLane === "Jalur Selatan";
+
+  // Hitung total kendaraan dari data real
+  const totalVehicles = useMemo(() => {
+    if (analytics.length > 0) {
+      return analytics.reduce((sum, a) => sum + (a.summary?.totalVehicles || 0), 0);
+    }
+    return trafficData.reduce((sum, t) => sum + t.vehicleCount, 0);
+  }, [analytics, trafficData]);
+
+  // Hitung congestion index rata-rata
+  const avgCongestionIndex = useMemo(() => {
+    if (analytics.length > 0) {
+      const avg = analytics.reduce((sum, a) => sum + (a.summary?.averageCongestionIndex || 0), 0) / analytics.length;
+      return Math.round(avg * 10) / 10;
+    }
+    return 6.4; // Default
+  }, [analytics]);
+
+  // Hitung IoT performance
+  const iotPerformance = useMemo(() => {
+    const activeDevices = intersections.filter((i) => i.status === "active").length;
+    const totalDevices = intersections.length;
+    const accuracy = totalDevices > 0 ? (activeDevices / totalDevices) * 100 : 98.4;
+    return {
+      accuracy: Math.round(accuracy * 10) / 10,
+      activeDevices,
+      totalDevices,
+      latency: 12, // ms - bisa dihitung dari timestamp
+    };
+  }, [intersections]);
+
+  const handleIntersectionChange = (value: string) => {
+    setSelectedIntersection(value);
+    const intersection = intersections.find((i) => i.id === value);
+    toast.success(`Filter diubah ke: ${intersection?.name || "Semua Persimpangan"}`);
   };
 
-  const filteredData = getFilteredData();
-
-  // Cek simpangan mana yang aktif untuk legend
-  const showUtara = selectedSimpangan === "Semua Jalur" || selectedSimpangan === "Jalur Utara";
-  const showTimur = selectedSimpangan === "Semua Jalur" || selectedSimpangan === "Jalur Timur";
-  const showBarat = selectedSimpangan === "Semua Jalur" || selectedSimpangan === "Jalur Barat";
-  const showSelatan = selectedSimpangan === "Semua Jalur" || selectedSimpangan === "Jalur Selatan";
-
-  const handleSimpanganChange = (value: string) => {
-    setSelectedSimpangan(value);
+  const handleLaneChange = (value: string) => {
+    setSelectedLane(value);
     toast.success(`Filter diubah ke: ${value}`);
   };
 
   const handleExport = () => {
     toast.success("Data berhasil diekspor ke format .csv");
-    // Simulasi download
-    const csvContent = "Jalur,Hari,Volume\nUtara,Senin,60\nTimur,Senin,45\nBarat,Senin,30\nSelatan,Senin,50\n";
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    
+    // Generate CSV dari data real
+    let csvContent = "Jalur,Hari,Volume,Kecepatan,Kepadatan\n";
+    
+    filteredWeeklyData.forEach((data) => {
+      if (data.utara > 0) csvContent += `Utara,${data.day},${data.utara},0,0\n`;
+      if (data.timur > 0) csvContent += `Timur,${data.day},${data.timur},0,0\n`;
+      if (data.barat > 0) csvContent += `Barat,${data.day},${data.barat},0,0\n`;
+      if (data.selatan > 0) csvContent += `Selatan,${data.day},${data.selatan},0,0\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `analitik-lalu-lintas-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleApplyIoT = () => {
@@ -119,7 +180,10 @@ export default function AnalitikPage() {
     <>
       <Sidebar />
       <main className="ml-64 min-h-screen pb-12">
-        <Header title="Analitik Lalu Lintas" dateRange="24 Okt 2023 - 30 Okt 2023" />
+        <Header 
+          title="Analitik Lalu Lintas" 
+          dateRange={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`} 
+        />
 
         <div className="p-8 space-y-8 max-w-7xl mx-auto">
 
@@ -136,13 +200,28 @@ export default function AnalitikPage() {
               </p>
               <div className="flex gap-3">
                 <select
-                  value={selectedSimpangan}
-                  onChange={(e) => handleSimpanganChange(e.target.value)}
+                  value={selectedIntersection}
+                  onChange={(e) => handleIntersectionChange(e.target.value)}
+                  className="bg-white border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm min-w-[200px]"
+                  disabled={loadingIntersections}
+                >
+                  <option value="all">Semua Persimpangan</option>
+                  {intersections.map((intersection) => (
+                    <option key={intersection.id} value={intersection.id}>
+                      {intersection.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedLane}
+                  onChange={(e) => handleLaneChange(e.target.value)}
                   className="bg-white border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm min-w-[200px]"
                 >
-                  {simpanganOptions.map((opt) => (
-                    <option key={opt}>{opt}</option>
-                  ))}
+                  <option>Semua Jalur</option>
+                  <option>Jalur Utara</option>
+                  <option>Jalur Timur</option>
+                  <option>Jalur Barat</option>
+                  <option>Jalur Selatan</option>
                 </select>
               </div>
             </div>
@@ -206,8 +285,16 @@ export default function AnalitikPage() {
                 </div>
               </div>
 
-              <div className="h-64 flex items-end gap-4 px-4">
-                {filteredData.map((d, idx) => (
+              {loadingAnalytics || loadingTraffic ? (
+                <div className="h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-sm text-slate-500">Memuat data analitik...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-64 flex items-end gap-4 px-4">
+                  {filteredWeeklyData.map((d, idx) => (
                   <motion.div
                     key={d.day}
                     initial={{ opacity: 0, scaleY: 0 }}
@@ -248,8 +335,9 @@ export default function AnalitikPage() {
                     </div>
                     <span className="text-[10px] font-bold text-slate-400">{d.day}</span>
                   </motion.div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* Stats: Performa Sensor IoT & Indeks Kemacetan */}
@@ -268,12 +356,12 @@ export default function AnalitikPage() {
                   <div>
                     <div className="flex justify-between items-end mb-2">
                       <span className="text-xs font-semibold">Akurasi Deteksi Kepadatan</span>
-                      <span className="text-2xl font-black font-headline">98.4%</span>
+                      <span className="text-2xl font-black font-headline">{iotPerformance.accuracy}%</span>
                     </div>
                     <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: "98.4%" }}
+                        animate={{ width: `${iotPerformance.accuracy}%` }}
                         transition={{ delay: 0.4, duration: 0.8 }}
                         className="h-full bg-blue-400 rounded-full"
                       ></motion.div>
@@ -281,13 +369,17 @@ export default function AnalitikPage() {
                   </div>
                   <div>
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-xs font-semibold">Waktu Latensi Jaringan</span>
-                      <span className="text-2xl font-black font-headline">12ms</span>
+                      <span className="text-xs font-semibold">Perangkat Aktif</span>
+                      <span className="text-2xl font-black font-headline">
+                        {iotPerformance.activeDevices}/{iotPerformance.totalDevices}
+                      </span>
                     </div>
                     <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: "85%" }}
+                        animate={{ 
+                          width: `${(iotPerformance.activeDevices / iotPerformance.totalDevices) * 100}%` 
+                        }}
                         transition={{ delay: 0.5, duration: 0.8 }}
                         className="h-full bg-emerald-400 rounded-full"
                       ></motion.div>
@@ -337,8 +429,12 @@ export default function AnalitikPage() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-black font-headline text-on-surface">6.4</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Moderat</span>
+                      <span className="text-2xl font-black font-headline text-on-surface">
+                        {avgCongestionIndex}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -384,7 +480,7 @@ export default function AnalitikPage() {
               </div>
 
               <div className="grid grid-cols-12 gap-1">
-                {heatmapData.map((block, idx) => {
+                {hourlyStats.map((block, idx) => {
                   const isPeak = block.intensity === 100;
                   const textColor = block.intensity >= 60 ? "text-white" : "text-slate-400";
                   return (
@@ -445,26 +541,54 @@ export default function AnalitikPage() {
                   Peringatan Kritis Lalu Lintas
                 </h3>
               </div>
-              <div className="space-y-2">
-                {alerts.map((alert, idx) => (
-                  <motion.div
-                    key={alert.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + idx * 0.1 }}
-                    className="flex justify-between items-start p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-slate-100"
-                    onClick={() => toast(`Detail: ${alert.title} — ${alert.location}`)}
-                  >
-                    <div>
-                      <h4 className="text-sm font-bold">{alert.title}</h4>
-                      <p className="text-xs text-slate-500 mt-1">{alert.location}</p>
-                    </div>
-                    <span className="text-[10px] font-black text-slate-400 whitespace-nowrap ml-4">
-                      {alert.time}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
+              {loadingEvents ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-8">
+                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">
+                    check_circle
+                  </span>
+                  <p className="text-sm text-slate-500">Tidak ada peringatan kritis saat ini</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {events.slice(0, 5).map((event, idx) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + idx * 0.1 }}
+                      className="flex justify-between items-start p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-slate-100"
+                      onClick={() => toast(`Detail: ${event.title}`)}
+                    >
+                      <div>
+                        <h4 className="text-sm font-bold">{event.title}</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {intersections.find((i) => i.id === event.intersectionId)?.name || event.intersectionId}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end ml-4">
+                        <span className={`text-[10px] font-black px-2 py-1 rounded uppercase ${
+                          event.priority === "critical" ? "bg-red-100 text-red-700" :
+                          event.priority === "high" ? "bg-orange-100 text-orange-700" :
+                          event.priority === "medium" ? "bg-yellow-100 text-yellow-700" :
+                          "bg-blue-100 text-blue-700"
+                        }`}>
+                          {event.priority}
+                        </span>
+                        <span className="text-[10px] text-slate-400 mt-1">
+                          {new Date(event.timestamp).toLocaleTimeString("id-ID", { 
+                            hour: "2-digit", 
+                            minute: "2-digit" 
+                          })}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* Wawasan Strategis IoT */}
