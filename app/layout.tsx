@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/Toast";
+import { Providers } from "./providers";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -32,8 +33,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${manrope.variable} font-body antialiased`}>
-        <ToastProvider />
-        {children}
+        <Providers>
+          <ToastProvider />
+          {children}
+        </Providers>
       </body>
     </html>
   );
