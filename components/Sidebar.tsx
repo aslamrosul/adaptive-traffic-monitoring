@@ -11,7 +11,6 @@ const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
   { icon: "analytics", label: "Analist", href: "/Analist" },
-  { icon: "map", label: "Peta", href: "/peta" },
   { icon: "group_work", label: "Tim Kami", href: "/tim" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];
