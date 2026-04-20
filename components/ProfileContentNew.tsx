@@ -259,6 +259,7 @@ export default function ProfileContent() {
                   src={profile.avatar}
                   alt="Profile"
                   fill
+                  sizes="128px"
                   className="object-cover"
                 />
               </div>

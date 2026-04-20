@@ -16,10 +16,10 @@ export default withAuth(
   }
 );
 
-// Protect these routes
+// Protect these routes (exclude root "/" because it handles its own redirect)
 export const config = {
   matcher: [
-    "/",
+    "/dashboard/:path*",
     "/Analist/:path*",
     "/persimpangan/:path*",
     "/pengguna/:path*",
