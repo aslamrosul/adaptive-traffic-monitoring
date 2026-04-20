@@ -90,6 +90,7 @@ export default function ProfileDropdown() {
             alt="Profil Pengguna"
             src={displayAvatar}
             fill
+            sizes="40px"
             className="object-cover"
           />
         </div>
@@ -111,6 +112,7 @@ export default function ProfileDropdown() {
                     alt="Profil"
                     src={displayAvatar}
                     fill
+                    sizes="48px"
                     className="object-cover"
                   />
                 </div>
