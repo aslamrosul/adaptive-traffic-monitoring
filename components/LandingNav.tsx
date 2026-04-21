@@ -3,9 +3,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 export default function LandingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
@@ -36,18 +39,49 @@ export default function LandingNav() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-blue-600 hover:text-blue-700 font-semibold px-5 py-2.5 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md"
-          >
-            Daftar
-          </Link>
+          {status === "loading" ? (
+            <div className="w-20 h-10 bg-slate-100 animate-pulse rounded-lg"></div>
+          ) : session ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">dashboard</span>
+                Dashboard
+              </Link>
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-all"
+                title={session.user?.name || "Profile"}
+              >
+                <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
+                  <Image
+                    alt="Profile"
+                    src={(session.user as any)?.avatar || session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=0040a1&color=fff`}
+                    fill
+                    sizes="36px"
+                    className="object-cover"
+                  />
+                </div>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-blue-600 hover:text-blue-700 font-semibold px-5 py-2.5 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md"
+              >
+                Daftar
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -84,18 +118,39 @@ export default function LandingNav() {
                 Tim Kami
               </a>
               <div className="pt-4 space-y-2">
-                <Link
-                  href="/login"
-                  className="block text-center text-blue-600 border border-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="block bg-blue-600 text-white text-center px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-all"
-                >
-                  Daftar
-                </Link>
+                {status === "loading" ? (
+                  <div className="w-full h-10 bg-slate-100 animate-pulse rounded-lg"></div>
+                ) : session ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className="block bg-blue-600 text-white text-center px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/profile"
+                      className="block text-center text-blue-600 border border-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all"
+                    >
+                      Profil Saya
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="block text-center text-blue-600 border border-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="block bg-blue-600 text-white text-center px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                    >
+                      Daftar
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
