@@ -27,7 +27,7 @@ export default function ProfileDropdown() {
   const handleLogout = async () => {
     setIsOpen(false);
     toast.loading("Logging out...");
-    await signOut({ callbackUrl: "/landing" });
+    await signOut({ callbackUrl: "/" });
     toast.dismiss();
     toast.success("Berhasil keluar dari sistem");
   };

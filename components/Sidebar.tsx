@@ -8,7 +8,7 @@ import ModalLaporan from "./ModalLaporan";
 import { useProfileStore } from "@/lib/store";
 
 const menuItems = [
-  { icon: "dashboard", label: "Dasbor", href: "/" },
+  { icon: "dashboard", label: "Dasbor", href: "/dashboard" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
   { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "group_work", label: "Tim Kami", href: "/tim" },
