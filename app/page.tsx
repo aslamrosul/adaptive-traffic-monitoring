@@ -4,6 +4,9 @@ import LandingFooter from "@/components/LandingFooter";
 import LandingNav from "@/components/LandingNav";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
