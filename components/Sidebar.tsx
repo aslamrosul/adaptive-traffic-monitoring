@@ -83,19 +83,12 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          x: isSidebarOpen ? 0 : -256,
-        }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200 flex flex-col p-4 z-50 lg:translate-x-0"
+      <aside
+        className={`h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200 flex flex-col p-4 z-50 transition-transform duration-300 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10 px-2"
-        >
+        <div className="mb-10 px-2">
           <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline">
             Aerial Command
           </h1>
@@ -107,66 +100,77 @@ export default function Sidebar() {
             ></motion.div>
             <p className="text-xs text-slate-500 font-medium">Status IoT: Terhubung</p>
           </div>
-        </motion.div>
+        </div>
 
         <nav className="flex-1 space-y-1">
-          {menuItems.map((item, idx) => {
+          {menuItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));
             return (
-              <motion.div
-                key={item.href}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
+              <div key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-manrope font-semibold text-sm transition-all duration-300 ${
+                  className={`group flex items-center gap-3 px-4 py-3 rounded-lg font-manrope font-semibold text-sm transition-all duration-200 ${
                     isActive
-                      ? "bg-white text-blue-700 shadow-sm"
-                      : "text-slate-600 hover:bg-slate-200/50"
+                      ? "bg-white text-blue-700 shadow-md"
+                      : "text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5"
                   }`}
                 >
                   <span
-                    className="material-symbols-outlined"
+                    className={`material-symbols-outlined transition-all duration-200 ${
+                      isActive ? "" : "group-hover:scale-110"
+                    }`}
                     style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                   >
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span className="transition-transform duration-200">
+                    {item.label}
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-slate-200/60">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => setShowModal(true)}
-            className="w-full mb-4 py-3 px-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 transition-all"
+            className="w-full mb-4 py-3 px-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
           >
-            Laporan Baru
-          </motion.button>
+            <span className="flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-lg">add_circle</span>
+              Laporan Baru
+            </span>
+          </button>
           <Link
             href="/profile?tab=settings"
-            className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg font-manrope font-semibold text-sm transition-all duration-300"
+            className="group flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-lg font-manrope font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
           >
-            <span className="material-symbols-outlined">settings</span>
+            <span className="material-symbols-outlined group-hover:scale-110 transition-transform duration-200">
+              settings
+            </span>
             <span>Pengaturan</span>
           </Link>
           <Link
             href="/profile?tab=help"
-            className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg font-manrope font-semibold text-sm transition-all duration-300"
+            className="group flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-lg font-manrope font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
           >
-            <span className="material-symbols-outlined">help</span>
+            <span className="material-symbols-outlined group-hover:scale-110 transition-transform duration-200">
+              help
+            </span>
             <span>Bantuan</span>
           </Link>
         </div>
-      </motion.aside>
+      </aside>
 
       <ModalLaporan isOpen={showModal} onClose={() => setShowModal(false)} />
     </>
