@@ -1,16 +1,17 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { useProfileStore } from "@/lib/store";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ModalLaporan from "./ModalLaporan";
-import { useProfileStore } from "@/lib/store";
 
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/dashboard" },
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
   { icon: "analytics", label: "Analist", href: "/Analist" },
+  { icon: "settings_remote", label: "Remote IoT", href: "/iot-config" },
   { icon: "group_work", label: "Tim Kami", href: "/tim" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];

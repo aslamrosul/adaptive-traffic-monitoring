@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const { resources } = await containers.intersections.items
       .query({
-        query: 'SELECT * FROM c ORDER BY c.name ASC',
+        query: 'SELECT * FROM c WHERE (NOT IS_DEFINED(c.type) OR c.type != "iot_config") ORDER BY c.name ASC',
       })
       .fetchAll();
 
