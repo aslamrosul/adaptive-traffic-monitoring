@@ -12,7 +12,6 @@ const menuItems = [
   { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
   { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "settings_remote", label: "Remote IoT", href: "/iot-config" },
-  { icon: "group_work", label: "Tim Kami", href: "/tim" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
 ];
 

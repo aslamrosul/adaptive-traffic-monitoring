@@ -267,16 +267,16 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
                     <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      AP
+                      AS
                     </div>
                   </div>
                   <div className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg z-20">
                     <span className="material-symbols-outlined text-blue-600 text-xl">verified</span>
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Aditya Pratama</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">Lead Developer</p>
-                <p className="text-slate-500 text-xs">NIM: 2101234567</p>
+                <h4 className="text-xl font-bold text-slate-900">Aslam Rosul Ahmad</h4>
+                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-xs">NIM: 2341720195</p>
               </motion.div>
 
               {/* Member 2 */}
@@ -291,13 +291,13 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
                     <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      SN
+                      AZ
                     </div>
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Siti Nurhaliza</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">AI Specialist</p>
-                <p className="text-slate-500 text-xs">NIM: 2101234568</p>
+                <h4 className="text-xl font-bold text-slate-900">Azzahra Attaqina</h4>
+                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-xs">NIM: 2341720224</p>
               </motion.div>
 
               {/* Member 3 */}
@@ -311,14 +311,14 @@ export default function LandingPage() {
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      BS
+                    <div className="w-full h-full bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                      TS
                     </div>
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Budi Santoso</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">UI/UX Designer</p>
-                <p className="text-slate-500 text-xs">NIM: 2101234569</p>
+                <h4 className="text-xl font-bold text-slate-900">Tri Sukma Sarah</h4>
+                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-xs">NIM: 2341720051</p>
               </motion.div>
 
               {/* Member 4 */}
@@ -332,14 +332,14 @@ export default function LandingPage() {
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      DA
+                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                      ZZ
                     </div>
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Dewi Anggraini</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">System Analyst</p>
-                <p className="text-slate-500 text-xs">NIM: 2101234570</p>
+                <h4 className="text-xl font-bold text-slate-900">Zilan Zalilan</h4>
+                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-xs">NIM: 244107023003</p>
               </motion.div>
             </div>
           </div>

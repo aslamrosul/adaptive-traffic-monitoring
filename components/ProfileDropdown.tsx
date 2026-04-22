@@ -34,6 +34,14 @@ export default function ProfileDropdown() {
 
   const menuItems = [
     {
+      icon: "home",
+      label: "Beranda",
+      action: () => {
+        router.push("/");
+        setIsOpen(false);
+      },
+    },
+    {
       icon: "person",
       label: "Profil Saya",
       action: () => {
