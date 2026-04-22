@@ -1,14 +1,51 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function LandingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("beranda");
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+    const sections = ["beranda", "fitur", "tentang-kami", "tim-kami"];
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-50% 0px -50% 0px",
+        threshold: 0,
+      }
+    );
+
+    sections.forEach((section) => {
+      const element = document.getElementById(section);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => {
+      sections.forEach((section) => {
+        const element = document.getElementById(section);
+        if (element) {
+          observer.unobserve(element);
+        }
+      });
+    };
+  }, []);
+
+  const isActive = (section: string) => activeSection === section;
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
@@ -23,16 +60,44 @@ export default function LandingNav() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
-          <a href="#beranda" className="text-blue-600 border-b-2 border-blue-600 pb-1 hover:text-blue-600 transition-colors duration-200">
+          <a 
+            href="#beranda" 
+            className={`pb-1 transition-colors duration-200 ${
+              isActive("beranda") 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-slate-600 hover:text-blue-500"
+            }`}
+          >
             Beranda
           </a>
-          <a href="#fitur" className="text-slate-600 hover:text-blue-500 transition-colors duration-200">
+          <a 
+            href="#fitur" 
+            className={`pb-1 transition-colors duration-200 ${
+              isActive("fitur") 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-slate-600 hover:text-blue-500"
+            }`}
+          >
             Fitur
           </a>
-          <a href="#tentang-kami" className="text-slate-600 hover:text-blue-500 transition-colors duration-200">
+          <a 
+            href="#tentang-kami" 
+            className={`pb-1 transition-colors duration-200 ${
+              isActive("tentang-kami") 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-slate-600 hover:text-blue-500"
+            }`}
+          >
             Tentang Kami
           </a>
-          <a href="#tim-kami" className="text-slate-600 hover:text-blue-500 transition-colors duration-200">
+          <a 
+            href="#tim-kami" 
+            className={`pb-1 transition-colors duration-200 ${
+              isActive("tim-kami") 
+                ? "text-blue-600 border-b-2 border-blue-600" 
+                : "text-slate-600 hover:text-blue-500"
+            }`}
+          >
             Tim Kami
           </a>
         </div>
@@ -105,16 +170,44 @@ export default function LandingNav() {
             className="md:hidden bg-white border-t border-slate-200"
           >
             <div className="px-6 py-4 space-y-3">
-              <a href="#beranda" className="block text-slate-900 font-medium py-2">
+              <a 
+                href="#beranda" 
+                className={`block py-2 ${
+                  isActive("beranda") 
+                    ? "text-blue-600 font-bold" 
+                    : "text-slate-600"
+                }`}
+              >
                 Beranda
               </a>
-              <a href="#fitur" className="block text-slate-600 py-2">
+              <a 
+                href="#fitur" 
+                className={`block py-2 ${
+                  isActive("fitur") 
+                    ? "text-blue-600 font-bold" 
+                    : "text-slate-600"
+                }`}
+              >
                 Fitur
               </a>
-              <a href="#tentang-kami" className="block text-slate-600 py-2">
+              <a 
+                href="#tentang-kami" 
+                className={`block py-2 ${
+                  isActive("tentang-kami") 
+                    ? "text-blue-600 font-bold" 
+                    : "text-slate-600"
+                }`}
+              >
                 Tentang Kami
               </a>
-              <a href="#tim-kami" className="block text-slate-600 py-2">
+              <a 
+                href="#tim-kami" 
+                className={`block py-2 ${
+                  isActive("tim-kami") 
+                    ? "text-blue-600 font-bold" 
+                    : "text-slate-600"
+                }`}
+              >
                 Tim Kami
               </a>
               <div className="pt-4 space-y-2">
