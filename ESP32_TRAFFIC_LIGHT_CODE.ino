@@ -27,7 +27,7 @@ const char* password = "YOUR_WIFI_PASSWORD";
 // ===== KONFIGURASI AZURE IOT HUB =====
 // Ganti dengan connection string dari .env.local
 // Format: HostName=xxx.azure-devices.net;DeviceId=xxx;SharedAccessKey=xxx
-static const char* connectionString = "HostName=traffic-iot-slam.azure-devices.net;DeviceId=lane-north;SharedAccessKey=AV/tmspOryhQLGSufivVq275yYM/TWDGZCn+vicZ6Xo=";
+static const char* connectionString = "HostName=YOUR_IOT_HUB.azure-devices.net;DeviceId=YOUR_DEVICE_ID;SharedAccessKey=YOUR_SHARED_ACCESS_KEY";
 
 // ===== PIN KONFIGURASI =====
 // Traffic Light LEDs
