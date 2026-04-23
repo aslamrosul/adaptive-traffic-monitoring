@@ -4,6 +4,7 @@ import "./globals.css";
 import ToastProvider from "@/components/Toast";
 import { Providers } from "./providers";
 import SessionProvider from "@/components/SessionProvider";
+import LoadingProvider from "@/components/LoadingProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -36,8 +37,10 @@ export default function RootLayout({
       <body className={`${inter.variable} ${manrope.variable} font-body antialiased`}>
         <SessionProvider>
           <Providers>
-            <ToastProvider />
-            {children}
+            <LoadingProvider>
+              <ToastProvider />
+              {children}
+            </LoadingProvider>
           </Providers>
         </SessionProvider>
       </body>

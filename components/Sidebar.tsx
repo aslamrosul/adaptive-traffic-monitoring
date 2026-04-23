@@ -93,22 +93,24 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
             >
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate">
+            <Link href="/" className="flex-1 min-w-0">
+              <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
                 Aerial Command
               </h1>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                 <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Desktop: Logo + Status (original layout) */}
           <div className="hidden lg:block">
-            <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline">
-              Aerial Command
-            </h1>
+            <Link href="/">
+              <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline hover:text-blue-600 transition-colors cursor-pointer">
+                Aerial Command
+              </h1>
+            </Link>
             <div className="flex items-center gap-2 mt-1">
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}

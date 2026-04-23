@@ -6,6 +6,7 @@ import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 interface HeaderProps {
   title: string;
@@ -78,15 +79,15 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
               {isSidebarOpen ? "close" : "menu"}
             </span>
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate">
+          <Link href="/" className="flex-1 min-w-0">
+            <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
               Aerial Command
             </h1>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
               <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Desktop Title */}
