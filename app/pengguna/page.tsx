@@ -1,7 +1,6 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import DashboardLayout from "@/components/DashboardLayout";
 import ModalTambahUser from "@/components/ModalTambahUser";
 import ModalEditUser from "@/components/ModalEditUser";
 import { motion } from "framer-motion";
@@ -143,10 +142,7 @@ export default function PenggunaPage() {
 
   return (
     <>
-      <Sidebar />
-      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
-        <Header title="Sistem Pantauan Lalu Lintas" />
-
+      <DashboardLayout title="Sistem Pantauan Lalu Lintas">
         <div className="p-4 lg:p-8 max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -376,7 +372,7 @@ export default function PenggunaPage() {
             </motion.div>
           </div>
         </div>
-      </main>
+      </DashboardLayout>
 
       <ModalTambahUser
         isOpen={showModal}

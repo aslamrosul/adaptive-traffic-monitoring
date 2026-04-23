@@ -7,8 +7,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
-export default function Header({ title, dateRange }: { title: string; dateRange?: string }) {
+interface HeaderProps {
+  title: string;
+  dateRange?: string;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [startDate, setStartDate] = useState("2023-10-24");
   const [endDate, setEndDate] = useState("2023-10-30");
 
@@ -35,17 +43,73 @@ export default function Header({ title, dateRange }: { title: string; dateRange?
   };
 
   return (
-    <header className="sticky top-0 lg:top-0 top-16 z-30 w-full h-16 glass-header px-4 lg:px-8 flex justify-between items-center shadow-sm">
+    <header className="sticky top-0 z-30 w-full h-16 glass-header px-4 lg:px-8 flex justify-between items-center shadow-sm">
+      {/* Mobile Search Overlay */}
+      <AnimatePresence>
+        {showMobileSearch && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 bg-white z-[60] flex items-center px-4 gap-2"
+          >
+            <button
+              onClick={() => setShowMobileSearch(false)}
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div className="flex-1">
+              <SearchBar isMobile autoFocus />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
-        <h2 className="font-headline font-extrabold text-sm lg:text-xl tracking-tight text-slate-900 truncate">
+        {/* Mobile Toggle Button & Logo */}
+        <div className="lg:hidden flex items-center gap-3">
+          <button
+            onClick={onToggleSidebar}
+            className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 transition-colors flex-shrink-0"
+            aria-label="Toggle Menu"
+          >
+            <span className="material-symbols-outlined text-xl">
+              {isSidebarOpen ? "close" : "menu"}
+            </span>
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate">
+              Aerial Command
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+              <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Title */}
+        <h2 className="hidden lg:block font-headline font-extrabold text-xl tracking-tight text-slate-900 truncate">
           {title}
         </h2>
+        
+        {/* Desktop Search Bar */}
         <div className="hidden md:block flex-1 max-w-md">
           <SearchBar />
         </div>
       </div>
 
-      <div className="flex items-center gap-1 lg:gap-4">
+      <div className="flex items-center gap-1 lg:gap-2">
+        {/* Mobile Search Icon */}
+        <button
+          onClick={() => setShowMobileSearch(true)}
+          className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+          aria-label="Search"
+        >
+          <span className="material-symbols-outlined">search</span>
+        </button>
+
         {dateRange && (
           <div className="relative hidden sm:block">
             <button

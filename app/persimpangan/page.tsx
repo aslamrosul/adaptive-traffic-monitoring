@@ -1,7 +1,6 @@
 "use client";
 
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -37,12 +36,8 @@ export default function PersimpanganPage() {
   };
 
   return (
-    <>
-      <Sidebar />
-      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50">
-        <Header title="Daftar Persimpangan" />
-
-        <div className="p-4 lg:p-8 space-y-4 lg:space-y-6">
+    <DashboardLayout title="Daftar Persimpangan">
+      <div className="p-4 lg:p-8 space-y-4 lg:space-y-6">
           {/* Stats Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
             <motion.div
@@ -206,7 +201,6 @@ export default function PersimpanganPage() {
             )}
           </div>
         </div>
-      </main>
-    </>
+    </DashboardLayout>
   );
 }

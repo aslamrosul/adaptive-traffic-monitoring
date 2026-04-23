@@ -5,11 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useTrafficStore } from "@/lib/store";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  isMobile?: boolean;
+  autoFocus?: boolean;
+}
+
+export default function SearchBar({ isMobile = false, autoFocus = false }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [filteredResults, setFilteredResults] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   
   const { intersections, fetchIntersections, isLoading } = useTrafficStore();
@@ -20,6 +26,13 @@ export default function SearchBar() {
       fetchIntersections();
     }
   }, [intersections.length, fetchIntersections]);
+
+  // Auto focus for mobile
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
 
   // Filter results based on query
   useEffect(() => {
@@ -65,11 +78,14 @@ export default function SearchBar() {
   };
 
   return (
-    <div ref={searchRef} className="relative hidden md:block">
-      <div className="flex items-center bg-slate-100 rounded-full px-4 py-1.5 gap-2 border border-outline-variant/10 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+    <div ref={searchRef} className="relative w-full">
+      <div className="flex items-center bg-slate-100 rounded-full px-4 py-2 gap-2 border border-outline-variant/10 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
         <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
         <input
-          className="bg-transparent border-none focus:ring-0 text-sm font-label w-48 text-on-surface-variant placeholder:text-slate-400 outline-none"
+          ref={inputRef}
+          className={`bg-transparent border-none focus:ring-0 text-sm font-label text-on-surface-variant placeholder:text-slate-400 outline-none ${
+            isMobile ? "w-full" : "w-full"
+          }`}
           placeholder="Cari simpangan..."
           type="text"
           value={query}
@@ -82,7 +98,7 @@ export default function SearchBar() {
               setQuery("");
               setShowResults(false);
             }}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
           >
             <span className="material-symbols-outlined text-sm">close</span>
           </button>
@@ -95,7 +111,9 @@ export default function SearchBar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50"
+            className={`absolute top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] ${
+              isMobile ? "left-0 right-0" : "w-80"
+            }`}
           >
             <div className="p-3 border-b border-slate-100">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -117,20 +135,20 @@ export default function SearchBar() {
                     className="w-full px-4 py-3 hover:bg-slate-50 transition-colors text-left flex items-center justify-between group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <span className="material-symbols-outlined text-primary text-sm">
                           traffic
                         </span>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors truncate">
                           {item.name}
                         </p>
-                        <p className="text-xs text-slate-500">{item.address || 'Jakarta'}</p>
+                        <p className="text-xs text-slate-500 truncate">{item.address || 'Jakarta'}</p>
                       </div>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusColor(
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ml-2 ${getStatusColor(
                         item.status
                       )}`}
                     >

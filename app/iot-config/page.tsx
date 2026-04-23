@@ -1,8 +1,7 @@
 "use client";
 
-import Header from "@/components/Header";
+import DashboardLayout from "@/components/DashboardLayout";
 import IoTConfigPanel from "@/components/IoTConfigPanel";
-import Sidebar from "@/components/Sidebar";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -37,12 +36,8 @@ export default function IoTConfigPage() {
   const selectedIntersection = intersections[selectedIndex];
 
   return (
-    <>
-      <Sidebar />
-      <main className="ml-64 min-h-screen bg-slate-50">
-        <Header title="Remote Configuration IoT" />
-
-        <div className="p-8 space-y-6 max-w-7xl mx-auto">
+    <DashboardLayout title="Remote Configuration IoT">
+      <div className="p-8 space-y-6 max-w-7xl mx-auto">
           {/* Info Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -193,7 +188,6 @@ export default function IoTConfigPage() {
             </div>
           </motion.div>
         </div>
-      </main>
-    </>
+      </DashboardLayout>
   );
 }
