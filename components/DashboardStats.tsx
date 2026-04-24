@@ -1,12 +1,17 @@
 "use client";
 
-import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useDashboardWithFilter, type TimeRange, type DateRange } from "@/lib/hooks/useDashboardWithFilter";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-export default function DashboardStats() {
+interface DashboardStatsProps {
+  timeRange: TimeRange;
+  customDates?: DateRange;
+}
+
+export default function DashboardStats({ timeRange, customDates }: DashboardStatsProps) {
   const router = useRouter();
-  const { stats, isLoading } = useDashboard();
+  const { stats, isLoading } = useDashboardWithFilter(timeRange, customDates);
 
   if (isLoading || !stats) {
     return (

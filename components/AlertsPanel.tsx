@@ -1,14 +1,19 @@
 "use client";
 
-import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useDashboardWithFilter, type TimeRange, type DateRange } from "@/lib/hooks/useDashboardWithFilter";
 import { useTrafficStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AlertsPanel() {
+interface AlertsPanelProps {
+  timeRange: TimeRange;
+  customDates?: DateRange;
+}
+
+export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps) {
   const router = useRouter();
-  const { recentEvents, isLoading } = useDashboard();
+  const { recentEvents, isLoading } = useDashboardWithFilter(timeRange, customDates);
   const { intersections, fetchIntersections } = useTrafficStore();
 
   useEffect(() => {

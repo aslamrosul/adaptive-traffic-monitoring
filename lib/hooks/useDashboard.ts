@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 
+export type TimeRange = "today" | "yesterday" | "7days" | "30days" | "custom";
+
+export interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
 export interface DashboardStats {
   totalVehicles: number;
   totalVehiclesToday: number;

@@ -1,11 +1,16 @@
 "use client";
 
-import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useDashboardWithFilter, type TimeRange, type DateRange } from "@/lib/hooks/useDashboardWithFilter";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
-export default function TrafficTrendChart() {
-  const { trafficTrend, isLoading, stats } = useDashboard();
+interface TrafficTrendChartProps {
+  timeRange: TimeRange;
+  customDates?: DateRange;
+}
+
+export default function TrafficTrendChart({ timeRange, customDates }: TrafficTrendChartProps) {
+  const { trafficTrend, isLoading, stats } = useDashboardWithFilter(timeRange, customDates);
   const [period, setPeriod] = useState("today");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
