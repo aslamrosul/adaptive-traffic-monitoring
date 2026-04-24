@@ -31,6 +31,7 @@ interface IoTConfig {
   };
   status?: string;
   updatedAt?: string;
+  lastSyncedAt?: string | null;
 }
 
 interface IoTConfigPanelProps {
