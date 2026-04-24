@@ -1,58 +1,34 @@
 "use client";
 
-import { useTrafficStore } from "@/lib/store";
+import { useDashboard } from "@/lib/hooks/useDashboard";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function DashboardStats() {
   const router = useRouter();
-  const { intersections, fetchIntersections } = useTrafficStore();
-  const [stats, setStats] = useState({
-    totalVehicles: "0",
-    iotStatus: "0%",
-    activeDevices: "0/0",
-    avgWaitTime: "0",
-    flowScore: "N/A",
-  });
+  const { stats, isLoading } = useDashboard();
 
-  useEffect(() => {
-    if (intersections.length === 0) {
-      fetchIntersections();
-    }
-  }, [intersections.length, fetchIntersections]);
-
-  useEffect(() => {
-    if (intersections.length > 0) {
-      // Calculate stats from intersections data
-      const activeCount = intersections.filter(i => 
-        i.status?.toLowerCase().includes('active') || 
-        !i.status?.toLowerCase().includes('inactive')
-      ).length;
-      const totalCount = intersections.length;
-      const iotPercentage = totalCount > 0 ? ((activeCount / totalCount) * 100) : 0;
-
-      // Mock calculations - in production, fetch from analytics API
-      const totalVehicles = (Math.random() * 500000 + 1000000).toFixed(0);
-      const avgWait = (Math.random() * 20 + 30).toFixed(0);
-      const score = iotPercentage > 90 ? "A" : iotPercentage > 80 ? "B+" : iotPercentage > 70 ? "B" : "C";
-
-      setStats({
-        totalVehicles: parseInt(totalVehicles).toLocaleString(),
-        iotStatus: `${iotPercentage.toFixed(1)}%`,
-        activeDevices: `${activeCount}/${totalCount}`,
-        avgWaitTime: avgWait,
-        flowScore: score,
-      });
-    }
-  }, [intersections]);
+  if (isLoading || !stats) {
+    return (
+      <section className="space-y-6">
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white p-4 md:p-6 rounded-xl animate-pulse">
+              <div className="h-4 bg-slate-200 rounded w-20 mb-4"></div>
+              <div className="h-8 bg-slate-200 rounded w-16"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   const statsConfig = [
     {
       label: "Total Kendaraan",
-      value: stats.totalVehicles,
-      change: "+12% vs Kemarin",
-      changeType: "positive",
+      value: stats.totalVehiclesToday.toLocaleString(),
+      change: `${stats.changeVsYesterday >= 0 ? '+' : ''}${stats.changeVsYesterday}% vs Kemarin`,
+      changeType: stats.changeVsYesterday >= 0 ? "positive" : "negative",
       icon: "directions_car",
       bgColor: "bg-surface-container-lowest",
       iconBg: "bg-primary-fixed",
@@ -61,8 +37,8 @@ export default function DashboardStats() {
     },
     {
       label: "Status IoT",
-      value: stats.iotStatus,
-      subtitle: `${stats.activeDevices} Perangkat Aktif`,
+      value: `${stats.iotPercentage}%`,
+      subtitle: `${stats.activeDevices}/${stats.totalDevices} Perangkat Aktif`,
       icon: "cloud_done",
       bgColor: "bg-surface-container-lowest",
       iconBg: "bg-emerald-100",
@@ -71,10 +47,10 @@ export default function DashboardStats() {
     },
     {
       label: "Waktu Tunggu (Rerata)",
-      value: stats.avgWaitTime,
+      value: stats.avgWaitTime.toString(),
       unit: "detik",
-      change: "+5 detik hari ini",
-      changeType: "negative",
+      change: `${stats.changeWaitTime >= 0 ? '+' : ''}${stats.changeWaitTime} detik hari ini`,
+      changeType: stats.changeWaitTime >= 0 ? "negative" : "positive",
       icon: "timer",
       bgColor: "bg-surface-container-lowest",
       iconBg: "bg-secondary-fixed",
@@ -84,14 +60,14 @@ export default function DashboardStats() {
     {
       label: "Skor Kelancaran",
       value: stats.flowScore,
-      subtitle: "Stabil dalam 2 jam terakhir",
+      subtitle: "Berdasarkan data real-time",
       icon: "speed",
       bgColor: "bg-primary",
       iconBg: "",
       iconColor: "text-primary-fixed",
       textColor: "text-on-primary",
       special: true,
-      link: "/peta",
+      link: "/Analist",
     },
   ];
 
