@@ -1,4 +1,5 @@
 import { containers } from '@/lib/azure-cosmos';
+import { sendConfigToDevice } from '@/lib/azure-iot-hub';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
