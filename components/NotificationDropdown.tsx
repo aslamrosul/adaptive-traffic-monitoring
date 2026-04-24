@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
 import { useNotificationStore } from "@/lib/store";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -194,7 +194,9 @@ export default function NotificationDropdown() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      router.push(notif.actionUrl);
+                                      if (notif.actionUrl) {
+                                        router.push(notif.actionUrl);
+                                      }
                                       setIsOpen(false);
                                     }}
                                     className="px-3 py-1.5 bg-primary text-white rounded-lg font-semibold text-xs hover:bg-blue-700 transition-colors"
