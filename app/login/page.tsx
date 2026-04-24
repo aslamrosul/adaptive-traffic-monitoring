@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,8 +30,8 @@ export default function LoginPage() {
         toast.error(result.error);
       } else {
         toast.success("Login berhasil!");
-        router.push("/");
-        router.refresh();
+        // Redirect to dashboard
+        window.location.href = "/dashboard";
       }
     } catch (error: any) {
       toast.error(error.message || "Gagal login");
@@ -126,7 +126,7 @@ export default function LoginPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
             disabled={isLoading}
             className="w-full bg-white border-2 border-slate-300 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
@@ -165,7 +165,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Credentials */}
+        {/* Demo Mode */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -173,14 +173,29 @@ export default function LoginPage() {
           className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4"
         >
           <p className="text-xs font-semibold text-blue-900 mb-2">
-            Demo Credentials:
+            💡 Mode Demo - Langsung Masuk:
           </p>
-          <p className="text-xs text-blue-700">
-            Email: admin@traffic.com
-            <br />
-            Password: admin123
+          <p className="text-xs text-blue-700 mb-3">
+            Untuk testing, Anda bisa langsung masuk ke dashboard tanpa login
           </p>
+          <Link
+            href="/dashboard"
+            className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Masuk ke Dashboard (Demo)
+          </Link>
         </motion.div>
+
+        {/* Back to Home */}
+        <div className="mt-4 text-center">
+          <Link
+            href="/"
+            className="text-sm text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            Kembali ke Beranda
+          </Link>
+        </div>
       </motion.div>
     </div>
   );
