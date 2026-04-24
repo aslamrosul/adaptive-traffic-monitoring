@@ -1,9 +1,9 @@
 "use client";
 
+import { useTrafficStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useTrafficStore } from "@/lib/store";
 
 export default function DashboardStats() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function DashboardStats() {
         !i.status?.toLowerCase().includes('inactive')
       ).length;
       const totalCount = intersections.length;
-      const iotPercentage = totalCount > 0 ? ((activeCount / totalCount) * 100).toFixed(1) : "0";
+      const iotPercentage = totalCount > 0 ? ((activeCount / totalCount) * 100) : 0;
 
       // Mock calculations - in production, fetch from analytics API
       const totalVehicles = (Math.random() * 500000 + 1000000).toFixed(0);
@@ -39,7 +39,7 @@ export default function DashboardStats() {
 
       setStats({
         totalVehicles: parseInt(totalVehicles).toLocaleString(),
-        iotStatus: `${iotPercentage}%`,
+        iotStatus: `${iotPercentage.toFixed(1)}%`,
         activeDevices: `${activeCount}/${totalCount}`,
         avgWaitTime: avgWait,
         flowScore: score,
