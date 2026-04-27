@@ -132,16 +132,30 @@ export default function DetailPersimpanganPage({
     );
     const totalVolume = laneTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
     
-    // Simulate traffic light status based on volume
+    // Get traffic light status from database (from latest traffic data)
+    const latestTraffic = laneTraffic.length > 0 ? laneTraffic[0] : null;
     let light: LightColor = 'red';
-    if (idx === 0) light = 'green'; // First lane is green
-    else if (idx === 2) light = 'yellow'; // Third lane is yellow
+    
+    if (latestTraffic?.trafficLight) {
+      // Use actual traffic light data from database
+      const lightStatus = latestTraffic.trafficLight.toLowerCase();
+      if (lightStatus === 'green' || lightStatus === 'hijau') light = 'green';
+      else if (lightStatus === 'yellow' || lightStatus === 'kuning') light = 'yellow';
+      else light = 'red';
+    } else {
+      // Fallback: simulate based on index if no data
+      if (idx === 0) light = 'green';
+      else if (idx === 2) light = 'yellow';
+    }
+    
+    // Calculate duration based on light color
+    const duration = light === 'green' ? 45 : light === 'yellow' ? 12 : 30;
     
     return {
       direction,
       street: intersection.address?.split(',')[0] || direction,
       volume: totalVolume,
-      duration: light === 'green' ? 45 : light === 'yellow' ? 12 : 30,
+      duration,
       light,
     };
   });
@@ -321,35 +335,35 @@ export default function DetailPersimpanganPage({
               className="space-y-4"
             >
               <h3 className="font-headline font-bold text-slate-900">Kontrol Jalur Real-time</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {data.lanes.map((lane, idx) => (
                   <motion.div
                     key={lane.direction}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 + idx * 0.08 }}
-                    className="bg-surface-container-lowest rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-surface-container-lowest rounded-xl p-4 lg:p-5 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between gap-3 lg:gap-4">
                       {/* Left side - Text content */}
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 space-y-2 lg:space-y-3">
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${lane.light === "green" ? "bg-primary animate-pulse" : "bg-slate-300"}`}></span>
-                          <p className="text-sm font-bold text-slate-900">
+                          <p className="text-xs lg:text-sm font-bold text-slate-900">
                             Jalur {lane.direction}
                           </p>
                         </div>
-                        <p className="text-xs text-slate-500">{lane.street}</p>
+                        <p className="text-[10px] lg:text-xs text-slate-500 line-clamp-1">{lane.street}</p>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-1.5 lg:space-y-2">
                           <div>
-                            <p className="text-[10px] uppercase text-slate-400 font-bold">Volume</p>
-                            <p className="text-lg font-headline font-bold">
+                            <p className="text-[9px] lg:text-[10px] uppercase text-slate-400 font-bold">Volume</p>
+                            <p className="text-base lg:text-lg font-headline font-bold">
                               {lane.volume > 0 ? lane.volume.toLocaleString("id-ID") : "-"}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] uppercase text-slate-400 font-bold">Durasi</p>
+                            <p className="text-[9px] lg:text-[10px] uppercase text-slate-400 font-bold">Durasi</p>
                             <LightDurationColor color={lane.light} duration={lane.duration} />
                           </div>
                         </div>
