@@ -4,10 +4,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function PersimpanganPage() {
   const router = useRouter();
   const { intersections, isLoading, isError } = useIntersections();
+  const [showAll, setShowAll] = useState(false);
+
+  const INITIAL_DISPLAY_COUNT = 6;
+  const displayedIntersections = showAll 
+    ? intersections 
+    : intersections.slice(0, INITIAL_DISPLAY_COUNT);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -143,61 +150,135 @@ export default function PersimpanganPage() {
                 <p className="text-slate-500 text-sm mt-1">Tambahkan persimpangan pertama Anda</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {intersections.map((intersection: any, idx: number) => (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {displayedIntersections.map((intersection: any, idx: number) => (
+                    <motion.div
+                      key={intersection.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                      onClick={() => router.push(`/persimpangan/${intersection.id}`)}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">
+                            {intersection.name}
+                          </h4>
+                          <p className="text-xs text-slate-500 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">location_on</span>
+                            {intersection.address}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${getStatusColor(intersection.status)}`}>
+                          {getStatusText(intersection.status)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Device ID</p>
+                          <p className="text-sm font-bold text-slate-900">{intersection.deviceId || '-'}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Jalur</p>
+                          <p className="text-sm font-bold text-slate-900">{intersection.lanes?.count || 4}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span className="material-symbols-outlined text-sm">update</span>
+                          <span>Update: {new Date(intersection.updatedAt).toLocaleDateString('id-ID')}</span>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/persimpangan/${intersection.id}`);
+                          }}
+                          className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
+                        >
+                          Detail
+                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Show More Button */}
+                {intersections.length > INITIAL_DISPLAY_COUNT && !showAll && (
                   <motion.div
-                    key={intersection.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => router.push(`/persimpangan/${intersection.id}`)}
+                    transition={{ delay: 0.3 }}
+                    className="mt-8 flex flex-col items-center gap-4"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">
-                          {intersection.name}
-                        </h4>
-                        <p className="text-xs text-slate-500 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">location_on</span>
-                          {intersection.address}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${getStatusColor(intersection.status)}`}>
-                        {getStatusText(intersection.status)}
+                    {/* Gradient Divider */}
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                    
+                    <button
+                      onClick={() => setShowAll(true)}
+                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-blue-700 text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-blue-600/30 transition-all duration-300 hover:scale-105 overflow-hidden"
+                    >
+                      {/* Animated Background */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      {/* Content */}
+                      <span className="relative z-10 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-xl animate-bounce">visibility</span>
+                        <span>Lihat Semua Persimpangan</span>
                       </span>
-                    </div>
+                      
+                      {/* Badge */}
+                      <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-extrabold flex items-center gap-1">
+                        <span className="material-symbols-outlined text-base">add</span>
+                        {intersections.length - INITIAL_DISPLAY_COUNT} lagi
+                      </span>
+                      
+                      {/* Arrow Icon */}
+                      <span className="relative z-10 material-symbols-outlined text-xl group-hover:translate-y-1 transition-transform duration-300">
+                        expand_more
+                      </span>
+                    </button>
 
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-slate-50 rounded-lg p-3">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Device ID</p>
-                        <p className="text-sm font-bold text-slate-900">{intersection.deviceId || '-'}</p>
-                      </div>
-                      <div className="bg-slate-50 rounded-lg p-3">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Jalur</p>
-                        <p className="text-sm font-bold text-slate-900">{intersection.lanes?.count || 4}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span className="material-symbols-outlined text-sm">update</span>
-                        <span>Update: {new Date(intersection.updatedAt).toLocaleDateString('id-ID')}</span>
-                      </div>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/persimpangan/${intersection.id}`);
-                        }}
-                        className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
-                      >
-                        Detail
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                      </button>
-                    </div>
+                    <p className="text-xs text-slate-500 font-medium">
+                      Menampilkan {INITIAL_DISPLAY_COUNT} dari {intersections.length} persimpangan
+                    </p>
                   </motion.div>
-                ))}
-              </div>
+                )}
+
+                {/* Show Less Button */}
+                {showAll && intersections.length > INITIAL_DISPLAY_COUNT && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8 flex flex-col items-center gap-4"
+                  >
+                    {/* Gradient Divider */}
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                    
+                    <button
+                      onClick={() => {
+                        setShowAll(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="group inline-flex items-center gap-3 px-8 py-4 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:border-primary hover:text-primary hover:shadow-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <span className="material-symbols-outlined text-xl group-hover:-translate-y-1 transition-transform duration-300">
+                        expand_less
+                      </span>
+                      <span>Tampilkan Lebih Sedikit</span>
+                      <span className="material-symbols-outlined text-xl">arrow_upward</span>
+                    </button>
+
+                    <p className="text-xs text-slate-500 font-medium">
+                      Menampilkan semua {intersections.length} persimpangan
+                    </p>
+                  </motion.div>
+                )}
+              </>
             )}
           </div>
         </div>
