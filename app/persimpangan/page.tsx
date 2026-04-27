@@ -1,17 +1,30 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import ModalTambahPersimpangan from "@/components/ModalTambahPersimpangan";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function PersimpanganPage() {
   const router = useRouter();
-  const { intersections, isLoading, isError } = useIntersections();
+  const { intersections, isLoading, isError, mutate } = useIntersections();
   const [showAll, setShowAll] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const INITIAL_DISPLAY_COUNT = 6;
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const INITIAL_DISPLAY_COUNT = isMobile ? 4 : 6;
   const displayedIntersections = showAll 
     ? intersections 
     : intersections.slice(0, INITIAL_DISPLAY_COUNT);
@@ -121,10 +134,20 @@ export default function PersimpanganPage() {
 
           {/* Intersections Grid */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-headline font-bold text-slate-900 text-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-headline font-bold text-slate-900 text-lg lg:text-xl">
                 Semua Persimpangan
               </h3>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="group inline-flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-primary to-blue-700 text-white rounded-lg lg:rounded-xl font-bold hover:shadow-xl hover:shadow-blue-600/30 transition-all duration-300 hover:scale-105"
+              >
+                <span className="material-symbols-outlined text-lg lg:text-xl group-hover:rotate-90 transition-transform duration-300">
+                  add_circle
+                </span>
+                <span className="hidden sm:inline">Tambah Persimpangan</span>
+                <span className="sm:hidden">Tambah</span>
+              </button>
             </div>
 
             {isLoading ? (
@@ -282,6 +305,13 @@ export default function PersimpanganPage() {
             )}
           </div>
         </div>
+
+      {/* Modal Tambah Persimpangan */}
+      <ModalTambahPersimpangan
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => mutate()}
+      />
     </DashboardLayout>
   );
 }
