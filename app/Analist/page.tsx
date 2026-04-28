@@ -195,17 +195,17 @@ export default function AnalitikPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex flex-col md:flex-row justify-between items-end gap-4"
+            className="flex flex-col gap-4"
           >
             <div className="space-y-1">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest font-label">
                 Parameter Analitik
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <select
                   value={selectedIntersection}
                   onChange={(e) => handleIntersectionChange(e.target.value)}
-                  className="bg-white border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm min-w-[200px]"
+                  className="bg-white border border-outline-variant/30 rounded-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[180px]"
                   disabled={loadingIntersections}
                 >
                   <option value="all">Semua Persimpangan</option>
@@ -218,7 +218,7 @@ export default function AnalitikPage() {
                 <select
                   value={selectedLane}
                   onChange={(e) => handleLaneChange(e.target.value)}
-                  className="bg-white border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm min-w-[200px]"
+                  className="bg-white border border-outline-variant/30 rounded-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[150px]"
                 >
                   <option>Semua Jalur</option>
                   <option>Jalur Utara</option>
@@ -233,10 +233,11 @@ export default function AnalitikPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleExport}
-                className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+                className="flex items-center justify-center sm:justify-start gap-2 bg-primary text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all w-full sm:w-auto"
               >
                 <span className="material-symbols-outlined text-lg">download</span>
-                Ekspor Data (.csv)
+                <span className="hidden sm:inline">Ekspor Data (.csv)</span>
+                <span className="sm:hidden">Ekspor</span>
               </motion.button>
             </div>
           </motion.section>
