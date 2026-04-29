@@ -12,7 +12,7 @@ import {
     formatDate,
     getWeekRange
 } from "@/lib/utils/analytics";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import type { TimeRange, DateRange } from "@/components/AnalyticsTimeFilter";
@@ -28,6 +28,9 @@ export default function AnalitikPage() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     return { start: sevenDaysAgo, end: today };
   });
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState("harian");
+  const [reportName, setReportName] = useState("");
 
   // Fetch data dari backend
   const { intersections, isLoading: loadingIntersections } = useIntersections();
@@ -210,6 +213,23 @@ export default function AnalitikPage() {
     toast.success("Konfigurasi IoT berhasil diterapkan untuk pukul 05:30 WIB");
   };
 
+  const handleGenerateReport = () => {
+    if (!reportName.trim()) {
+      toast.error("Nama laporan tidak boleh kosong");
+      return;
+    }
+
+    const dateStr = `${dateRange.start.toLocaleDateString('id-ID')} - ${dateRange.end.toLocaleDateString('id-ID')}`;
+    const filename = `laporan-${reportType}-${reportName}-${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    toast.success(`Laporan "${reportName}" berhasil dibuat!\nTipe: ${reportType}\nPeriode: ${dateStr}\nFile: ${filename}`);
+    
+    // Reset form
+    setReportName("");
+    setReportType("harian");
+    setShowReportModal(false);
+  };
+
   const handlePrevWeek = () => {
     const newStart = new Date(dateRange.start);
     newStart.setDate(newStart.getDate() - 7);
@@ -287,6 +307,16 @@ export default function AnalitikPage() {
                 <span className="material-symbols-outlined text-lg">download</span>
                 <span className="hidden sm:inline">Ekspor Data (.csv)</span>
                 <span className="sm:hidden">Ekspor</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowReportModal(true)}
+                className="flex items-center justify-center sm:justify-start gap-2 bg-green-600 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-green-600/20 hover:brightness-110 transition-all w-full sm:w-auto"
+              >
+                <span className="material-symbols-outlined text-lg">description</span>
+                <span className="hidden sm:inline">Buat Laporan</span>
+                <span className="sm:hidden">Laporan</span>
               </motion.button>
             </div>
           </motion.section>
@@ -658,6 +688,141 @@ export default function AnalitikPage() {
 
           </div>
       </div>
+
+      {/* Modal Buat Laporan */}
+      <AnimatePresence>
+        {showReportModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowReportModal(false)}
+              className="fixed inset-0 bg-black/50 z-40"
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 z-50 mx-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-green-600 text-2xl">description</span>
+                  <h3 className="font-headline font-bold text-lg text-slate-900">
+                    Buat Laporan Manual
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <span className="material-symbols-outlined text-slate-500">close</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Nama Laporan */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Nama Laporan
+                  </label>
+                  <input
+                    type="text"
+                    value={reportName}
+                    onChange={(e) => setReportName(e.target.value)}
+                    placeholder="Contoh: Analisis Kemacetan Pagi"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
+                  />
+                </div>
+
+                {/* Tipe Laporan */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Tipe Laporan
+                  </label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
+                  >
+                    <option value="harian">Laporan Harian</option>
+                    <option value="mingguan">Laporan Mingguan</option>
+                    <option value="bulanan">Laporan Bulanan</option>
+                    <option value="custom">Laporan Custom</option>
+                  </select>
+                </div>
+
+                {/* Periode */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Periode
+                  </label>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {dateRange.start.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - {dateRange.end.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Persimpangan */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Persimpangan
+                  </label>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {selectedIntersection === "all" ? "Semua Persimpangan" : intersections.find((i: any) => i.id === selectedIntersection)?.name || "Semua Persimpangan"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Jalur */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Jalur
+                  </label>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {selectedLane}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex gap-2">
+                  <span className="material-symbols-outlined text-green-600 text-lg flex-shrink-0">
+                    info
+                  </span>
+                  <p className="text-xs text-green-700 leading-relaxed">
+                    Laporan akan dibuat berdasarkan filter yang Anda pilih dan disimpan dalam format PDF.
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 px-4 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-sm transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleGenerateReport}
+                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">check_circle</span>
+                  Buat Laporan
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   );
 }

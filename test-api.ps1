@@ -14,21 +14,21 @@ $body = @{
 
 try {
     $response = Invoke-RestMethod -Uri "http://localhost:3000/api/traffic/realtime" -Method POST -Headers @{"Content-Type"="application/json"} -Body $body
-    Write-Host "✅ Data inserted successfully!" -ForegroundColor Green
+    Write-Host " Data inserted successfully!" -ForegroundColor Green
     Write-Host "Response: $($response | ConvertTo-Json)" -ForegroundColor Gray
 } catch {
-    Write-Host "❌ Error inserting data: $_" -ForegroundColor Red
+    Write-Host " Error inserting data: $_" -ForegroundColor Red
 }
 
 # Test 2: Get data
 Write-Host "`n2. Fetching data from Cosmos DB..." -ForegroundColor Yellow
 try {
     $data = Invoke-RestMethod -Uri "http://localhost:3000/api/traffic/realtime" -Method GET
-    Write-Host "✅ Data fetched successfully!" -ForegroundColor Green
+    Write-Host " Data fetched successfully!" -ForegroundColor Green
     Write-Host "Total records: $($data.count)" -ForegroundColor Gray
     Write-Host "Data: $($data.data | ConvertTo-Json -Depth 3)" -ForegroundColor Gray
 } catch {
-    Write-Host "❌ Error fetching data: $_" -ForegroundColor Red
+    Write-Host " Error fetching data: $_" -ForegroundColor Red
 }
 
 # Test 3: Insert more data
@@ -45,9 +45,9 @@ foreach ($device in $devices) {
     
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:3000/api/traffic/realtime" -Method POST -Headers @{"Content-Type"="application/json"} -Body $body
-        Write-Host "✅ Data inserted for $device" -ForegroundColor Green
+        Write-Host " Data inserted for $device" -ForegroundColor Green
     } catch {
-        Write-Host "❌ Error inserting data for $device" -ForegroundColor Red
+        Write-Host " Error inserting data for $device" -ForegroundColor Red
     }
 }
 
@@ -55,15 +55,15 @@ foreach ($device in $devices) {
 Write-Host "`n4. Fetching all data..." -ForegroundColor Yellow
 try {
     $data = Invoke-RestMethod -Uri "http://localhost:3000/api/traffic/realtime" -Method GET
-    Write-Host "✅ Total records now: $($data.count)" -ForegroundColor Green
+    Write-Host " Total records now: $($data.count)" -ForegroundColor Green
     
     if ($data.count -gt 0) {
         Write-Host "`nLatest data:" -ForegroundColor Cyan
         $data.data | Select-Object -First 5 | Format-Table deviceId, lane, vehicleCount, speed, density -AutoSize
     }
 } catch {
-    Write-Host "❌ Error fetching data: $_" -ForegroundColor Red
+    Write-Host " Error fetching data: $_" -ForegroundColor Red
 }
 
-Write-Host "`n✅ Test complete!" -ForegroundColor Green
+Write-Host "`n Test complete!" -ForegroundColor Green
 Write-Host "Check Azure Portal > Cosmos DB > Data Explorer to see the data!" -ForegroundColor Cyan
