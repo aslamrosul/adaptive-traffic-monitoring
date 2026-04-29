@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import AnalyticsTimeFilter from "@/components/AnalyticsTimeFilter";
 import { useAnalytics } from "@/lib/hooks/useAnalytics";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useIntersections } from "@/lib/hooks/useIntersections";
@@ -14,12 +15,19 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import type { TimeRange, DateRange } from "@/components/AnalyticsTimeFilter";
 
 export default function AnalitikPage() {
   const [selectedIntersection, setSelectedIntersection] = useState<string>("all");
   const [selectedLane, setSelectedLane] = useState("Semua Jalur");
-  const [currentWeek, setCurrentWeek] = useState(0);
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(getWeekRange(0));
+  const [timeRange, setTimeRange] = useState<TimeRange>("7days");
+  const [customDates, setCustomDates] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return { start: sevenDaysAgo, end: today };
+  });
 
   // Fetch data dari backend
   const { intersections, isLoading: loadingIntersections } = useIntersections();
@@ -35,10 +43,44 @@ export default function AnalitikPage() {
     "open"
   );
 
-  // Update date range ketika week berubah
+  // Update date range ketika time range berubah
   useEffect(() => {
-    setDateRange(getWeekRange(currentWeek));
-  }, [currentWeek]);
+    const today = new Date();
+    let start = new Date(today);
+
+    switch (timeRange) {
+      case "today":
+        start = new Date(today);
+        break;
+      case "yesterday":
+        start = new Date(today);
+        start.setDate(start.getDate() - 1);
+        break;
+      case "7days":
+        start.setDate(start.getDate() - 7);
+        break;
+      case "30days":
+        start.setDate(start.getDate() - 30);
+        break;
+      case "custom":
+        if (customDates) {
+          start = new Date(customDates.startDate);
+          today.setTime(new Date(customDates.endDate).getTime());
+        }
+        break;
+    }
+
+    setDateRange({ start, end: today });
+  }, [timeRange, customDates]);
+
+  const handleFilterChange = (range: TimeRange, dates?: DateRange) => {
+    setTimeRange(range);
+    if (range === "custom" && dates) {
+      setCustomDates(dates);
+    } else {
+      setCustomDates(undefined);
+    }
+  };
 
   // Hitung statistik dari data real-time
   const hourlyStats = useMemo(() => {
@@ -169,27 +211,39 @@ export default function AnalitikPage() {
   };
 
   const handlePrevWeek = () => {
-    setCurrentWeek((w) => Math.max(0, w - 1));
-    toast(`Menampilkan data minggu ke-${currentWeek}`, { icon: "📅" });
+    const newStart = new Date(dateRange.start);
+    newStart.setDate(newStart.getDate() - 7);
+    const newEnd = new Date(dateRange.start);
+    setDateRange({ start: newStart, end: newEnd });
+    toast(`Menampilkan data minggu sebelumnya`, { icon: "📅" });
   };
 
   const handleNextWeek = () => {
-    setCurrentWeek((w) => w + 1);
-    toast(`Menampilkan data minggu ke-${currentWeek + 2}`, { icon: "📅" });
+    const newStart = new Date(dateRange.end);
+    newStart.setDate(newStart.getDate() + 1);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + 6);
+    setDateRange({ start: newStart, end: newEnd });
+    toast(`Menampilkan data minggu berikutnya`, { icon: "📅" });
   };
 
   return (
     <DashboardLayout 
       title="Analitik Lalu Lintas"
-      dateRange={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`}
     >
       <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+
+        {/* Time Filter */}
+        <AnalyticsTimeFilter 
+          onFilterChange={handleFilterChange}
+          currentRange={timeRange}
+        />
 
           {/* Filters & Quick Actions */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.15 }}
             className="flex flex-col gap-4"
           >
             <div className="space-y-1">
@@ -461,20 +515,6 @@ export default function AnalitikPage() {
                   <p className="text-sm text-slate-500">
                     Visualisasi heatmap intensitas penumpukan kendaraan berdasarkan data node IoT.
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handlePrevWeek}
-                    className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center hover:bg-surface-container-high transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg">chevron_left</span>
-                  </button>
-                  <button
-                    onClick={handleNextWeek}
-                    className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center hover:bg-surface-container-high transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg">chevron_right</span>
-                  </button>
                 </div>
               </div>
 
