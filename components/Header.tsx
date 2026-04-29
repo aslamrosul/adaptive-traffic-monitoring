@@ -207,10 +207,15 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="sm:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 p-4 max-h-[80vh] overflow-y-auto"
+                    className="sm:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 p-6 max-h-[90vh] overflow-y-auto"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-lg text-slate-900">Pilih Rentang Tanggal</h3>
+                    {/* Handle Bar */}
+                    <div className="flex justify-center mb-4">
+                      <div className="w-12 h-1 bg-slate-300 rounded-full"></div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-bold text-xl text-slate-900">Pilih Rentang Tanggal</h3>
                       <button
                         onClick={() => setShowDatePicker(false)}
                         className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
@@ -219,50 +224,50 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
                       </button>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-600 mb-2">
-                          Tanggal Mulai
+                        <label className="block text-sm font-semibold text-slate-700 mb-3">
+                          📅 Tanggal Mulai
                         </label>
                         <input
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                          className="w-full px-4 py-4 border-2 border-slate-300 rounded-xl text-base focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-semibold text-slate-600 mb-2">
-                          Tanggal Akhir
+                        <label className="block text-sm font-semibold text-slate-700 mb-3">
+                          📅 Tanggal Akhir
                         </label>
                         <input
                           type="date"
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                          className="w-full px-4 py-4 border-2 border-slate-300 rounded-xl text-base focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       </div>
 
                       {/* Preview */}
-                      <div className="bg-slate-50 rounded-lg p-3 mt-4">
-                        <p className="text-xs text-slate-500 font-semibold mb-1">PREVIEW</p>
-                        <p className="text-sm font-bold text-slate-900">
+                      <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-4 mt-6 border border-blue-100">
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide mb-2">📊 Preview Periode</p>
+                        <p className="text-base font-bold text-slate-900">
                           {formatDateRange(startDate, endDate)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-6">
+                    <div className="flex gap-3 mt-8 pb-4">
                       <button
                         onClick={() => setShowDatePicker(false)}
-                        className="flex-1 px-4 py-3 text-slate-600 hover:bg-slate-100 rounded-lg font-semibold text-base transition-colors border border-slate-200"
+                        className="flex-1 px-4 py-4 text-slate-700 hover:bg-slate-100 rounded-xl font-semibold text-base transition-colors border-2 border-slate-200"
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleApplyDate}
-                        className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-bold text-base hover:brightness-110 transition-all"
+                        className="flex-1 px-4 py-4 bg-primary text-white rounded-xl font-bold text-base hover:brightness-110 transition-all shadow-lg shadow-primary/30"
                       >
                         Terapkan
                       </button>
