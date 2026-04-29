@@ -1,5 +1,6 @@
 "use client";
 
+import DashboardLayout from "@/components/DashboardLayout";
 import { useEvents, useIntersection, useRealtimeTraffic } from "@/lib/hooks";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
