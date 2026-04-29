@@ -399,7 +399,6 @@ export default function DetailPersimpanganPage({
             </motion.div>
           </div>
         </div>
-      </div>
     </DashboardLayout>
   );
 }
