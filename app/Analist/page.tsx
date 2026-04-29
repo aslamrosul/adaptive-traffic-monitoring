@@ -1,7 +1,6 @@
 "use client";
 
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useAnalytics } from "@/lib/hooks/useAnalytics";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useIntersections } from "@/lib/hooks/useIntersections";
@@ -180,15 +179,11 @@ export default function AnalitikPage() {
   };
 
   return (
-    <>
-      <Sidebar />
-      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen pb-12">
-        <Header 
-          title="Analitik Lalu Lintas" 
-          dateRange={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`} 
-        />
-
-        <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+    <DashboardLayout 
+      title="Analitik Lalu Lintas"
+      dateRange={`${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`}
+    >
+      <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
 
           {/* Filters & Quick Actions */}
           <motion.section
@@ -622,8 +617,7 @@ export default function AnalitikPage() {
             </motion.div>
 
           </div>
-        </div>
-      </main>
-    </>
+      </div>
+    </DashboardLayout>
   );
 }
