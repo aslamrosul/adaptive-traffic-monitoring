@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import ModalLaporan from "./ModalLaporan";
 
 const menuItems = [
   { icon: "dashboard", label: "Dasbor", href: "/dashboard" },
@@ -23,7 +22,6 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarProps = {}) {
   const pathname = usePathname();
-  const [showModal, setShowModal] = useState(false);
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { fetchProfile } = useProfileStore();
 
@@ -168,15 +166,6 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-slate-200/60">
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-full mb-4 py-3 px-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-blue-900/10 transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-lg">add_circle</span>
-              Laporan Baru
-            </span>
-          </button>
           <Link
             href="/profile?tab=settings"
             className="group flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-lg font-manrope font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
@@ -197,8 +186,6 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
           </Link>
         </div>
       </aside>
-
-      <ModalLaporan isOpen={showModal} onClose={() => setShowModal(false)} />
     </>
   );
 }

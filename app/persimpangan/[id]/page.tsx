@@ -1,7 +1,6 @@
 "use client";
 
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useEvents, useIntersection, useRealtimeTraffic } from "@/lib/hooks";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -90,23 +89,21 @@ export default function DetailPersimpanganPage({
 
   if (loadingIntersection) {
     return (
-      <>
-        <Sidebar />
-        <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+      <DashboardLayout title="Memuat...">
+        <div className="p-4 lg:p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-slate-600">Memuat data persimpangan...</p>
           </div>
-        </main>
-      </>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!intersection) {
     return (
-      <>
-        <Sidebar />
-        <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-slate-50 flex items-center justify-center">
+      <DashboardLayout title="Error">
+        <div className="p-4 lg:p-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
             <p className="text-slate-900 font-bold text-xl mb-2">Persimpangan tidak ditemukan</p>
@@ -117,8 +114,8 @@ export default function DetailPersimpanganPage({
               Kembali ke Daftar
             </button>
           </div>
-        </main>
-      </>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -130,26 +127,44 @@ export default function DetailPersimpanganPage({
     const laneTraffic = recentTrafficData.filter((t: any) => 
       t.direction?.toLowerCase() === direction.toLowerCase()
     );
+    
+    // Get latest traffic data for this lane (most recent)
+    const latestTraffic = laneTraffic.length > 0 
+      ? laneTraffic.sort((a: any, b: any) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0] 
+      : null;
+    
+    // Calculate total volume from all traffic data for this lane
     const totalVolume = laneTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
     
     // Get traffic light status from database (from latest traffic data)
-    const latestTraffic = laneTraffic.length > 0 ? laneTraffic[0] : null;
     let light: LightColor = 'red';
+    let duration = 30; // Default duration
     
     if (latestTraffic?.trafficLight) {
       // Use actual traffic light data from database
       const lightStatus = latestTraffic.trafficLight.toLowerCase();
-      if (lightStatus === 'green' || lightStatus === 'hijau') light = 'green';
-      else if (lightStatus === 'yellow' || lightStatus === 'kuning') light = 'yellow';
-      else light = 'red';
+      if (lightStatus === 'green' || lightStatus === 'hijau') {
+        light = 'green';
+        duration = latestTraffic.greenDuration || 45;
+      } else if (lightStatus === 'yellow' || lightStatus === 'kuning') {
+        light = 'yellow';
+        duration = latestTraffic.yellowDuration || 12;
+      } else {
+        light = 'red';
+        duration = latestTraffic.redDuration || 30;
+      }
     } else {
       // Fallback: simulate based on index if no data
-      if (idx === 0) light = 'green';
-      else if (idx === 2) light = 'yellow';
+      if (idx === 0) {
+        light = 'green';
+        duration = 45;
+      } else if (idx === 2) {
+        light = 'yellow';
+        duration = 12;
+      }
     }
-    
-    // Calculate duration based on light color
-    const duration = light === 'green' ? 45 : light === 'yellow' ? 12 : 30;
     
     return {
       direction,
@@ -271,12 +286,8 @@ export default function DetailPersimpanganPage({
   };
 
   return (
-    <>
-      <Sidebar />
-      <main className="pt-16 lg:pt-0 lg:ml-64 min-h-screen">
-        <Header title={`Detail: ${data.name}`} />
-
-        <div className="p-4 lg:p-8 space-y-4 lg:space-y-8">
+    <DashboardLayout title={`Detail: ${data.name}`}>
+      <div className="p-4 lg:p-8 space-y-4 lg:space-y-8">
           {/* Back Button & Status Badge */}
           <div className="flex items-center justify-between">
             <motion.button
@@ -396,8 +407,7 @@ export default function DetailPersimpanganPage({
             </motion.div>
           </div>
         </div>
-      </main>
-    </>
+    </DashboardLayout>
   );
 }
 
