@@ -83,7 +83,7 @@ export default function DetailPersimpanganPage({
   }, [params]);
 
   const { intersection, isLoading: loadingIntersection, mutate } = useIntersection(id);
-  const { trafficData, isLoading: loadingTraffic } = useRealtimeTraffic(id, 10);
+  const { trafficData, isLoading: loadingTraffic } = useRealtimeTraffic(id, 100); // Ambil lebih banyak data
   const { events, isLoading: loadingEvents } = useEvents(id, undefined, undefined, 10);
 
   if (!id) return null;
@@ -127,7 +127,7 @@ export default function DetailPersimpanganPage({
   // Calculate lane data from traffic data
   const laneDirections = ['Utara', 'Timur', 'Selatan', 'Barat'];
   const lanes = laneDirections.map((direction, idx) => {
-    const laneTraffic = trafficData.filter((t: any) => 
+    const laneTraffic = recentTrafficData.filter((t: any) => 
       t.direction?.toLowerCase() === direction.toLowerCase()
     );
     const totalVolume = laneTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
@@ -161,9 +161,16 @@ export default function DetailPersimpanganPage({
   });
 
   // Calculate metrics
-  const totalVolume = trafficData.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
-  const avgCongestion = trafficData.length > 0
-    ? trafficData.reduce((sum: number, t: any) => sum + (t.congestionIndex || 0), 0) / trafficData.length
+  // Filter data untuk 1 jam terakhir
+  const oneHourAgo = Date.now() - (60 * 60 * 1000);
+  const recentTrafficData = trafficData.filter((t: any) => {
+    const timestamp = new Date(t.timestamp).getTime();
+    return timestamp > oneHourAgo;
+  });
+  
+  const totalVolume = recentTrafficData.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
+  const avgCongestion = recentTrafficData.length > 0
+    ? recentTrafficData.reduce((sum: number, t: any) => sum + (t.congestionIndex || 0), 0) / recentTrafficData.length
     : 0;
   const congestionLevel = avgCongestion > 70 ? 'Macet Parah' : avgCongestion > 50 ? 'Padat' : avgCongestion > 30 ? 'Sedang' : 'Lancar';
   const vcRatio = avgCongestion / 100;

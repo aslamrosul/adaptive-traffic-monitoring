@@ -1,17 +1,31 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
+const COLORS = [
+  { bg: "rgb(239,68,68)",   shadow: "0 0 20px rgba(239,68,68,0.9), 0 0 40px rgba(239,68,68,0.4)" },
+  { bg: "rgb(251,191,36)",  shadow: "0 0 20px rgba(251,191,36,0.9), 0 0 40px rgba(251,191,36,0.4)" },
+  { bg: "rgb(34,197,94)",   shadow: "0 0 20px rgba(34,197,94,0.9), 0 0 40px rgba(34,197,94,0.4)" },
+];
+
 export default function LoadingScreen() {
-  const [activeLight, setActiveLight] = useState(0); // 0: red, 1: yellow, 2: green
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveLight((prev) => (prev + 1) % 3);
-    }, 600); // Change light every 600ms
+    // merah: 500ms, kuning: 400ms, hijau: 900ms (pause lebih lama)
+    const DURATIONS = [500, 400, 1200];
+    let timer: ReturnType<typeof setTimeout>;
 
-    return () => clearInterval(interval);
+    const tick = (current: number) => {
+      const next = (current + 1) % 3;
+      setActive(next);
+      timer = setTimeout(() => tick(next), DURATIONS[next]);
+    };
+
+    timer = setTimeout(() => tick(0), DURATIONS[0]);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -21,68 +35,34 @@ export default function LoadingScreen() {
       transition={{ duration: 0.5 }}
       className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center"
     >
-      {/* Traffic Icon with Animated Lights */}
-      <div className="relative mb-12">
-        {/* Main Traffic Icon */}
-        <motion.span
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="material-symbols-outlined text-blue-600"
-          style={{ 
-            fontVariationSettings: "'FILL' 1",
-            fontSize: "240px" // Balanced size
-          }}
-        >
-          traffic
-        </motion.span>
+      {/* Logo + overlay light */}
+      <div className="relative mb-4 flex items-center justify-center">
+        <div className="relative">
+          <Image
+            src="/logo.png"
+            alt="Aerial Command"
+            width={230}
+            height={230}
+            className="object-contain"
+          />
 
-        {/* Animated Light Indicators - Positioned to match icon lights */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-          className="absolute inset-0 flex flex-col items-center justify-start pt-[62px]"
-        >
-          {/* Red Light */}
+          {/* Single traffic light dot - fade sendiri */}
           <motion.div
+            className="absolute z-20"
             animate={{
-              opacity: activeLight === 0 ? 1 : 0.15,
-              scale: activeLight === 0 ? 1.1 : 1,
+              backgroundColor: COLORS[active].bg,
+              boxShadow: COLORS[active].shadow,
             }}
-            transition={{ duration: 0.3 }}
-            className="w-[28px] h-[28px] rounded-full bg-red-500 mb-[16px]"
+            transition={{ duration: 0.15, ease: "easeInOut" }}
             style={{
-              boxShadow: activeLight === 0 ? "0 0 20px rgba(239, 68, 68, 1), 0 0 40px rgba(239, 68, 68, 0.5)" : "none",
+              top: "calc(0.5rem + 116.5px)",
+              right: "calc(0.5rem + 92.2px)",
+              width: "37px",
+              height: "37px",
+              borderRadius: "50%",
             }}
           />
-          
-          {/* Yellow Light */}
-          <motion.div
-            animate={{
-              opacity: activeLight === 1 ? 1 : 0.15,
-              scale: activeLight === 1 ? 1.1 : 1,
-            }}
-            transition={{ duration: 0.3 }}
-            className="w-[28px] h-[28px] rounded-full bg-yellow-400 mb-[16px]"
-            style={{
-              boxShadow: activeLight === 1 ? "0 0 20px rgba(251, 191, 36, 1), 0 0 40px rgba(251, 191, 36, 0.5)" : "none",
-            }}
-          />
-          
-          {/* Green Light */}
-          <motion.div
-            animate={{
-              opacity: activeLight === 2 ? 1 : 0.15,
-              scale: activeLight === 2 ? 1.1 : 1,
-            }}
-            transition={{ duration: 0.3 }}
-            className="w-[28px] h-[28px] rounded-full bg-green-500"
-            style={{
-              boxShadow: activeLight === 2 ? "0 0 20px rgba(16, 185, 129, 1), 0 0 40px rgba(16, 185, 129, 0.5)" : "none",
-            }}
-          />
-        </motion.div>
+        </div>
       </div>
 
       {/* Logo Text */}
@@ -105,15 +85,8 @@ export default function LoadingScreen() {
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 1, 0.3],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: i * 0.2,
-            }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
             className="w-2 h-2 bg-blue-600 rounded-full"
           />
         ))}

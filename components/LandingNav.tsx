@@ -52,9 +52,7 @@ export default function LandingNav() {
       <div className="flex justify-between items-center h-16 px-6 md:px-12 max-w-7xl mx-auto">
         {/* Brand */}
         <Link href="/" className="text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-2">
-          <span className="material-symbols-outlined text-blue-600" style={{ fontVariationSettings: "'FILL' 1" }}>
-            traffic
-          </span>
+          <Image src="/logo.png" alt="Aerial Command" width={36} height={36} className="flex-shrink-0" />
           Aerial Command
         </Link>
 

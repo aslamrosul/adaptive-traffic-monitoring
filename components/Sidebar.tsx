@@ -2,6 +2,7 @@
 
 import { useProfileStore } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -93,32 +94,37 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
             >
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
-            <Link href="/" className="flex-1 min-w-0">
-              <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
-                Aerial Command
-              </h1>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
+            <Link href="/" className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="min-w-0">
+                <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
+                  Aerial Command
+                </h1>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                  <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
+                </div>
               </div>
             </Link>
           </div>
 
           {/* Desktop: Logo + Status (original layout) */}
           <div className="hidden lg:block">
-            <Link href="/">
-              <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline hover:text-blue-600 transition-colors cursor-pointer">
-                Aerial Command
-              </h1>
+            <Link href="/" className="flex items-start gap-2.5">
+              <Image src="/logo.png" alt="Aerial Command" width={40} height={40} className=" flex-shrink-0" />
+              <div className="flex flex-col">
+                <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline hover:text-blue-600 transition-colors cursor-pointer">
+                  Aerial Command
+                </h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="w-2 h-2 rounded-full bg-emerald-500"
+                  ></motion.div>
+                  <p className="text-xs text-slate-500 font-medium">Status IoT: Terhubung</p>
+                </div>
+              </div>
             </Link>
-            <div className="flex items-center gap-2 mt-1">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-2 h-2 rounded-full bg-emerald-500"
-              ></motion.div>
-              <p className="text-xs text-slate-500 font-medium">Status IoT: Terhubung</p>
-            </div>
           </div>
         </div>
 
