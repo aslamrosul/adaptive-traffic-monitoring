@@ -88,12 +88,12 @@ export default function ProfileDropdown() {
         className="flex items-center gap-3 cursor-pointer group"
       >
         <div className="text-right hidden sm:block">
-          <p className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors">
+          <p className="text-sm font-bold text-white group-hover:text-blue-100 transition-colors leading-tight">
             {displayName}
           </p>
-          <p className="text-[10px] text-slate-500 capitalize">{displayRole}</p>
+          <p className="text-xs text-blue-200 capitalize font-medium">{displayRole}</p>
         </div>
-        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm relative">
+        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50 shadow-lg relative group-hover:ring-white transition-all">
           <Image
             alt="Profil Pengguna"
             src={displayAvatar}

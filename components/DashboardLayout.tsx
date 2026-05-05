@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
@@ -11,22 +11,45 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ title, dateRange, children }: DashboardLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start closed by default
+  
+  // Load sidebar state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('sidebarOpen');
+    if (savedState !== null) {
+      setIsSidebarOpen(savedState === 'true');
+    } else {
+      // Default: open on desktop, closed on mobile
+      setIsSidebarOpen(window.innerWidth >= 1024);
+    }
+  }, []);
+  
+  // Save sidebar state to localStorage whenever it changes
+  const handleToggleSidebar = (open: boolean) => {
+    setIsSidebarOpen(open);
+    localStorage.setItem('sidebarOpen', String(open));
+  };
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      <Sidebar isOpen={isSidebarOpen} onToggle={setIsSidebarOpen} />
+    <div className="flex min-h-screen bg-surface overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onToggle={handleToggleSidebar} />
       
-      <main className="lg:ml-64 flex-1 min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header 
           title={title} 
           dateRange={dateRange}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          onToggleSidebar={() => handleToggleSidebar(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
         />
         
-        {children}
-      </main>
+        <main className={`flex-1 transition-all duration-300 ease-in-out lg:pt-16 ${
+          isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+        }`}>
+          <div className="transition-all duration-300">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

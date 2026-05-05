@@ -234,7 +234,7 @@ export default function ProfileContent() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -248,18 +248,18 @@ export default function ProfileContent() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-primary to-blue-600 rounded-2xl overflow-hidden shadow-xl"
+        className="bg-gradient-to-br from-primary to-blue-600 rounded-xl lg:rounded-2xl overflow-hidden shadow-xl"
       >
-        <div className="p-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+        <div className="p-4 lg:p-8">
+          <div className="flex flex-col items-center md:flex-row md:items-start gap-4 lg:gap-6">
             {/* Avatar */}
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
+              <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
                 <Image
                   src={profile.avatar}
                   alt="Profile"
                   fill
-                  sizes="128px"
+                  sizes="(max-width: 768px) 80px, 128px"
                   className="object-cover"
                 />
               </div>
@@ -267,67 +267,67 @@ export default function ProfileContent() {
                 <button
                   onClick={handleChangePhoto}
                   disabled={isLoading}
-                  className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  className="w-7 h-7 lg:w-10 lg:h-10 bg-white rounded-full shadow-lg flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-opacity disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-primary text-sm">photo_camera</span>
+                  <span className="material-symbols-outlined text-primary text-xs lg:text-sm">photo_camera</span>
                 </button>
                 {!profile.avatar.includes("ui-avatars.com") && (
                   <button
                     onClick={handleDeleteAvatar}
                     disabled={isLoading}
-                    className="w-10 h-10 bg-red-500 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                    className="w-7 h-7 lg:w-10 lg:h-10 bg-red-500 rounded-full shadow-lg flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-opacity disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-white text-sm">delete</span>
+                    <span className="material-symbols-outlined text-white text-xs lg:text-sm">delete</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Info */}
-            <div className="flex-1 text-white">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h1 className="text-3xl font-bold font-headline mb-1">{profile.name}</h1>
-                  <p className="text-blue-100 text-lg">{profile.position}</p>
+            <div className="flex-1 text-white text-center md:text-left w-full">
+              <div className="flex flex-col items-center md:items-start gap-2 mb-2">
+                <div className="w-full">
+                  <h1 className="text-lg lg:text-3xl font-bold font-headline mb-0.5 lg:mb-1 break-words">{profile.name}</h1>
+                  <p className="text-blue-100 text-xs lg:text-lg">{profile.position}</p>
                 </div>
                 {!isEditing && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+                    className="w-full md:w-auto px-3 py-1.5 lg:px-4 lg:py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg font-semibold text-xs lg:text-sm transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <span className="material-symbols-outlined text-sm">edit</span>
-                    Edit Profil
+                    <span className="material-symbols-outlined text-xs lg:text-sm">edit</span>
+                    <span>Edit Profil</span>
                   </button>
                 )}
               </div>
               
-              <div className="flex flex-wrap gap-4 mt-4">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">business</span>
-                  <span className="text-sm">{profile.department}</span>
+              <div className="flex flex-col gap-1.5 lg:gap-2 mt-2 lg:mt-4 text-xs lg:text-sm">
+                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">business</span>
+                  <span className="truncate">{profile.department}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">email</span>
-                  <span className="text-sm">{profile.email}</span>
+                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">email</span>
+                  <span className="truncate">{profile.email}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">phone</span>
-                  <span className="text-sm">{profile.phone}</span>
+                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">phone</span>
+                  <span className="truncate">{profile.phone}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="text-xs font-semibold">Online</span>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 lg:gap-3 mt-2 lg:mt-4">
+                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                  <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  <span className="text-[9px] lg:text-xs font-semibold">Online</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="material-symbols-outlined text-sm">verified_user</span>
-                  <span className="text-xs font-semibold">Verified</span>
+                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                  <span className="material-symbols-outlined text-xs lg:text-sm">verified_user</span>
+                  <span className="text-[9px] lg:text-xs font-semibold">Verified</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="material-symbols-outlined text-sm">workspace_premium</span>
-                  <span className="text-xs font-semibold">{profile.accountType}</span>
+                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                  <span className="material-symbols-outlined text-xs lg:text-sm">workspace_premium</span>
+                  <span className="text-[9px] lg:text-xs font-semibold">{profile.accountType}</span>
                 </div>
               </div>
             </div>
@@ -335,8 +335,8 @@ export default function ProfileContent() {
         </div>
 
         {/* Stats Bar */}
-        <div className="bg-white/10 backdrop-blur-sm border-t border-white/20 px-8 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white/10 backdrop-blur-sm border-t border-white/20 px-3 lg:px-8 py-2 lg:py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 lg:gap-4">
             {stats.map((stat, idx) => (
               <motion.div
                 key={idx}
@@ -345,8 +345,8 @@ export default function ProfileContent() {
                 transition={{ delay: idx * 0.1 }}
                 className="text-center"
               >
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-blue-100">{stat.label}</p>
+                <p className="text-base lg:text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-[9px] lg:text-xs text-blue-100 truncate">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -354,7 +354,7 @@ export default function ProfileContent() {
       </motion.div>
 
       {/* Tabs - Continue in next part... */}
-      <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
+      <div className="flex gap-1 lg:gap-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
         {[
           { id: "overview", label: "Overview", icon: "dashboard" },
           { id: "activity", label: "Aktivitas", icon: "history" },
@@ -364,44 +364,74 @@ export default function ProfileContent() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3 font-semibold text-xs lg:text-sm transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? "text-primary border-b-2 border-primary"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-            {tab.label}
+            <span className="material-symbols-outlined text-base lg:text-lg">{tab.icon}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[400px] overflow-x-hidden">
         {activeTab === "overview" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Main Info */}
-            <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-4 lg:space-y-6">
+            {/* Mobile: Quick Actions First */}
+            <div className="block lg:hidden">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 overflow-x-hidden"
+              >
+                <h3 className="text-sm font-bold text-slate-900 mb-2 truncate">Quick Actions</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleExportData}
+                    className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-primary text-xl">download</span>
+                    <span className="text-[9px] font-semibold text-slate-700 text-center">Export</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <span className="material-symbols-outlined text-primary text-xl">history</span>
+                    <span className="text-[9px] font-semibold text-slate-700 text-center">History</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-1.5 p-2 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                    <span className="material-symbols-outlined text-primary text-xl">lock</span>
+                    <span className="text-[9px] font-semibold text-slate-700 text-center">Privacy</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Desktop: 2-column layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+              {/* Left Column - Main Info */}
+              <div className="lg:col-span-2 space-y-4 lg:space-y-6">
               {/* About Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">info</span>
-                  Tentang
+                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">info</span>
+                  <span className="truncate">Tentang</span>
                 </h3>
                 {isEditing ? (
                   <textarea
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     rows={4}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm lg:text-base"
                     placeholder="Ceritakan tentang diri Anda..."
                   />
                 ) : (
-                  <p className="text-slate-600 leading-relaxed">{profile.bio}</p>
+                  <p className="text-slate-600 leading-relaxed text-sm lg:text-base break-words">{profile.bio}</p>
                 )}
               </motion.div>
 
@@ -410,81 +440,81 @@ export default function ProfileContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">badge</span>
-                  Informasi Personal
+                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">badge</span>
+                  <span className="truncate">Informasi Personal</span>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Nama Lengkap</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Nama Lengkap</label>
                     {isEditing ? (
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                       />
                     ) : (
-                      <p className="text-slate-900 font-medium">{profile.name}</p>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.name}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Email</label>
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Email</label>
                     {isEditing ? (
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                       />
                     ) : (
-                      <p className="text-slate-900 font-medium">{profile.email}</p>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.email}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Telepon</label>
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Telepon</label>
                     {isEditing ? (
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                       />
                     ) : (
-                      <p className="text-slate-900 font-medium">{profile.phone}</p>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.phone}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Posisi</label>
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Posisi</label>
                     {isEditing ? (
                       <input
                         type="text"
                         value={formData.position}
                         onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                       />
                     ) : (
-                      <p className="text-slate-900 font-medium">{profile.position}</p>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.position}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Departemen</label>
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Departemen</label>
                     {isEditing ? (
                       <input
                         type="text"
                         value={formData.department}
                         onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                       />
                     ) : (
-                      <p className="text-slate-900 font-medium">{profile.department}</p>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.department}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-2">Bergabung Sejak</label>
-                    <p className="text-slate-900 font-medium">
+                  <div className="overflow-x-hidden">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Bergabung Sejak</label>
+                    <p className="text-slate-900 font-medium text-sm lg:text-base truncate">
                       {new Date(profile.memberSince).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "long",
@@ -495,18 +525,18 @@ export default function ProfileContent() {
                 </div>
 
                 {isEditing && (
-                  <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+                  <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-slate-200">
                     <button
                       onClick={handleSave}
                       disabled={isLoading}
-                      className="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:flex-1 px-4 lg:px-6 py-2 lg:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
                     >
                       {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
                     </button>
                     <button
                       onClick={handleCancel}
                       disabled={isLoading}
-                      className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto px-4 lg:px-6 py-2 lg:py-3 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
                     >
                       Batal
                     </button>
@@ -519,20 +549,20 @@ export default function ProfileContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">psychology</span>
-                  Keahlian
+                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">psychology</span>
+                  <span className="truncate">Keahlian</span>
                 </h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 lg:gap-2">
                   {profile.skills.map((skill, idx) => (
                     <motion.span
                       key={idx}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="px-4 py-2 bg-blue-50 text-primary rounded-full text-sm font-semibold"
+                      className="px-3 lg:px-4 py-1.5 lg:py-2 bg-blue-50 text-primary rounded-full text-xs lg:text-sm font-semibold truncate max-w-full"
                     >
                       {skill}
                     </motion.span>
@@ -545,22 +575,22 @@ export default function ProfileContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">trending_up</span>
-                  Performa
+                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">trending_up</span>
+                  <span className="truncate">Performa</span>
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3 lg:space-y-4">
                   {[
                     { label: "Response Time", value: profile.performance.responseTime, color: "bg-green-500" },
                     { label: "Accuracy", value: profile.performance.accuracy, color: "bg-blue-500" },
                     { label: "Efficiency", value: profile.performance.efficiency, color: "bg-purple-500" },
                   ].map((metric, idx) => (
-                    <div key={idx}>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-semibold text-slate-700">{metric.label}</span>
-                        <span className="text-sm font-bold text-slate-900">{metric.value}%</span>
+                    <div key={idx} className="overflow-x-hidden">
+                      <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
+                        <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">{metric.label}</span>
+                        <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">{metric.value}%</span>
                       </div>
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div
@@ -576,58 +606,88 @@ export default function ProfileContent() {
               </motion.div>
             </div>
 
-            {/* Right Column - Quick Actions & Account Info */}
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
-              >
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={handleExportData}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left"
-                  >
-                    <span className="material-symbols-outlined text-primary">download</span>
-                    <span className="text-sm font-semibold text-slate-700">Export Data</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left">
-                    <span className="material-symbols-outlined text-primary">history</span>
-                    <span className="text-sm font-semibold text-slate-700">View History</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left">
-                    <span className="material-symbols-outlined text-primary">lock</span>
-                    <span className="text-sm font-semibold text-slate-700">Privacy Settings</span>
-                  </button>
-                </div>
-              </motion.div>
+              {/* Right Column - Quick Actions & Account Info (Desktop Only) */}
+              <div className="hidden lg:block space-y-4 lg:space-y-6">
+                {/* Quick Actions */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">Quick Actions</h3>
+                  <div className="space-y-1.5 lg:space-y-2">
+                    <button
+                      onClick={handleExportData}
+                      className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left overflow-hidden"
+                    >
+                      <span className="material-symbols-outlined text-primary text-lg lg:text-xl flex-shrink-0">download</span>
+                      <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">Export Data</span>
+                    </button>
+                    <button className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left overflow-hidden">
+                      <span className="material-symbols-outlined text-primary text-lg lg:text-xl flex-shrink-0">history</span>
+                      <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">View History</span>
+                    </button>
+                    <button className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors text-left overflow-hidden">
+                      <span className="material-symbols-outlined text-primary text-lg lg:text-xl flex-shrink-0">lock</span>
+                      <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">Privacy Settings</span>
+                    </button>
+                  </div>
+                </motion.div>
 
-              {/* Account Info */}
+                {/* Account Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">Account Info</h3>
+                  <div className="space-y-2 lg:space-y-3">
+                    <div className="flex items-center justify-between gap-2 overflow-hidden">
+                      <span className="text-xs lg:text-sm text-slate-600 truncate">Account Type</span>
+                      <span className="px-2 lg:px-3 py-0.5 lg:py-1 bg-yellow-100 text-yellow-700 rounded-full text-[10px] lg:text-xs font-bold flex-shrink-0">
+                        {profile.accountType}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 overflow-hidden">
+                      <span className="text-xs lg:text-sm text-slate-600 flex-shrink-0">User ID</span>
+                      <span className="text-xs lg:text-sm font-mono font-semibold text-slate-900 truncate">{profile.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 overflow-hidden">
+                      <span className="text-xs lg:text-sm text-slate-600 flex-shrink-0">Last Login</span>
+                      <span className="text-xs lg:text-sm font-semibold text-slate-900 truncate">
+                        {new Date(profile.lastLogin).toLocaleDateString("id-ID")}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Mobile: Account Info at Bottom */}
+            <div className="block lg:hidden">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 overflow-x-hidden"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Account Info</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Account Type</span>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">
+                <h3 className="text-sm font-bold text-slate-900 mb-2 truncate">Account Info</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2 overflow-hidden">
+                    <span className="text-xs text-slate-600 truncate">Account Type</span>
+                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold flex-shrink-0">
                       {profile.accountType}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">User ID</span>
-                    <span className="text-sm font-mono font-semibold text-slate-900">{profile.id}</span>
+                  <div className="flex items-center justify-between gap-2 overflow-hidden">
+                    <span className="text-xs text-slate-600 flex-shrink-0">User ID</span>
+                    <span className="text-[10px] font-mono font-semibold text-slate-900 truncate">{profile.id}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Last Login</span>
-                    <span className="text-sm font-semibold text-slate-900">
-                      {new Date(profile.lastLogin).toLocaleDateString("id-ID")}
+                  <div className="flex items-center justify-between gap-2 overflow-hidden">
+                    <span className="text-xs text-slate-600 flex-shrink-0">Last Login</span>
+                    <span className="text-xs font-semibold text-slate-900 truncate">
+                      {new Date(profile.lastLogin).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </div>
@@ -640,27 +700,27 @@ export default function ProfileContent() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+            className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
           >
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">history</span>
-              Aktivitas Terbaru
+            <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-4 lg:mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-lg lg:text-xl">history</span>
+              <span className="truncate">Aktivitas Terbaru</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               {activityLog.map((activity, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex items-start gap-2 lg:gap-4 p-2 lg:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors overflow-hidden"
                 >
-                  <div className={`w-10 h-10 rounded-full ${activity.color} flex items-center justify-center flex-shrink-0`}>
-                    <span className="material-symbols-outlined text-lg">{activity.icon}</span>
+                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full ${activity.color} flex items-center justify-center flex-shrink-0`}>
+                    <span className="material-symbols-outlined text-base lg:text-lg">{activity.icon}</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-slate-900 text-sm">{activity.action}</p>
-                    <p className="text-xs text-slate-500 mt-1">{activity.time}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">{activity.action}</p>
+                    <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">{activity.time}</p>
                   </div>
                 </motion.div>
               ))}
@@ -672,40 +732,40 @@ export default function ProfileContent() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+            className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
           >
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">emoji_events</span>
-              Pencapaian
+            <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-4 lg:mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-lg lg:text-xl">emoji_events</span>
+              <span className="truncate">Pencapaian</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               {achievements.map((achievement, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`p-6 rounded-xl border-2 ${
+                  className={`p-3 lg:p-6 rounded-xl border-2 overflow-hidden ${
                     achievement.earned
                       ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
                       : "bg-slate-50 border-slate-200 opacity-60"
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-full ${achievement.color} flex items-center justify-center mb-4`}>
-                    <span className="material-symbols-outlined text-2xl">{achievement.icon}</span>
+                  <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full ${achievement.color} flex items-center justify-center mb-2 lg:mb-4`}>
+                    <span className="material-symbols-outlined text-xl lg:text-2xl">{achievement.icon}</span>
                   </div>
-                  <h4 className="font-bold text-slate-900 mb-1">{achievement.title}</h4>
-                  <p className="text-sm text-slate-600">{achievement.description}</p>
+                  <h4 className="font-bold text-slate-900 mb-0.5 lg:mb-1 text-sm lg:text-base truncate">{achievement.title}</h4>
+                  <p className="text-xs lg:text-sm text-slate-600 break-words">{achievement.description}</p>
                   {achievement.earned && (
-                    <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-green-600">
-                      <span className="material-symbols-outlined text-sm">check_circle</span>
-                      Unlocked
+                    <div className="mt-2 lg:mt-3 flex items-center gap-1.5 lg:gap-2 text-[10px] lg:text-xs font-semibold text-green-600">
+                      <span className="material-symbols-outlined text-xs lg:text-sm">check_circle</span>
+                      <span>Unlocked</span>
                     </div>
                   )}
                   {!achievement.earned && (
-                    <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-400">
-                      <span className="material-symbols-outlined text-sm">lock</span>
-                      Locked
+                    <div className="mt-2 lg:mt-3 flex items-center gap-1.5 lg:gap-2 text-[10px] lg:text-xs font-semibold text-slate-400">
+                      <span className="material-symbols-outlined text-xs lg:text-sm">lock</span>
+                      <span>Locked</span>
                     </div>
                   )}
                 </motion.div>
@@ -718,65 +778,65 @@ export default function ProfileContent() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
+            className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
           >
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">settings</span>
-              Pengaturan Privasi
+            <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-4 lg:mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-lg lg:text-xl">settings</span>
+              <span className="truncate">Pengaturan Privasi</span>
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Profil Publik</p>
-                  <p className="text-xs text-slate-500 mt-1">Izinkan orang lain melihat profil Anda</p>
+            <div className="space-y-3 lg:space-y-4">
+              <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">Profil Publik</p>
+                  <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">Izinkan orang lain melihat profil Anda</p>
                 </div>
                 <button
                   onClick={() => handleToggleSetting("publicProfile")}
                   disabled={isLoading}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
                     profile.settings.publicProfile ? "bg-primary" : "bg-slate-300"
                   } disabled:opacity-50`}
                 >
                   <motion.div
-                    animate={{ x: profile.settings.publicProfile ? 28 : 2 }}
+                    animate={{ x: profile.settings.publicProfile ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}
                     className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
                   />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Tampilkan Email</p>
-                  <p className="text-xs text-slate-500 mt-1">Email akan terlihat di profil publik</p>
+              <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">Tampilkan Email</p>
+                  <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">Email akan terlihat di profil publik</p>
                 </div>
                 <button
                   onClick={() => handleToggleSetting("showEmail")}
                   disabled={isLoading}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
                     profile.settings.showEmail ? "bg-primary" : "bg-slate-300"
                   } disabled:opacity-50`}
                 >
                   <motion.div
-                    animate={{ x: profile.settings.showEmail ? 28 : 2 }}
+                    animate={{ x: profile.settings.showEmail ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}
                     className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
                   />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Tampilkan Aktivitas</p>
-                  <p className="text-xs text-slate-500 mt-1">Aktivitas akan terlihat di profil publik</p>
+              <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">Tampilkan Aktivitas</p>
+                  <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">Aktivitas akan terlihat di profil publik</p>
                 </div>
                 <button
                   onClick={() => handleToggleSetting("showActivity")}
                   disabled={isLoading}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
                     profile.settings.showActivity ? "bg-primary" : "bg-slate-300"
                   } disabled:opacity-50`}
                 >
                   <motion.div
-                    animate={{ x: profile.settings.showActivity ? 28 : 2 }}
+                    animate={{ x: profile.settings.showActivity ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}
                     className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
                   />
                 </button>

@@ -231,107 +231,149 @@ export default function AnalitikPage() {
     <DashboardLayout 
       title="Analitik Lalu Lintas"
     >
-      <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+      <div className="p-3 lg:p-6 space-y-4 lg:space-y-5 max-w-[1920px] mx-auto">
 
-        {/* Time Filter */}
-        <AnalyticsTimeFilter 
-          onFilterChange={handleFilterChange}
-          currentRange={timeRange}
-        />
+        {/* Time Filter with Indeks Kemacetan on Mobile */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <AnalyticsTimeFilter 
+              onFilterChange={handleFilterChange}
+              currentRange={timeRange}
+            />
+          </div>
+          
+          {/* Indeks Kemacetan - Mobile Only, beside Time Filter */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2 shadow-lg border-2 border-blue-200 flex flex-col items-center justify-center min-w-[100px]"
+          >
+            <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest font-label mb-1">
+              Indeks
+            </h3>
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90">
+                <circle
+                  className="text-slate-100"
+                  cx="32"
+                  cy="32"
+                  fill="transparent"
+                  r="28"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <motion.circle
+                  className="text-primary"
+                  cx="32"
+                  cy="32"
+                  fill="transparent"
+                  r="28"
+                  stroke="currentColor"
+                  strokeDasharray="176"
+                  initial={{ strokeDashoffset: 176 }}
+                  animate={{ strokeDashoffset: 58 }}
+                  transition={{ delay: 0.5, duration: 1 }}
+                  strokeWidth="4"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-lg font-black font-headline text-on-surface">
+                  {avgCongestionIndex}
+                </span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase">
+                  {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
           {/* Filters & Quick Actions */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5"
           >
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest font-label">
-                Parameter Analitik
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <select
-                  value={selectedIntersection}
-                  onChange={(e) => handleIntersectionChange(e.target.value)}
-                  className="bg-white border border-outline-variant/30 rounded-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[180px]"
-                  disabled={loadingIntersections}
-                >
-                  <option value="all">Semua Persimpangan</option>
-                  {intersections.map((intersection: any) => (
-                    <option key={intersection.id} value={intersection.id}>
-                      {intersection.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={selectedLane}
-                  onChange={(e) => handleLaneChange(e.target.value)}
-                  className="bg-white border border-outline-variant/30 rounded-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[150px]"
-                >
-                  <option>Semua Jalur</option>
-                  <option>Jalur Utara</option>
-                  <option>Jalur Timur</option>
-                  <option>Jalur Barat</option>
-                  <option>Jalur Selatan</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleExport}
-                className="flex items-center justify-center sm:justify-start gap-2 bg-primary text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all w-full sm:w-auto"
+            <div className="flex flex-col sm:flex-row gap-1 flex-1">
+              <select
+                value={selectedIntersection}
+                onChange={(e) => handleIntersectionChange(e.target.value)}
+                className="bg-white border border-outline-variant/30 rounded text-[9px] px-1.5 py-1 font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[130px]"
+                disabled={loadingIntersections}
               >
-                <span className="material-symbols-outlined text-lg">download</span>
-                <span className="hidden sm:inline">Ekspor Data (.csv)</span>
-                <span className="sm:hidden">Ekspor</span>
-              </motion.button>
+                <option value="all">Semua Persimpangan</option>
+                {intersections.map((intersection: any) => (
+                  <option key={intersection.id} value={intersection.id}>
+                    {intersection.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedLane}
+                onChange={(e) => handleLaneChange(e.target.value)}
+                className="bg-white border border-outline-variant/30 rounded text-[9px] px-1.5 py-1 font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm w-full sm:w-auto sm:min-w-[110px]"
+              >
+                <option>Semua Jalur</option>
+                <option>Jalur Utara</option>
+                <option>Jalur Timur</option>
+                <option>Jalur Barat</option>
+                <option>Jalur Selatan</option>
+              </select>
             </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleExport}
+              className="flex items-center justify-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded text-[9px] font-bold shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-600/40 transition-all w-full sm:w-auto"
+            >
+              <span className="material-symbols-outlined text-xs">download</span>
+              <span>Ekspor</span>
+            </motion.button>
           </motion.section>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-12 gap-3 lg:gap-6">
+          <div className="grid grid-cols-12 gap-2 lg:gap-4">
 
             {/* Hero Chart: Analisis Kepadatan Kendaraan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="col-span-12 lg:col-span-8 bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-100"
+              className="col-span-12 lg:col-span-8 bg-white rounded-lg p-2 lg:p-3 shadow-lg border border-blue-100 card-hover"
             >
-              <div className="flex justify-between items-start mb-4 lg:mb-8">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="text-base lg:text-lg font-bold font-headline text-on-surface">
+                  <h3 className="text-sm lg:text-base font-bold font-headline text-on-surface">
                     Analisis Kepadatan Kendaraan
                   </h3>
-                  <p className="text-xs lg:text-sm text-slate-500">
+                  <p className="text-[9px] lg:text-[10px] text-slate-500">
                     Detail volume unit per meter persegi berdasarkan data sensor IoT.
                   </p>
                 </div>
-                <div className="flex items-center gap-4 text-xs font-semibold">
+                <div className="flex items-center gap-1.5 text-[9px] font-semibold">
                   {showUtara && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-primary inline-block"></span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-primary inline-block"></span>
                       Utara
                     </div>
                   )}
                   {showTimur && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-blue-300 inline-block"></span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-300 inline-block"></span>
                       Timur
                     </div>
                   )}
                   {showBarat && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-slate-300 inline-block"></span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-slate-300 inline-block"></span>
                       Barat
                     </div>
                   )}
                   {showSelatan && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-green-400 inline-block"></span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
                       Selatan
                     </div>
                   )}
@@ -339,77 +381,167 @@ export default function AnalitikPage() {
               </div>
 
               {loadingAnalytics || loadingTraffic ? (
-                <div className="h-64 flex items-center justify-center">
+                <div className="h-56 lg:h-80 flex items-center justify-center">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-sm text-slate-500">Memuat data analitik...</p>
                   </div>
                 </div>
               ) : (
-                <div className="h-64 flex items-end gap-4 px-4">
-                  {filteredWeeklyData.map((d, idx) => (
-                  <motion.div
-                    key={d.day}
-                    initial={{ opacity: 0, scaleY: 0 }}
-                    animate={{ opacity: 1, scaleY: 1 }}
-                    transition={{ delay: 0.2 + idx * 0.07 }}
-                    className="flex-1 flex flex-col items-center gap-2"
-                    style={{ transformOrigin: "bottom" }}
-                  >
-                    <div className="w-full flex items-end gap-1 h-52">
-                      {showUtara && d.utara > 0 && (
-                        <div
-                          className="bg-primary w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
-                          style={{ height: `${d.utara}%` }}
-                          title={`Utara: ${d.utara}%`}
-                        ></div>
-                      )}
-                      {showTimur && d.timur > 0 && (
-                        <div
-                          className="bg-blue-300 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
-                          style={{ height: `${d.timur}%` }}
-                          title={`Timur: ${d.timur}%`}
-                        ></div>
-                      )}
-                      {showBarat && d.barat > 0 && (
-                        <div
-                          className="bg-slate-300 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
-                          style={{ height: `${d.barat}%` }}
-                          title={`Barat: ${d.barat}%`}
-                        ></div>
-                      )}
-                      {showSelatan && d.selatan > 0 && (
-                        <div
-                          className="bg-green-400 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
-                          style={{ height: `${d.selatan}%` }}
-                          title={`Selatan: ${d.selatan}%`}
-                        ></div>
-                      )}
+                <div className="h-56 lg:h-80 px-2 lg:px-4 relative">
+                  <div className="absolute bottom-0 left-2 lg:left-4 right-2 lg:right-4 h-[calc(100%-24px)]">
+                    <div className="flex items-end justify-between gap-2 lg:gap-4 h-full">
+                      {filteredWeeklyData.map((d, idx) => {
+                        const maxValue = Math.max(d.utara, d.timur, d.barat, d.selatan);
+                        return (
+                          <div
+                            key={d.day}
+                            className="flex-1 flex flex-col items-center h-full"
+                          >
+                            <div className="flex-1 w-full flex items-end justify-center gap-0.5">
+                              <motion.div
+                                initial={{ opacity: 0, scaleY: 0 }}
+                                animate={{ opacity: 1, scaleY: 1 }}
+                                transition={{ delay: 0.2 + idx * 0.07 }}
+                                className="w-full flex items-end justify-center gap-0.5"
+                                style={{ 
+                                  transformOrigin: "bottom",
+                                  height: `${maxValue}%`
+                                }}
+                              >
+                                {showUtara && d.utara > 0 && (
+                                  <div
+                                    className="bg-primary w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
+                                    style={{ height: `${(d.utara / maxValue) * 100}%` }}
+                                    title={`Utara: ${d.utara}%`}
+                                  ></div>
+                                )}
+                                {showTimur && d.timur > 0 && (
+                                  <div
+                                    className="bg-blue-300 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
+                                    style={{ height: `${(d.timur / maxValue) * 100}%` }}
+                                    title={`Timur: ${d.timur}%`}
+                                  ></div>
+                                )}
+                                {showBarat && d.barat > 0 && (
+                                  <div
+                                    className="bg-slate-300 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
+                                    style={{ height: `${(d.barat / maxValue) * 100}%` }}
+                                    title={`Barat: ${d.barat}%`}
+                                  ></div>
+                                )}
+                                {showSelatan && d.selatan > 0 && (
+                                  <div
+                                    className="bg-green-400 w-full rounded-t-lg transition-all duration-500 hover:brightness-110 cursor-pointer"
+                                    style={{ height: `${(d.selatan / maxValue) * 100}%` }}
+                                    title={`Selatan: ${d.selatan}%`}
+                                  ></div>
+                                )}
+                              </motion.div>
+                            </div>
+                            <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 mt-1 lg:mt-2">{d.day}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">{d.day}</span>
-                  </motion.div>
-                  ))}
+                  </div>
                 </div>
               )}
             </motion.div>
 
-            {/* Stats: Performa Sensor IoT & Indeks Kemacetan */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-              {/* Performa Sensor IoT */}
+            {/* Stats: Indeks Kemacetan & Performa Sensor IoT (Swapped Order) */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-2 lg:gap-3">
+              {/* Indeks Kemacetan - Hidden on Mobile, Shown on Desktop */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-inverse-surface to-slate-800 rounded-xl p-4 lg:p-6 text-white shadow-xl"
+                className="hidden lg:block bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-2 lg:p-3 shadow-lg border-2 border-blue-200"
               >
-                <h3 className="text-sm font-bold opacity-60 uppercase tracking-widest font-label mb-4">
+                <h3 className="text-xs lg:text-sm font-bold text-slate-400 uppercase tracking-widest font-label mb-1.5 lg:mb-2">
+                  Indeks Kemacetan
+                </h3>
+                <div className="flex items-center justify-center py-1 lg:py-2">
+                  <div className="relative w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90">
+                      <circle
+                        className="text-slate-100 lg:hidden"
+                        cx="40"
+                        cy="40"
+                        fill="transparent"
+                        r="36"
+                        stroke="currentColor"
+                        strokeWidth="5"
+                      />
+                      <motion.circle
+                        className="text-primary lg:hidden"
+                        cx="40"
+                        cy="40"
+                        fill="transparent"
+                        r="36"
+                        stroke="currentColor"
+                        strokeDasharray="226"
+                        initial={{ strokeDashoffset: 226 }}
+                        animate={{ strokeDashoffset: 75 }}
+                        transition={{ delay: 0.5, duration: 1 }}
+                        strokeWidth="5"
+                      />
+                      <circle
+                        className="text-slate-100 hidden lg:block"
+                        cx="56"
+                        cy="56"
+                        fill="transparent"
+                        r="50"
+                        stroke="currentColor"
+                        strokeWidth="7"
+                      />
+                      <motion.circle
+                        className="text-primary hidden lg:block"
+                        cx="56"
+                        cy="56"
+                        fill="transparent"
+                        r="50"
+                        stroke="currentColor"
+                        strokeDasharray="314"
+                        initial={{ strokeDashoffset: 314 }}
+                        animate={{ strokeDashoffset: 103 }}
+                        transition={{ delay: 0.5, duration: 1 }}
+                        strokeWidth="7"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-lg lg:text-xl font-black font-headline text-on-surface">
+                        {avgCongestionIndex}
+                      </span>
+                      <span className="text-[8px] lg:text-[9px] font-bold text-slate-400 uppercase">
+                        {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-1 lg:mt-2 text-center">
+                  <span className="inline-flex items-center gap-0.5 lg:gap-1 text-tertiary text-[9px] lg:text-[10px] font-bold">
+                    <span className="material-symbols-outlined text-xs">trending_up</span>
+                    +12% kepadatan dari kemarin
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Performa Sensor IoT - Now Second */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-xl p-3 lg:p-4 text-white shadow-2xl border border-slate-700"
+              >
+                <h3 className="text-xs lg:text-sm font-bold opacity-60 uppercase tracking-widest font-label mb-2 lg:mb-3">
                   Performa Sensor IoT
                 </h3>
-                <div className="space-y-6">
+                <div className="space-y-3 lg:space-y-4">
                   <div>
-                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-xs font-semibold">Akurasi Deteksi Kepadatan</span>
-                      <span className="text-2xl font-black font-headline">{iotPerformance.accuracy}%</span>
+                    <div className="flex justify-between items-end mb-1.5 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-semibold">Akurasi Deteksi Kepadatan</span>
+                      <span className="text-xl lg:text-2xl font-black font-headline">{iotPerformance.accuracy}%</span>
                     </div>
                     <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
@@ -421,9 +553,9 @@ export default function AnalitikPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-xs font-semibold">Perangkat Aktif</span>
-                      <span className="text-2xl font-black font-headline">
+                    <div className="flex justify-between items-end mb-1.5 lg:mb-2">
+                      <span className="text-[10px] lg:text-xs font-semibold">Perangkat Aktif</span>
+                      <span className="text-xl lg:text-2xl font-black font-headline">
                         {iotPerformance.activeDevices}/{iotPerformance.totalDevices}
                       </span>
                     </div>
@@ -439,64 +571,10 @@ export default function AnalitikPage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-[10px] mt-6 leading-relaxed opacity-50">
+                <p className="text-[9px] lg:text-[10px] mt-3 lg:mt-4 leading-relaxed opacity-50">
                   Sistem beroperasi penuh pada infrastruktur IoT terintegrasi untuk kalkulasi arus
                   secara real-time tanpa delay manual.
                 </p>
-              </motion.div>
-
-              {/* Indeks Kemacetan */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25 }}
-                className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-100 flex-1"
-              >
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest font-label mb-4">
-                  Indeks Kemacetan
-                </h3>
-                <div className="flex items-center justify-center py-4">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <svg className="w-full h-full -rotate-90">
-                      <circle
-                        className="text-slate-100"
-                        cx="64"
-                        cy="64"
-                        fill="transparent"
-                        r="58"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                      />
-                      <motion.circle
-                        className="text-primary"
-                        cx="64"
-                        cy="64"
-                        fill="transparent"
-                        r="58"
-                        stroke="currentColor"
-                        strokeDasharray="364"
-                        initial={{ strokeDashoffset: 364 }}
-                        animate={{ strokeDashoffset: 120 }}
-                        transition={{ delay: 0.5, duration: 1 }}
-                        strokeWidth="8"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-black font-headline text-on-surface">
-                        {avgCongestionIndex}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <span className="inline-flex items-center gap-1 text-tertiary text-xs font-bold">
-                    <span className="material-symbols-outlined text-sm">trending_up</span>
-                    +12% kepadatan dari kemarin
-                  </span>
-                </div>
               </motion.div>
             </div>
 
@@ -505,7 +583,7 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="col-span-12 bg-white rounded-xl p-4 lg:p-8 shadow-sm border border-slate-100"
+              className="col-span-12 bg-white rounded-xl p-4 lg:p-8 shadow-lg border-2 border-indigo-100 card-hover"
             >
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 lg:mb-8 gap-4">
                 <div>
@@ -567,11 +645,11 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="col-span-12 lg:col-span-6 bg-white rounded-xl p-4 lg:p-6 shadow-sm border-r-4 border-tertiary"
+              className="col-span-12 lg:col-span-6 bg-white rounded-xl p-4 lg:p-6 shadow-lg border-l-4 border-orange-500"
             >
               <div className="flex items-center gap-3 mb-6">
                 <span
-                  className="material-symbols-outlined text-tertiary"
+                  className="material-symbols-outlined text-orange-500 text-2xl"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
                   warning
@@ -635,7 +713,7 @@ export default function AnalitikPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="col-span-12 lg:col-span-6 bg-primary-container rounded-xl p-4 lg:p-6 text-on-primary-container flex flex-col justify-center relative overflow-hidden"
+              className="col-span-12 lg:col-span-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-4 lg:p-6 text-white flex flex-col justify-center relative overflow-hidden shadow-xl"
             >
               <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
                 <span className="material-symbols-outlined text-[180px]">insights</span>
@@ -650,7 +728,7 @@ export default function AnalitikPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleApplyIoT}
-                className="w-fit bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all"
+                className="w-fit bg-white text-purple-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all shadow-lg"
               >
                 Terapkan Konfigurasi IoT
               </motion.button>

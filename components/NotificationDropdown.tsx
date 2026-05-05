@@ -85,14 +85,30 @@ export default function NotificationDropdown() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors"
+        className={`relative p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full transition-all ${
+          unreadCount > 0 ? 'text-yellow-400' : 'text-white'
+        }`}
       >
-        <span className="material-symbols-outlined">notifications</span>
+        <div className="relative">
+          <span 
+            className="material-symbols-outlined"
+            style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}
+          >
+            notifications
+          </span>
+          {unreadCount > 0 && (
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-yellow-400 rounded-full blur-md opacity-50"
+            />
+          )}
+        </div>
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/50"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </motion.span>

@@ -121,6 +121,13 @@ export default function DetailPersimpanganPage({
 
   const isOnline = intersection.status === 'active';
   
+  // Filter data untuk 1 jam terakhir - HARUS DIDEFINISIKAN DULU
+  const oneHourAgo = Date.now() - (60 * 60 * 1000);
+  const recentTrafficData = trafficData.filter((t: any) => {
+    const timestamp = new Date(t.timestamp).getTime();
+    return timestamp > oneHourAgo;
+  });
+  
   // Calculate lane data from traffic data
   const laneDirections = ['Utara', 'Timur', 'Selatan', 'Barat'];
   const lanes = laneDirections.map((direction, idx) => {
@@ -176,13 +183,6 @@ export default function DetailPersimpanganPage({
   });
 
   // Calculate metrics
-  // Filter data untuk 1 jam terakhir
-  const oneHourAgo = Date.now() - (60 * 60 * 1000);
-  const recentTrafficData = trafficData.filter((t: any) => {
-    const timestamp = new Date(t.timestamp).getTime();
-    return timestamp > oneHourAgo;
-  });
-  
   const totalVolume = recentTrafficData.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
   const avgCongestion = recentTrafficData.length > 0
     ? recentTrafficData.reduce((sum: number, t: any) => sum + (t.congestionIndex || 0), 0) / recentTrafficData.length

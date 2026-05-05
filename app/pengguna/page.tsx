@@ -14,6 +14,8 @@ export default function PenggunaPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Fetch users from API
   useEffect(() => {
@@ -140,30 +142,41 @@ export default function PenggunaPage() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   return (
     <>
       <DashboardLayout title="Sistem Pantauan Lalu Lintas">
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <div className="p-3 lg:p-6 max-w-[1920px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8"
+            className="flex flex-col gap-3 mb-4 lg:mb-6"
           >
             <div>
-              <h3 className="text-xl lg:text-3xl font-headline font-extrabold text-on-surface tracking-tight">
+              <h3 className="text-base lg:text-2xl font-headline font-extrabold text-on-surface tracking-tight">
                 Manajemen Pengguna
               </h3>
-              <p className="text-slate-500 mt-1">
+              <p className="text-slate-500 mt-0.5 text-xs lg:text-sm">
                 Kelola hak akses, perbarui peran, dan pantau aktivitas operator sistem.
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative flex-1">
+                <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm lg:text-base">
                   search
                 </span>
                 <input
-                  className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 w-64 placeholder:text-slate-400"
+                  className="w-full pl-8 lg:pl-9 pr-3 py-1.5 lg:py-2 bg-white border border-slate-200 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400"
                   placeholder="Cari pengguna..."
                   type="text"
                   value={searchQuery}
@@ -174,36 +187,129 @@ export default function PenggunaPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
+                className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg font-bold text-xs lg:text-sm shadow-lg shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-600/40 transition-all whitespace-nowrap"
               >
-                <span className="material-symbols-outlined text-lg">person_add</span>
-                Tambah Pengguna
+                <span className="material-symbols-outlined text-sm lg:text-base">person_add</span>
+                <span>Tambah Pengguna</span>
               </motion.button>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="lg:col-span-3 space-y-6"
+              className="lg:col-span-3 space-y-3 lg:space-y-4"
             >
               <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Mobile Card View */}
+                <div className="block lg:hidden divide-y divide-slate-100">
+                  {isLoading ? (
+                    <div className="px-4 py-8 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-slate-500 text-xs">Memuat data...</p>
+                      </div>
+                    </div>
+                  ) : currentUsers.length === 0 ? (
+                    <div className="px-4 py-8 text-center">
+                      <span className="material-symbols-outlined text-4xl text-slate-300 mb-1">person_off</span>
+                      <p className="text-slate-500 text-xs">
+                        {searchQuery ? "Tidak ada pengguna yang cocok" : "Belum ada pengguna"}
+                      </p>
+                    </div>
+                  ) : (
+                    currentUsers.map((user, idx) => (
+                      <motion.div
+                        key={user.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="p-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <img
+                            alt={user.name}
+                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              user.name
+                            )}&background=0040a1&color=fff`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-slate-900 truncate">
+                                  {user.name}
+                                </p>
+                                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleEdit(user)}
+                                  className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all"
+                                >
+                                  <span className="material-symbols-outlined text-lg">edit</span>
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleDelete(user.id)}
+                                  className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-error transition-all"
+                                >
+                                  <span className="material-symbols-outlined text-lg">delete</span>
+                                </motion.button>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                  user.role === "admin"
+                                    ? "bg-primary-fixed text-on-primary-fixed-variant"
+                                    : "bg-secondary-container text-on-secondary-container"
+                                }`}
+                              >
+                                {user.role === "admin" ? "ADMIN" : "OPERATOR"}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <div
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    user.status === "active" ? "bg-emerald-500" : "bg-slate-300"
+                                  }`}
+                                ></div>
+                                <span
+                                  className={`text-[10px] font-medium ${
+                                    user.status === "active" ? "text-slate-700" : "text-slate-400"
+                                  }`}
+                                >
+                                  {user.status === "active" ? "Aktif" : "Offline"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-surface-container-low/50">
-                        <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Pengguna
                         </th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Jabatan / Role
                         </th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                        <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
                           Aksi
                         </th>
                       </tr>
@@ -211,24 +317,24 @@ export default function PenggunaPage() {
                     <tbody className="divide-y divide-slate-100">
                       {isLoading ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
-                            <div className="flex flex-col items-center gap-3">
-                              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                              <p className="text-slate-500 text-sm">Memuat data...</p>
+                          <td colSpan={4} className="px-4 py-8 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                              <p className="text-slate-500 text-xs">Memuat data...</p>
                             </div>
                           </td>
                         </tr>
-                      ) : filteredUsers.length === 0 ? (
+                      ) : currentUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
-                            <span className="material-symbols-outlined text-5xl text-slate-300 mb-2">person_off</span>
-                            <p className="text-slate-500 text-sm">
+                          <td colSpan={4} className="px-4 py-8 text-center">
+                            <span className="material-symbols-outlined text-4xl text-slate-300 mb-1">person_off</span>
+                            <p className="text-slate-500 text-xs">
                               {searchQuery ? "Tidak ada pengguna yang cocok" : "Belum ada pengguna"}
                             </p>
                           </td>
                         </tr>
                       ) : (
-                        filteredUsers.map((user, idx) => (
+                        currentUsers.map((user, idx) => (
                         <motion.tr
                           key={user.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -236,26 +342,26 @@ export default function PenggunaPage() {
                           transition={{ delay: 0.3 + idx * 0.1 }}
                           className="hover:bg-slate-50 transition-colors group"
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
                               <img
                                 alt={user.name}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-8 h-8 rounded-full object-cover"
                                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
                                   user.name
                                 )}&background=0040a1&color=fff`}
                               />
                               <div>
-                                <p className="text-sm font-bold text-slate-900 leading-none">
+                                <p className="text-xs font-bold text-slate-900 leading-none">
                                   {user.name}
                                 </p>
-                                <p className="text-xs text-slate-500 mt-1">{user.email}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{user.email}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <span
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase ${
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                 user.role === "admin"
                                   ? "bg-primary-fixed text-on-primary-fixed-variant"
                                   : "bg-secondary-container text-on-secondary-container"
@@ -264,15 +370,15 @@ export default function PenggunaPage() {
                               {user.role === "admin" ? "ADMIN PUSAT" : "OPERATOR LAPANGAN"}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
                               <div
-                                className={`w-2 h-2 rounded-full ${
+                                className={`w-1.5 h-1.5 rounded-full ${
                                   user.status === "active" ? "bg-emerald-500" : "bg-slate-300"
                                 }`}
                               ></div>
                               <span
-                                className={`text-xs font-medium ${
+                                className={`text-[10px] font-medium ${
                                   user.status === "active" ? "text-slate-700" : "text-slate-400"
                                 }`}
                               >
@@ -280,23 +386,23 @@ export default function PenggunaPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => handleEdit(user)}
-                                className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all"
+                                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all"
                               >
-                                <span className="material-symbols-outlined text-lg">edit</span>
+                                <span className="material-symbols-outlined text-base">edit</span>
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => handleDelete(user.id)}
-                                className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-error transition-all"
+                                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-error transition-all"
                               >
-                                <span className="material-symbols-outlined text-lg">delete</span>
+                                <span className="material-symbols-outlined text-base">delete</span>
                               </motion.button>
                             </div>
                           </td>
@@ -307,40 +413,133 @@ export default function PenggunaPage() {
                   </table>
                 </div>
               </div>
+
+              {/* Pagination */}
+              {!isLoading && filteredUsers.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-surface-container-lowest rounded-xl shadow-sm p-3 lg:p-4"
+                >
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p className="text-xs text-slate-500 text-center sm:text-left">
+                      Menampilkan <span className="font-semibold text-slate-700">{startIndex + 1}</span> - <span className="font-semibold text-slate-700">{Math.min(endIndex, filteredUsers.length)}</span> dari <span className="font-semibold text-slate-700">{filteredUsers.length}</span> pengguna
+                    </p>
+                    
+                    <div className="flex items-center gap-1 lg:gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="p-1.5 lg:p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base lg:text-lg text-slate-600">first_page</span>
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="p-1.5 lg:p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base lg:text-lg text-slate-600">chevron_left</span>
+                      </motion.button>
+
+                      {/* Page Numbers */}
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(page => {
+                            // Show first page, last page, current page, and pages around current
+                            if (page === 1 || page === totalPages) return true;
+                            if (Math.abs(page - currentPage) <= 1) return true;
+                            return false;
+                          })
+                          .map((page, idx, arr) => {
+                            // Add ellipsis
+                            const prevPage = arr[idx - 1];
+                            const showEllipsis = prevPage && page - prevPage > 1;
+                            
+                            return (
+                              <div key={page} className="flex items-center gap-1">
+                                {showEllipsis && (
+                                  <span className="px-1 text-slate-400 text-xs">...</span>
+                                )}
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => setCurrentPage(page)}
+                                  className={`w-7 h-7 lg:w-8 lg:h-8 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
+                                    currentPage === page
+                                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                                      : "hover:bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  {page}
+                                </motion.button>
+                              </div>
+                            );
+                          })}
+                      </div>
+
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 lg:p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base lg:text-lg text-slate-600">chevron_right</span>
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 lg:p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base lg:text-lg text-slate-600">last_page</span>
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="space-y-6"
+              className="space-y-3 lg:space-y-6"
             >
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <h4 className="text-sm font-bold text-slate-900 mb-4">Informasi Peran</h4>
-                <div className="space-y-4">
-                  <div className="p-4 bg-primary-fixed/30 rounded-xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="material-symbols-outlined text-primary text-lg">
+              <div className="bg-surface-container-lowest p-3 lg:p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">Informasi Peran</h4>
+                <div className="space-y-3 lg:space-y-4">
+                  <div className="p-3 lg:p-4 bg-primary-fixed/30 rounded-xl">
+                    <div className="flex items-center gap-1.5 lg:gap-2 mb-1">
+                      <span className="material-symbols-outlined text-primary text-base lg:text-lg">
                         verified_user
                       </span>
-                      <span className="text-xs font-extrabold text-on-primary-fixed-variant">
+                      <span className="text-[10px] lg:text-xs font-extrabold text-on-primary-fixed-variant">
                         Admin Pusat
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                    <p className="text-[10px] lg:text-[11px] text-slate-600 leading-relaxed">
                       Akses penuh ke semua fitur, manajemen sistem, dan pengaturan API eksternal.
                     </p>
                   </div>
-                  <div className="p-4 bg-secondary-container/30 rounded-xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="material-symbols-outlined text-secondary text-lg">
+                  <div className="p-3 lg:p-4 bg-secondary-container/30 rounded-xl">
+                    <div className="flex items-center gap-1.5 lg:gap-2 mb-1">
+                      <span className="material-symbols-outlined text-secondary text-base lg:text-lg">
                         monitor_heart
                       </span>
-                      <span className="text-xs font-extrabold text-on-secondary-container">
+                      <span className="text-[10px] lg:text-xs font-extrabold text-on-secondary-container">
                         Operator Lapangan
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                    <p className="text-[10px] lg:text-[11px] text-slate-600 leading-relaxed">
                       Memantau arus lalu lintas secara real-time dan mengelola laporan insiden
                       lokal.
                     </p>
@@ -348,22 +547,22 @@ export default function PenggunaPage() {
                 </div>
               </div>
 
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <h4 className="text-sm font-bold text-slate-900 mb-4">Statistik</h4>
-                <div className="space-y-3">
+              <div className="bg-surface-container-lowest p-3 lg:p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">Statistik</h4>
+                <div className="space-y-2 lg:space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Total Pengguna</span>
-                    <span className="text-lg font-bold text-slate-900">{users.length}</span>
+                    <span className="text-[10px] lg:text-xs text-slate-500">Total Pengguna</span>
+                    <span className="text-base lg:text-lg font-bold text-slate-900">{users.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Aktif</span>
-                    <span className="text-lg font-bold text-emerald-600">
+                    <span className="text-[10px] lg:text-xs text-slate-500">Aktif</span>
+                    <span className="text-base lg:text-lg font-bold text-emerald-600">
                       {users.filter((u) => u.status === "active").length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-500">Offline</span>
-                    <span className="text-lg font-bold text-slate-400">
+                    <span className="text-[10px] lg:text-xs text-slate-500">Offline</span>
+                    <span className="text-base lg:text-lg font-bold text-slate-400">
                       {users.filter((u) => u.status !== "active").length}
                     </span>
                   </div>

@@ -57,22 +57,22 @@ export default function PersimpanganPage() {
 
   return (
     <DashboardLayout title="Daftar Persimpangan">
-      <div className="p-4 lg:p-8 space-y-4 lg:space-y-6">
+      <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
           {/* Stats Overview */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg card-hover"
             >
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[9px] font-bold text-blue-100 uppercase tracking-widest mb-1">
                 Total Persimpangan
               </p>
-              <p className="text-4xl font-headline font-extrabold text-primary mb-1">
+              <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
                 {isLoading ? '...' : intersections.length}
               </p>
-              <div className="flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">location_on</span>
+              <div className="flex items-center gap-1 text-blue-100 text-[10px] font-bold">
+                <span className="material-symbols-outlined text-xs">location_on</span>
                 <span>Terdaftar di sistem</span>
               </div>
             </motion.div>
@@ -81,16 +81,16 @@ export default function PersimpanganPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-xl shadow-lg card-hover"
             >
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[9px] font-bold text-green-100 uppercase tracking-widest mb-1">
                 Status Aktif
               </p>
-              <p className="text-4xl font-headline font-extrabold text-green-600 mb-1">
+              <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
                 {isLoading ? '...' : intersections.filter((i: any) => i.status === 'active').length}
               </p>
-              <div className="flex items-center gap-1 text-green-600 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">check_circle</span>
+              <div className="flex items-center gap-1 text-green-100 text-[10px] font-bold">
+                <span className="material-symbols-outlined text-xs">check_circle</span>
                 <span>Beroperasi normal</span>
               </div>
             </motion.div>
@@ -99,16 +99,16 @@ export default function PersimpanganPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-gradient-to-br from-orange-500 to-amber-600 p-4 rounded-xl shadow-lg card-hover"
             >
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[9px] font-bold text-orange-100 uppercase tracking-widest mb-1">
                 Maintenance
               </p>
-              <p className="text-4xl font-headline font-extrabold text-orange-500 mb-1">
+              <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
                 {isLoading ? '...' : intersections.filter((i: any) => i.status === 'maintenance').length}
               </p>
-              <div className="flex items-center gap-1 text-orange-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">build</span>
+              <div className="flex items-center gap-1 text-orange-100 text-[10px] font-bold">
+                <span className="material-symbols-outlined text-xs">build</span>
                 <span>Dalam perbaikan</span>
               </div>
             </motion.div>
@@ -117,16 +117,16 @@ export default function PersimpanganPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-gradient-to-br from-red-500 to-rose-600 p-4 rounded-xl shadow-lg card-hover"
             >
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[9px] font-bold text-red-100 uppercase tracking-widest mb-1">
                 Tidak Aktif
               </p>
-              <p className="text-4xl font-headline font-extrabold text-red-500 mb-1">
+              <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
                 {isLoading ? '...' : intersections.filter((i: any) => i.status === 'inactive').length}
               </p>
-              <div className="flex items-center gap-1 text-red-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">error</span>
+              <div className="flex items-center gap-1 text-red-100 text-[10px] font-bold">
+                <span className="material-symbols-outlined text-xs">error</span>
                 <span>Perlu perhatian</span>
               </div>
             </motion.div>
@@ -134,15 +134,15 @@ export default function PersimpanganPage() {
 
           {/* Intersections Grid */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-headline font-bold text-slate-900 text-lg lg:text-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-headline font-bold text-slate-900 text-base lg:text-lg">
                 Semua Persimpangan
               </h3>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="group inline-flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-primary to-blue-700 text-white rounded-lg lg:rounded-xl font-bold hover:shadow-xl hover:shadow-blue-600/30 transition-all duration-300 hover:scale-105"
+                className="group inline-flex items-center gap-2 px-3 lg:px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold text-sm hover:shadow-2xl hover:shadow-blue-600/40 transition-all duration-300 hover:scale-105"
               >
-                <span className="material-symbols-outlined text-lg lg:text-xl group-hover:rotate-90 transition-transform duration-300">
+                <span className="material-symbols-outlined text-base group-hover:rotate-90 transition-transform duration-300">
                   add_circle
                 </span>
                 <span className="hidden sm:inline">Tambah Persimpangan</span>
@@ -181,7 +181,7 @@ export default function PersimpanganPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                      className="bg-white rounded-xl p-4 lg:p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer group border-2 border-transparent hover:border-blue-300 card-hover"
                       onClick={() => router.push(`/persimpangan/${intersection.id}`)}
                     >
                       <div className="flex items-start justify-between mb-4">
@@ -242,11 +242,14 @@ export default function PersimpanganPage() {
                     <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
                     
                     <button
-                      onClick={() => setShowAll(true)}
-                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-blue-700 text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-blue-600/30 transition-all duration-300 hover:scale-105 overflow-hidden"
+                      onClick={() => {
+                        setShowAll(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-blue-600/40 transition-all duration-300 hover:scale-105 overflow-hidden"
                     >
                       {/* Animated Background */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       
                       {/* Content */}
                       <span className="relative z-10 flex items-center gap-2">

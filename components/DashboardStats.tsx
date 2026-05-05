@@ -35,9 +35,10 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
       change: `${stats.changeVsYesterday >= 0 ? '+' : ''}${stats.changeVsYesterday}% vs Kemarin`,
       changeType: stats.changeVsYesterday >= 0 ? "positive" : "negative",
       icon: "directions_car",
-      bgColor: "bg-surface-container-lowest",
-      iconBg: "bg-primary-fixed",
-      iconColor: "text-primary",
+      bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
+      iconBg: "",
+      iconColor: "text-white",
+      textColor: "text-white",
       link: "/Analist",
     },
     {
@@ -45,9 +46,10 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
       value: `${stats.iotPercentage}%`,
       subtitle: `${stats.activeDevices}/${stats.totalDevices} Perangkat Aktif`,
       icon: "cloud_done",
-      bgColor: "bg-surface-container-lowest",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-700",
+      bgColor: "bg-gradient-to-br from-emerald-500 to-green-600",
+      iconBg: "",
+      iconColor: "text-white",
+      textColor: "text-white",
       link: "/persimpangan",
     },
     {
@@ -57,9 +59,10 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
       change: `${stats.changeWaitTime >= 0 ? '+' : ''}${stats.changeWaitTime} detik hari ini`,
       changeType: stats.changeWaitTime >= 0 ? "negative" : "positive",
       icon: "timer",
-      bgColor: "bg-surface-container-lowest",
-      iconBg: "bg-secondary-fixed",
-      iconColor: "text-secondary",
+      bgColor: "bg-gradient-to-br from-orange-500 to-amber-600",
+      iconBg: "",
+      iconColor: "text-white",
+      textColor: "text-white",
       link: "/Analist",
     },
     {
@@ -67,10 +70,10 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
       value: stats.flowScore,
       subtitle: "Berdasarkan data real-time",
       icon: "speed",
-      bgColor: "bg-primary",
+      bgColor: "bg-gradient-to-br from-purple-600 to-indigo-700",
       iconBg: "",
-      iconColor: "text-primary-fixed",
-      textColor: "text-on-primary",
+      iconColor: "text-white",
+      textColor: "text-white",
       special: true,
       link: "/Analist",
     },
@@ -78,10 +81,9 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
 
   return (
     <section className="space-y-6">
-      {/* Mobile: First 3 cards horizontal, 4th card full width */}
-      {/* Desktop: All 4 cards in one row */}
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
-        {statsConfig.slice(0, 3).map((stat, idx) => (
+      {/* All 4 cards in one row for both mobile and desktop */}
+      <div className="grid grid-cols-4 gap-2 lg:gap-4">
+        {statsConfig.map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
@@ -89,38 +91,36 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
             transition={{ delay: idx * 0.1 }}
             whileHover={{ scale: 1.02, y: -4 }}
             onClick={() => router.push(stat.link)}
-            className={`${stat.bgColor} p-4 md:p-6 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col justify-between overflow-hidden relative group cursor-pointer`}
+            className={`${stat.bgColor} p-3 lg:p-4 rounded-xl shadow-lg hover:shadow-2xl border border-white/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer transition-all`}
           >
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+            <div className="absolute -right-6 -top-6 w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
 
-            <header className="flex justify-between items-start mb-3 md:mb-4 relative z-10">
-              <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <header className="flex justify-between items-start mb-2 lg:mb-3 relative z-10">
+              <span className={`text-[9px] lg:text-xs font-bold uppercase tracking-wider ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
                 {stat.label}
               </span>
-              <div className={`p-1.5 md:p-2 ${stat.iconBg} rounded-lg ${stat.iconColor}`}>
-                <span className="material-symbols-outlined text-base md:text-lg">{stat.icon}</span>
+              <div className={`p-1.5 lg:p-2 bg-white/20 backdrop-blur-sm rounded-lg ${stat.iconColor}`}>
+                <span className="material-symbols-outlined text-base lg:text-xl">{stat.icon}</span>
               </div>
             </header>
 
             <div className="relative z-10">
-              <h3 className="text-xl md:text-3xl font-headline font-extrabold tracking-tight text-slate-900">
+              <h3 className={`text-2xl lg:text-4xl font-headline font-extrabold tracking-tight ${stat.textColor || 'text-white'} leading-none mb-1`}>
                 {stat.value}
                 {stat.unit && (
-                  <span className="text-[10px] md:text-sm font-bold text-slate-400 ml-1">{stat.unit}</span>
+                  <span className={`text-xs lg:text-sm font-bold ${stat.textColor || 'text-white'} opacity-70 ml-1`}>{stat.unit}</span>
                 )}
               </h3>
               {stat.change && (
                 <p
-                  className={`text-[10px] md:text-xs font-semibold mt-1 flex items-center gap-1 ${
-                    stat.changeType === "positive" ? "text-emerald-600" : "text-tertiary"
-                  }`}
+                  className={`text-[9px] lg:text-xs font-semibold flex items-center gap-1 ${stat.textColor || 'text-white'} opacity-90 leading-tight`}
                 >
-                  <span className="material-symbols-outlined text-xs md:text-sm">trending_up</span>
-                  <span className="hidden md:inline">{stat.change}</span>
+                  <span className="material-symbols-outlined text-xs lg:text-sm">trending_up</span>
+                  <span>{stat.change}</span>
                 </p>
               )}
               {stat.subtitle && (
-                <p className="text-[10px] md:text-xs font-medium mt-1 text-slate-500">
+                <p className={`text-[9px] lg:text-xs font-medium ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
                   {stat.subtitle}
                 </p>
               )}
@@ -128,86 +128,13 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
 
             {/* Hover indicator */}
             <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="material-symbols-outlined text-sm text-slate-400">
+              <span className={`material-symbols-outlined text-base lg:text-lg ${stat.textColor || 'text-white'} opacity-50`}>
                 arrow_forward
               </span>
             </div>
           </motion.div>
         ))}
-        
-        {/* Desktop: 4th card in same row */}
-        <motion.div
-          key={statsConfig[3].label}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.02, y: -4 }}
-          onClick={() => router.push(statsConfig[3].link)}
-          className="hidden md:flex bg-primary p-6 rounded-xl shadow-sm shadow-primary/20 flex-col justify-between overflow-hidden relative group cursor-pointer"
-        >
-          <div className="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-          <header className="flex justify-between items-start mb-4 relative z-10">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-primary-fixed/60">
-              {statsConfig[3].label}
-            </span>
-            <div className={`p-2 rounded-lg text-primary-fixed`}>
-              <span className="material-symbols-outlined text-lg">{statsConfig[3].icon}</span>
-            </div>
-          </header>
-
-          <div className="relative z-10">
-            <h3 className="text-3xl font-headline font-extrabold tracking-tight text-on-primary">
-              {statsConfig[3].value}
-            </h3>
-            <p className="text-xs font-medium mt-1 text-primary-fixed/80">
-              {statsConfig[3].subtitle}
-            </p>
-          </div>
-
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="material-symbols-outlined text-sm text-primary-fixed/50">
-              arrow_forward
-            </span>
-          </div>
-        </motion.div>
       </div>
-
-      {/* Mobile: 4th card full width below */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        whileHover={{ scale: 1.02, y: -4 }}
-        onClick={() => router.push(statsConfig[3].link)}
-        className="md:hidden bg-primary p-6 rounded-xl shadow-sm shadow-primary/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer"
-      >
-        <div className="absolute bottom-0 right-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-        <header className="flex justify-between items-start mb-4 relative z-10">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-primary-fixed/60">
-            {statsConfig[3].label}
-          </span>
-          <div className={`p-2 rounded-lg text-primary-fixed`}>
-            <span className="material-symbols-outlined text-lg">{statsConfig[3].icon}</span>
-          </div>
-        </header>
-
-        <div className="relative z-10">
-          <h3 className="text-3xl font-headline font-extrabold tracking-tight text-on-primary">
-            {statsConfig[3].value}
-          </h3>
-          <p className="text-xs font-medium mt-1 text-primary-fixed/80">
-            {statsConfig[3].subtitle}
-          </p>
-        </div>
-
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="material-symbols-outlined text-sm text-primary-fixed/50">
-            arrow_forward
-          </span>
-        </div>
-      </motion.div>
     </section>
   );
 }

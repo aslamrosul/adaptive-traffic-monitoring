@@ -37,24 +37,24 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
   }
 
   return (
-    <div className="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15">
-      <div className="flex justify-between items-center mb-8">
+    <div className="bg-white p-2 lg:p-3 rounded-lg shadow-lg border border-blue-100 card-hover">
+      <div className="flex justify-between items-center mb-2">
         <div>
-          <h4 className="text-lg font-headline font-bold text-slate-900">
+          <h4 className="text-xs lg:text-sm font-headline font-bold text-slate-900">
             Tren Lalu Lintas Harian
           </h4>
-          <p className="text-sm text-slate-500">
-            Volume kendaraan per jam (data real-time dari IoT)
+          <p className="text-[9px] lg:text-[10px] text-slate-500">
+            Volume kendaraan per jam
           </p>
         </div>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="bg-slate-50 border-none rounded-lg text-xs font-bold text-slate-600 focus:ring-primary cursor-pointer px-3 py-2"
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-md text-[10px] font-bold text-slate-700 focus:ring-blue-500 cursor-pointer px-2 py-1 hover:from-blue-100 hover:to-indigo-100 transition-all"
         >
           <option value="today">Hari Ini</option>
           <option value="yesterday">Kemarin</option>
-          <option value="week">7 Hari Terakhir</option>
+          <option value="week">7 Hari</option>
         </select>
       </div>
 
@@ -64,16 +64,16 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg z-10"
+            className="absolute top-0 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-2 py-1 rounded-md text-xs font-bold shadow-lg z-10"
           >
             <div className="text-center">
-              <p className="text-xs text-slate-300">{trafficTrend[hoveredIndex].time}</p>
-              <p className="text-lg">{trafficTrend[hoveredIndex].vehicles} kendaraan</p>
+              <p className="text-[9px] text-slate-300">{trafficTrend[hoveredIndex].time}</p>
+              <p className="text-sm">{trafficTrend[hoveredIndex].vehicles}</p>
             </div>
           </motion.div>
         )}
 
-        <div className="relative h-64 w-full bg-slate-50/50 rounded-xl overflow-hidden flex items-end px-4 gap-2">
+        <div className="relative h-56 lg:h-64 w-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg overflow-hidden flex items-end px-2 gap-1 border border-blue-100">
           {trafficTrend.length > 0 ? (
             trafficTrend.map((data, idx) => (
               <motion.div
@@ -85,13 +85,13 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`w-full rounded-t-sm relative group cursor-pointer transition-all ${
                   hoveredIndex === idx
-                    ? "bg-gradient-to-t from-primary/50 to-primary/10"
-                    : "bg-gradient-to-t from-primary/30 to-primary/0"
+                    ? "bg-gradient-to-t from-blue-600 to-blue-400"
+                    : "bg-gradient-to-t from-blue-500 to-blue-300"
                 }`}
               >
                 <div
                   className={`absolute -top-1 left-0 w-full h-[2px] transition-colors ${
-                    hoveredIndex === idx ? "bg-primary" : "bg-primary/70"
+                    hoveredIndex === idx ? "bg-blue-700" : "bg-blue-600"
                   }`}
                 ></div>
               </motion.div>
@@ -111,21 +111,21 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-3 gap-4">
+      <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-3 gap-2">
         <div className="text-center">
-          <p className="text-xs text-slate-500 font-semibold mb-1">Puncak</p>
-          <p className="text-lg font-bold text-slate-900">{peakData.vehicles}</p>
-          <p className="text-[10px] text-slate-400">{peakData.time}</p>
+          <p className="text-[9px] text-slate-500 font-semibold mb-0">Puncak</p>
+          <p className="text-sm font-bold text-slate-900">{peakData.vehicles}</p>
+          <p className="text-[8px] text-slate-400">{peakData.time}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-slate-500 font-semibold mb-1">Rata-rata</p>
-          <p className="text-lg font-bold text-slate-900">{avgVehicles}</p>
-          <p className="text-[10px] text-slate-400">kendaraan/jam</p>
+          <p className="text-[9px] text-slate-500 font-semibold mb-0">Rata-rata</p>
+          <p className="text-sm font-bold text-slate-900">{avgVehicles}</p>
+          <p className="text-[8px] text-slate-400">per jam</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-slate-500 font-semibold mb-1">Terendah</p>
-          <p className="text-lg font-bold text-slate-900">{lowestData.vehicles}</p>
-          <p className="text-[10px] text-slate-400">{lowestData.time}</p>
+          <p className="text-[9px] text-slate-500 font-semibold mb-0">Terendah</p>
+          <p className="text-sm font-bold text-slate-900">{lowestData.vehicles}</p>
+          <p className="text-[8px] text-slate-400">{lowestData.time}</p>
         </div>
       </div>
     </div>

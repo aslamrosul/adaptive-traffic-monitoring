@@ -34,7 +34,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${manrope.variable} font-body antialiased`}>
+      <body className={`${inter.variable} ${manrope.variable} font-body antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50`}>
         <SessionProvider>
           <Providers>
             <LoadingProvider>

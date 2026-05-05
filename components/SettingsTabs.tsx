@@ -24,21 +24,21 @@ export default function SettingsTabs() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
+      <div className="flex gap-1 lg:gap-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3 font-semibold text-xs lg:text-sm transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? "text-primary border-b-2 border-primary"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-            {tab.label}
+            <span className="material-symbols-outlined text-base lg:text-lg">{tab.icon}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -48,50 +48,50 @@ export default function SettingsTabs() {
         key={activeTab}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-8"
+        className="bg-white rounded-xl shadow-sm p-4 lg:p-8 overflow-x-hidden"
       >
         {activeTab === "general" && (
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Pengaturan Umum</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-slate-900">Mode Otomatis</p>
-                    <p className="text-sm text-slate-500">
+              <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4">Pengaturan Umum</h3>
+              <div className="space-y-3 lg:space-y-4">
+                <div className="flex items-center justify-between p-3 lg:p-4 bg-slate-50 rounded-lg gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 text-sm lg:text-base truncate">Mode Otomatis</p>
+                    <p className="text-xs lg:text-sm text-slate-500">
                       Sistem akan mengatur lampu lalu lintas secara otomatis
                     </p>
                   </div>
                   <button
                     onClick={() => setAutoMode(!autoMode)}
-                    className={`relative w-14 h-8 rounded-full transition-colors ${
+                    className={`relative w-12 h-7 lg:w-14 lg:h-8 rounded-full transition-colors flex-shrink-0 ${
                       autoMode ? "bg-primary" : "bg-slate-300"
                     }`}
                   >
                     <div
-                      className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                        autoMode ? "translate-x-7" : "translate-x-1"
+                      className={`absolute top-1 w-5 h-5 lg:w-6 lg:h-6 bg-white rounded-full transition-transform ${
+                        autoMode ? "translate-x-6 lg:translate-x-7" : "translate-x-1"
                       }`}
                     ></div>
                   </button>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
+                <div className="p-3 lg:p-4 bg-slate-50 rounded-lg">
+                  <label className="block font-semibold text-slate-900 mb-2 text-sm lg:text-base">
                     Bahasa Sistem
                   </label>
-                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                  <select className="w-full px-3 lg:px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm lg:text-base">
                     <option>Bahasa Indonesia</option>
                     <option>English</option>
                     <option>中文</option>
                   </select>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
+                <div className="p-3 lg:p-4 bg-slate-50 rounded-lg">
+                  <label className="block font-semibold text-slate-900 mb-2 text-sm lg:text-base">
                     Zona Waktu
                   </label>
-                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                  <select className="w-full px-3 lg:px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm lg:text-base">
                     <option>WIB (GMT+7)</option>
                     <option>WITA (GMT+8)</option>
                     <option>WIT (GMT+9)</option>
@@ -334,13 +334,13 @@ export default function SettingsTabs() {
         )}
 
         {/* Save Button */}
-        <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
-          <button className="px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 lg:gap-3 mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-200">
+          <button className="w-full sm:w-auto px-4 lg:px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-sm lg:text-base">
             Batal
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="w-full sm:w-auto px-4 lg:px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm lg:text-base"
           >
             Simpan Perubahan
           </button>

@@ -2,7 +2,6 @@
 
 import { useProfileStore } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -41,20 +40,22 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
 
   // Auto-close sidebar on mobile when route changes
   useEffect(() => {
-    setIsSidebarOpen(false);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+    // Desktop: keep sidebar state as is (don't auto-close or auto-open)
   }, [pathname]);
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      } else {
+      // On mobile, close sidebar
+      if (window.innerWidth < 1024) {
         setIsSidebarOpen(false);
       }
+      // On desktop, keep current state (don't force open/close)
     };
 
-    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -78,55 +79,45 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
 
       {/* Sidebar */}
       <aside
-        className={`h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200 flex flex-col p-4 z-50 transition-transform duration-300 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        className={`h-screen lg:h-[calc(100vh-4rem)] fixed left-0 top-0 lg:top-16 flex flex-col z-50 shadow-2xl overflow-hidden ${
+          isSidebarOpen 
+            ? "w-64 translate-x-0 p-4 bg-gradient-to-b from-blue-600 via-blue-700 to-indigo-800" 
+            : "w-0 lg:w-20 -translate-x-full lg:translate-x-0 lg:p-2 lg:bg-gradient-to-b lg:from-blue-600 lg:via-blue-700 lg:to-indigo-800"
         }`}
       >
-        <div className="mb-10 px-2">
-          {/* Mobile: Toggle Button + Logo + Status in one row */}
-          <div className="lg:hidden flex items-center gap-3 mb-6">
+        <div className={`lg:hidden ${isSidebarOpen ? 'block px-2 mb-6' : 'hidden'}`}>
+          {/* Toggle Button + Logo + Status - Mobile Only */}
+          <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex-shrink-0"
-              aria-label="Close Menu"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors flex-shrink-0"
+              aria-label={isSidebarOpen ? "Close Menu" : "Open Menu"}
+              title={isSidebarOpen ? "Tutup Menu" : "Buka Menu"}
             >
-              <span className="material-symbols-outlined text-xl">menu</span>
+              <span className="material-symbols-outlined text-xl">
+                menu
+              </span>
             </button>
-            <Link href="/" className="flex-1 min-w-0 flex items-center gap-2">
+            
+            {/* Logo and Status - Mobile Only */}
+            <Link 
+              href="/" 
+              className="flex-1 min-w-0 flex items-center gap-2"
+            >
               <div className="min-w-0">
-                <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
+                <h1 className="text-sm font-black text-white tracking-tighter font-headline truncate hover:text-blue-200 transition-colors cursor-pointer">
                   Aerial Command
                 </h1>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                  <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          {/* Desktop: Logo + Status (original layout) */}
-          <div className="hidden lg:block">
-            <Link href="/" className="flex items-start gap-2.5">
-              <Image src="/logo.png" alt="Aerial Command" width={40} height={40} className=" flex-shrink-0" />
-              <div className="flex flex-col">
-                <h1 className="text-lg font-black text-blue-800 tracking-tighter font-headline hover:text-blue-600 transition-colors cursor-pointer">
-                  Aerial Command
-                </h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="w-2 h-2 rounded-full bg-emerald-500"
-                  ></motion.div>
-                  <p className="text-xs text-slate-500 font-medium">Status IoT: Terhubung</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <p className="text-[10px] text-blue-200 font-medium">IoT: Terhubung</p>
                 </div>
               </div>
             </Link>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden">
           {menuItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -135,29 +126,44 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
               <div key={item.href}>
                 <Link
                   href={item.href}
-                  className={`group flex items-center gap-3 px-4 py-3 rounded-lg font-manrope font-semibold text-sm transition-all duration-200 ${
+                  className={`group flex items-center gap-3 rounded-xl font-manrope font-semibold text-sm relative ${
                     isActive
-                      ? "bg-white text-blue-700 shadow-md"
-                      : "text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5"
+                      ? "bg-white text-blue-700 shadow-xl shadow-blue-900/30"
+                      : "text-blue-100 hover:bg-white/10 hover:text-white hover:shadow-lg hover:-translate-y-0.5 backdrop-blur-sm"
+                  } ${
+                    isSidebarOpen 
+                      ? 'px-4 py-3' 
+                      : 'lg:justify-center lg:px-3 lg:py-3 lg:mx-auto lg:w-14'
                   }`}
+                  title={!isSidebarOpen ? item.label : ''}
                 >
                   <span
-                    className={`material-symbols-outlined transition-all duration-200 ${
+                    className={`material-symbols-outlined ${
                       isActive ? "" : "group-hover:scale-110"
-                    }`}
+                    } ${!isSidebarOpen ? 'lg:text-2xl' : ''}`}
                     style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                   >
                     {item.icon}
                   </span>
-                  <span className="transition-transform duration-200">
+                  <span className={`whitespace-nowrap ${
+                    isSidebarOpen ? 'block' : 'hidden'
+                  }`}>
                     {item.label}
                   </span>
-                  {isActive && (
+                  {isActive && isSidebarOpen && (
                     <motion.div
                       layoutId="activeIndicator"
                       className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
+                  )}
+                  
+                  {/* Tooltip for collapsed state */}
+                  {!isSidebarOpen && (
+                    <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                      {item.label}
+                      <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                    </div>
                   )}
                 </Link>
               </div>
@@ -165,24 +171,62 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
           })}
         </nav>
 
-        <div className="mt-auto space-y-1 pt-4 border-t border-slate-200/60">
+        <div className="mt-auto space-y-1 pt-4 border-t border-white/20">
           <Link
             href="/profile?tab=settings"
-            className="group flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-lg font-manrope font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
+            className={`group flex items-center gap-3 text-blue-100 hover:bg-white/10 hover:text-white hover:shadow-lg rounded-xl font-manrope font-semibold text-sm hover:-translate-y-0.5 backdrop-blur-sm relative ${
+              isSidebarOpen 
+                ? 'px-4 py-3' 
+                : 'lg:justify-center lg:px-3 lg:py-3 lg:mx-auto lg:w-14'
+            }`}
+            title={!isSidebarOpen ? 'Pengaturan' : ''}
           >
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform duration-200">
+            <span className={`material-symbols-outlined group-hover:scale-110 ${
+              !isSidebarOpen ? 'lg:text-2xl' : ''
+            }`}>
               settings
             </span>
-            <span>Pengaturan</span>
+            <span className={`whitespace-nowrap ${
+              isSidebarOpen ? 'block' : 'hidden'
+            }`}>
+              Pengaturan
+            </span>
+            
+            {/* Tooltip for collapsed state */}
+            {!isSidebarOpen && (
+              <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                Pengaturan
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+              </div>
+            )}
           </Link>
           <Link
             href="/profile?tab=help"
-            className="group flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-lg font-manrope font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
+            className={`group flex items-center gap-3 text-blue-100 hover:bg-white/10 hover:text-white hover:shadow-lg rounded-xl font-manrope font-semibold text-sm hover:-translate-y-0.5 backdrop-blur-sm relative ${
+              isSidebarOpen 
+                ? 'px-4 py-3' 
+                : 'lg:justify-center lg:px-3 lg:py-3 lg:mx-auto lg:w-14'
+            }`}
+            title={!isSidebarOpen ? 'Bantuan' : ''}
           >
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform duration-200">
+            <span className={`material-symbols-outlined group-hover:scale-110 ${
+              !isSidebarOpen ? 'lg:text-2xl' : ''
+            }`}>
               help
             </span>
-            <span>Bantuan</span>
+            <span className={`whitespace-nowrap ${
+              isSidebarOpen ? 'block' : 'hidden'
+            }`}>
+              Bantuan
+            </span>
+            
+            {/* Tooltip for collapsed state */}
+            {!isSidebarOpen && (
+              <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                Bantuan
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+              </div>
+            )}
           </Link>
         </div>
       </aside>

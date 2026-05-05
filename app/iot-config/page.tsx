@@ -46,31 +46,31 @@ export default function IoTConfigPage() {
 
   return (
     <DashboardLayout title="Remote Configuration IoT">
-      <div className="p-8 space-y-6 max-w-7xl mx-auto">
+      <div className="p-4 lg:p-6 space-y-4 max-w-[1920px] mx-auto">
           {/* Info Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-blue-50 border border-blue-200 rounded-xl p-6"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 border border-blue-400 rounded-lg p-3 shadow-lg"
           >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-blue-600 text-2xl">info</span>
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-white text-lg">info</span>
               </div>
               <div>
-                <h3 className="font-bold text-blue-900 mb-2">Remote Configuration untuk Smart Traffic Light</h3>
-                <p className="text-blue-700 text-sm leading-relaxed">
+                <h3 className="font-bold text-white mb-1 text-xs">Remote Configuration untuk Smart Traffic Light</h3>
+                <p className="text-blue-100 text-[10px] leading-relaxed">
                   Atur durasi lampu lalu lintas berdasarkan jumlah kendaraan secara real-time. 
                   Konfigurasi akan disimpan ke database dan dikirim ke ESP32 melalui MQTT/API.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-white rounded-full text-xs font-semibold text-blue-700">
-                    ✓ Real-time Update
+                <div className="mt-2 flex flex-wrap gap-1">
+                  <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
+                    ✓ Real-time
                   </span>
-                  <span className="px-3 py-1 bg-white rounded-full text-xs font-semibold text-blue-700">
-                    ✓ MQTT Integration
+                  <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
+                    ✓ MQTT
                   </span>
-                  <span className="px-3 py-1 bg-white rounded-full text-xs font-semibold text-blue-700">
+                  <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
                     ✓ Auto Sync
                   </span>
                 </div>
@@ -83,9 +83,9 @@ export default function IoTConfigPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-slate-200"
+            className="bg-white rounded-lg p-3 shadow-sm border border-slate-200"
           >
-            <h3 className="font-bold text-slate-900 mb-4">Pilih Perangkat IoT</h3>
+            <h3 className="font-bold text-slate-900 mb-2 text-xs">Pilih Perangkat IoT</h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -96,27 +96,27 @@ export default function IoTConfigPage() {
                 <p>Belum ada perangkat IoT terdaftar</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {/* Searchable Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-xl transition-all"
+                    className="w-full flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-300 rounded-lg transition-all shadow-sm hover:shadow-md"
                   >
-                    <div className="flex items-center gap-3 flex-1 text-left">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-blue-600">router</span>
+                    <div className="flex items-center gap-2 flex-1 text-left">
+                      <div className="w-7 h-7 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-blue-600 text-sm">router</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">
+                        <p className="font-semibold text-slate-900 truncate text-xs">
                           {selectedIntersection?.name || 'Pilih Persimpangan'}
                         </p>
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-[10px] text-slate-500 truncate">
                           {selectedIntersection?.deviceId || 'Tidak ada device dipilih'}
                         </p>
                       </div>
                     </div>
-                    <span className={`material-symbols-outlined text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                    <span className={`material-symbols-outlined text-slate-400 transition-transform text-base ${isDropdownOpen ? 'rotate-180' : ''}`}>
                       expand_more
                     </span>
                   </button>

@@ -80,14 +80,14 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
   }
 
   return (
-    <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/15 overflow-hidden sticky top-24">
-      <header className="p-6 border-b border-slate-100 flex justify-between items-center">
-        <h4 className="font-headline font-bold text-slate-900">Peringatan Terbaru</h4>
+    <div className="bg-white rounded-lg shadow-lg border border-orange-100 overflow-hidden sticky top-16 lg:top-20">
+      <header className="p-2 lg:p-3 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-orange-50 to-amber-50">
+        <h4 className="font-headline font-bold text-slate-900 text-xs lg:text-sm">Peringatan Terbaru</h4>
         {liveCount > 0 && (
           <motion.span
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded text-[10px] font-black"
+            className="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg"
           >
             {liveCount} LIVE
           </motion.span>
@@ -96,11 +96,11 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
 
       <div className="p-0">
         {recentEvents.length === 0 ? (
-          <div className="p-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-slate-300 mb-4 inline-block">
+          <div className="p-6 text-center">
+            <span className="material-symbols-outlined text-3xl text-slate-300 mb-2 inline-block">
               check_circle
             </span>
-            <p className="text-sm text-slate-500">Tidak ada peringatan saat ini</p>
+            <p className="text-xs text-slate-500">Tidak ada peringatan saat ini</p>
           </div>
         ) : (
           recentEvents.slice(0, 5).map((event, idx) => {
@@ -111,21 +111,21 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="p-6 border-b border-slate-50 hover:bg-slate-50 transition-colors group cursor-pointer"
+                className="p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors group cursor-pointer"
                 onClick={() => router.push(`/persimpangan/${event.intersectionId}`)}
               >
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <div
-                    className={`w-10 h-10 rounded-full ${iconStyle.bg} ${iconStyle.color} flex items-center justify-center shrink-0`}
+                    className={`w-8 h-8 rounded-full ${iconStyle.bg} ${iconStyle.color} flex items-center justify-center shrink-0`}
                   >
-                    <span className="material-symbols-outlined text-xl">
+                    <span className="material-symbols-outlined text-base">
                       {getEventIcon(event.type, event.priority)}
                     </span>
                   </div>
-                  <div className="space-y-1 flex-1">
+                  <div className="space-y-0.5 flex-1">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-900">{event.title}</p>
+                        <p className="text-xs font-bold text-slate-900">{event.title}</p>
                         {event.live && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-600 mt-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
@@ -137,11 +137,11 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
                         {getTimeAgo(event.timestamp)}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-[10px] text-slate-500 leading-relaxed">
                       {event.description || getIntersectionName(event.intersectionId)}
                     </p>
-                    <div className="pt-2">
-                      <button className="text-[10px] font-bold text-primary uppercase tracking-wider group-hover:underline">
+                    <div className="pt-1">
+                      <button className="text-[9px] font-bold text-primary uppercase tracking-wider group-hover:underline">
                         Lihat Detail
                       </button>
                     </div>
@@ -153,10 +153,10 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
         )}
       </div>
 
-      <footer className="p-4 bg-slate-50 text-center">
+      <footer className="p-2 bg-slate-50 text-center">
         <button
           onClick={() => router.push("/persimpangan")}
-          className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+          className="text-[9px] font-bold text-slate-500 hover:text-slate-800 transition-colors"
         >
           Lihat Semua Riwayat
         </button>

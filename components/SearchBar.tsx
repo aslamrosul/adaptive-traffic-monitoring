@@ -79,12 +79,18 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
 
   return (
     <div ref={searchRef} className="relative w-full">
-      <div className="flex items-center bg-slate-100 rounded-full px-4 py-2 gap-2 border border-outline-variant/10 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-        <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
+      <div className={`flex items-center rounded-full px-4 py-2.5 gap-2 border transition-all ${
+        isMobile 
+          ? 'bg-white border-slate-300 focus-within:ring-2 focus-within:ring-primary/20 shadow-lg' 
+          : 'bg-white/20 backdrop-blur-sm border-white/30 focus-within:ring-2 focus-within:ring-white/50'
+      }`}>
+        <span className={`material-symbols-outlined text-sm ${isMobile ? 'text-slate-600' : 'text-white'}`}>search</span>
         <input
           ref={inputRef}
-          className={`bg-transparent border-none focus:ring-0 text-sm font-label text-on-surface-variant placeholder:text-slate-400 outline-none ${
-            isMobile ? "w-full" : "w-full"
+          className={`bg-transparent border-none focus:ring-0 text-sm font-label outline-none w-full ${
+            isMobile 
+              ? 'text-slate-900 placeholder:text-slate-400' 
+              : 'text-white placeholder:text-white/60'
           }`}
           placeholder="Cari simpangan..."
           type="text"
@@ -98,7 +104,11 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
               setQuery("");
               setShowResults(false);
             }}
-            className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+            className={`transition-colors flex-shrink-0 ${
+              isMobile 
+                ? 'text-slate-400 hover:text-slate-600' 
+                : 'text-white/60 hover:text-white'
+            }`}
           >
             <span className="material-symbols-outlined text-sm">close</span>
           </button>
@@ -112,10 +122,10 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className={`absolute top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] ${
-              isMobile ? "left-0 right-0" : "w-80"
+              isMobile ? "left-0 right-0" : "left-0 right-0"
             }`}
           >
-            <div className="p-3 border-b border-slate-100">
+            <div className="p-3 border-b border-slate-100 bg-slate-50">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 {isLoading ? 'Mencari...' : `${filteredResults.length} Simpangan Ditemukan`}
               </p>
@@ -170,7 +180,7 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
             </div>
 
             {filteredResults.length > 0 && (
-              <div className="p-3 bg-slate-50 border-t border-slate-100">
+              <div className="p-3 bg-gradient-to-b from-slate-50 to-slate-100 border-t border-slate-200">
                 <button
                   onClick={() => {
                     router.push("/persimpangan");

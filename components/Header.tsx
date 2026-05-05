@@ -44,7 +44,7 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full h-16 glass-header px-4 lg:px-8 flex justify-between items-center shadow-sm">
+    <header className="sticky top-0 z-40 w-full h-16 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-lg flex justify-between items-center lg:fixed lg:left-0 lg:right-0">
       {/* Mobile Search Overlay */}
       <AnimatePresence>
         {showMobileSearch && (
@@ -52,11 +52,11 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 bg-white z-[60] flex items-center px-4 gap-2"
+            className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 z-[100] flex items-center px-3 gap-2 shadow-lg"
           >
             <button
               onClick={() => setShowMobileSearch(false)}
-              className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex-shrink-0"
+              className="p-2 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
@@ -67,45 +67,47 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
-        {/* Mobile Toggle Button & Logo */}
-        <div className="lg:hidden flex items-center gap-3">
+      <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0 px-3 lg:px-3">
+        {/* Toggle Button - Mobile Only */}
+        <motion.button
+          onClick={onToggleSidebar}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="lg:hidden w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/30 transition-all flex-shrink-0 backdrop-blur-sm"
+          aria-label="Toggle Menu"
+        >
+          <span className="material-symbols-outlined text-xl">
+            menu
+          </span>
+        </motion.button>
+
+        {/* Desktop: Only Toggle Button in Navbar */}
+        <div className="hidden lg:flex items-center">
           <button
             onClick={onToggleSidebar}
-            className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-200 transition-colors flex-shrink-0"
-            aria-label="Toggle Menu"
+            className="w-14 h-14 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+            aria-label={isSidebarOpen ? "Close Menu" : "Open Menu"}
           >
-            <span className="material-symbols-outlined text-xl">
-              {isSidebarOpen ? "close" : "menu"}
-            </span>
+            <span className="material-symbols-outlined text-2xl">menu</span>
           </button>
-          <Link href="/" className="flex-1 min-w-0">
-            <h1 className="text-sm font-black text-blue-800 tracking-tighter font-headline truncate hover:text-blue-600 transition-colors cursor-pointer">
-              Aerial Command
-            </h1>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-              <p className="text-[10px] text-slate-500 font-medium">IoT: Terhubung</p>
-            </div>
-          </Link>
         </div>
 
-        {/* Desktop Title */}
-        <h2 className="hidden lg:block font-headline font-extrabold text-xl tracking-tight text-slate-900 truncate">
+        {/* Title */}
+        <h2 className="font-headline font-extrabold text-lg lg:text-xl tracking-tight text-white truncate drop-shadow-md">
           {title}
         </h2>
         
         {/* Desktop Search Bar */}
-        <div className="hidden md:block flex-1 max-w-md">
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 -ml-12 w-full max-w-md">
           <SearchBar />
         </div>
       </div>
 
-      <div className="flex items-center gap-1 lg:gap-2">
+      <div className="flex items-center gap-1 lg:gap-2 px-3 lg:px-6">
         {/* Mobile Search Icon */}
         <button
           onClick={() => setShowMobileSearch(true)}
-          className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+          className="md:hidden p-2 text-white hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm"
           aria-label="Search"
         >
           <span className="material-symbols-outlined">search</span>
@@ -117,10 +119,10 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-2 bg-slate-100 rounded-full px-4 py-1.5 border border-outline-variant/20 hover:bg-slate-200 transition-colors"
+                className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 border border-white/30 hover:bg-white/30 transition-colors backdrop-blur-sm"
               >
-                <span className="material-symbols-outlined text-sm text-slate-500">calendar_today</span>
-                <span className="text-xs font-semibold text-slate-700">
+                <span className="material-symbols-outlined text-sm text-white">calendar_today</span>
+                <span className="text-xs font-semibold text-white">
                   {formatDateRange(startDate, endDate)}
                 </span>
               </button>
@@ -183,7 +185,7 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
             {/* Mobile Date Picker Button */}
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="sm:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              className="sm:hidden p-2 text-white hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm"
               aria-label="Pilih Tanggal"
             >
               <span className="material-symbols-outlined">calendar_today</span>
@@ -280,10 +282,35 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         )}
         
         <NotificationDropdown />
-        <button className="hidden sm:flex p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors active:scale-95">
-          <span className="material-symbols-outlined">sensors</span>
-        </button>
-        <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-2"></div>
+        
+        {/* IoT Status Indicator */}
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 10, -10, 0]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 3,
+              ease: "easeInOut"
+            }}
+            className="relative"
+          >
+            <span className="material-symbols-outlined text-emerald-400 text-lg">wifi</span>
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-50"
+            />
+          </motion.div>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-white/80 font-semibold leading-none">IoT Status</span>
+            <span className="text-xs text-white font-bold leading-none mt-0.5">Terhubung</span>
+          </div>
+        </div>
+        
+        <div className="hidden sm:block h-8 w-[1px] bg-white/30 mx-2"></div>
         <ProfileDropdown />
       </div>
     </header>

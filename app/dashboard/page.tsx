@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout title="Sistem Pantauan Lalu Lintas">
-      <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 max-w-7xl mx-auto">
+      <div className="p-3 lg:p-6 space-y-4 lg:space-y-6 max-w-[1920px] mx-auto">
         {/* Time Filter */}
         <DashboardTimeFilter 
           onFilterChange={handleFilterChange}
@@ -35,8 +35,8 @@ export default function DashboardPage() {
         <DashboardStats timeRange={timeRange} customDates={customDates} />
         
         {/* Main Content */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+          <div className="lg:col-span-8 space-y-4 lg:space-y-6">
             <TrafficTrendChart timeRange={timeRange} customDates={customDates} />
             <IntersectionGrid />
           </div>
