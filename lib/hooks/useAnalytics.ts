@@ -11,8 +11,8 @@ export function useAnalytics(intersectionId?: string, date?: string) {
     `/api/analytics/daily?${params.toString()}`,
     fetcher,
     {
-      refreshInterval: 60000, // Refresh setiap 1 menit
-      revalidateOnFocus: true,
+      refreshInterval: 120000, // Refresh setiap 2 menit (dikurangi dari 1 menit)
+      revalidateOnFocus: false, // Matikan auto-refresh saat tab difokuskan
     }
   );
 

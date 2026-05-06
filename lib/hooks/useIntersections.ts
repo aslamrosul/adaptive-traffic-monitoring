@@ -7,8 +7,8 @@ export function useIntersections() {
     '/api/intersections',
     fetcher,
     {
-      refreshInterval: 30000, // Refresh setiap 30 detik
-      revalidateOnFocus: true,
+      refreshInterval: 60000, // Refresh setiap 60 detik (dikurangi dari 30 detik)
+      revalidateOnFocus: false, // Matikan auto-refresh saat tab difokuskan
     }
   );
 
@@ -25,8 +25,8 @@ export function useIntersection(id: string) {
     id ? `/api/intersections/${id}` : null,
     fetcher,
     {
-      refreshInterval: 10000, // Refresh setiap 10 detik
-      revalidateOnFocus: true,
+      refreshInterval: 30000, // Refresh setiap 30 detik (dikurangi dari 10 detik)
+      revalidateOnFocus: false, // Matikan auto-refresh saat tab difokuskan
     }
   );
 

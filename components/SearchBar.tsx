@@ -37,7 +37,8 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
   // Filter results based on query
   useEffect(() => {
     if (query.trim() === "") {
-      setFilteredResults(intersections.slice(0, 8)); // Show first 8
+      setFilteredResults([]);
+      setShowResults(false);
     } else {
       const filtered = intersections.filter(
         (item) =>
@@ -45,6 +46,7 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
           (item.address && item.address.toLowerCase().includes(query.toLowerCase()))
       );
       setFilteredResults(filtered);
+      setShowResults(true);
     }
   }, [query, intersections]);
 
@@ -79,10 +81,10 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
 
   return (
     <div ref={searchRef} className="relative w-full">
-      <div className={`flex items-center rounded-full px-4 py-2.5 gap-2 border transition-all ${
+      <div className={`flex items-center rounded-full px-4 gap-2 border transition-all ${
         isMobile 
-          ? 'bg-white border-slate-300 focus-within:ring-2 focus-within:ring-primary/20 shadow-lg' 
-          : 'bg-white/20 backdrop-blur-sm border-white/30 focus-within:ring-2 focus-within:ring-white/50'
+          ? 'bg-white border-slate-300 focus-within:ring-2 focus-within:ring-primary/20 shadow-lg py-1' 
+          : 'bg-white/20 backdrop-blur-sm border-white/30 focus-within:ring-2 focus-within:ring-white/50 py-1'
       }`}>
         <span className={`material-symbols-outlined text-sm ${isMobile ? 'text-slate-600' : 'text-white'}`}>search</span>
         <input

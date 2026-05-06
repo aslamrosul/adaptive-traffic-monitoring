@@ -91,21 +91,21 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
             transition={{ delay: idx * 0.1 }}
             whileHover={{ scale: 1.02, y: -4 }}
             onClick={() => router.push(stat.link)}
-            className={`${stat.bgColor} p-3 lg:p-4 rounded-xl shadow-lg hover:shadow-2xl border border-white/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer transition-all`}
+            className={`${stat.bgColor} p-1.5 lg:p-3 rounded-xl shadow-lg hover:shadow-2xl border border-white/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer transition-all`}
           >
             <div className="absolute -right-6 -top-6 w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
 
-            <header className="flex justify-between items-start mb-2 lg:mb-3 relative z-10">
+            <header className="flex justify-between items-start mb-0.5 lg:mb-2 relative z-10">
               <span className={`text-[9px] lg:text-xs font-bold uppercase tracking-wider ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
                 {stat.label}
               </span>
-              <div className={`p-1.5 lg:p-2 bg-white/20 backdrop-blur-sm rounded-lg ${stat.iconColor}`}>
-                <span className="material-symbols-outlined text-base lg:text-xl">{stat.icon}</span>
+              <div className={`p-0.5 lg:p-1.5 bg-white/20 backdrop-blur-sm rounded-lg ${stat.iconColor}`}>
+                <span className="material-symbols-outlined text-sm lg:text-lg">{stat.icon}</span>
               </div>
             </header>
 
             <div className="relative z-10">
-              <h3 className={`text-2xl lg:text-4xl font-headline font-extrabold tracking-tight ${stat.textColor || 'text-white'} leading-none mb-1`}>
+              <h3 className={`text-xl lg:text-3xl font-headline font-extrabold tracking-tight ${stat.textColor || 'text-white'} leading-none mb-0.5`}>
                 {stat.value}
                 {stat.unit && (
                   <span className={`text-xs lg:text-sm font-bold ${stat.textColor || 'text-white'} opacity-70 ml-1`}>{stat.unit}</span>
@@ -127,8 +127,8 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
             </div>
 
             {/* Hover indicator */}
-            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className={`material-symbols-outlined text-base lg:text-lg ${stat.textColor || 'text-white'} opacity-50`}>
+            <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className={`material-symbols-outlined text-sm lg:text-base ${stat.textColor || 'text-white'} opacity-50`}>
                 arrow_forward
               </span>
             </div>

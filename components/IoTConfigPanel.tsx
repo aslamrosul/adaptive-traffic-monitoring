@@ -195,15 +195,15 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+    <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-200">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <h3 className="text-lg lg:text-xl font-bold text-slate-900 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">settings_remote</span>
             Remote Configuration
           </h3>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs lg:text-sm text-slate-500 mt-1">
             Device ID: <span className="font-mono font-semibold">{deviceId}</span>
           </p>
         </div>
@@ -219,9 +219,9 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
       </div>
 
       {/* Traffic Light Rules */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 mb-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-slate-900">Aturan Durasi Lampu Lalu Lintas</h4>
+          <h4 className="font-semibold text-slate-900 text-sm">Aturan Durasi Lampu Lalu Lintas</h4>
           <button
             onClick={addRule}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
@@ -231,15 +231,15 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {config.trafficLightConfig.rules.map((rule, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-50 rounded-lg p-4 border border-slate-200"
+              className="bg-slate-50 rounded-lg p-3 border border-slate-200"
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between mb-2">
                 <input
                   type="text"
                   value={rule.description}
@@ -250,17 +250,17 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
                 {config.trafficLightConfig.rules.length > 1 && (
                   <button
                     onClick={() => removeRule(index)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 flex-shrink-0"
                   >
                     <span className="material-symbols-outlined text-sm">delete</span>
                   </button>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2 items-start">
                 {/* Vehicle Threshold */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
                     Batas Kendaraan
                   </label>
                   <div className="relative">
@@ -279,7 +279,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
                 {/* Green Duration */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
                     Hijau
                   </label>
                   <div className="relative">
@@ -298,7 +298,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
                 {/* Yellow Duration */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
                     Kuning
                   </label>
                   <div className="relative">
@@ -317,7 +317,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
                 {/* Red Duration */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
                     Merah
                   </label>
                   <div className="relative">
@@ -336,7 +336,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
               </div>
 
               {/* Rule Summary */}
-              <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+              <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
                 <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
                 Jika kendaraan <strong>&gt; {rule.vehicleThreshold}</strong>, maka lampu hijau <strong>{rule.greenDuration} detik</strong>
               </div>
@@ -346,10 +346,10 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
       </div>
 
       {/* Advanced Settings */}
-      <div className="border-t border-slate-200 pt-4">
+      <div className="border-t border-slate-200 pt-3">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-4"
+          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-3"
         >
           <span className="material-symbols-outlined text-sm">
             {showAdvanced ? 'expand_less' : 'expand_more'}
@@ -523,7 +523,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
       {/* Last Updated */}
       {config.updatedAt && (
-        <div className="mt-4 space-y-1">
+        <div className="mt-3 space-y-1">
           <div className="text-xs text-slate-500">
             Terakhir diupdate: {new Date(config.updatedAt).toLocaleString('id-ID')}
           </div>
@@ -547,7 +547,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
       )}
 
       {/* Save Button */}
-      <div className="mt-6 flex gap-3">
+      <div className="mt-4 flex gap-3">
         <button
           onClick={handleSaveConfig}
           disabled={isSaving}

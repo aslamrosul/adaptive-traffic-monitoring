@@ -285,49 +285,72 @@ export default function ProfileContent() {
 
             {/* Info */}
             <div className="flex-1 text-white text-center md:text-left w-full">
-              <div className="flex flex-col items-center md:items-start gap-2 mb-2">
+              {/* Mobile: Vertical Layout */}
+              <div className="flex flex-col items-center gap-2 mb-2 md:hidden">
                 <div className="w-full">
-                  <h1 className="text-lg lg:text-3xl font-bold font-headline mb-0.5 lg:mb-1 break-words">{profile.name}</h1>
-                  <p className="text-blue-100 text-xs lg:text-lg">{profile.position}</p>
+                  <h1 className="text-lg font-bold font-headline mb-0.5 break-words">{profile.name}</h1>
+                  <p className="text-blue-100 text-xs">{profile.position}</p>
                 </div>
                 {!isEditing && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-full md:w-auto px-3 py-1.5 lg:px-4 lg:py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg font-semibold text-xs lg:text-sm transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    className="w-full px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <span className="material-symbols-outlined text-xs lg:text-sm">edit</span>
+                    <span className="material-symbols-outlined text-xs">edit</span>
+                    <span>Edit Profil</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Desktop: Horizontal Layout */}
+              <div className="hidden md:flex md:flex-row md:items-start md:justify-between md:gap-4 mb-3">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-3xl font-bold font-headline mb-1 truncate">{profile.name}</h1>
+                  <p className="text-blue-100 text-lg truncate">{profile.position}</p>
+                </div>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex-shrink-0 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg font-semibold text-sm transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <span className="material-symbols-outlined text-sm">edit</span>
                     <span>Edit Profil</span>
                   </button>
                 )}
               </div>
               
-              <div className="flex flex-col gap-1.5 lg:gap-2 mt-2 lg:mt-4 text-xs lg:text-sm">
-                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
-                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">business</span>
-                  <span className="truncate">{profile.department}</span>
+              {/* Contact Info & Badges - 2 Rows on Desktop */}
+              <div className="flex flex-col gap-2 mt-2 md:mt-3">
+                {/* Row 1: Contact Info - Spread across on Desktop */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1.5 md:gap-4 text-xs lg:text-sm">
+                  <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                    <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">business</span>
+                    <span className="truncate">{profile.department}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                    <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">email</span>
+                    <span className="truncate">{profile.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
+                    <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">phone</span>
+                    <span className="truncate">{profile.phone}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
-                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">email</span>
-                  <span className="truncate">{profile.email}</span>
-                </div>
-                <div className="flex items-center gap-1.5 lg:gap-2 justify-center md:justify-start">
-                  <span className="material-symbols-outlined text-xs lg:text-sm flex-shrink-0">phone</span>
-                  <span className="truncate">{profile.phone}</span>
-                </div>
-              </div>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 lg:gap-3 mt-2 lg:mt-4">
-                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="text-[9px] lg:text-xs font-semibold">Online</span>
-                </div>
-                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="material-symbols-outlined text-xs lg:text-sm">verified_user</span>
-                  <span className="text-[9px] lg:text-xs font-semibold">Verified</span>
-                </div>
-                <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                  <span className="material-symbols-outlined text-xs lg:text-sm">workspace_premium</span>
-                  <span className="text-[9px] lg:text-xs font-semibold">{profile.accountType}</span>
+                {/* Row 2: Badges - Spread across on Desktop */}
+                <div className="flex flex-wrap items-center justify-center md:justify-between gap-1.5 lg:gap-3">
+                  <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                    <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    <span className="text-[9px] lg:text-xs font-semibold">Online</span>
+                  </div>
+                  <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                    <span className="material-symbols-outlined text-xs lg:text-sm">verified_user</span>
+                    <span className="text-[9px] lg:text-xs font-semibold">Verified</span>
+                  </div>
+                  <div className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                    <span className="material-symbols-outlined text-xs lg:text-sm">workspace_premium</span>
+                    <span className="text-[9px] lg:text-xs font-semibold">{profile.accountType}</span>
+                  </div>
                 </div>
               </div>
             </div>

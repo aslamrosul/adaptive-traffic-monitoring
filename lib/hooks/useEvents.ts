@@ -13,8 +13,8 @@ export function useEvents(intersectionId?: string, status?: string, priority?: s
     `/api/events?${params.toString()}`,
     fetcher,
     {
-      refreshInterval: 15000, // Refresh setiap 15 detik
-      revalidateOnFocus: true,
+      refreshInterval: 30000, // Refresh setiap 30 detik (dikurangi dari 15 detik)
+      revalidateOnFocus: false, // Matikan auto-refresh saat tab difokuskan
     }
   );
 

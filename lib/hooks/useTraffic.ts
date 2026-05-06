@@ -11,8 +11,8 @@ export function useRealtimeTraffic(intersectionId?: string, limit: number = 100)
     `/api/traffic/realtime?${params.toString()}`,
     fetcher,
     {
-      refreshInterval: 5000, // Refresh setiap 5 detik untuk real-time
-      revalidateOnFocus: true,
+      refreshInterval: 15000, // Refresh setiap 15 detik (dikurangi dari 5 detik)
+      revalidateOnFocus: false, // Matikan auto-refresh saat tab difokuskan
     }
   );
 

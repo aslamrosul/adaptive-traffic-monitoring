@@ -223,46 +223,46 @@ export default function SettingsTabs() {
         )}
 
         {activeTab === "security" && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Keamanan</h3>
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Keamanan</h3>
+              <div className="space-y-2.5">
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
                     Ubah Password
                   </label>
                   <input
                     type="password"
                     placeholder="Password lama"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-2 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-1.5 focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   />
                   <input
                     type="password"
                     placeholder="Password baru"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-2 focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-1.5 focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   />
                   <input
                     type="password"
                     placeholder="Konfirmasi password baru"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   />
                 </div>
 
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-green-600">verified_user</span>
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-green-600 text-lg">verified_user</span>
                     <div>
                       <p className="font-semibold text-green-900 text-sm">Two-Factor Authentication</p>
-                      <p className="text-xs text-green-700 mt-1">
+                      <p className="text-xs text-green-700 mt-0.5">
                         Aktif - Terakhir digunakan 2 jam yang lalu
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="font-semibold text-slate-900 mb-2">Sesi Aktif</p>
-                  <div className="space-y-2">
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <p className="font-semibold text-slate-900 mb-1.5 text-sm">Sesi Aktif</p>
+                  <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-sm">
                       <span>Windows - Chrome</span>
                       <span className="text-green-600 font-semibold">Saat ini</span>
@@ -281,50 +281,50 @@ export default function SettingsTabs() {
         )}
 
         {activeTab === "advanced" && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Pengaturan Lanjutan</h3>
-              <div className="space-y-4">
-                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-yellow-600">warning</span>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Pengaturan Lanjutan</h3>
+              <div className="space-y-2.5">
+                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-yellow-600 text-lg">warning</span>
                     <div>
                       <p className="font-semibold text-yellow-900 text-sm">Peringatan</p>
-                      <p className="text-xs text-yellow-700 mt-1">
+                      <p className="text-xs text-yellow-700 mt-0.5">
                         Pengaturan ini hanya untuk pengguna advanced. Perubahan dapat mempengaruhi kinerja sistem.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
                     Mode Debug
                   </label>
-                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                  <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm">
                     <option>Disabled</option>
                     <option>Enabled (Console Only)</option>
                     <option>Enabled (Full Logging)</option>
                   </select>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
                     API Rate Limit
                   </label>
                   <input
                     type="number"
                     defaultValue={100}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   />
                   <p className="text-xs text-slate-500 mt-1">
                     Requests per minute
                   </p>
                 </div>
 
-                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                  <p className="font-semibold text-red-900 mb-2">Danger Zone</p>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="font-semibold text-red-900 mb-1.5 text-sm">Danger Zone</p>
+                  <button className="px-3 py-1.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
                     Reset Semua Pengaturan
                   </button>
                 </div>

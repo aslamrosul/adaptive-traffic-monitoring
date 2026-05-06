@@ -98,7 +98,7 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         </h2>
         
         {/* Desktop Search Bar */}
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 -ml-12 w-full max-w-md">
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 -ml-12 top-1/2 -translate-y-1/2 w-full max-w-md">
           <SearchBar />
         </div>
       </div>
