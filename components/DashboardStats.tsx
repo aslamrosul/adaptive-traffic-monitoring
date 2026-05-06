@@ -29,6 +29,11 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
     );
   }
 
+  // Return null if stats is still null after loading
+  if (!stats) {
+    return null;
+  }
+
   const statsConfig = [
     {
       label: "Total Kendaraan",
