@@ -58,7 +58,8 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
     return intersection?.name || intersectionId;
   };
 
-  if (isLoading) {
+  // Only show skeleton on initial load when recentEvents is empty
+  if (isLoading && recentEvents.length === 0) {
     return (
       <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/15 overflow-hidden sticky top-24 animate-pulse">
         <div className="p-6 border-b border-slate-100">

@@ -20,10 +20,11 @@ interface TrafficStore {
   intersections: TrafficData[];
   selectedIntersection: string | null;
   isLoading: boolean;
+  isInitialLoad: boolean;
   error: string | null;
   
   // Actions
-  fetchIntersections: () => Promise<void>;
+  fetchIntersections: (isBackgroundRefresh?: boolean) => Promise<void>;
   searchIntersections: (query: string) => Promise<void>;
   setSelectedIntersection: (id: string | null) => void;
   updateIntersection: (id: string, data: Partial<TrafficData>) => Promise<void>;
@@ -34,21 +35,24 @@ export const useTrafficStore = create<TrafficStore>((set, get) => ({
   intersections: [],
   selectedIntersection: null,
   isLoading: false,
+  isInitialLoad: true,
   error: null,
 
-  fetchIntersections: async () => {
-    set({ isLoading: true, error: null });
+  fetchIntersections: async (isBackgroundRefresh = false) => {
+    if (!isBackgroundRefresh) {
+      set({ isLoading: true, error: null });
+    }
     try {
       const response = await fetch('/api/intersections');
       const result = await response.json();
 
       if (result.success) {
-        set({ intersections: result.data, isLoading: false });
+        set({ intersections: result.data, isLoading: false, isInitialLoad: false });
       } else {
-        set({ error: result.error, isLoading: false });
+        set({ error: result.error, isLoading: false, isInitialLoad: false });
       }
     } catch (error) {
-      set({ error: 'Failed to fetch intersections', isLoading: false });
+      set({ error: 'Failed to fetch intersections', isLoading: false, isInitialLoad: false });
     }
   },
 

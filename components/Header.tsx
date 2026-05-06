@@ -48,22 +48,34 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
       {/* Mobile Search Overlay */}
       <AnimatePresence>
         {showMobileSearch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 z-[100] flex items-center px-3 gap-2 shadow-lg"
-          >
-            <button
+          <>
+            {/* Backdrop - Click to close */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setShowMobileSearch(false)}
-              className="p-2 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+              className="md:hidden fixed inset-0 bg-black/50 z-[90]"
+            />
+            
+            {/* Search Bar Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 z-[100] flex items-center px-3 gap-2 shadow-lg"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <div className="flex-1">
-              <SearchBar isMobile autoFocus />
-            </div>
-          </motion.div>
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="p-2 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+              >
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <div className="flex-1">
+                <SearchBar isMobile autoFocus />
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -93,12 +105,12 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         </div>
 
         {/* Title */}
-        <h2 className="font-headline font-extrabold text-lg lg:text-xl tracking-tight text-white truncate drop-shadow-md">
+        <h2 className="font-headline font-extrabold text-lg lg:text-xl tracking-tight text-white truncate drop-shadow-md flex-shrink-0">
           {title}
         </h2>
         
-        {/* Desktop Search Bar */}
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 -ml-12 top-1/2 -translate-y-1/2 w-full max-w-md">
+        {/* Desktop Search Bar - Responsive */}
+        <div className="hidden md:flex flex-1 max-w-md mx-auto px-4">
           <SearchBar />
         </div>
       </div>

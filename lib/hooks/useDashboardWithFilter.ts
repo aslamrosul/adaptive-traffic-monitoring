@@ -43,6 +43,7 @@ export function useDashboardWithFilter(timeRange: TimeRange = "today", customDat
   const [trafficTrend, setTrafficTrend] = useState<TrafficTrendData[]>([]);
   const [recentEvents, setRecentEvents] = useState<DashboardEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -83,8 +84,11 @@ export function useDashboardWithFilter(timeRange: TimeRange = "today", customDat
     return { start, end };
   };
 
-  const fetchDashboardData = async () => {
-    setIsLoading(true);
+  const fetchDashboardData = async (isBackgroundRefresh = false) => {
+    // Only show loading screen on initial load, not on background refresh
+    if (!isBackgroundRefresh) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -286,20 +290,24 @@ export function useDashboardWithFilter(timeRange: TimeRange = "today", customDat
       setRecentEvents(processedEvents);
       setLastUpdated(new Date());
       setIsLoading(false);
+      setIsInitialLoad(false);
     } catch (err: any) {
       console.error('Error fetching dashboard data:', err);
       setError(err.message || 'Failed to fetch dashboard data');
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    // Reset initial load state when filter changes
+    setIsInitialLoad(true);
+    fetchDashboardData(false);
 
     // Auto-refresh every 30 seconds only for "today" filter
     if (timeRange === "today") {
       const interval = setInterval(() => {
-        fetchDashboardData();
+        fetchDashboardData(true); // Background refresh
       }, 30000);
 
       return () => clearInterval(interval);

@@ -27,7 +27,8 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
     ? Math.round(trafficTrend.reduce((sum, curr) => sum + curr.vehicles, 0) / trafficTrend.length)
     : 0;
 
-  if (isLoading) {
+  // Only show skeleton on initial load when trafficTrend is empty
+  if (isLoading && trafficTrend.length === 0) {
     return (
       <div className="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-48 mb-4"></div>

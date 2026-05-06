@@ -233,7 +233,7 @@ export default function AnalitikPage() {
     >
       <div className="p-3 lg:p-6 space-y-4 lg:space-y-5 max-w-[1920px] mx-auto">
 
-        {/* Time Filter with Indeks Kemacetan on Mobile */}
+        {/* Time Filter with Stats on Mobile */}
         <div className="flex gap-2">
           <div className="flex-1">
             <AnalyticsTimeFilter 
@@ -242,51 +242,100 @@ export default function AnalitikPage() {
             />
           </div>
           
-          {/* Indeks Kemacetan - Mobile Only, beside Time Filter */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2 shadow-lg border-2 border-blue-200 flex flex-col items-center justify-center min-w-[100px]"
-          >
-            <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest font-label mb-1">
-              Indeks
-            </h3>
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90">
-                <circle
-                  className="text-slate-100"
-                  cx="32"
-                  cy="32"
-                  fill="transparent"
-                  r="28"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <motion.circle
-                  className="text-primary"
-                  cx="32"
-                  cy="32"
-                  fill="transparent"
-                  r="28"
-                  stroke="currentColor"
-                  strokeDasharray="176"
-                  initial={{ strokeDashoffset: 176 }}
-                  animate={{ strokeDashoffset: 58 }}
-                  transition={{ delay: 0.5, duration: 1 }}
-                  strokeWidth="4"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-lg font-black font-headline text-on-surface">
-                  {avgCongestionIndex}
-                </span>
-                <span className="text-[7px] font-bold text-slate-400 uppercase">
-                  {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
-                </span>
+          {/* Mobile Stats - Performa IoT & Indeks side by side */}
+          <div className="lg:hidden flex gap-2">
+            {/* Performa Sensor IoT - Mobile Only */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-2 shadow-lg border border-slate-700 flex flex-col justify-center min-w-[100px]"
+            >
+              <h3 className="text-[7px] font-bold text-white/60 uppercase tracking-widest font-label mb-1.5">
+                Performa IoT
+              </h3>
+              <div className="space-y-2">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7px] text-white/80 font-semibold">Akurasi</span>
+                    <span className="text-xs font-black text-white">{iotPerformance.accuracy}%</span>
+                  </div>
+                  <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${iotPerformance.accuracy}%` }}
+                      transition={{ delay: 0.4, duration: 0.8 }}
+                      className="h-full bg-blue-400 rounded-full"
+                    ></motion.div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7px] text-white/80 font-semibold">Aktif</span>
+                    <span className="text-xs font-black text-white">
+                      {iotPerformance.activeDevices}/{iotPerformance.totalDevices}
+                    </span>
+                  </div>
+                  <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ 
+                        width: `${(iotPerformance.activeDevices / iotPerformance.totalDevices) * 100}%` 
+                      }}
+                      transition={{ delay: 0.5, duration: 0.8 }}
+                      className="h-full bg-emerald-400 rounded-full"
+                    ></motion.div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Indeks Kemacetan - Mobile Only */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2 shadow-lg border-2 border-blue-200 flex flex-col items-center justify-center min-w-[100px]"
+            >
+              <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest font-label mb-1">
+                Indeks
+              </h3>
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90">
+                  <circle
+                    className="text-slate-100"
+                    cx="32"
+                    cy="32"
+                    fill="transparent"
+                    r="28"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <motion.circle
+                    className="text-primary"
+                    cx="32"
+                    cy="32"
+                    fill="transparent"
+                    r="28"
+                    stroke="currentColor"
+                    strokeDasharray="176"
+                    initial={{ strokeDashoffset: 176 }}
+                    animate={{ strokeDashoffset: 58 }}
+                    transition={{ delay: 0.5, duration: 1 }}
+                    strokeWidth="4"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg font-black font-headline text-on-surface">
+                    {avgCongestionIndex}
+                  </span>
+                  <span className="text-[7px] font-bold text-slate-400 uppercase">
+                    {avgCongestionIndex < 30 ? "Lancar" : avgCongestionIndex < 60 ? "Moderat" : avgCongestionIndex < 85 ? "Padat" : "Macet"}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
           {/* Filters & Quick Actions */}
@@ -527,12 +576,12 @@ export default function AnalitikPage() {
                 </div>
               </motion.div>
 
-              {/* Performa Sensor IoT - Now Second */}
+              {/* Performa Sensor IoT - Desktop Only (Hidden on Mobile) */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.25 }}
-                className="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-xl p-3 lg:p-4 text-white shadow-2xl border border-slate-700"
+                className="hidden lg:block bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-xl p-3 lg:p-4 text-white shadow-2xl border border-slate-700"
               >
                 <h3 className="text-xs lg:text-sm font-bold opacity-60 uppercase tracking-widest font-label mb-2 lg:mb-3">
                   Performa Sensor IoT

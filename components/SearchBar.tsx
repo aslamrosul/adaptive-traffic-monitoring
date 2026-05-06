@@ -37,8 +37,12 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
   // Filter results based on query
   useEffect(() => {
     if (query.trim() === "") {
-      setFilteredResults([]);
-      setShowResults(false);
+      // Show all intersections when query is empty (on focus)
+      if (showResults) {
+        setFilteredResults(intersections);
+      } else {
+        setFilteredResults([]);
+      }
     } else {
       const filtered = intersections.filter(
         (item) =>
@@ -48,7 +52,7 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
       setFilteredResults(filtered);
       setShowResults(true);
     }
-  }, [query, intersections]);
+  }, [query, intersections, showResults]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -98,7 +102,13 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setShowResults(true)}
+          onFocus={() => {
+            setShowResults(true);
+            // Show all results when focused with empty query
+            if (query.trim() === "") {
+              setFilteredResults(intersections);
+            }
+          }}
         />
         {query && (
           <button
@@ -124,12 +134,17 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className={`absolute top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] ${
-              isMobile ? "left-0 right-0" : "left-0 right-0"
+              isMobile ? "left-0 right-0 w-full" : "left-0 w-[400px] max-w-[90vw]"
             }`}
           >
             <div className="p-3 border-b border-slate-100 bg-slate-50">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {isLoading ? 'Mencari...' : `${filteredResults.length} Simpangan Ditemukan`}
+                {isLoading 
+                  ? 'Mencari...' 
+                  : query.trim() === "" 
+                    ? `${filteredResults.length} Simpangan Tersedia`
+                    : `${filteredResults.length} Simpangan Ditemukan`
+                }
               </p>
             </div>
 

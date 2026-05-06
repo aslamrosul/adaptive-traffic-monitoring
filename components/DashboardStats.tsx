@@ -13,7 +13,8 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
   const router = useRouter();
   const { stats, isLoading } = useDashboardWithFilter(timeRange, customDates);
 
-  if (isLoading || !stats) {
+  // Only show skeleton on initial load when stats is null
+  if (isLoading && !stats) {
     return (
       <section className="space-y-6">
         <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">

@@ -314,29 +314,31 @@ export default function IoTConfigPage() {
                     transition={{ delay: 0.2 }}
                     className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-white text-xl">settings_remote</span>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-blue-900 mb-1">{selectedIntersection.name}</h4>
-                        <p className="text-sm text-blue-700 mb-2">{selectedIntersection.address}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="px-2 py-1 bg-white rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">memory</span>
-                            {selectedIntersection.deviceId}
-                          </span>
-                          <span className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
-                            selectedIntersection.status === 'active' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              selectedIntersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'
-                            }`}></span>
-                            {selectedIntersection.status === 'active' ? 'Online' : 'Offline'}
-                          </span>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined text-white text-xl">settings_remote</span>
                         </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-blue-900 mb-1">{selectedIntersection.name}</h4>
+                          <p className="text-sm text-blue-700">{selectedIntersection.address}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                        <span className="px-2 py-1 bg-white rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs">memory</span>
+                          {selectedIntersection.deviceId}
+                        </span>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
+                          selectedIntersection.status === 'active' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            selectedIntersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'
+                          }`}></span>
+                          {selectedIntersection.status === 'active' ? 'Online' : 'Offline'}
+                        </span>
                       </div>
                     </div>
                   </motion.div>

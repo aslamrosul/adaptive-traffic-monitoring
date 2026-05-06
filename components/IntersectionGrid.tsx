@@ -7,7 +7,7 @@ import { useTrafficStore } from "@/lib/store";
 
 export default function IntersectionGrid() {
   const router = useRouter();
-  const { intersections, fetchIntersections, isLoading } = useTrafficStore();
+  const { intersections, fetchIntersections, isLoading, isInitialLoad } = useTrafficStore();
 
   useEffect(() => {
     if (intersections.length === 0) {
@@ -38,7 +38,7 @@ export default function IntersectionGrid() {
     return status?.toUpperCase() || 'AKTIF';
   };
 
-  if (isLoading && intersections.length === 0) {
+  if (isInitialLoad && intersections.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[1, 2, 3, 4].map((i) => (
