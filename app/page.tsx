@@ -4,6 +4,7 @@ import LandingFooter from "@/components/LandingFooter";
 import LandingNav from "@/components/LandingNav";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
@@ -267,10 +268,14 @@ export default function LandingPage() {
               >
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
-                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      AS
-                    </div>
+                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
+                    <Image
+                      src="/aslam.jpg"
+                      alt="Aslam Rosul Ahmad"
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
                   <div className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg z-20">
                     <span className="material-symbols-outlined text-blue-600 text-xl">verified</span>
@@ -291,10 +296,14 @@ export default function LandingPage() {
               >
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
-                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      AZ
-                    </div>
+                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
+                    <Image
+                      src="/azza.jpg"
+                      alt="Azzahra Attaqina"
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
                 </div>
                 <h4 className="text-xl font-bold text-slate-900">Azzahra Attaqina</h4>
@@ -312,10 +321,14 @@ export default function LandingPage() {
               >
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
-                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      TS
-                    </div>
+                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
+                    <Image
+                      src="/sarah.jpg"
+                      alt="Tri Sukma Sarah"
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
                 </div>
                 <h4 className="text-xl font-bold text-slate-900">Tri Sukma Sarah</h4>
@@ -333,10 +346,14 @@ export default function LandingPage() {
               >
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
-                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2">
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                      ZZ
-                    </div>
+                  <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
+                    <Image
+                      src="/zilan.jpg"
+                      alt="Zilan Zalilan"
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
                 </div>
                 <h4 className="text-xl font-bold text-slate-900">Zilan Zalilan</h4>
