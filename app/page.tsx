@@ -11,7 +11,7 @@ export default function LandingPage() {
     <div className="bg-white text-slate-900 antialiased">
       <LandingNav />
 
-      <main className="pt-8">
+      <main className="pt-20">
         {/* Hero Section */}
         <section className="relative pt-12 pb-32 overflow-hidden" id="beranda">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-slate-50 -z-10"></div>
