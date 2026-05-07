@@ -104,22 +104,19 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
           </button>
         </div>
 
-        {/* Title */}
-        <h2 className="font-headline font-extrabold text-lg lg:text-xl tracking-tight text-white truncate drop-shadow-md flex-shrink-0">
-          {title}
-        </h2>
+        {/* Logo + Aerial Command - Replace Title */}
+        <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-lg">satellite_alt</span>
+          </div>
+          <h2 className="font-headline font-extrabold text-lg tracking-tight text-white drop-shadow-md hidden sm:block">
+            Aerial Command
+          </h2>
+        </Link>
         
         {/* Desktop Search Bar - Responsive */}
         <div className="hidden md:flex flex-1 max-w-md mx-auto px-4">
           <SearchBar />
-        </div>
-
-        {/* Logo + Aerial Command - Desktop Only */}
-        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex-shrink-0">
-          <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
-          </div>
-          <span className="text-sm font-bold text-white whitespace-nowrap">Aerial Command</span>
         </div>
       </div>
 
