@@ -1,15 +1,31 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function LandingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("beranda");
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const sections = ["beranda", "fitur", "tentang-kami", "tim-kami"];
@@ -44,6 +60,61 @@ export default function LandingNav() {
       });
     };
   }, []);
+
+  const handleLogout = async () => {
+    setIsProfileOpen(false);
+    toast.loading("Logging out...");
+    await signOut({ callbackUrl: "/" });
+    toast.dismiss();
+    toast.success("Berhasil keluar dari sistem");
+  };
+
+  const displayName = session?.user?.name || "User";
+  const displayEmail = session?.user?.email || "user@example.com";
+  const displayAvatar = (session?.user as any)?.avatar || session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0040a1&color=fff`;
+  const displayRole = (session?.user as any)?.role || "operator";
+  const displayId = (session?.user as any)?.id ? `#${(session?.user as any).id.split("-")[1]?.toUpperCase() || "USER"}` : "#USER";
+
+  const profileMenuItems = [
+    {
+      icon: "home",
+      label: "Beranda",
+      action: () => {
+        router.push("/");
+        setIsProfileOpen(false);
+      },
+    },
+    {
+      icon: "person",
+      label: "Profil Saya",
+      action: () => {
+        router.push("/profile");
+        setIsProfileOpen(false);
+      },
+    },
+    {
+      icon: "settings",
+      label: "Pengaturan",
+      action: () => {
+        router.push("/profile?tab=settings");
+        setIsProfileOpen(false);
+      },
+    },
+    {
+      icon: "help",
+      label: "Bantuan",
+      action: () => {
+        router.push("/profile?tab=help");
+        setIsProfileOpen(false);
+      },
+    },
+    {
+      icon: "logout",
+      label: "Keluar",
+      action: handleLogout,
+      danger: true,
+    },
+  ];
 
   const isActive = (section: string) => activeSection === section;
 
@@ -113,21 +184,84 @@ export default function LandingNav() {
                 <span className="material-symbols-outlined text-sm">dashboard</span>
                 Dashboard
               </Link>
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-all"
-                title={session.user?.name || "Profile"}
-              >
-                <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
-                  <Image
-                    alt="Profile"
-                    src={(session.user as any)?.avatar || session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=0040a1&color=fff`}
-                    fill
-                    sizes="36px"
-                    className="object-cover"
-                  />
-                </div>
-              </Link>
+              
+              {/* Profile Dropdown */}
+              <div ref={profileDropdownRef} className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+                  title={session.user?.name || "Profile"}
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
+                    <Image
+                      alt="Profile"
+                      src={displayAvatar}
+                      fill
+                      sizes="36px"
+                      className="object-cover"
+                    />
+                  </div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50"
+                    >
+                      {/* Profile Header */}
+                      <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white relative">
+                            <Image
+                              alt="Profil"
+                              src={displayAvatar}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm truncate">{displayName}</p>
+                            <p className="text-xs text-blue-100 truncate">{displayEmail}</p>
+                            <p className="text-[10px] text-blue-200 mt-0.5">{displayId}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        {profileMenuItems.map((item, idx) => (
+                          <motion.button
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={item.action}
+                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors ${
+                              item.danger ? "text-red-600" : "text-slate-700"
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                            <span className="font-medium text-sm">{item.label}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-3 bg-slate-50 border-t border-slate-200">
+                        <p className="text-[10px] text-slate-400 text-center">
+                          Aerial Command v2.4.0
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </>
           ) : (
             <>
@@ -219,12 +353,42 @@ export default function LandingNav() {
                     >
                       Dashboard
                     </Link>
-                    <Link
-                      href="/profile"
-                      className="block text-center text-blue-600 border border-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all"
-                    >
-                      Profil Saya
-                    </Link>
+                    
+                    {/* Mobile Profile Menu */}
+                    <div className="border-t border-slate-200 pt-3 mt-3">
+                      <div className="px-3 py-2 bg-slate-50 rounded-lg mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 relative flex-shrink-0">
+                            <Image
+                              alt="Profil"
+                              src={displayAvatar}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-slate-900 truncate">{displayName}</p>
+                            <p className="text-xs text-slate-500 truncate">{displayEmail}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {profileMenuItems.map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={item.action}
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
+                            item.danger 
+                              ? "text-red-600 hover:bg-red-50" 
+                              : "text-slate-700 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                          <span className="font-medium text-sm">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </>
                 ) : (
                   <>
