@@ -11,6 +11,10 @@ export async function POST() {
   const endpoint = signalRConnectionString.match(/Endpoint=(.*?);/)?.[1];
   const accessKey = signalRConnectionString.match(/AccessKey=(.*?);/)?.[1];
   
+  if (!endpoint || !accessKey) {
+    return NextResponse.json({ error: 'Invalid SignalR connection string' }, { status: 500 });
+  }
+  
   const hubName = 'trafficHub';
   const url = `${endpoint}/api/v1/hubs/${hubName}`;
   
