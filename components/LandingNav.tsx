@@ -120,18 +120,18 @@ export default function LandingNav() {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <div className="flex justify-between items-center h-16 px-6 md:px-12 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 lg:px-12 max-w-7xl mx-auto w-full">
         {/* Brand */}
-        <Link href="/" className="text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-2">
-          <Image src="/logo.png" alt="Aerial Command" width={36} height={36} className="flex-shrink-0" />
-          Aerial Command
+        <Link href="/" className="text-lg md:text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-2 flex-shrink-0">
+          <Image src="/logo.png" alt="Aerial Command" width={28} height={28} className="flex-shrink-0 md:w-9 md:h-9" />
+          <span className="hidden sm:inline">Aerial Command</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
           <a 
             href="#beranda" 
-            className={`pb-1 transition-colors duration-200 ${
+            className={`pb-1 text-sm lg:text-base transition-colors duration-200 ${
               isActive("beranda") 
                 ? "text-blue-600 border-b-2 border-blue-600" 
                 : "text-slate-600 hover:text-blue-500"
@@ -141,7 +141,7 @@ export default function LandingNav() {
           </a>
           <a 
             href="#fitur" 
-            className={`pb-1 transition-colors duration-200 ${
+            className={`pb-1 text-sm lg:text-base transition-colors duration-200 ${
               isActive("fitur") 
                 ? "text-blue-600 border-b-2 border-blue-600" 
                 : "text-slate-600 hover:text-blue-500"
@@ -151,7 +151,7 @@ export default function LandingNav() {
           </a>
           <a 
             href="#tentang-kami" 
-            className={`pb-1 transition-colors duration-200 ${
+            className={`pb-1 text-sm lg:text-base transition-colors duration-200 ${
               isActive("tentang-kami") 
                 ? "text-blue-600 border-b-2 border-blue-600" 
                 : "text-slate-600 hover:text-blue-500"
@@ -161,7 +161,7 @@ export default function LandingNav() {
           </a>
           <a 
             href="#tim-kami" 
-            className={`pb-1 transition-colors duration-200 ${
+            className={`pb-1 text-sm lg:text-base transition-colors duration-200 ${
               isActive("tim-kami") 
                 ? "text-blue-600 border-b-2 border-blue-600" 
                 : "text-slate-600 hover:text-blue-500"
@@ -172,17 +172,17 @@ export default function LandingNav() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3">
           {status === "loading" ? (
-            <div className="w-20 h-10 bg-slate-100 animate-pulse rounded-lg"></div>
+            <div className="w-16 lg:w-20 h-8 lg:h-10 bg-slate-100 animate-pulse rounded-lg"></div>
           ) : session ? (
             <>
               <Link
                 href="/dashboard"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-semibold text-sm lg:text-base transition-all shadow-sm hover:shadow-md flex items-center gap-1 lg:gap-2"
               >
                 <span className="material-symbols-outlined text-sm">dashboard</span>
-                Dashboard
+                <span className="hidden lg:inline">Dashboard</span>
               </Link>
               
               {/* Profile Dropdown */}
@@ -194,7 +194,7 @@ export default function LandingNav() {
                   className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
                   title={session.user?.name || "Profile"}
                 >
-                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
+                  <div className="w-8 lg:w-9 h-8 lg:h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
                     <Image
                       alt="Profile"
                       src={displayAvatar}
@@ -211,12 +211,12 @@ export default function LandingNav() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50"
+                      className="absolute right-0 mt-2 w-56 lg:w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50"
                     >
                       {/* Profile Header */}
-                      <div className="p-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white relative">
+                      <div className="p-3 lg:p-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                        <div className="flex items-center gap-2 lg:gap-3">
+                          <div className="w-10 lg:w-12 h-10 lg:h-12 rounded-full overflow-hidden border-2 border-white relative flex-shrink-0">
                             <Image
                               alt="Profil"
                               src={displayAvatar}
@@ -226,15 +226,15 @@ export default function LandingNav() {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-sm truncate">{displayName}</p>
-                            <p className="text-xs text-blue-100 truncate">{displayEmail}</p>
-                            <p className="text-[10px] text-blue-200 mt-0.5">{displayId}</p>
+                            <p className="font-bold text-xs lg:text-sm truncate">{displayName}</p>
+                            <p className="text-[10px] lg:text-xs text-blue-100 truncate">{displayEmail}</p>
+                            <p className="text-[9px] lg:text-[10px] text-blue-200 mt-0.5">{displayId}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Menu Items */}
-                      <div className="py-2">
+                      <div className="py-1 lg:py-2">
                         {profileMenuItems.map((item, idx) => (
                           <motion.button
                             key={idx}
@@ -242,19 +242,19 @@ export default function LandingNav() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             onClick={item.action}
-                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors ${
+                            className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 hover:bg-slate-50 transition-colors text-sm lg:text-base ${
                               item.danger ? "text-red-600" : "text-slate-700"
                             }`}
                           >
-                            <span className="material-symbols-outlined text-lg">{item.icon}</span>
-                            <span className="font-medium text-sm">{item.label}</span>
+                            <span className="material-symbols-outlined text-base lg:text-lg">{item.icon}</span>
+                            <span className="font-medium">{item.label}</span>
                           </motion.button>
                         ))}
                       </div>
 
                       {/* Footer */}
-                      <div className="p-3 bg-slate-50 border-t border-slate-200">
-                        <p className="text-[10px] text-slate-400 text-center">
+                      <div className="p-2 lg:p-3 bg-slate-50 border-t border-slate-200">
+                        <p className="text-[9px] lg:text-[10px] text-slate-400 text-center">
                           Aerial Command v2.4.0
                         </p>
                       </div>
@@ -267,13 +267,13 @@ export default function LandingNav() {
             <>
               <Link
                 href="/login"
-                className="text-blue-600 hover:text-blue-700 font-semibold px-5 py-2.5 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all"
+                className="text-blue-600 hover:text-blue-700 font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all text-sm lg:text-base"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md text-sm lg:text-base"
               >
                 Daftar
               </Link>
@@ -301,10 +301,10 @@ export default function LandingNav() {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-white border-t border-slate-200"
           >
-            <div className="px-6 py-4 space-y-3">
+            <div className="px-4 py-3 space-y-2">
               <a 
                 href="#beranda" 
-                className={`block py-2 ${
+                className={`block py-1.5 text-sm ${
                   isActive("beranda") 
                     ? "text-blue-600 font-bold" 
                     : "text-slate-600"
@@ -314,7 +314,7 @@ export default function LandingNav() {
               </a>
               <a 
                 href="#fitur" 
-                className={`block py-2 ${
+                className={`block py-1.5 text-sm ${
                   isActive("fitur") 
                     ? "text-blue-600 font-bold" 
                     : "text-slate-600"
@@ -324,7 +324,7 @@ export default function LandingNav() {
               </a>
               <a 
                 href="#tentang-kami" 
-                className={`block py-2 ${
+                className={`block py-1.5 text-sm ${
                   isActive("tentang-kami") 
                     ? "text-blue-600 font-bold" 
                     : "text-slate-600"
@@ -334,7 +334,7 @@ export default function LandingNav() {
               </a>
               <a 
                 href="#tim-kami" 
-                className={`block py-2 ${
+                className={`block py-1.5 text-sm ${
                   isActive("tim-kami") 
                     ? "text-blue-600 font-bold" 
                     : "text-slate-600"
@@ -342,34 +342,34 @@ export default function LandingNav() {
               >
                 Tim Kami
               </a>
-              <div className="pt-4 space-y-2">
+              <div className="pt-2 space-y-1.5">
                 {status === "loading" ? (
-                  <div className="w-full h-10 bg-slate-100 animate-pulse rounded-lg"></div>
+                  <div className="w-full h-8 bg-slate-100 animate-pulse rounded-lg"></div>
                 ) : session ? (
                   <>
                     <Link
                       href="/dashboard"
-                      className="block bg-blue-600 text-white text-center px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                      className="block bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm"
                     >
                       Dashboard
                     </Link>
                     
                     {/* Mobile Profile Menu */}
-                    <div className="border-t border-slate-200 pt-3 mt-3">
-                      <div className="px-3 py-2 bg-slate-50 rounded-lg mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 relative flex-shrink-0">
+                    <div className="border-t border-slate-200 pt-2 mt-2">
+                      <div className="px-2 py-1.5 bg-slate-50 rounded-lg mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200 relative flex-shrink-0">
                             <Image
                               alt="Profil"
                               src={displayAvatar}
                               fill
-                              sizes="40px"
+                              sizes="32px"
                               className="object-cover"
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-sm text-slate-900 truncate">{displayName}</p>
-                            <p className="text-xs text-slate-500 truncate">{displayEmail}</p>
+                            <p className="font-bold text-xs text-slate-900 truncate">{displayName}</p>
+                            <p className="text-[10px] text-slate-500 truncate">{displayEmail}</p>
                           </div>
                         </div>
                       </div>
@@ -378,14 +378,14 @@ export default function LandingNav() {
                         <button
                           key={idx}
                           onClick={item.action}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-left rounded-lg transition-colors text-sm ${
                             item.danger 
                               ? "text-red-600 hover:bg-red-50" 
                               : "text-slate-700 hover:bg-slate-100"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg">{item.icon}</span>
-                          <span className="font-medium text-sm">{item.label}</span>
+                          <span className="material-symbols-outlined text-base flex-shrink-0">{item.icon}</span>
+                          <span className="font-medium">{item.label}</span>
                         </button>
                       ))}
                     </div>
@@ -394,13 +394,13 @@ export default function LandingNav() {
                   <>
                     <Link
                       href="/login"
-                      className="block text-center text-blue-600 border border-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all"
+                      className="block text-center text-blue-600 border border-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-all text-sm"
                     >
                       Login
                     </Link>
                     <Link
                       href="/register"
-                      className="block bg-blue-600 text-white text-center px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-all"
+                      className="block bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm"
                     >
                       Daftar
                     </Link>
