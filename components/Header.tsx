@@ -106,8 +106,8 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         </div>
 
         {/* Logo + Aerial Command - Replace Title */}
-        <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 relative flex-shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-1 md:gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
+          <div className="w-7 md:w-8 h-7 md:h-8 relative flex-shrink-0">
             <Image
               src="/logo.png"
               alt="Aerial Command Logo"
@@ -116,7 +116,7 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
               className="object-contain"
             />
           </div>
-          <h2 className="font-headline font-extrabold text-lg tracking-tight text-white drop-shadow-md hidden sm:block">
+          <h2 className="font-headline font-extrabold text-sm md:text-lg tracking-tight text-white drop-shadow-md">
             Aerial Command
           </h2>
         </Link>
