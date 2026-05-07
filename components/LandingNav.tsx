@@ -122,9 +122,9 @@ export default function LandingNav() {
     <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 lg:px-12 max-w-7xl mx-auto w-full">
         {/* Brand */}
-        <Link href="/" className="text-lg md:text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-2 flex-shrink-0">
+        <Link href="/" className="text-sm md:text-lg lg:text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-1 md:gap-2 flex-shrink-0">
           <Image src="/logo.png" alt="Aerial Command" width={28} height={28} className="flex-shrink-0 md:w-9 md:h-9" />
-          <span className="hidden sm:inline">Aerial Command</span>
+          <span>Aerial Command</span>
         </Link>
 
         {/* Desktop Navigation */}
