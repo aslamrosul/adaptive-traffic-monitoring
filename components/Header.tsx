@@ -113,6 +113,14 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
         <div className="hidden md:flex flex-1 max-w-md mx-auto px-4">
           <SearchBar />
         </div>
+
+        {/* Logo + Aerial Command - Desktop Only */}
+        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex-shrink-0">
+          <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+          </div>
+          <span className="text-sm font-bold text-white whitespace-nowrap">Aerial Command</span>
+        </div>
       </div>
 
       <div className="flex items-center gap-1 lg:gap-2 px-3 lg:px-6">
