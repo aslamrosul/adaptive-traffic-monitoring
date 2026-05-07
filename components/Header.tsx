@@ -7,6 +7,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import Image from "next/image";
 
 interface HeaderProps {
   title: string;
@@ -106,8 +107,14 @@ export default function Header({ title, dateRange, onToggleSidebar, isSidebarOpe
 
         {/* Logo + Aerial Command - Replace Title */}
         <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-lg">satellite_alt</span>
+          <div className="w-8 h-8 relative flex-shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Aerial Command Logo"
+              fill
+              sizes="32px"
+              className="object-contain"
+            />
           </div>
           <h2 className="font-headline font-extrabold text-lg tracking-tight text-white drop-shadow-md hidden sm:block">
             Aerial Command
