@@ -223,11 +223,13 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="order-1 lg:order-2 bg-slate-100 rounded-3xl p-8 flex items-center justify-center"
+                className="order-1 lg:order-2 bg-slate-100 rounded-3xl p-8 flex items-center justify-center overflow-hidden"
               >
-                <span className="material-symbols-outlined text-blue-600 text-[120px]">
-                  hub
-                </span>
+                <img
+                  alt="Smart City Traffic Management"
+                  src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=600&fit=crop"
+                  className="w-full h-full object-cover rounded-2xl"
+                />
               </motion.div>
             </div>
           </div>
