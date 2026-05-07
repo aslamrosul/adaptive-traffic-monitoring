@@ -97,39 +97,39 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 bg-white relative" id="fitur">
+        <section className="py-12 md:py-24 bg-white relative" id="fitur">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto mb-16"
+              className="text-center max-w-3xl mx-auto mb-8 md:mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 md:mb-4 tracking-tight">
                 Kecerdasan Buatan untuk Mobilitas Lebih Baik
               </h2>
-              <p className="text-lg text-slate-600">
+              <p className="text-sm sm:text-base md:text-lg text-slate-600">
                 Fitur komprehensif kami dirancang untuk menangani kompleksitas lalu lintas perkotaan modern dengan presisi tinggi.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
               {/* Feature 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+                className="p-4 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
               >
-                <div className="h-14 w-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <div className="h-12 md:h-14 w-12 md:w-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-xl md:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     multiline_chart
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Monitoring Real-time</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Monitoring Real-time</h3>
+                <p className="text-sm md:text-base text-slate-600 leading-relaxed">
                   Pantau 4 simpangan atau lebih secara langsung melalui dashboard terpusat. Visibilitas penuh atas kondisi jalan raya setiap detik.
                 </p>
               </motion.div>
@@ -140,15 +140,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+                className="p-4 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
               >
-                <div className="h-14 w-14 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <div className="h-12 md:h-14 w-12 md:w-14 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-xl md:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     psychology
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Adaptif AI</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Adaptif AI</h3>
+                <p className="text-sm md:text-base text-slate-600 leading-relaxed">
                   Penyesuaian waktu lampu hijau otomatis. AI menganalisis jumlah kendaraan dan memprioritaskan jalur yang padat secara dinamis.
                 </p>
               </motion.div>
@@ -159,15 +159,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+                className="p-4 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
               >
-                <div className="h-14 w-14 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <div className="h-12 md:h-14 w-12 md:w-14 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-xl md:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     query_stats
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Analitik Cerdas</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Analitik Cerdas</h3>
+                <p className="text-sm md:text-base text-slate-600 leading-relaxed">
                   Laporan data mendalam. Pola lalu lintas historis untuk membantu pengambil keputusan dalam perencanaan kota jangka panjang.
                 </p>
               </motion.div>
@@ -178,15 +178,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+                className="p-4 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all group"
               >
-                <div className="h-14 w-14 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <div className="h-12 md:h-14 w-12 md:w-14 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-xl md:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     health_and_safety
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Fail-safe Mode</h3>
-                <p className="text-slate-600 leading-relaxed">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Fail-safe Mode</h3>
+                <p className="text-sm md:text-base text-slate-600 leading-relaxed">
                   Keamanan terjamin. Sistem secara otomatis kembali ke pengaturan waktu default yang aman jika sensor IoT mengalami gangguan koneksi.
                 </p>
               </motion.div>
@@ -195,9 +195,9 @@ export default function LandingPage() {
         </section>
 
         {/* Tentang Kami Section */}
-        <section className="py-24 bg-white" id="tentang-kami">
+        <section className="py-12 md:py-24 bg-white" id="tentang-kami">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-center">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -205,16 +205,16 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="order-2 lg:order-1"
               >
-                <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-sm mb-3">
+                <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-xs md:text-sm mb-2 md:mb-3">
                   Tentang Kami
                 </h2>
-                <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4 md:mb-6">
                   Misi Kami Merevolusi Mobilitas Perkotaan
                 </h3>
-                <p className="text-slate-600 text-lg leading-relaxed mb-6">
+                <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed mb-4 md:mb-6">
                   Aerial Command adalah sistem manajemen lalu lintas cerdas yang mengintegrasikan kecerdasan buatan dengan armada drone otonom. Kami percaya bahwa teknologi dapat menyelesaikan tantangan transportasi modern yang semakin kompleks.
                 </p>
-                <p className="text-slate-600 text-lg leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed">
                   Platform kami dirancang untuk membantu pemerintah kota dan otoritas transportasi dalam memantau, menganalisis, dan mengoptimalkan arus lalu lintas secara real-time, menciptakan jalan raya yang lebih aman dan efisien bagi semua orang.
                 </p>
               </motion.div>
@@ -224,7 +224,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="order-1 lg:order-2 bg-slate-100 rounded-3xl p-8 flex items-center justify-center overflow-hidden"
+                className="order-1 lg:order-2 bg-slate-100 rounded-3xl p-4 md:p-8 flex items-center justify-center overflow-hidden"
               >
                 <img
                   alt="Smart City Traffic Management"
@@ -237,27 +237,27 @@ export default function LandingPage() {
         </section>
 
         {/* Tim Kami Section */}
-        <section className="py-24 bg-slate-50" id="tim-kami">
+        <section className="py-12 md:py-24 bg-slate-50" id="tim-kami">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto mb-16"
+              className="text-center max-w-3xl mx-auto mb-8 md:mb-16"
             >
-              <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-sm mb-3">
+              <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-xs md:text-sm mb-2 md:mb-3">
                 Tim Kami
               </h2>
-              <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 md:mb-4">
                 Para Inovator di Balik Aerial Command
               </h3>
-              <p className="text-slate-600 text-lg">
+              <p className="text-sm sm:text-base md:text-lg text-slate-600">
                 Dedikasi kami untuk menciptakan solusi teknologi yang berdampak nyata bagi masyarakat.
               </p>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
               {/* Member 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -266,7 +266,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-center group"
               >
-                <div className="relative w-48 h-48 mx-auto mb-6">
+                <div className="relative w-32 sm:w-40 md:w-48 h-32 sm:h-40 md:h-48 mx-auto mb-3 md:mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
                     <Image
@@ -277,13 +277,13 @@ export default function LandingPage() {
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <div className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg z-20">
-                    <span className="material-symbols-outlined text-blue-600 text-xl">verified</span>
+                  <div className="absolute bottom-1 md:bottom-2 right-1 md:right-2 bg-white p-1 md:p-2 rounded-full shadow-lg z-20">
+                    <span className="material-symbols-outlined text-blue-600 text-sm md:text-xl">verified</span>
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Aslam Rosul Ahmad</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
-                <p className="text-slate-500 text-xs">NIM: 2341720195</p>
+                <h4 className="text-base md:text-xl font-bold text-slate-900">Aslam Rosul Ahmad</h4>
+                <p className="text-blue-600 font-medium text-xs md:text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-[10px] md:text-xs">NIM: 2341720195</p>
               </motion.div>
 
               {/* Member 2 */}
@@ -294,7 +294,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-center group"
               >
-                <div className="relative w-48 h-48 mx-auto mb-6">
+                <div className="relative w-32 sm:w-40 md:w-48 h-32 sm:h-40 md:h-48 mx-auto mb-3 md:mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
                     <Image
@@ -306,9 +306,9 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Azzahra Attaqina</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
-                <p className="text-slate-500 text-xs">NIM: 2341720224</p>
+                <h4 className="text-base md:text-xl font-bold text-slate-900">Azzahra Attaqina</h4>
+                <p className="text-blue-600 font-medium text-xs md:text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-[10px] md:text-xs">NIM: 2341720224</p>
               </motion.div>
 
               {/* Member 3 */}
@@ -319,7 +319,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="text-center group"
               >
-                <div className="relative w-48 h-48 mx-auto mb-6">
+                <div className="relative w-32 sm:w-40 md:w-48 h-32 sm:h-40 md:h-48 mx-auto mb-3 md:mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
                     <Image
@@ -331,9 +331,9 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Tri Sukma Sarah</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
-                <p className="text-slate-500 text-xs">NIM: 2341720051</p>
+                <h4 className="text-base md:text-xl font-bold text-slate-900">Tri Sukma Sarah</h4>
+                <p className="text-blue-600 font-medium text-xs md:text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-[10px] md:text-xs">NIM: 2341720051</p>
               </motion.div>
 
               {/* Member 4 */}
@@ -344,7 +344,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="text-center group"
               >
-                <div className="relative w-48 h-48 mx-auto mb-6">
+                <div className="relative w-32 sm:w-40 md:w-48 h-32 sm:h-40 md:h-48 mx-auto mb-3 md:mb-6">
                   <div className="absolute inset-0 bg-blue-100 rounded-full group-hover:scale-105 transition-transform duration-300"></div>
                   <div className="relative z-10 w-full h-full flex items-center justify-center rounded-full p-2 overflow-hidden">
                     <Image
@@ -356,9 +356,9 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-                <h4 className="text-xl font-bold text-slate-900">Zilan Zalilan</h4>
-                <p className="text-blue-600 font-medium text-sm mb-1">D4-Teknik Informatika</p>
-                <p className="text-slate-500 text-xs">NIM: 244107023003</p>
+                <h4 className="text-base md:text-xl font-bold text-slate-900">Zilan Zalilan</h4>
+                <p className="text-blue-600 font-medium text-xs md:text-sm mb-1">D4-Teknik Informatika</p>
+                <p className="text-slate-500 text-[10px] md:text-xs">NIM: 244107023003</p>
               </motion.div>
             </div>
           </div>
