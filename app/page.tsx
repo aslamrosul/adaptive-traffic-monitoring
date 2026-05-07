@@ -13,11 +13,11 @@ export default function LandingPage() {
 
       <main className="pt-20">
         {/* Hero Section */}
-        <section className="relative pt-12 pb-32 overflow-hidden" id="beranda">
+        <section className="relative pt-8 md:pt-12 pb-16 md:pb-32 overflow-hidden" id="beranda">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-slate-50 -z-10"></div>
           
           <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-12 items-center">
               {/* Left Content */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -25,7 +25,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="max-w-2xl"
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 md:mb-6">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
@@ -33,7 +33,7 @@ export default function LandingPage() {
                   Smart City Ready
                 </div>
 
-                <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4 md:mb-6">
                   Revolusi Manajemen{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
                     Lalu Lintas
@@ -41,21 +41,21 @@ export default function LandingPage() {
                   Kota Anda
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 mb-6 md:mb-8 leading-relaxed">
                   Aerial Command memanfaatkan kekuatan IoT dan AI untuk mengoptimalkan durasi lampu lalu lintas secara otomatis berdasarkan kepadatan kendaraan aktual, mengurangi kemacetan hingga 40%.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                   <Link
                     href="#tentang-kami"
-                    className="inline-flex justify-center items-center px-8 py-4 text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5"
+                    className="inline-flex justify-center items-center px-6 sm:px-8 py-3 md:py-4 text-sm md:text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5"
                   >
                     Pelajari Lebih Lanjut
                     <span className="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
                   </Link>
                   <a
                     href="#tim-kami"
-                    className="inline-flex justify-center items-center px-8 py-4 text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
+                    className="inline-flex justify-center items-center px-6 sm:px-8 py-3 md:py-4 text-sm md:text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
                   >
                     Lihat Tim Kami
                   </a>
@@ -72,7 +72,7 @@ export default function LandingPage() {
                 <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl blur-2xl opacity-20 z-0"></div>
                 <img
                   alt="Smart city intersection"
-                  className="relative z-10 w-full h-[500px] object-cover rounded-2xl shadow-2xl border border-white/20"
+                  className="relative z-10 w-full h-[250px] sm:h-[350px] md:h-[400px] lg:h-[500px] object-cover rounded-2xl shadow-2xl border border-white/20"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQUIbvVoAv8N3k25XgwSIhgwZ-6snr_S1tm-HgQqJTsdQ56aMWtsLHoKdC9ghy7z9OpFmDQOouj4Lxd1iWd-_--txSkZlTQS0nEagCgb5pXbQGY2XJEba85jaa9R_w1VLbuWXBk9zT0jfzS4kYmee_bBxvv2twO4VCjyVYG03OhZcGDLfJMeJVDfWcy6-jop0O90UYZh-uSF7wnZtyTfCajAAwUcJhprjohG04tpFnqBrOzavAfambcwPRv0Q38eR5IOGROES0bvQ"
                 />
                 
@@ -81,14 +81,14 @@ export default function LandingPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl z-20 border border-slate-100 flex items-center gap-4"
+                  className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 bg-white p-3 md:p-4 rounded-xl shadow-xl z-20 border border-slate-100 flex items-center gap-3 md:gap-4"
                 >
-                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                    <span className="material-symbols-outlined">trending_down</span>
+                  <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                    <span className="material-symbols-outlined text-lg md:text-xl">trending_down</span>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500 font-medium">Pengurangan Antrean</p>
-                    <p className="text-xl font-bold text-slate-900">-42%</p>
+                    <p className="text-xs md:text-sm text-slate-500 font-medium">Pengurangan Antrean</p>
+                    <p className="text-lg md:text-xl font-bold text-slate-900">-42%</p>
                   </div>
                 </motion.div>
               </motion.div>
