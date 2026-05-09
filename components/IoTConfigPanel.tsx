@@ -141,49 +141,6 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
     }
   };
 
-  const updateRule = (index: number, field: keyof TrafficRule, value: any) => {
-    const newRules = [...config.trafficLightConfig.rules];
-    newRules[index] = {
-      ...newRules[index],
-      [field]: value,
-    };
-    setConfig({
-      ...config,
-      trafficLightConfig: {
-        ...config.trafficLightConfig,
-        rules: newRules,
-      },
-    });
-  };
-
-  const addRule = () => {
-    const newRule: TrafficRule = {
-      vehicleThreshold: 40,
-      greenDuration: 75,
-      yellowDuration: 5,
-      redDuration: 10,
-      description: 'Lalu lintas sangat tinggi',
-    };
-    setConfig({
-      ...config,
-      trafficLightConfig: {
-        ...config.trafficLightConfig,
-        rules: [...config.trafficLightConfig.rules, newRule],
-      },
-    });
-  };
-
-  const removeRule = (index: number) => {
-    const newRules = config.trafficLightConfig.rules.filter((_, i) => i !== index);
-    setConfig({
-      ...config,
-      trafficLightConfig: {
-        ...config.trafficLightConfig,
-        rules: newRules,
-      },
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200">
@@ -196,155 +153,187 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
   return (
     <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-200">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg lg:text-xl font-bold text-slate-900 flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600">settings_remote</span>
-            Remote Configuration
-          </h3>
-          <p className="text-xs lg:text-sm text-slate-500 mt-1">
-            Device ID: <span className="font-mono font-semibold">{deviceId}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-            config.status === 'active' 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-slate-100 text-slate-600'
-          }`}>
-            {config.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
-          </span>
-        </div>
-      </div>
-
-      {/* Traffic Light Rules */}
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-slate-900 text-sm">Aturan Durasi Lampu Lalu Lintas</h4>
+      {/* Traffic Light Duration Rules */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-bold text-slate-900">Aturan Durasi Lampu Lalu Lintas</h4>
           <button
-            onClick={addRule}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            onClick={() => {
+              const newRule: TrafficRule = {
+                vehicleThreshold: 40,
+                greenDuration: 70,
+                yellowDuration: 5,
+                redDuration: 10,
+                description: 'Lalu lintas sangat tinggi',
+              };
+              setConfig({
+                ...config,
+                trafficLightConfig: {
+                  ...config.trafficLightConfig,
+                  rules: [...config.trafficLightConfig.rules, newRule],
+                },
+              });
+              toast.success('Aturan baru ditambahkan');
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-blue-50 rounded-lg font-semibold transition-all text-sm border border-primary"
           >
-            <span className="material-symbols-outlined text-sm">add</span>
+            <span className="material-symbols-outlined text-lg">add</span>
             Tambah Aturan
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {config.trafficLightConfig.rules.map((rule, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-50 rounded-lg p-3 border border-slate-200"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white border-2 border-slate-200 rounded-xl p-4 hover:border-primary transition-all"
             >
-              <div className="flex items-start justify-between mb-2">
+              {/* Header with Title and Delete Button */}
+              <div className="flex items-center justify-between mb-4">
                 <input
                   type="text"
                   value={rule.description}
-                  onChange={(e) => updateRule(index, 'description', e.target.value)}
-                  className="text-sm font-semibold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 p-0"
-                  placeholder="Deskripsi aturan"
+                  onChange={(e) => {
+                    const newRules = [...config.trafficLightConfig.rules];
+                    newRules[index].description = e.target.value;
+                    setConfig({
+                      ...config,
+                      trafficLightConfig: {
+                        ...config.trafficLightConfig,
+                        rules: newRules,
+                      },
+                    });
+                  }}
+                  className="flex-1 text-base font-bold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 p-0"
+                  placeholder="Nama aturan"
                 />
-                {config.trafficLightConfig.rules.length > 1 && (
-                  <button
-                    onClick={() => removeRule(index)}
-                    className="text-red-500 hover:text-red-700 flex-shrink-0"
-                  >
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    if (config.trafficLightConfig.rules.length > 1) {
+                      const newRules = config.trafficLightConfig.rules.filter((_, i) => i !== index);
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                      toast.success('Aturan dihapus');
+                    } else {
+                      toast.error('Minimal harus ada 1 aturan');
+                    }
+                  }}
+                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Hapus aturan"
+                >
+                  <span className="material-symbols-outlined text-xl">delete</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 items-start">
-                {/* Vehicle Threshold */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
-                    Batas Kendaraan
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={rule.vehicleThreshold}
-                      onChange={(e) => updateRule(index, 'vehicleThreshold', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="1"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-                      unit
-                    </span>
-                  </div>
-                </div>
+              {/* Batas Kendaraan */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  Batas Kendaraan
+                </label>
+                <input
+                  type="number"
+                  value={rule.vehicleThreshold}
+                  onChange={(e) => {
+                    const newRules = [...config.trafficLightConfig.rules];
+                    newRules[index].vehicleThreshold = parseInt(e.target.value) || 0;
+                    setConfig({
+                      ...config,
+                      trafficLightConfig: {
+                        ...config.trafficLightConfig,
+                        rules: newRules,
+                      },
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  min="1"
+                />
+              </div>
 
-                {/* Green Duration */}
+              {/* Duration Inputs Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Hijau */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
                     Hijau
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={rule.greenDuration}
-                      onChange={(e) => updateRule(index, 'greenDuration', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="5"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-                      detik
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    value={rule.greenDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].greenDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="5"
+                  />
                 </div>
 
-                {/* Yellow Duration */}
+                {/* Kuning */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
                     Kuning
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={rule.yellowDuration}
-                      onChange={(e) => updateRule(index, 'yellowDuration', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="3"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-                      detik
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    value={rule.yellowDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].yellowDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="3"
+                  />
                 </div>
 
-                {/* Red Duration */}
+                {/* Merah */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1 h-8 flex items-start">
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
                     Merah
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={rule.redDuration}
-                      onChange={(e) => updateRule(index, 'redDuration', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="5"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-                      detik
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    value={rule.redDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].redDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="5"
+                  />
                 </div>
-              </div>
-
-              {/* Rule Summary */}
-              <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
-                <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
-                Jika kendaraan <strong>&gt; {rule.vehicleThreshold}</strong>, maka lampu hijau <strong>{rule.greenDuration} detik</strong>
               </div>
             </motion.div>
           ))}
         </div>
       </div>
-
       {/* Advanced Settings */}
       <div className="border-t border-slate-200 pt-3">
         <button
