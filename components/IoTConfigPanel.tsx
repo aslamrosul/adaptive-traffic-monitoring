@@ -49,18 +49,11 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
     trafficLightConfig: {
       rules: [
         {
-          vehicleThreshold: 10,
+          vehicleThreshold: 15,
           greenDuration: 30,
           yellowDuration: 5,
           redDuration: 25,
           description: 'Lalu lintas rendah',
-        },
-        {
-          vehicleThreshold: 20,
-          greenDuration: 45,
-          yellowDuration: 5,
-          redDuration: 20,
-          description: 'Lalu lintas sedang',
         },
         {
           vehicleThreshold: 30,
@@ -182,7 +175,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {config.trafficLightConfig.rules.map((rule, index) => (
             <motion.div
               key={index}
@@ -334,11 +327,12 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
           ))}
         </div>
       </div>
+
       {/* Advanced Settings */}
-      <div className="border-t border-slate-200 pt-3">
+      <div className="border-t border-slate-200 pt-6">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-3"
+          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-4"
         >
           <span className="material-symbols-outlined text-sm">
             {showAdvanced ? 'expand_less' : 'expand_more'}
@@ -512,7 +506,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
       {/* Last Updated */}
       {config.updatedAt && (
-        <div className="mt-3 space-y-1">
+        <div className="mt-6 space-y-1">
           <div className="text-xs text-slate-500">
             Terakhir diupdate: {new Date(config.updatedAt).toLocaleString('id-ID')}
           </div>
@@ -536,7 +530,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
       )}
 
       {/* Save Button */}
-      <div className="mt-4 flex gap-3">
+      <div className="mt-6 flex gap-3">
         <button
           onClick={handleSaveConfig}
           disabled={isSaving}
