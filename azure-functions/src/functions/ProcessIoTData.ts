@@ -12,6 +12,7 @@ const cosmosClient = new CosmosClient({
 
 const database = cosmosClient.database(process.env.COSMOS_DATABASE || 'TrafficDB');
 const container = database.container('traffic-data');
+const deviceStatusContainer = database.container('device-status');
 
 // Redis client (optional)
 let redisClient: any = null;
@@ -21,11 +22,13 @@ async function getRedisClient() {
     return redisClient;
   }
 
+  const useTls = process.env.REDIS_TLS === 'true';
+
   redisClient = createClient({
     socket: {
       host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT || '6380'),
-      tls: process.env.REDIS_TLS === 'true'
+      ...(useTls && { tls: true })
     },
     password: process.env.REDIS_PASSWORD
   });
@@ -38,9 +41,14 @@ export async function ProcessIoTData(blob: Buffer, context: InvocationContext): 
   context.log('Processing blob:', context.triggerMetadata?.name);
 
   try {
-    // Parse IoT data from blob
-    const iotData = JSON.parse(blob.toString());
-    context.log('Parsed IoT data:', iotData);
+    // Parse IoT Hub wrapper
+    const iotHubWrapper = JSON.parse(blob.toString());
+    context.log('Parsed IoT Hub wrapper:', iotHubWrapper);
+
+    // Decode Base64 Body to get actual traffic data
+    const bodyBuffer = Buffer.from(iotHubWrapper.Body, 'base64');
+    const iotData = JSON.parse(bodyBuffer.toString('utf-8'));
+    context.log('Decoded traffic data:', iotData);
 
     // Add metadata
     const processedData = {
@@ -70,6 +78,9 @@ export async function ProcessIoTData(blob: Buffer, context: InvocationContext): 
     // Save to Cosmos DB
     await container.items.create(processedData);
     context.log('✅ Saved to Cosmos DB:', processedData.id);
+
+    // Update device status
+    await updateDeviceStatus(iotData.deviceId, processedData.intersectionId, context);
 
     // Cache latest data in Redis (optional)
     if (process.env.REDIS_HOST) {
@@ -162,9 +173,30 @@ function generateAccessToken(endpoint: string, accessKey: string, hubName: strin
   return `${url}\n${expiry}\n${signature}`;
 }
 
+async function updateDeviceStatus(deviceId: string, intersectionId: string, context: InvocationContext): Promise<void> {
+  try {
+    const deviceStatus = {
+      id: deviceId,
+      deviceId: deviceId,
+      intersectionId: intersectionId,
+      status: 'online',
+      lastHeartbeat: new Date().toISOString(),
+      lastDataReceived: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Upsert (create or update)
+    await deviceStatusContainer.items.upsert(deviceStatus);
+    context.log(`✅ Device status updated: ${deviceId}`);
+  } catch (error) {
+    context.error('⚠️ Device status update failed (non-critical):', error);
+    // Don't throw - device status failure shouldn't stop data processing
+  }
+}
+
 // Register the function
 app.storageBlob('ProcessIoTData', {
-  path: 'raw-data/{name}',
+  path: 'raw-data/{name}.json',
   connection: 'AzureWebJobsStorage',
   handler: ProcessIoTData
 });
