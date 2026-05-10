@@ -27,27 +27,33 @@ export default function DashboardPage() {
   return (
     <DashboardLayout title="Sistem Pantauan Lalu Lintas">
       <div className="p-3 lg:p-6 space-y-4 lg:space-y-6 max-w-[1920px] mx-auto">
-        {/* SignalR Status */}
-        <div className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-          isConnected 
-            ? 'bg-green-50 border border-green-200' 
-            : 'bg-red-50 border border-red-200'
-        }`}>
-          <div className={`w-2.5 h-2.5 rounded-full ${
-            isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-          }`} />
-          <div className="flex-1">
-            <p className="font-semibold text-sm">
-              {isConnected ? 'Real-Time Connected' : 'Disconnected'}
-            </p>
-            {error && <p className="text-xs text-red-600 mt-0.5">{error}</p>}
-            {latestData && isConnected && (
-              <p className="text-xs text-slate-600 mt-0.5">
-                Latest: {latestData.deviceId} - {latestData.vehicleCount} vehicles
+        {/* SignalR Status - Only show if there's an active connection attempt */}
+        {(isConnected || error) && (
+          <div className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+            isConnected 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-yellow-50 border border-yellow-200'
+          }`}>
+            <div className={`w-2.5 h-2.5 rounded-full ${
+              isConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'
+            }`} />
+            <div className="flex-1">
+              <p className="font-semibold text-sm">
+                {isConnected ? '🔴 Live Updates Active' : '⚠️ Real-time Unavailable'}
               </p>
-            )}
+              {error && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Using polling fallback (data refreshes every 30s)
+                </p>
+              )}
+              {latestData && isConnected && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Latest: {latestData.deviceId} - {latestData.vehicleCount} vehicles
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Time Filter */}
         <DashboardTimeFilter 

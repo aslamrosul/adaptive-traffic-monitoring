@@ -1,0 +1,28 @@
+{
+  "deviceId": "esp32-traffic-monitor",
+  "timestamp": 1715270400000,
+  "north": {
+    "light": "green",
+    "vehicleCount": 8,
+    "irState": "clear",
+    "queueLength": 25
+  },
+  "south": {
+    "light": "red",
+    "vehicleCount": 12,
+    "irState": "detected",
+    "queueLength": 15
+  },
+  "east": {
+    "light": "yellow",
+    "vehicleCount": 5,
+    "irState": "clear",
+    "queueLength": 30
+  },
+  "west": {
+    "light": "red",
+    "vehicleCount": 10,
+    "irState": "detected",
+    "queueLength": 8
+  }
+}

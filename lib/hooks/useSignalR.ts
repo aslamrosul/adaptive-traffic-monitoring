@@ -14,19 +14,30 @@ export function useSignalR() {
       try {
         // Get token
         const res = await fetch('/api/signalr/negotiate', { method: 'POST' });
-        const { url, accessToken } = await res.json();
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'SignalR not configured');
+        }
+
+        const data = await res.json();
+        
+        // Validate response
+        if (!data.url || !data.accessToken) {
+          throw new Error('Invalid SignalR response: missing url or accessToken');
+        }
 
         // Create connection
         const conn = new signalR.HubConnectionBuilder()
-          .withUrl(url, { accessTokenFactory: () => accessToken })
+          .withUrl(data.url, { accessTokenFactory: () => data.accessToken })
           .withAutomaticReconnect()
           .build();
 
         // Listen for updates
-        conn.on('trafficUpdate', (data) => {
+        conn.on('trafficUpdate', (trafficData) => {
           if (isMounted) {
-            console.log('📡 Update:', data);
-            setLatestData(data);
+            console.log('📡 SignalR Update:', trafficData);
+            setLatestData(trafficData);
           }
         });
 
@@ -37,10 +48,13 @@ export function useSignalR() {
           setConnection(conn);
           setIsConnected(true);
           setError(null);
+          console.log('✅ SignalR Connected');
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed');
+          const errorMsg = err instanceof Error ? err.message : 'Connection failed';
+          console.warn('⚠️ SignalR:', errorMsg);
+          setError(errorMsg);
           setIsConnected(false);
         }
       }

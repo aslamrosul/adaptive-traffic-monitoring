@@ -44,10 +44,10 @@ export const containers = {
     return getDatabase().container('users');
   },
   get trafficData() {
-    return getDatabase().container('traffic_data');
+    return getDatabase().container('traffic-data');
   },
   get analyticsDaily() {
-    return getDatabase().container('analytics_daily');
+    return getDatabase().container('analytics');
   },
   get intersections() {
     return getDatabase().container('intersections');
@@ -62,7 +62,7 @@ export const containers = {
     return getDatabase().container('notifications');
   },
   get deviceStatus() {
-    return getDatabase().container('device_status');
+    return getDatabase().container('device-status');
   },
 };
 

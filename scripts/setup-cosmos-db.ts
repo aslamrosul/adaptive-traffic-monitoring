@@ -25,12 +25,12 @@ async function setupDatabase() {
     const containers = [
       { id: 'users', partitionKey: '/email' },
       { id: 'intersections', partitionKey: '/deviceId' },
-      { id: 'traffic_data', partitionKey: '/intersectionId' },
+      { id: 'traffic-data', partitionKey: '/intersectionId' },
       { id: 'events', partitionKey: '/intersectionId' },
       { id: 'reports', partitionKey: '/intersectionId' },
       { id: 'notifications', partitionKey: '/userId' },
-      { id: 'device_status', partitionKey: '/deviceId' },
-      { id: 'analytics_daily', partitionKey: '/intersectionId' },
+      { id: 'device-status', partitionKey: '/deviceId' },
+      { id: 'analytics', partitionKey: '/intersectionId' },
     ];
 
     // Create containers
