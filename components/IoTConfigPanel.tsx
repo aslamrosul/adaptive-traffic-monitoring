@@ -49,18 +49,11 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
     trafficLightConfig: {
       rules: [
         {
-          vehicleThreshold: 10,
+          vehicleThreshold: 15,
           greenDuration: 30,
           yellowDuration: 5,
           redDuration: 25,
           description: 'Lalu lintas rendah',
-        },
-        {
-          vehicleThreshold: 20,
-          greenDuration: 45,
-          yellowDuration: 5,
-          redDuration: 20,
-          description: 'Lalu lintas sedang',
         },
         {
           vehicleThreshold: 30,
@@ -153,11 +146,193 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
   return (
     <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-200">
+      {/* Traffic Light Duration Rules */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-bold text-slate-900">Aturan Durasi Lampu Lalu Lintas</h4>
+          <button
+            onClick={() => {
+              const newRule: TrafficRule = {
+                vehicleThreshold: 40,
+                greenDuration: 70,
+                yellowDuration: 5,
+                redDuration: 10,
+                description: 'Lalu lintas sangat tinggi',
+              };
+              setConfig({
+                ...config,
+                trafficLightConfig: {
+                  ...config.trafficLightConfig,
+                  rules: [...config.trafficLightConfig.rules, newRule],
+                },
+              });
+              toast.success('Aturan baru ditambahkan');
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-blue-50 rounded-lg font-semibold transition-all text-sm border border-primary"
+          >
+            <span className="material-symbols-outlined text-lg">add</span>
+            Tambah Aturan
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {config.trafficLightConfig.rules.map((rule, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white border-2 border-slate-200 rounded-xl p-4 hover:border-primary transition-all"
+            >
+              {/* Header with Title and Delete Button */}
+              <div className="flex items-center justify-between mb-4">
+                <input
+                  type="text"
+                  value={rule.description}
+                  onChange={(e) => {
+                    const newRules = [...config.trafficLightConfig.rules];
+                    newRules[index].description = e.target.value;
+                    setConfig({
+                      ...config,
+                      trafficLightConfig: {
+                        ...config.trafficLightConfig,
+                        rules: newRules,
+                      },
+                    });
+                  }}
+                  className="flex-1 text-base font-bold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 p-0"
+                  placeholder="Nama aturan"
+                />
+                <button
+                  onClick={() => {
+                    if (config.trafficLightConfig.rules.length > 1) {
+                      const newRules = config.trafficLightConfig.rules.filter((_, i) => i !== index);
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                      toast.success('Aturan dihapus');
+                    } else {
+                      toast.error('Minimal harus ada 1 aturan');
+                    }
+                  }}
+                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Hapus aturan"
+                >
+                  <span className="material-symbols-outlined text-xl">delete</span>
+                </button>
+              </div>
+
+              {/* Batas Kendaraan */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  Batas Kendaraan
+                </label>
+                <input
+                  type="number"
+                  value={rule.vehicleThreshold}
+                  onChange={(e) => {
+                    const newRules = [...config.trafficLightConfig.rules];
+                    newRules[index].vehicleThreshold = parseInt(e.target.value) || 0;
+                    setConfig({
+                      ...config,
+                      trafficLightConfig: {
+                        ...config.trafficLightConfig,
+                        rules: newRules,
+                      },
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  min="1"
+                />
+              </div>
+
+              {/* Duration Inputs Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Hijau */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Hijau
+                  </label>
+                  <input
+                    type="number"
+                    value={rule.greenDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].greenDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="5"
+                  />
+                </div>
+
+                {/* Kuning */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Kuning
+                  </label>
+                  <input
+                    type="number"
+                    value={rule.yellowDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].yellowDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="3"
+                  />
+                </div>
+
+                {/* Merah */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Merah
+                  </label>
+                  <input
+                    type="number"
+                    value={rule.redDuration}
+                    onChange={(e) => {
+                      const newRules = [...config.trafficLightConfig.rules];
+                      newRules[index].redDuration = parseInt(e.target.value) || 0;
+                      setConfig({
+                        ...config,
+                        trafficLightConfig: {
+                          ...config.trafficLightConfig,
+                          rules: newRules,
+                        },
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    min="5"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* Advanced Settings */}
-      <div className="border-t border-slate-200 pt-3">
+      <div className="border-t border-slate-200 pt-6">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-3"
+          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 mb-4"
         >
           <span className="material-symbols-outlined text-sm">
             {showAdvanced ? 'expand_less' : 'expand_more'}
@@ -331,7 +506,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
 
       {/* Last Updated */}
       {config.updatedAt && (
-        <div className="mt-3 space-y-1">
+        <div className="mt-6 space-y-1">
           <div className="text-xs text-slate-500">
             Terakhir diupdate: {new Date(config.updatedAt).toLocaleString('id-ID')}
           </div>
@@ -355,7 +530,7 @@ export default function IoTConfigPanel({ deviceId, intersectionId, onConfigSaved
       )}
 
       {/* Save Button */}
-      <div className="mt-4 flex gap-3">
+      <div className="mt-6 flex gap-3">
         <button
           onClick={handleSaveConfig}
           disabled={isSaving}
