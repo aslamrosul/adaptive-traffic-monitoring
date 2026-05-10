@@ -1,15 +1,35 @@
 import { containers } from '@/lib/azure-cosmos';
 import { NextResponse } from 'next/server';
+import { cacheGet, cacheSet } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
-// GET: Fetch daily analytics
+// GET: Fetch daily analytics with Redis caching
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const intersectionId = searchParams.get('intersectionId');
-    const date = searchParams.get('date');
+    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const limit = parseInt(searchParams.get('limit') || '30');
+
+    // Create cache key based on query parameters
+    const cacheKey = `cache:analytics:daily:${date}:${intersectionId || 'all'}:${limit}`;
+
+    // Try cache first (24 hour TTL for historical data, 5 min for today)
+    const isToday = date === new Date().toISOString().split('T')[0];
+    const cached = await cacheGet(cacheKey);
+    
+    if (cached) {
+      console.log('✅ Cache HIT:', cacheKey);
+      return NextResponse.json({
+        success: true,
+        source: 'cache',
+        count: cached.length,
+        data: cached,
+      });
+    }
+
+    console.log('❌ Cache MISS - fetching from Cosmos DB:', cacheKey);
 
     let query = 'SELECT * FROM c WHERE 1=1';
     const parameters: any[] = [];
@@ -30,8 +50,15 @@ export async function GET(request: Request) {
       .query({ query, parameters })
       .fetchAll();
 
+    // Cache the results
+    // Historical data: 24 hours (86400s), Today's data: 5 minutes (300s)
+    const ttl = isToday ? 300 : 86400;
+    await cacheSet(cacheKey, resources, ttl);
+    console.log(`✅ Cached for ${ttl}s:`, cacheKey);
+
     return NextResponse.json({
       success: true,
+      source: 'database',
       count: resources.length,
       data: resources,
     });
