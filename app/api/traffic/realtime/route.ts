@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { containers } from "@/lib/azure-cosmos";
+import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
@@ -68,32 +68,72 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate queue level (NEW CONCEPT)
+    if (data.queueLevel !== undefined && ![0, 1, 2].includes(data.queueLevel)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid queueLevel. Must be 0, 1, or 2",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate queue length (NEW CONCEPT)
+    if (data.queueLength !== undefined && data.queueLength < 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid queueLength. Must be >= 0",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate green duration (NEW CONCEPT)
+    if (data.greenDuration !== undefined && ![7, 10, 15].includes(data.greenDuration)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid greenDuration. Must be 7, 10, or 15 seconds",
+        },
+        { status: 400 }
+      );
+    }
+
     // Get intersectionId from deviceId mapping
     const intersectionId = data.intersectionId || DEVICE_TO_INTERSECTION[data.deviceId] || "int-001";
 
-    // Create item with timestamp
+    // Create item with timestamp (NEW CONCEPT: Added queue fields)
     const item = {
       id: `${data.deviceId}-${Date.now()}`,
       intersectionId: intersectionId,
       deviceId: data.deviceId,
       lane: data.lane,
-      vehicleCount: data.vehicleCount || 0,
+      light: data.light || "red",                    // NEW: Current light status
+      vehicleCount: data.vehicleCount || 0,          // NEW: Count in all light conditions
+      irState: data.irState || "clear",              // NEW: IR sensor state
+      queueLength: data.queueLength || 0,            // NEW: Distance from ultrasonic (cm)
+      queueLevel: data.queueLevel !== undefined ? data.queueLevel : 0,  // NEW: 0, 1, or 2
+      greenDuration: data.greenDuration || 7,        // NEW: Actual duration used (7, 10, or 15)
       speed: data.speed || 0,
       density: data.density || 0,
       status: data.status || "normal",
-      greenDuration: data.greenDuration || 0,
       timestamp: new Date().toISOString(),
       _ts: Math.floor(Date.now() / 1000),
     };
 
-    // Log received data for debugging
-    console.log("📥 Received traffic data from ESP32:", {
+    // Log received data for debugging (NEW CONCEPT)
+    console.log("📥 Received traffic data from ESP32 (NEW CONCEPT):", {
       intersectionId: item.intersectionId,
       deviceId: item.deviceId,
       lane: item.lane,
+      light: item.light,
       vehicleCount: item.vehicleCount,
-      speed: item.speed,
+      queueLength: item.queueLength,
+      queueLevel: item.queueLevel,
       greenDuration: item.greenDuration,
+      irState: item.irState,
     });
 
     // Save to Cosmos DB
@@ -103,10 +143,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Data saved successfully",
+      message: "Data saved successfully (NEW CONCEPT)",
       id: resource?.id,
       intersectionId: item.intersectionId,
       timestamp: item.timestamp,
+      queueLevel: item.queueLevel,
+      greenDuration: item.greenDuration,
     });
   } catch (error: any) {
     console.error("❌ Error saving traffic data:", error);
