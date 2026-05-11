@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 import { CosmosClient } from '@azure/cosmos';
 
+// Device Status interface
+interface DeviceStatus {
+  id: string;
+  deviceId: string;
+  intersectionId: string;
+  status: 'online' | 'offline' | 'error';
+  lastHeartbeat: string;
+  lastDataReceived: string;
+  updatedAt: string;
+}
+
 // Lazy initialization - only create client when needed
 let cosmosClient: CosmosClient | null = null;
 let deviceStatusContainer: any = null;
@@ -47,17 +58,20 @@ export async function GET(request: Request) {
       })
       .fetchAll();
 
+    // Type assertion for resources
+    const devices = resources as DeviceStatus[];
+
     // Calculate stats
     const stats = {
-      total: resources.length,
-      online: resources.filter((d: any) => d.status === 'online').length,
-      offline: resources.filter((d: any) => d.status === 'offline').length,
-      error: resources.filter((d: any) => d.status === 'error').length
+      total: devices.length,
+      online: devices.filter(d => d.status === 'online').length,
+      offline: devices.filter(d => d.status === 'offline').length,
+      error: devices.filter(d => d.status === 'error').length
     };
 
     // Check for stale devices (no heartbeat in last 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const staleDevices = resources.filter((d: any) => {
+    const staleDevices = devices.filter(d => {
       const lastHeartbeat = new Date(d.lastHeartbeat);
       return lastHeartbeat < fiveMinutesAgo && d.status === 'online';
     });
@@ -65,8 +79,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       stats,
-      devices: resources,
-      staleDevices: staleDevices.map((d: any) => d.deviceId)
+      devices,
+      staleDevices: staleDevices.map(d => d.deviceId)
     });
 
   } catch (error: any) {
