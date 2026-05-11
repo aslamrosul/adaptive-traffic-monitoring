@@ -23,7 +23,25 @@ export interface LaneData {
   irState: IRState;                // IR sensor detection state
   queueLength: number;             // Distance from ultrasonic sensor (cm)
   queueLevel: QueueLevel;          // 0: >20cm, 1: 10-20cm, 2: <10cm
-  greenDuration: number;           // Actual duration used (7, 10, or 15 seconds)
+  greenDuration: 7 | 10 | 15;      // Actual duration used (seconds)
+}
+
+/**
+ * Traffic Data Document (NEW CONCEPT)
+ * Stored in Cosmos DB
+ */
+export interface TrafficData {
+  id: string;
+  deviceId: string;
+  timestamp: number;
+  north: LaneData;
+  south: LaneData;
+  east: LaneData;
+  west: LaneData;
+  // Migration metadata
+  _migrated?: boolean;
+  _migratedAt?: string;
+  _migrationVersion?: string;
 }
 
 /**
@@ -40,6 +58,7 @@ export interface TrafficDataPayload {
 
 /**
  * Traffic Data Item in Database (NEW CONCEPT)
+ * Per-lane storage format
  */
 export interface TrafficDataItem {
   id: string;
@@ -57,6 +76,10 @@ export interface TrafficDataItem {
   status: string;
   timestamp: string;
   _ts: number;
+  // Migration metadata
+  _migrated?: boolean;
+  _migratedAt?: string;
+  _migrationVersion?: string;
 }
 
 /**

@@ -27,7 +27,10 @@
     "db:init": "npm run db:setup && npm run db:seed && npm run db:seed:analytics",
     "db:export": "npx tsx scripts/export-cosmos-data.ts",
     "db:import": "npx tsx scripts/import-cosmos-data.ts",
-    "test:api": "npx tsx scripts/test-api.ts"
+    "test:api": "npx tsx scripts/test-api.ts",
+    "migrate:backup": "npx tsx scripts/backup-cosmos-before-migration.ts",
+    "migrate:run": "npx tsx scripts/migrate-cosmos-schema.ts",
+    "migrate:full": "npm run migrate:backup && npm run migrate:run"
   },
   "dependencies": {
     "@azure/cosmos": "^4.9.3",
