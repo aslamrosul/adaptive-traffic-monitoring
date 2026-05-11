@@ -111,7 +111,7 @@ export default function QueueDistributionChartJS({
           padding: 20,
           font: {
             size: 14,
-            weight: "600",
+            weight: 600 as any,
           },
           usePointStyle: true,
           pointStyle: "circle",
