@@ -1,145 +1,122 @@
-import { NextRequest, NextResponse } from "next/server";
+import { containers } from "@/lib/azure-cosmos";
+import { QUEUE_LEVEL_CONFIG } from "@/lib/types/traffic";
+import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/analytics/green-duration-effectiveness
- * 
- * Fetches green light duration effectiveness data comparing expected vs actual durations
- * for each queue level within a date range.
- * 
- * Query Parameters:
- * - startDate: ISO date string (YYYY-MM-DD)
- * - endDate: ISO date string (YYYY-MM-DD)
- * 
- * Response:
- * {
- *   level0: { expected, actual, effectiveness, count },
- *   level1: { expected, actual, effectiveness, count },
- *   level2: { expected, actual, effectiveness, count }
- * }
+ * GET: Green Duration Effectiveness Analytics (NEW CONCEPT)
+ * Compares expected vs actual green duration for each queue level
  */
-
-interface LevelData {
-  expected: number;
-  actual: number;
-  effectiveness: number;
-  count: number;
-}
-
-interface ResponseData {
-  level0: LevelData;
-  level1: LevelData;
-  level2: LevelData;
-}
-
-// Expected green light durations for each queue level
-const EXPECTED_DURATIONS: Record<number, number> = {
-  0: 7,   // Level 0 (Lancar): 7 seconds
-  1: 10,  // Level 1 (Sedang): 10 seconds
-  2: 15,  // Level 2 (Padat): 15 seconds
-};
-
-// Mock data generator for demonstration
-function generateMockData(startDate: string, endDate: string): ResponseData {
-  // In production, this would query Cosmos DB
-  // For now, return realistic mock data
-  
-  return {
-    level0: {
-      expected: 7,
-      actual: 7.2,
-      effectiveness: 97.1,
-      count: 450,
-    },
-    level1: {
-      expected: 10,
-      actual: 10.5,
-      effectiveness: 95.2,
-      count: 350,
-    },
-    level2: {
-      expected: 15,
-      actual: 15.8,
-      effectiveness: 94.9,
-      count: 200,
-    },
-  };
-}
-
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    // Validate parameters
+    // Validate required parameters
     if (!startDate || !endDate) {
       return NextResponse.json(
-        { error: "startDate and endDate parameters are required" },
+        {
+          success: false,
+          error: "startDate and endDate are required (ISO string format)",
+        },
         { status: 400 }
       );
     }
 
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-      return NextResponse.json(
-        { error: "Dates must be in YYYY-MM-DD format" },
-        { status: 400 }
-      );
-    }
-
-    // Validate date range
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (start > end) {
-      return NextResponse.json(
-        { error: "startDate must be before endDate" },
-        { status: 400 }
-      );
-    }
-
-    // TODO: Replace with actual Cosmos DB query
-    // Example implementation:
-    /*
-    const client = await getCosmosClient();
-    const container = client.database("traffic_db").container("events");
-
+    // Build query
     const query = `
       SELECT 
         c.queueLevel,
-        AVG(c.greenDuration) as avgDuration,
-        COUNT(1) as count
+        c.greenDuration
       FROM c
       WHERE c.timestamp >= @startDate 
         AND c.timestamp <= @endDate
-        AND c.queueLevel IN (0, 1, 2)
-      GROUP BY c.queueLevel
+        AND IS_DEFINED(c.queueLevel)
+        AND IS_DEFINED(c.greenDuration)
     `;
 
-    const { resources } = await container.items
-      .query(query, {
-        parameters: [
-          { name: "@startDate", value: startDate + "T00:00:00Z" },
-          { name: "@endDate", value: endDate + "T23:59:59Z" },
-        ],
-      })
+    const parameters = [
+      { name: "@startDate", value: startDate },
+      { name: "@endDate", value: endDate },
+    ];
+
+    // Execute query
+    const { resources } = await containers.trafficData.items
+      .query({ query, parameters })
       .fetchAll();
 
-    // Process results...
-    */
+    // Aggregate data by queue level
+    const stats: Record<number, { total: number; count: number }> = {
+      0: { total: 0, count: 0 },
+      1: { total: 0, count: 0 },
+      2: { total: 0, count: 0 },
+    };
 
-    // For now, return mock data
-    const data = generateMockData(startDate, endDate);
-
-    return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-      },
+    resources.forEach((item: any) => {
+      const level = item.queueLevel;
+      if (stats[level] !== undefined) {
+        stats[level].total += item.greenDuration;
+        stats[level].count++;
+      }
     });
-  } catch (error) {
-    console.error("Error fetching green duration effectiveness data:", error);
+
+    // Calculate effectiveness for each level
+    const response: any = {};
+
+    [0, 1, 2].forEach((level) => {
+      const expected = QUEUE_LEVEL_CONFIG[level as 0 | 1 | 2].greenDuration;
+      const count = stats[level].count;
+      const actual = count > 0 ? Math.round((stats[level].total / count) * 10) / 10 : 0;
+      
+      // Effectiveness = (expected / actual) * 100
+      // If actual is close to expected, effectiveness is high
+      const effectiveness = actual > 0 
+        ? Math.round((expected / actual) * 100 * 10) / 10 
+        : 0;
+
+      response[`level${level}`] = {
+        expected,
+        actual,
+        effectiveness: Math.min(effectiveness, 100), // Cap at 100%
+        count,
+      };
+    });
+
+    // Add summary
+    const totalCount = stats[0].count + stats[1].count + stats[2].count;
+    const avgEffectiveness = totalCount > 0
+      ? Math.round(
+          ((response.level0.effectiveness * stats[0].count +
+            response.level1.effectiveness * stats[1].count +
+            response.level2.effectiveness * stats[2].count) /
+            totalCount) *
+            10
+        ) / 10
+      : 0;
+
+    response.summary = {
+      totalCount,
+      avgEffectiveness,
+      period: {
+        startDate,
+        endDate,
+      },
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: response,
+      message: "Green duration effectiveness retrieved successfully",
+    });
+  } catch (error: any) {
+    console.error("Error fetching green duration effectiveness:", error);
     return NextResponse.json(
-      { error: "Failed to fetch green duration effectiveness data" },
+      {
+        success: false,
+        error: error.message || "Failed to fetch green duration effectiveness",
+      },
       { status: 500 }
     );
   }
