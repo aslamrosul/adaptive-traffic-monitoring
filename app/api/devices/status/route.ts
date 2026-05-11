@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 import { CosmosClient } from '@azure/cosmos';
 
-const cosmosClient = new CosmosClient({
-  endpoint: process.env.COSMOS_ENDPOINT!,
-  key: process.env.COSMOS_KEY!
-});
+// Lazy initialization - only create client when needed
+let cosmosClient: CosmosClient | null = null;
+let deviceStatusContainer: any = null;
 
-const database = cosmosClient.database(process.env.COSMOS_DATABASE || 'TrafficDB');
-const deviceStatusContainer = database.container('device-status');
+function getDeviceStatusContainer() {
+  if (!deviceStatusContainer) {
+    cosmosClient = new CosmosClient({
+      endpoint: process.env.COSMOS_ENDPOINT!,
+      key: process.env.COSMOS_KEY!
+    });
+    const database = cosmosClient.database(process.env.COSMOS_DATABASE || 'TrafficDB');
+    deviceStatusContainer = database.container('device-status');
+  }
+  return deviceStatusContainer;
+}
 
 export async function GET(request: Request) {
   try {
@@ -31,7 +39,8 @@ export async function GET(request: Request) {
 
     query += ' ORDER BY c.updatedAt DESC';
 
-    const { resources } = await deviceStatusContainer.items
+    const container = getDeviceStatusContainer();
+    const { resources } = await container.items
       .query({
         query,
         parameters
@@ -41,14 +50,14 @@ export async function GET(request: Request) {
     // Calculate stats
     const stats = {
       total: resources.length,
-      online: resources.filter(d => d.status === 'online').length,
-      offline: resources.filter(d => d.status === 'offline').length,
-      error: resources.filter(d => d.status === 'error').length
+      online: resources.filter((d: any) => d.status === 'online').length,
+      offline: resources.filter((d: any) => d.status === 'offline').length,
+      error: resources.filter((d: any) => d.status === 'error').length
     };
 
     // Check for stale devices (no heartbeat in last 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const staleDevices = resources.filter(d => {
+    const staleDevices = resources.filter((d: any) => {
       const lastHeartbeat = new Date(d.lastHeartbeat);
       return lastHeartbeat < fiveMinutesAgo && d.status === 'online';
     });
@@ -57,7 +66,7 @@ export async function GET(request: Request) {
       success: true,
       stats,
       devices: resources,
-      staleDevices: staleDevices.map(d => d.deviceId)
+      staleDevices: staleDevices.map((d: any) => d.deviceId)
     });
 
   } catch (error: any) {
@@ -95,7 +104,8 @@ export async function POST(request: Request) {
       updatedAt: new Date().toISOString()
     };
 
-    await deviceStatusContainer.items.upsert(deviceStatus);
+    const container = getDeviceStatusContainer();
+    await container.items.upsert(deviceStatus);
 
     return NextResponse.json({
       success: true,
