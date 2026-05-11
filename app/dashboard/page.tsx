@@ -7,6 +7,7 @@ import IntersectionGrid from "@/components/IntersectionGrid";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import DashboardLayout from "@/components/DashboardLayout";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
+import QueueLevelCards from "@/components/QueueLevelCards";
 import { useSignalR } from "@/lib/hooks/useSignalR";
 import type { TimeRange, DateRange } from "@/lib/hooks/useDashboardWithFilter";
 
@@ -63,6 +64,9 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         <DashboardStats timeRange={timeRange} customDates={customDates} />
+
+        {/* Queue Level Cards - NEW */}
+        <QueueLevelCards />
         
         {/* Main Content */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
