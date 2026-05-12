@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 interface ModalTambahPersimpanganProps {
@@ -16,6 +16,12 @@ export default function ModalTambahPersimpangan({
   onSuccess,
 }: ModalTambahPersimpanganProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [usedDevices, setUsedDevices] = useState<string[]>([]);
+  const [showAddDevice, setShowAddDevice] = useState(false);
+  const [newDeviceId, setNewDeviceId] = useState("");
+  const [creatingDevice, setCreatingDevice] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -27,6 +33,98 @@ export default function ModalTambahPersimpangan({
     lanesDirections: ["north", "east", "south", "west"],
     configMode: "auto",
   });
+
+  // Fetch devices from IoT Hub when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDevices();
+      fetchUsedDevices();
+    }
+  }, [isOpen]);
+
+  const fetchDevices = async () => {
+    setLoadingDevices(true);
+    try {
+      const response = await fetch('/api/iot/devices');
+      const data = await response.json();
+      
+      if (data.success) {
+        setDevices(data.activeDevices || []);
+      } else {
+        toast.error('Gagal memuat daftar device dari IoT Hub');
+      }
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+      toast.error('Gagal memuat daftar device');
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
+  const fetchUsedDevices = async () => {
+    try {
+      const response = await fetch('/api/intersections');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Get all deviceIds that are already used
+        const used = data.data.map((i: any) => i.deviceId);
+        setUsedDevices(used);
+      }
+    } catch (error) {
+      console.error('Error fetching used devices:', error);
+    }
+  };
+
+  // Filter available devices (not used by other intersections)
+  const availableDevices = devices.filter(
+    (device) => !usedDevices.includes(device.deviceId)
+  );
+
+  const handleCreateDevice = async () => {
+    if (!newDeviceId.trim()) {
+      toast.error('Device ID tidak boleh kosong');
+      return;
+    }
+
+    setCreatingDevice(true);
+    try {
+      const response = await fetch('/api/iot/devices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: newDeviceId.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`Device ${newDeviceId} berhasil dibuat!`);
+        
+        // Show connection string in a modal or copy to clipboard
+        if (data.device?.connectionString) {
+          navigator.clipboard.writeText(data.device.connectionString);
+          toast.success('Connection string disalin ke clipboard!');
+        }
+
+        // Refresh device list
+        await fetchDevices();
+        
+        // Auto-select the new device
+        setFormData(prev => ({ ...prev, deviceId: newDeviceId.trim() }));
+        
+        // Close add device form
+        setShowAddDevice(false);
+        setNewDeviceId('');
+      } else {
+        toast.error(data.error || 'Gagal membuat device');
+      }
+    } catch (error) {
+      console.error('Error creating device:', error);
+      toast.error('Terjadi kesalahan saat membuat device');
+    } finally {
+      setCreatingDevice(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,20 +287,167 @@ export default function ModalTambahPersimpangan({
                   </div>
                 </div>
 
-                {/* Device ID */}
+                {/* Device ID - Dropdown or Manual Input */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Device ID <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="deviceId"
-                    value={formData.deviceId}
-                    onChange={handleChange}
-                    required
-                    placeholder="Contoh: ESP32_006"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
+                  {loadingDevices ? (
+                    <div className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <span className="text-sm text-slate-500">Memuat device dari IoT Hub...</span>
+                    </div>
+                  ) : availableDevices.length > 0 ? (
+                    <>
+                      <select
+                        name="deviceId"
+                        value={formData.deviceId}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        <option value="">-- Pilih Device --</option>
+                        {availableDevices.map((device) => (
+                          <option key={device.deviceId} value={device.deviceId}>
+                            {device.deviceId} {device.connectionState === 'Connected' ? '🟢' : '⚪'}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-slate-500">
+                          Hanya menampilkan device yang belum digunakan ({availableDevices.length} tersedia)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddDevice(!showAddDevice)}
+                          className="text-xs font-bold text-primary hover:text-blue-700 flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-sm">add_circle</span>
+                          Tambah Device Baru
+                        </button>
+                      </div>
+
+                      {/* Add Device Form */}
+                      {showAddDevice && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-3 p-4 border border-blue-200 rounded-lg bg-blue-50"
+                        >
+                          <p className="text-sm font-bold text-blue-900 mb-2">Buat Device Baru di IoT Hub</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={newDeviceId}
+                              onChange={(e) => setNewDeviceId(e.target.value)}
+                              placeholder="Contoh: esp32-traffic-monitor-2"
+                              className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              disabled={creatingDevice}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleCreateDevice}
+                              disabled={creatingDevice || !newDeviceId.trim()}
+                              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                              {creatingDevice ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                  <span>Membuat...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                  <span>Buat</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs text-blue-700 mt-2">
+                            💡 Connection string akan otomatis disalin ke clipboard
+                          </p>
+                        </motion.div>
+                      )}
+                    </>
+                  ) : devices.length > 0 ? (
+                    <>
+                      <div className="w-full px-4 py-3 border border-amber-300 rounded-lg bg-amber-50">
+                        <p className="text-sm text-amber-800 mb-2">
+                          ⚠️ Semua device sudah digunakan.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddDevice(!showAddDevice)}
+                          className="text-sm font-bold text-amber-900 hover:text-amber-700 flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-base">add_circle</span>
+                          Tambah Device Baru di IoT Hub
+                        </button>
+                      </div>
+
+                      {/* Add Device Form */}
+                      {showAddDevice && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-3 p-4 border border-blue-200 rounded-lg bg-blue-50"
+                        >
+                          <p className="text-sm font-bold text-blue-900 mb-2">Buat Device Baru di IoT Hub</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={newDeviceId}
+                              onChange={(e) => setNewDeviceId(e.target.value)}
+                              placeholder="Contoh: esp32-traffic-monitor-2"
+                              className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              disabled={creatingDevice}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleCreateDevice}
+                              disabled={creatingDevice || !newDeviceId.trim()}
+                              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                              {creatingDevice ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                  <span>Membuat...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="material-symbols-outlined text-sm">add</span>
+                                  <span>Buat</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs text-blue-700 mt-2">
+                            💡 Connection string akan otomatis disalin ke clipboard
+                          </p>
+                        </motion.div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        name="deviceId"
+                        value={formData.deviceId}
+                        onChange={handleChange}
+                        required
+                        placeholder="Contoh: esp32-traffic-monitor"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                      <div className="mt-2 p-3 border border-amber-300 rounded-lg bg-amber-50">
+                        <p className="text-xs text-amber-800">
+                          ⚠️ Tidak dapat memuat device dari IoT Hub. Masukkan Device ID secara manual.
+                          Pastikan device sudah terdaftar di Azure IoT Hub.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Status & Mode */}

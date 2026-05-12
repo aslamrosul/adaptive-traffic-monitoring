@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "100");
     const deviceId = searchParams.get("deviceId");
+    const intersectionId = searchParams.get("intersectionId");
 
     let query = "SELECT * FROM c ORDER BY c._ts DESC";
     const parameters: any[] = [];
@@ -16,6 +17,10 @@ export async function GET(request: Request) {
     if (deviceId) {
       query = "SELECT * FROM c WHERE c.deviceId = @deviceId ORDER BY c._ts DESC";
       parameters.push({ name: "@deviceId", value: deviceId });
+    } else if (intersectionId) {
+      // Query by intersectionId (which matches deviceId)
+      query = "SELECT * FROM c WHERE c.intersectionId = @intersectionId ORDER BY c._ts DESC";
+      parameters.push({ name: "@intersectionId", value: intersectionId });
     }
 
     query += ` OFFSET 0 LIMIT ${limit}`;

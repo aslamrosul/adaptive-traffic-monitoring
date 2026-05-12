@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import ModalTambahPersimpangan from "@/components/ModalTambahPersimpangan";
+import ModalEditPersimpangan from "@/components/ModalEditPersimpangan";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,10 @@ export default function PersimpanganPage() {
   const { intersections, isLoading, isError, mutate } = useIntersections();
   const [showAll, setShowAll] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedIntersection, setSelectedIntersection] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile screen
@@ -52,6 +57,42 @@ export default function PersimpanganPage() {
         return 'Tidak Aktif';
       default:
         return status;
+    }
+  };
+
+  const handleEdit = (intersection: any) => {
+    setSelectedIntersection(intersection);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm(id);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/intersections/${deleteConfirm}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        mutate(); // Refresh data
+        setDeleteConfirm(null);
+        // Show success toast (you can add toast library)
+        alert('Persimpangan berhasil dihapus');
+      } else {
+        throw new Error(data.error || 'Failed to delete');
+      }
+    } catch (error: any) {
+      console.error('Error deleting intersection:', error);
+      alert('Gagal menghapus persimpangan: ' + error.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -215,16 +256,38 @@ export default function PersimpanganPage() {
                           <span className="material-symbols-outlined text-sm">update</span>
                           <span>Update: {new Date(intersection.updatedAt).toLocaleDateString('id-ID')}</span>
                         </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/persimpangan/${intersection.id}`);
-                          }}
-                          className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
-                        >
-                          Detail
-                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(intersection);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <span className="material-symbols-outlined text-base">edit</span>
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(intersection.id);
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus"
+                          >
+                            <span className="material-symbols-outlined text-base">delete</span>
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/persimpangan/${intersection.id}`);
+                            }}
+                            className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
+                          >
+                            Detail
+                            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -315,6 +378,71 @@ export default function PersimpanganPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => mutate()}
       />
+
+      {/* Modal Edit Persimpangan */}
+      {selectedIntersection && (
+        <ModalEditPersimpangan
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedIntersection(null);
+          }}
+          onSuccess={() => mutate()}
+          intersection={selectedIntersection}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <span className="material-symbols-outlined text-red-600 text-2xl">warning</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-slate-900">Hapus Persimpangan?</h3>
+                <p className="text-sm text-slate-600">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+
+            <p className="text-slate-700 mb-6">
+              Apakah Anda yakin ingin menghapus persimpangan ini? Semua data terkait akan dihapus secara permanen.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                    Menghapus...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">delete</span>
+                    Hapus
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

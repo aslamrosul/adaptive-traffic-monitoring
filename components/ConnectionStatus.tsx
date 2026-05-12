@@ -193,30 +193,6 @@ export default function ConnectionStatus({
             </div>
           </motion.div>
         )}
-
-        {/* Connection Stats (when connected) */}
-        {isConnected && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            className="mt-3 pt-3 border-t border-emerald-200"
-          >
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Protocol</p>
-                <p className="text-xs font-bold text-emerald-800">WebSocket</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Latency</p>
-                <p className="text-xs font-bold text-emerald-800">~50ms</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Auto-Reconnect</p>
-                <p className="text-xs font-bold text-emerald-800">Enabled</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </motion.div>
     </AnimatePresence>
   );

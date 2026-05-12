@@ -107,10 +107,9 @@ export async function ProcessIoTData(blob: Buffer, context: InvocationContext): 
 }
 
 function extractIntersectionId(deviceId: string): string {
-  // Extract intersection from device ID
-  // e.g., "esp32-traffic-monitor" → "intersection-1"
-  // Customize based on your device naming convention
-  return deviceId.replace('esp32-', 'intersection-');
+  // Simply use deviceId as intersectionId for consistency
+  // This ensures data in traffic-data matches the intersection's deviceId
+  return deviceId;
 }
 
 function calculateQueueLevel(queueLength: number): number {

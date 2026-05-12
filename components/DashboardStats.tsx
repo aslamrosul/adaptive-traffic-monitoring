@@ -49,8 +49,8 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
     },
     {
       label: "Status IoT",
-      value: `${stats.iotPercentage}%`,
-      subtitle: `${stats.activeDevices}/${stats.totalDevices} Perangkat Aktif`,
+      value: `${stats.activeDevices}/${stats.totalDevices}`,
+      subtitle: "Perangkat Aktif",
       icon: "cloud_done",
       bgColor: "bg-gradient-to-br from-emerald-500 to-green-600",
       iconBg: "",
@@ -97,44 +97,44 @@ export default function DashboardStats({ timeRange, customDates }: DashboardStat
             transition={{ delay: idx * 0.1 }}
             whileHover={{ scale: 1.02, y: -4 }}
             onClick={() => router.push(stat.link)}
-            className={`${stat.bgColor} p-1.5 lg:p-3 rounded-xl shadow-lg hover:shadow-2xl border border-white/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer transition-all`}
+            className={`${stat.bgColor} p-2 lg:p-2.5 rounded-xl shadow-lg hover:shadow-2xl border border-white/20 flex flex-col justify-between overflow-hidden relative group cursor-pointer transition-all min-h-[70px] lg:min-h-[85px]`}
           >
-            <div className="absolute -right-6 -top-6 w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
+            <div className="absolute -right-6 -top-6 w-20 h-20 lg:w-28 lg:h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
 
-            <header className="flex justify-between items-start mb-0.5 lg:mb-2 relative z-10">
-              <span className={`text-[9px] lg:text-xs font-bold uppercase tracking-wider ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
+            <header className="flex justify-between items-start mb-0.5 relative z-10">
+              <span className={`text-[8px] lg:text-[10px] font-bold uppercase tracking-wider ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
                 {stat.label}
               </span>
-              <div className={`p-0.5 lg:p-1.5 bg-white/20 backdrop-blur-sm rounded-lg ${stat.iconColor}`}>
-                <span className="material-symbols-outlined text-sm lg:text-lg">{stat.icon}</span>
+              <div className={`p-0.5 lg:p-1 bg-white/20 backdrop-blur-sm rounded-lg ${stat.iconColor}`}>
+                <span className="material-symbols-outlined text-sm lg:text-base">{stat.icon}</span>
               </div>
             </header>
 
             <div className="relative z-10">
-              <h3 className={`text-xl lg:text-3xl font-headline font-extrabold tracking-tight ${stat.textColor || 'text-white'} leading-none mb-0.5`}>
+              <h3 className={`text-base lg:text-xl font-headline font-extrabold tracking-tight ${stat.textColor || 'text-white'} leading-none mb-0.5`}>
                 {stat.value}
                 {stat.unit && (
-                  <span className={`text-xs lg:text-sm font-bold ${stat.textColor || 'text-white'} opacity-70 ml-1`}>{stat.unit}</span>
+                  <span className={`text-[10px] lg:text-xs font-bold ${stat.textColor || 'text-white'} opacity-70 ml-1`}>{stat.unit}</span>
                 )}
               </h3>
               {stat.change && (
                 <p
-                  className={`text-[9px] lg:text-xs font-semibold flex items-center gap-1 ${stat.textColor || 'text-white'} opacity-90 leading-tight`}
+                  className={`text-[8px] lg:text-[10px] font-semibold flex items-center gap-0.5 ${stat.textColor || 'text-white'} opacity-90 leading-tight`}
                 >
-                  <span className="material-symbols-outlined text-xs lg:text-sm">trending_up</span>
+                  <span className="material-symbols-outlined text-[10px] lg:text-xs">trending_up</span>
                   <span>{stat.change}</span>
                 </p>
               )}
               {stat.subtitle && (
-                <p className={`text-[9px] lg:text-xs font-medium ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
+                <p className={`text-[8px] lg:text-[10px] font-medium ${stat.textColor || 'text-white'} opacity-90 leading-tight`}>
                   {stat.subtitle}
                 </p>
               )}
             </div>
 
             {/* Hover indicator */}
-            <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className={`material-symbols-outlined text-sm lg:text-base ${stat.textColor || 'text-white'} opacity-50`}>
+            <div className="absolute bottom-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className={`material-symbols-outlined text-xs lg:text-sm ${stat.textColor || 'text-white'} opacity-50`}>
                 arrow_forward
               </span>
             </div>

@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const item = {
-      id: data.id || `int_${Date.now()}`,
+      id: data.deviceId, // ← ID sama dengan deviceId untuk konsistensi
       name: data.name,
       address: data.address,
       location: {

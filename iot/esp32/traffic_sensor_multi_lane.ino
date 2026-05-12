@@ -143,6 +143,9 @@ void loop() {
   }
   client.loop();
   
+  // Feed watchdog regularly
+  yield();
+  
   // Read sensors setiap 100ms untuk responsiveness
   static unsigned long lastRead = 0;
   if (millis() - lastRead > 100) {
@@ -172,6 +175,7 @@ void loop() {
     detectQueue("east", eastIR);
     
     lastRead = millis();
+    yield();  // Feed watchdog
   }
   
   // Send data setiap 15 detik
@@ -181,12 +185,15 @@ void loop() {
     lastSend = millis();
   }
   
-  // Traffic light cycle setiap 30 detik
-  static unsigned long lastCycle = 0;
-  if (millis() - lastCycle > 30000) {
+  // Traffic light cycle - check every second
+  static unsigned long lastCycleCheck = 0;
+  if (millis() - lastCycleCheck > 1000) {
     cycleTrafficLights();
-    lastCycle = millis();
+    lastCycleCheck = millis();
   }
+  
+  // Small delay to prevent tight loop
+  delay(10);
 }
 
 // Count vehicle dengan debounce
@@ -348,13 +355,13 @@ void readAndSendData() {
   int southQueue = readUltrasonic(SOUTH_TRIG_PIN, SOUTH_ECHO_PIN);
   int eastQueue = readUltrasonic(EAST_TRIG_PIN, EAST_ECHO_PIN);
   
-  // Create JSON payload
-  JsonDocument doc;
+  // Create JSON payload with fixed size (IMPORTANT!)
+  StaticJsonDocument<512> doc;  // Fixed size to prevent overflow
   doc["deviceId"] = DEVICE_ID;
   doc["timestamp"] = String(millis());
   
   // North lane
-  JsonObject north = doc["north"].to<JsonObject>();
+  JsonObject north = doc.createNestedObject("north");
   north["light"] = northLight;
   north["vehicleCount"] = northCount;
   north["densityLevel"] = northDensityLevel;
@@ -362,7 +369,7 @@ void readAndSendData() {
   north["queueLength"] = northQueue;
   
   // South lane
-  JsonObject south = doc["south"].to<JsonObject>();
+  JsonObject south = doc.createNestedObject("south");
   south["light"] = southLight;
   south["vehicleCount"] = southCount;
   south["densityLevel"] = southDensityLevel;
@@ -370,7 +377,7 @@ void readAndSendData() {
   south["queueLength"] = southQueue;
   
   // East lane
-  JsonObject east = doc["east"].to<JsonObject>();
+  JsonObject east = doc.createNestedObject("east");
   east["light"] = eastLight;
   east["vehicleCount"] = eastCount;
   east["densityLevel"] = eastDensityLevel;
@@ -378,22 +385,29 @@ void readAndSendData() {
   east["queueLength"] = eastQueue;
   
   // West lane (dummy)
-  JsonObject west = doc["west"].to<JsonObject>();
+  JsonObject west = doc.createNestedObject("west");
   west["light"] = "red";
   west["vehicleCount"] = 0;
   west["densityLevel"] = 0;
   west["queueDetected"] = false;
   west["queueLength"] = 0;
   
-  String payload;
+  char payload[512];  // Fixed buffer
   serializeJson(doc, payload);
   
-  if (client.publish(MQTT_TOPIC, payload.c_str())) {
+  if (client.publish(MQTT_TOPIC, payload)) {
     Serial.println("✅ Data sent!");
-    Serial.println("📤 " + payload);
+    Serial.print("📤 ");
+    Serial.println(payload);
   } else {
     Serial.println("❌ Failed to send");
   }
+  
+  // Clear doc to free memory
+  doc.clear();
+  
+  // Feed watchdog
+  yield();
 }
 
 int readUltrasonic(int trigPin, int echoPin) {
@@ -447,40 +461,74 @@ void setTrafficLight(String lane, String color) {
 }
 
 void cycleTrafficLights() {
+  // Non-blocking traffic light cycle
+  static unsigned long yellowStartTime = 0;
+  static bool inYellowPhase = false;
+  
+  if (inYellowPhase) {
+    // Check if yellow phase is done (3 seconds)
+    if (millis() - yellowStartTime > 3000) {
+      inYellowPhase = false;
+      
+      // Complete the transition
+      if (northLight == "yellow") {
+        setTrafficLight("north", "red");
+        setTrafficLight("south", "green");
+      } else if (southLight == "yellow") {
+        setTrafficLight("south", "red");
+        setTrafficLight("east", "green");
+      } else if (eastLight == "yellow") {
+        setTrafficLight("east", "red");
+        setTrafficLight("north", "green");
+      }
+    }
+    return;  // Still in yellow phase
+  }
+  
+  // Start yellow phase
   if (northLight == "green") {
     setTrafficLight("north", "yellow");
-    delay(3000);
-    setTrafficLight("north", "red");
-    setTrafficLight("south", "green");
+    yellowStartTime = millis();
+    inYellowPhase = true;
   } else if (southLight == "green") {
     setTrafficLight("south", "yellow");
-    delay(3000);
-    setTrafficLight("south", "red");
-    setTrafficLight("east", "green");
+    yellowStartTime = millis();
+    inYellowPhase = true;
   } else if (eastLight == "green") {
     setTrafficLight("east", "yellow");
-    delay(3000);
-    setTrafficLight("east", "red");
-    setTrafficLight("north", "green");
+    yellowStartTime = millis();
+    inYellowPhase = true;
   }
 }
 
 void messageReceived(char* topic, byte* payload, unsigned int length) {
   Serial.print("📥 Command received: ");
-  String message = "";
-  for (int i = 0; i < length; i++) {
-    message += (char)payload[i];
-  }
+  
+  // Use fixed buffer instead of String
+  char message[256];
+  if (length > 255) length = 255;  // Prevent overflow
+  memcpy(message, payload, length);
+  message[length] = '\0';
+  
   Serial.println(message);
   
-  JsonDocument doc;
-  deserializeJson(doc, message);
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, message);
   
-  String lane = doc["lane"];
-  String command = doc["command"];
-  String color = doc["color"];
-  
-  if (command == "change_light") {
-    setTrafficLight(lane, color);
+  if (error) {
+    Serial.print("❌ JSON parse error: ");
+    Serial.println(error.c_str());
+    return;
   }
+  
+  const char* lane = doc["lane"];
+  const char* command = doc["command"];
+  const char* color = doc["color"];
+  
+  if (strcmp(command, "change_light") == 0) {
+    setTrafficLight(String(lane), String(color));
+  }
+  
+  // Feed watchdog
+  yield();
 }

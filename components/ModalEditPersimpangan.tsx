@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 interface ModalEditPersimpanganProps {
@@ -18,6 +18,9 @@ export default function ModalEditPersimpangan({
   intersection,
 }: ModalEditPersimpanganProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [usedDevices, setUsedDevices] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -29,6 +32,53 @@ export default function ModalEditPersimpangan({
     configMode: "auto",
   });
 
+  // Fetch devices and used devices when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDevices();
+      fetchUsedDevices();
+    }
+  }, [isOpen]);
+
+  const fetchDevices = async () => {
+    setLoadingDevices(true);
+    try {
+      const response = await fetch('/api/iot/devices');
+      const data = await response.json();
+      
+      if (data.success) {
+        setDevices(data.activeDevices || []);
+      }
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
+  const fetchUsedDevices = async () => {
+    try {
+      const response = await fetch('/api/intersections');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Get all deviceIds except current intersection's deviceId
+        const used = data.data
+          .filter((i: any) => i.id !== intersection?.id)
+          .map((i: any) => i.deviceId);
+        setUsedDevices(used);
+      }
+    } catch (error) {
+      console.error('Error fetching used devices:', error);
+    }
+  };
+
+  // Filter available devices (not used by other intersections)
+  const availableDevices = devices.filter(
+    (device) => !usedDevices.includes(device.deviceId) || device.deviceId === intersection?.deviceId
+  );
+
+  // Populate form with intersection data
   useEffect(() => {
     if (intersection) {
       setFormData({
@@ -98,8 +148,6 @@ export default function ModalEditPersimpangan({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  if (!intersection) return null;
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -115,7 +163,7 @@ export default function ModalEditPersimpangan({
             className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-headline font-bold">
@@ -149,7 +197,8 @@ export default function ModalEditPersimpangan({
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Contoh: Persimpangan Sudirman-Thamrin"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -164,7 +213,8 @@ export default function ModalEditPersimpangan({
                     value={formData.address}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Contoh: Jl. Sudirman - Jl. Thamrin, Jakarta Pusat"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -180,7 +230,8 @@ export default function ModalEditPersimpangan({
                       name="latitude"
                       value={formData.latitude}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="-6.2088"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -193,24 +244,61 @@ export default function ModalEditPersimpangan({
                       name="longitude"
                       value={formData.longitude}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="106.8456"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
-                {/* Device ID */}
+                {/* Device ID - Dropdown or Manual Input */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     Device ID <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="deviceId"
-                    value={formData.deviceId}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
+                  {loadingDevices ? (
+                    <div className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-slate-500">Memuat device dari IoT Hub...</span>
+                    </div>
+                  ) : availableDevices.length > 0 ? (
+                    <>
+                      <select
+                        name="deviceId"
+                        value={formData.deviceId}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">-- Pilih Device --</option>
+                        {availableDevices.map((device) => (
+                          <option key={device.deviceId} value={device.deviceId}>
+                            {device.deviceId} {device.connectionState === 'Connected' ? '🟢' : '⚪'}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Hanya menampilkan device yang belum digunakan
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        name="deviceId"
+                        value={formData.deviceId}
+                        onChange={handleChange}
+                        required
+                        placeholder="Contoh: esp32-traffic-monitor"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <div className="mt-2 p-3 border border-amber-300 rounded-lg bg-amber-50">
+                        <p className="text-xs text-amber-800">
+                          ⚠️ Tidak dapat memuat device dari IoT Hub atau semua device sudah digunakan. 
+                          Masukkan Device ID secara manual.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Status & Mode */}
@@ -223,7 +311,7 @@ export default function ModalEditPersimpangan({
                       name="status"
                       value={formData.status}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="active">Active</option>
                       <option value="maintenance">Maintenance</option>
@@ -238,7 +326,7 @@ export default function ModalEditPersimpangan({
                       name="configMode"
                       value={formData.configMode}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="auto">Auto</option>
                       <option value="manual">Manual</option>
@@ -255,7 +343,7 @@ export default function ModalEditPersimpangan({
                     name="lanesCount"
                     value={formData.lanesCount}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="3">3 Jalur</option>
                     <option value="4">4 Jalur</option>
@@ -278,7 +366,7 @@ export default function ModalEditPersimpangan({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {isLoading ? (
                     <>

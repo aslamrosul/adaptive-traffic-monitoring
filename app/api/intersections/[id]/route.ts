@@ -75,25 +75,55 @@ export async function PATCH(
     }
 
     const existing = resources[0];
+    const oldDeviceId = existing.deviceId;
+    const newDeviceId = data.deviceId || oldDeviceId;
 
-    // Update item
-    const updated = {
-      ...existing,
-      ...data,
-      id: existing.id, // Keep original id
-      updatedAt: new Date().toISOString(),
-    };
+    // Check if deviceId is being changed
+    if (newDeviceId !== oldDeviceId) {
+      // If deviceId changes, we need to delete old item and create new one
+      // because deviceId is the partition key and cannot be updated
+      
+      // Create new item with new deviceId
+      const newItem = {
+        ...existing,
+        ...data,
+        id: existing.id, // Keep same id
+        deviceId: newDeviceId, // New partition key
+        updatedAt: new Date().toISOString(),
+      };
 
-    // Use deviceId as partition key
-    const { resource } = await containers.intersections
-      .item(existing.id, existing.deviceId)
-      .replace(updated);
+      // Delete old item
+      await containers.intersections.item(existing.id, oldDeviceId).delete();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Intersection updated successfully',
-      data: resource,
-    });
+      // Create new item
+      const { resource } = await containers.intersections.items.create(newItem);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Intersection updated successfully (deviceId changed)',
+        data: resource,
+      });
+    } else {
+      // Normal update (deviceId not changed)
+      const updated = {
+        ...existing,
+        ...data,
+        id: existing.id, // Keep original id
+        deviceId: existing.deviceId, // Keep original deviceId
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Use deviceId as partition key
+      const { resource } = await containers.intersections
+        .item(existing.id, existing.deviceId)
+        .replace(updated);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Intersection updated successfully',
+        data: resource,
+      });
+    }
   } catch (error: any) {
     console.error('Error updating intersection:', error);
     return NextResponse.json(

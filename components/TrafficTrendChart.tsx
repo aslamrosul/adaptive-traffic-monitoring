@@ -42,25 +42,90 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLane, setSelectedLane] = useState<string>("all");
-  const [period, setPeriod] = useState("today");
 
   const fetchChartData = async () => {
     setIsLoading(true);
     try {
       // Fetch traffic data
-      const response = await fetch('/api/traffic/realtime?limit=500');
+      const response = await fetch(`/api/traffic/realtime?limit=2000`);
       const result = await response.json();
 
-      if (result.success && result.data) {
+      console.log('📊 TrafficTrendChart - Fetched data:', {
+        success: result.success,
+        count: result.count,
+        hasData: result.data?.length > 0,
+        sampleData: result.data?.[0],
+        dataStructure: result.data?.[0] ? Object.keys(result.data[0]) : []
+      });
+
+      if (result.success && result.data && result.data.length > 0) {
+        // Flatten nested lane data structure
+        const flattenedData: any[] = [];
+        
+        result.data.forEach((item: any) => {
+          // Check if data has nested lane structure (north, south, east, west)
+          if (item.north || item.south || item.east || item.west) {
+            // New structure: nested lanes
+            ['north', 'south', 'east', 'west'].forEach(lane => {
+              if (item[lane]) {
+                flattenedData.push({
+                  timestamp: item.timestamp,
+                  intersectionId: item.intersectionId,
+                  deviceId: item.deviceId,
+                  lane: lane,
+                  light: item[lane].light,
+                  vehicleCount: item[lane].vehicleCount || 0,
+                  queueLength: item[lane].queueLength || 0,
+                  queueLevel: item[lane].queueLevel ?? 0,
+                  irState: item[lane].irState
+                });
+              }
+            });
+          } else if (item.lane) {
+            // Old structure: already flat
+            flattenedData.push(item);
+          }
+        });
+
+        console.log('📊 After flattening:', {
+          originalCount: result.data.length,
+          flattenedCount: flattenedData.length,
+          uniqueLanes: [...new Set(flattenedData.map((d: any) => d.lane))],
+          sampleFlattened: flattenedData[0]
+        });
+
         // Filter by lane if not "all"
-        let filteredData = result.data;
+        let filteredData = flattenedData;
         if (selectedLane !== "all") {
-          filteredData = result.data.filter((item: any) => 
-            item.lane?.toLowerCase() === selectedLane.toLowerCase()
-          );
+          filteredData = flattenedData.filter((item: any) => {
+            const itemLane = item.lane?.toLowerCase();
+            return itemLane === selectedLane.toLowerCase();
+          });
         }
 
-        // Group by hour
+        console.log('📊 After lane filter:', {
+          selectedLane,
+          filteredCount: filteredData.length,
+          sampleFiltered: filteredData[0]
+        });
+
+        // Group by hour for TODAY only
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Filter to today's data only
+        const todayData = filteredData.filter((item: any) => {
+          const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+          return itemDate === todayStr;
+        });
+
+        console.log('📊 Today data filter:', {
+          todayStr,
+          todayDataCount: todayData.length,
+          allDataCount: filteredData.length,
+          sampleTimestamp: filteredData[0]?.timestamp
+        });
+
         const hourlyMap = new Map<number, { vehicles: number[]; queueLevels: number[] }>();
         
         // Initialize 24 hours
@@ -69,21 +134,13 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
         }
 
         // Aggregate data
-        filteredData.forEach((item: any) => {
+        todayData.forEach((item: any) => {
           const hour = new Date(item.timestamp).getHours();
           const data = hourlyMap.get(hour);
           
           if (data) {
             data.vehicles.push(item.vehicleCount || 0);
-            
-            // Calculate queue level from queueLength if not provided
-            let queueLevel = item.queueLevel ?? 0;
-            if (item.queueLength !== undefined && item.queueLevel === undefined) {
-              if (item.queueLength > 20) queueLevel = 0;
-              else if (item.queueLength >= 10) queueLevel = 1;
-              else queueLevel = 2;
-            }
-            data.queueLevels.push(queueLevel);
+            data.queueLevels.push(item.queueLevel ?? 0);
           }
         });
 
@@ -113,12 +170,23 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
           }
         }
 
+        console.log('📊 Chart data prepared:', {
+          dataPoints: chartData.length,
+          sample: chartData[0],
+          totalVehicles: chartData.reduce((sum, d) => sum + d.vehicleCount, 0),
+          hasNonZeroData: chartData.some(d => d.vehicleCount > 0)
+        });
+
         setHourlyData(chartData);
+      } else {
+        console.warn('⚠️ No traffic data available from API');
+        setHourlyData([]);
       }
       
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching chart data:', error);
+      console.error('❌ Error fetching chart data:', error);
+      setHourlyData([]);
       setIsLoading(false);
     }
   };
@@ -326,17 +394,6 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
             <option value="south">Jalur Selatan</option>
             <option value="east">Jalur Timur</option>
             <option value="west">Jalur Barat</option>
-          </select>
-
-          {/* Period Filter */}
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="flex-1 lg:flex-none bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:bg-slate-100 transition-colors"
-          >
-            <option value="today">Hari Ini</option>
-            <option value="yesterday">Kemarin</option>
-            <option value="week">7 Hari</option>
           </select>
 
           {/* Refresh Button */}

@@ -14,9 +14,18 @@ interface DateRange {
 interface DashboardTimeFilterProps {
   onFilterChange: (range: TimeRange, dates?: DateRange) => void;
   currentRange: TimeRange;
+  onIntersectionChange?: (intersectionId: string) => void;
+  selectedIntersection?: string;
+  intersections?: Array<{ id: string; name: string }>;
 }
 
-export default function DashboardTimeFilter({ onFilterChange, currentRange }: DashboardTimeFilterProps) {
+export default function DashboardTimeFilter({ 
+  onFilterChange, 
+  currentRange,
+  onIntersectionChange,
+  selectedIntersection = "all",
+  intersections = []
+}: DashboardTimeFilterProps) {
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -92,16 +101,42 @@ export default function DashboardTimeFilter({ onFilterChange, currentRange }: Da
       className="bg-white rounded-lg p-2 lg:p-3 shadow-sm border border-slate-200"
     >
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-        {/* Left: Title & Date Range */}
-        <div className="flex-1">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="material-symbols-outlined text-primary text-base">filter_alt</span>
-            <h3 className="font-headline font-bold text-slate-900 text-xs">Filter Periode</h3>
+        {/* Left: Title & Date Range & Intersection Selector */}
+        <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="material-symbols-outlined text-primary text-base">filter_alt</span>
+              <h3 className="font-headline font-bold text-slate-900 text-xs">Filter Periode</h3>
+            </div>
+            <p className="text-[10px] text-slate-500 flex items-center gap-1">
+              <span className="material-symbols-outlined text-xs">schedule</span>
+              {getDateRangeText()}
+            </p>
           </div>
-          <p className="text-[10px] text-slate-500 flex items-center gap-1">
-            <span className="material-symbols-outlined text-xs">schedule</span>
-            {getDateRangeText()}
-          </p>
+
+          {/* Intersection Selector */}
+          {onIntersectionChange && intersections.length > 0 && (
+            <div className="relative">
+              <select
+                value={selectedIntersection}
+                onChange={(e) => onIntersectionChange(e.target.value)}
+                className="appearance-none pl-8 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+              >
+                <option value="all">Semua Persimpangan</option>
+                {intersections.map((intersection) => (
+                  <option key={intersection.id} value={intersection.id}>
+                    {intersection.name}
+                  </option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
+                location_on
+              </span>
+              <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
+                expand_more
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Right: Quick Filters */}

@@ -1,23 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AlertsPanel from "@/components/AlertsPanel";
 import DashboardStats from "@/components/DashboardStats";
 import IntersectionGrid from "@/components/IntersectionGrid";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
-import QueueLevelCards from "@/components/QueueLevelCards";
-import ConnectionStatus from "@/components/ConnectionStatus";
+import LaneStatusPanel from "@/components/LaneStatusPanel";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { useSignalR } from "@/lib/hooks/useSignalR";
+import { useIntersections } from "@/lib/hooks/useIntersections";
 import type { TimeRange, DateRange } from "@/lib/hooks/useDashboardWithFilter";
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
+  const [selectedIntersection, setSelectedIntersection] = useState<string>("all");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Fetch intersections for dropdown
+  const { intersections } = useIntersections();
   
   // SignalR real-time connection
   const { 
@@ -61,6 +64,10 @@ export default function DashboardPage() {
     }
   };
 
+  const handleIntersectionChange = (intersectionId: string) => {
+    setSelectedIntersection(intersectionId);
+  };
+
   return (
     <div className="flex min-h-screen bg-surface overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onToggle={handleToggleSidebar} />
@@ -78,15 +85,6 @@ export default function DashboardPage() {
           isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
         }`}>
           <div className="p-3 lg:p-6 space-y-4 lg:space-y-6 max-w-[1920px] mx-auto">
-            
-            {/* SignalR Connection Status */}
-            <ConnectionStatus
-              connectionState={connectionState}
-              isConnected={isConnected}
-              error={error}
-              lastUpdate={lastUpdate}
-              onReconnect={reconnect}
-            />
 
             {/* Real-time Data Preview (only when connected and has data) */}
             {isConnected && latestData && (
@@ -136,13 +134,13 @@ export default function DashboardPage() {
             <DashboardTimeFilter 
               onFilterChange={handleFilterChange}
               currentRange={timeRange}
+              onIntersectionChange={handleIntersectionChange}
+              selectedIntersection={selectedIntersection}
+              intersections={intersections.map(i => ({ id: i.id, name: i.name }))}
             />
 
             {/* Stats Cards */}
             <DashboardStats timeRange={timeRange} customDates={customDates} />
-
-            {/* Queue Level Cards - Real-time Updates */}
-            <QueueLevelCards />
             
             {/* Main Content */}
             <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
@@ -152,7 +150,7 @@ export default function DashboardPage() {
               </div>
               
               <div className="lg:col-span-4">
-                <AlertsPanel timeRange={timeRange} customDates={customDates} />
+                <LaneStatusPanel intersectionId={selectedIntersection} />
               </div>
             </section>
           </div>

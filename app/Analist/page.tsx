@@ -388,8 +388,7 @@ export default function AnalitikPage() {
 
           {/* Queue Level by Hour Chart */}
           <QueueLevelByHourChart
-            data={queueLevelByHourData}
-            isLoading={loadingTraffic}
+            date={startDate}
           />
         </div>
 
