@@ -116,62 +116,6 @@ export default function AnalitikPage() {
     ];
   }, []);
 
-  // Queue effectiveness data
-  const queueEffectivenessData = useMemo(() => {
-    return [
-      {
-        id: "1",
-        intersectionName: "Persimpangan Sudirman",
-        lane: "Jalur Utara",
-        avgQueueLength: 8.5,
-        avgGreenDuration: 10,
-        vehiclesPerSecond: 4.2,
-        effectiveness: 92,
-        status: "optimal" as const,
-      },
-      {
-        id: "2",
-        intersectionName: "Persimpangan Sudirman",
-        lane: "Jalur Timur",
-        avgQueueLength: 12.3,
-        avgGreenDuration: 12,
-        vehiclesPerSecond: 3.8,
-        effectiveness: 85,
-        status: "good" as const,
-      },
-      {
-        id: "3",
-        intersectionName: "Persimpangan Gatot Subroto",
-        lane: "Jalur Barat",
-        avgQueueLength: 15.7,
-        avgGreenDuration: 15,
-        vehiclesPerSecond: 3.2,
-        effectiveness: 78,
-        status: "fair" as const,
-      },
-      {
-        id: "4",
-        intersectionName: "Persimpangan Gatot Subroto",
-        lane: "Jalur Selatan",
-        avgQueueLength: 18.2,
-        avgGreenDuration: 15,
-        vehiclesPerSecond: 2.9,
-        effectiveness: 65,
-        status: "poor" as const,
-      },
-      {
-        id: "5",
-        intersectionName: "Persimpangan Ahmad Yani",
-        lane: "Jalur Utara",
-        avgQueueLength: 9.1,
-        avgGreenDuration: 10,
-        vehiclesPerSecond: 4.1,
-        effectiveness: 90,
-        status: "optimal" as const,
-      },
-    ];
-  }, []);
-
   const handleIntersectionChange = (value: string) => {
     setSelectedIntersection(value);
     const intersection = intersections.find((i: any) => i.id === value);
@@ -384,8 +328,8 @@ export default function AnalitikPage() {
 
         {/* Queue Effectiveness Table - Full Width */}
         <QueueEffectivenessTable
-          data={queueEffectivenessData}
-          isLoading={loadingAnalytics}
+          startDate={startDate}
+          endDate={endDate}
         />
 
         {/* Info Box */}
