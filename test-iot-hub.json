@@ -1,28 +1,32 @@
 {
   "deviceId": "esp32-traffic-monitor",
-  "timestamp": 1715270400000,
+  "timestamp": "1715270400000",
   "north": {
     "light": "green",
     "vehicleCount": 8,
-    "irState": "clear",
-    "queueLength": 25
+    "densityLevel": 1,
+    "queueDetected": false,
+    "queueLength": 15
   },
   "south": {
     "light": "red",
     "vehicleCount": 12,
-    "irState": "detected",
-    "queueLength": 15
+    "densityLevel": 2,
+    "queueDetected": true,
+    "queueLength": 40
   },
   "east": {
     "light": "yellow",
     "vehicleCount": 5,
-    "irState": "clear",
-    "queueLength": 30
+    "densityLevel": 0,
+    "queueDetected": false,
+    "queueLength": 0
   },
   "west": {
     "light": "red",
     "vehicleCount": 10,
-    "irState": "detected",
-    "queueLength": 8
+    "densityLevel": 1,
+    "queueDetected": false,
+    "queueLength": 15
   }
 }

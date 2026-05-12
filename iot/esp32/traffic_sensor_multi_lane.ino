@@ -1,10 +1,23 @@
 /*
  * ESP32 Multi-Lane Traffic Monitoring System
- * Updated with new logic:
- * - Debounce 2 detik untuk vehicle counting
- * - Density Level 0, 1, 2 (infrared + HC-SR04)
- * - Queue detection 10 detik
- * - Hitung kendaraan di semua warna lampu
+ * 
+ * KONSEP SENSOR:
+ * - Infrared: Deteksi kendaraan lewat (untuk counting)
+ * - Ultrasonic (HC-SR04): Deteksi kendaraan sangat dekat (< 5cm) untuk density level
+ * - Fungsi Infrared & Ultrasonic SAMA, cuma beda jenis sensor
+ * 
+ * DENSITY LEVEL & QUEUE LENGTH:
+ * - Level 0: Tidak ada kendaraan → Queue Length = 0 meter (lancar, pakai waktu hijau default)
+ * - Level 1: Infrared deteksi kendaraan → Queue Length = 15 meter (antrian sedang)
+ * - Level 2: Infrared + Ultrasonic < 5cm → Queue Length = 30 meter (antrian padat)
+ * 
+ * QUEUE DETECTION:
+ * - Kendaraan ada di depan sensor (IR atau Ultrasonic < 5cm) selama 10 detik
+ * - Kalau queue detected, queue length bertambah (level 1: 20m, level 2: 40m)
+ * 
+ * VEHICLE COUNTING:
+ * - Debounce 2 detik untuk mencegah double counting
+ * - Hitung kendaraan di semua warna lampu (merah, kuning, hijau)
  */
 
 #include <WiFi.h>
@@ -23,7 +36,7 @@ int readUltrasonic(int trigPin, int echoPin);
 void messageReceived(char* topic, byte* payload, unsigned int length);
 void countVehicle(String lane, bool irDetected);
 int calculateDensityLevel(bool irDetected, int distance);
-void detectQueue(String lane, bool irDetected);
+void detectQueue(String lane, bool irDetected, int queueLength);
 
 // ========== WIFI CONFIG ==========
 const char* ssid = "Gozzy";
@@ -35,7 +48,7 @@ const int mqtt_port = 8883;
 
 // ========== DEVICE CONFIG ==========
 const char* DEVICE_ID = "esp32-traffic-monitor";
-const char* SAS_TOKEN = "SharedAccessSignature sr=traffic-iot-slam1.azure-devices.net%2Fdevices%2Fesp32-traffic-monitor&sig=%2F%2FUENjKzIQ4N1JzIjkqGW%2Fchfafzd0%2B18T5rTqDuFy4%3D&se=1778258902";
+const char* SAS_TOKEN = "SharedAccessSignature sr=traffic-iot-slam1.azure-devices.net%2Fdevices%2Fesp32-traffic-monitor&sig=NJ8p5ILc0IYuatAeBbHPpu1ZKZ68HomKwmmUYEKdE5o%3D&se=1778661880";
 const char* MQTT_USERNAME = "traffic-iot-slam1.azure-devices.net/esp32-traffic-monitor/?api-version=2021-04-12";
 const char* MQTT_TOPIC = "devices/esp32-traffic-monitor/messages/events/";
 
@@ -71,7 +84,7 @@ const char* MQTT_TOPIC = "devices/esp32-traffic-monitor/messages/events/";
 // ========== THRESHOLDS ==========
 #define VEHICLE_DEBOUNCE_MS 2000    // 2 detik debounce untuk counting
 #define QUEUE_THRESHOLD_MS 10000    // 10 detik untuk queue detection
-#define HCSR04_THRESHOLD_CM 50      // Jarak HC-SR04 untuk level 2
+#define ULTRASONIC_THRESHOLD_CM 5   // Jarak ultrasonic untuk density level 2 (padat)
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -113,10 +126,14 @@ void setup() {
   
   Serial.println("\n=== ESP32 Traffic Monitoring System ===");
   Serial.println("Device: esp32-traffic-monitor");
-  Serial.println("New Logic:");
-  Serial.println("- Debounce: 2 seconds");
-  Serial.println("- Queue threshold: 10 seconds");
-  Serial.println("- Density levels: 0, 1, 2");
+  Serial.println("\nKONSEP:");
+  Serial.println("- Infrared & Ultrasonic: fungsi sama, deteksi kendaraan");
+  Serial.println("- Density Level 0: Lancar (queue = 0m)");
+  Serial.println("- Density Level 1: Sedang (queue = 15m)");
+  Serial.println("- Density Level 2: Padat (queue = 30m)");
+  Serial.println("- Queue detected: kendaraan di sensor selama 10 detik");
+  Serial.println("- Debounce: 2 detik untuk counting");
+  Serial.println("");
   
   setupPins();
   connectWiFi();
@@ -129,12 +146,13 @@ void setup() {
   client.setSocketTimeout(15);
   client.setCallback(messageReceived);
   
-  // Set default lights
+  // Set initial lights - East starts with green
   setTrafficLight("north", "red");
   setTrafficLight("south", "red");
   setTrafficLight("east", "green");
   
   Serial.println("✅ Setup complete!");
+  Serial.println("Initial state: North=RED, South=RED, East=GREEN");
 }
 
 void loop() {
@@ -169,10 +187,10 @@ void loop() {
     southDensityLevel = calculateDensityLevel(southIR, southDistance);
     eastDensityLevel = calculateDensityLevel(eastIR, eastDistance);
     
-    // Detect queues
-    detectQueue("north", northIR);
-    detectQueue("south", southIR);
-    detectQueue("east", eastIR);
+    // Detect queues (pass distance for better detection)
+    detectQueue("north", northIR, northDistance);
+    detectQueue("south", southIR, southDistance);
+    detectQueue("east", eastIR, eastDistance);
     
     lastRead = millis();
     yield();  // Feed watchdog
@@ -185,9 +203,9 @@ void loop() {
     lastSend = millis();
   }
   
-  // Traffic light cycle - check every second
+  // Traffic light cycle - check every 100ms (untuk smooth transition)
   static unsigned long lastCycleCheck = 0;
-  if (millis() - lastCycleCheck > 1000) {
+  if (millis() - lastCycleCheck > 100) {
     cycleTrafficLights();
     lastCycleCheck = millis();
   }
@@ -233,27 +251,49 @@ void countVehicle(String lane, bool irDetected) {
 }
 
 // Calculate density level
-// Level 0: Tidak ada kendaraan
-// Level 1: Infrared saja
-// Level 2: Infrared + HC-SR04
+// Level 0: Tidak ada kendaraan (lancar) - queue length = 0m
+// Level 1: Infrared saja (sedang) - queue length = 15m
+// Level 2: Infrared + Ultrasonic dalam 5cm (padat) - queue length = 30m
 int calculateDensityLevel(bool irDetected, int distance) {
   if (!irDetected) {
-    return 0;  // Tidak ada kendaraan
+    return 0;  // Tidak ada kendaraan (lancar)
   }
   
-  if (irDetected && distance > 0 && distance < HCSR04_THRESHOLD_CM) {
-    return 2;  // Infrared + HC-SR04 (padat)
+  // Check if ultrasonic detects vehicle within 5cm (very close = padat)
+  if (irDetected && distance > 0 && distance <= 5) {
+    return 2;  // Infrared + Ultrasonic (padat)
   }
   
   if (irDetected) {
-    return 1;  // Hanya infrared
+    return 1;  // Hanya infrared (sedang)
   }
   
   return 0;
 }
 
-// Detect queue (IR HIGH selama 10 detik)
-void detectQueue(String lane, bool irDetected) {
+// Calculate queue length based on density level (in meters)
+// Queue length = panjang antrian dalam meter
+int calculateQueueLength(int densityLevel, bool queueDetected) {
+  if (densityLevel == 0) {
+    return 0;  // Lancar, tidak ada antrian (0 meter)
+  }
+  
+  if (densityLevel == 1) {
+    // Sedang: antrian 15 meter (sekitar 3-5 kendaraan)
+    return queueDetected ? 20 : 15;
+  }
+  
+  if (densityLevel == 2) {
+    // Padat: antrian 30 meter (sekitar 6-10 kendaraan)
+    return queueDetected ? 40 : 30;
+  }
+  
+  return 0;
+}
+
+// Detect queue (kendaraan di depan sensor selama 10 detik)
+// Ultrasonic/Infrared mendeteksi kendaraan dalam jarak dekat (5cm) selama 10 detik
+void detectQueue(String lane, bool irDetected, int ultrasonicDistance) {
   unsigned long* queueStartTime;
   bool* queueDetected;
   
@@ -270,13 +310,16 @@ void detectQueue(String lane, bool irDetected) {
     return;
   }
   
-  if (irDetected) {
+  // Queue detected if: kendaraan ada di depan sensor (IR atau Ultrasonic < 5cm) selama 10 detik
+  bool vehicleNearby = irDetected || (ultrasonicDistance > 0 && ultrasonicDistance <= 5);
+  
+  if (vehicleNearby) {
     if (*queueStartTime == 0) {
       *queueStartTime = millis();
     } else if (millis() - (*queueStartTime) > QUEUE_THRESHOLD_MS) {
       if (!(*queueDetected)) {
         *queueDetected = true;
-        Serial.printf("🚦 %s: Queue detected!\n", lane.c_str());
+        Serial.printf("🚦 %s: Queue detected! (vehicle nearby for 10s)\n", lane.c_str());
       }
     }
   } else {
@@ -314,17 +357,39 @@ void setupPins() {
 }
 
 void connectWiFi() {
-  Serial.print("Connecting to WiFi");
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+  
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   
-  while (WiFi.status() != WL_CONNECTED) {
+  int attempts = 0;
+  int maxAttempts = 20;  // 10 seconds timeout
+  
+  while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts) {
     delay(500);
     Serial.print(".");
+    attempts++;
   }
   
-  Serial.println("\n✅ WiFi connected");
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n✅ WiFi connected");
+    Serial.print("IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("Signal: ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+  } else {
+    Serial.println("\n❌ WiFi connection failed!");
+    Serial.println("Possible issues:");
+    Serial.println("- Wrong SSID/Password");
+    Serial.println("- WiFi is 5GHz (ESP32 only supports 2.4GHz)");
+    Serial.println("- Signal too weak");
+    Serial.println("- Router not responding");
+    Serial.println("\nRetrying in 5 seconds...");
+    delay(5000);
+    ESP.restart();  // Restart ESP32 to try again
+  }
 }
 
 void reconnectMQTT() {
@@ -350,10 +415,10 @@ void reconnectMQTT() {
 void readAndSendData() {
   Serial.println("\n📊 Sending telemetry...");
   
-  // Read current ultrasonic values
-  int northQueue = readUltrasonic(NORTH_TRIG_PIN, NORTH_ECHO_PIN);
-  int southQueue = readUltrasonic(SOUTH_TRIG_PIN, SOUTH_ECHO_PIN);
-  int eastQueue = readUltrasonic(EAST_TRIG_PIN, EAST_ECHO_PIN);
+  // Calculate queue lengths based on density levels (in meters)
+  int northQueue = calculateQueueLength(northDensityLevel, northQueueDetected);
+  int southQueue = calculateQueueLength(southDensityLevel, southQueueDetected);
+  int eastQueue = calculateQueueLength(eastDensityLevel, eastQueueDetected);
   
   // Create JSON payload with fixed size (IMPORTANT!)
   StaticJsonDocument<512> doc;  // Fixed size to prevent overflow
@@ -366,7 +431,7 @@ void readAndSendData() {
   north["vehicleCount"] = northCount;
   north["densityLevel"] = northDensityLevel;
   north["queueDetected"] = northQueueDetected;
-  north["queueLength"] = northQueue;
+  north["queueLength"] = northQueue;  // in meters
   
   // South lane
   JsonObject south = doc.createNestedObject("south");
@@ -374,7 +439,7 @@ void readAndSendData() {
   south["vehicleCount"] = southCount;
   south["densityLevel"] = southDensityLevel;
   south["queueDetected"] = southQueueDetected;
-  south["queueLength"] = southQueue;
+  south["queueLength"] = southQueue;  // in meters
   
   // East lane
   JsonObject east = doc.createNestedObject("east");
@@ -382,7 +447,7 @@ void readAndSendData() {
   east["vehicleCount"] = eastCount;
   east["densityLevel"] = eastDensityLevel;
   east["queueDetected"] = eastQueueDetected;
-  east["queueLength"] = eastQueue;
+  east["queueLength"] = eastQueue;  // in meters
   
   // West lane (dummy)
   JsonObject west = doc.createNestedObject("west");
@@ -399,6 +464,11 @@ void readAndSendData() {
     Serial.println("✅ Data sent!");
     Serial.print("📤 ");
     Serial.println(payload);
+    
+    // Print summary
+    Serial.printf("North: Level=%d, Queue=%dm, Count=%d\n", northDensityLevel, northQueue, northCount);
+    Serial.printf("South: Level=%d, Queue=%dm, Count=%d\n", southDensityLevel, southQueue, southCount);
+    Serial.printf("East: Level=%d, Queue=%dm, Count=%d\n", eastDensityLevel, eastQueue, eastCount);
   } else {
     Serial.println("❌ Failed to send");
   }
@@ -445,10 +515,12 @@ void setTrafficLight(String lane, String color) {
     return;
   }
   
+  // Turn off all lights for this lane first
   digitalWrite(redPin, LOW);
   digitalWrite(yellowPin, LOW);
   digitalWrite(greenPin, LOW);
   
+  // Then turn on the requested color
   if (color == "red") {
     digitalWrite(redPin, HIGH);
   } else if (color == "yellow") {
@@ -463,29 +535,51 @@ void setTrafficLight(String lane, String color) {
 void cycleTrafficLights() {
   // Non-blocking traffic light cycle
   static unsigned long yellowStartTime = 0;
+  static unsigned long greenStartTime = 0;
   static bool inYellowPhase = false;
+  static bool cycleInitialized = false;
+  
+  // Initialize green phase timer on first run
+  if (!cycleInitialized) {
+    greenStartTime = millis();
+    cycleInitialized = true;
+    Serial.println("🚦 Traffic light cycle initialized");
+    return;  // Skip first cycle to let green timer start
+  }
   
   if (inYellowPhase) {
     // Check if yellow phase is done (3 seconds)
     if (millis() - yellowStartTime > 3000) {
       inYellowPhase = false;
       
-      // Complete the transition
+      // Complete the transition - SET RED FIRST, then GREEN
+      // This ensures only 1 green at a time!
       if (northLight == "yellow") {
-        setTrafficLight("north", "red");
-        setTrafficLight("south", "green");
+        setTrafficLight("north", "red");    // Set red FIRST
+        delay(100);                          // Small delay to ensure red is set
+        setTrafficLight("south", "green");  // Then set green
+        greenStartTime = millis();
       } else if (southLight == "yellow") {
-        setTrafficLight("south", "red");
-        setTrafficLight("east", "green");
+        setTrafficLight("south", "red");    // Set red FIRST
+        delay(100);                          // Small delay
+        setTrafficLight("east", "green");   // Then set green
+        greenStartTime = millis();
       } else if (eastLight == "yellow") {
-        setTrafficLight("east", "red");
-        setTrafficLight("north", "green");
+        setTrafficLight("east", "red");     // Set red FIRST
+        delay(100);                          // Small delay
+        setTrafficLight("north", "green");  // Then set green
+        greenStartTime = millis();
       }
     }
     return;  // Still in yellow phase
   }
   
-  // Start yellow phase
+  // Check if green phase is done (30 seconds)
+  if (millis() - greenStartTime < 30000) {
+    return;  // Still in green phase
+  }
+  
+  // Start yellow phase after 30 seconds of green
   if (northLight == "green") {
     setTrafficLight("north", "yellow");
     yellowStartTime = millis();
