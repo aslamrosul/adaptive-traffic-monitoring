@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import DashboardStats from "@/components/DashboardStats";
-import IntersectionGrid from "@/components/IntersectionGrid";
-import TrafficTrendChart from "@/components/TrafficTrendChart";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
+import Header from "@/components/Header";
+import IntersectionGrid from "@/components/IntersectionGrid";
 import LaneStatusPanel from "@/components/LaneStatusPanel";
 import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
-import { useSignalR } from "@/lib/hooks/useSignalR";
+import TrafficTrendChart from "@/components/TrafficTrendChart";
+import type { DateRange, TimeRange } from "@/lib/hooks/useDashboardWithFilter";
 import { useIntersections } from "@/lib/hooks/useIntersections";
-import type { TimeRange, DateRange } from "@/lib/hooks/useDashboardWithFilter";
+import { useSignalR } from "@/lib/hooks/useSignalR";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               currentRange={timeRange}
               onIntersectionChange={handleIntersectionChange}
               selectedIntersection={selectedIntersection}
-              intersections={intersections.map(i => ({ id: i.id, name: i.name }))}
+              intersections={intersections.map((i: any) => ({ id: i.id, name: i.name }))}
             />
 
             {/* Stats Cards */}

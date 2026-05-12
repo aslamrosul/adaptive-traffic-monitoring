@@ -1,25 +1,18 @@
 "use client";
 
+import type { DateRange, TimeRange } from "@/components/AnalyticsTimeFilter";
 import DashboardLayout from "@/components/DashboardLayout";
-import AnalyticsTimeFilter from "@/components/AnalyticsTimeFilter";
-import QueueDistributionChart from "@/components/QueueDistributionChart";
-import QueueLevelByHourChart from "@/components/QueueLevelByHourChart";
 import GreenDurationChart from "@/components/GreenDurationChart";
+import QueueDistributionChart from "@/components/QueueDistributionChart";
 import QueueEffectivenessTable from "@/components/QueueEffectivenessTable";
+import QueueLevelByHourChart from "@/components/QueueLevelByHourChart";
 import { useAnalytics } from "@/lib/hooks/useAnalytics";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { useRealtimeTraffic } from "@/lib/hooks/useTraffic";
-import {
-    calculateHourlyStats,
-    calculateWeeklyStats,
-    formatDate,
-    getWeekRange
-} from "@/lib/utils/analytics";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import type { TimeRange, DateRange } from "@/components/AnalyticsTimeFilter";
 
 export default function AnalitikPage() {
   const [selectedIntersection, setSelectedIntersection] = useState<string>("all");
@@ -120,71 +113,6 @@ export default function AnalitikPage() {
       { hour: 18, time: "18:00", level0: 30, level1: 40, level2: 30 },
       { hour: 20, time: "20:00", level0: 70, level1: 20, level2: 10 },
       { hour: 22, time: "22:00", level0: 75, level1: 18, level2: 7 },
-    ];
-  }, []);
-
-  // Green duration data
-  const greenDurationData = useMemo(() => {
-    return [
-      { queueLevel: 0 as const, avgDuration: 7, count: 450 },
-      { queueLevel: 1 as const, avgDuration: 10, count: 350 },
-      { queueLevel: 2 as const, avgDuration: 15, count: 200 },
-    ];
-  }, []);
-
-  // Queue effectiveness data
-  const queueEffectivenessData = useMemo(() => {
-    return [
-      {
-        id: "1",
-        intersectionName: "Persimpangan Sudirman",
-        lane: "Jalur Utara",
-        avgQueueLength: 8.5,
-        avgGreenDuration: 10,
-        vehiclesPerSecond: 4.2,
-        effectiveness: 92,
-        status: "optimal" as const,
-      },
-      {
-        id: "2",
-        intersectionName: "Persimpangan Sudirman",
-        lane: "Jalur Timur",
-        avgQueueLength: 12.3,
-        avgGreenDuration: 12,
-        vehiclesPerSecond: 3.8,
-        effectiveness: 85,
-        status: "good" as const,
-      },
-      {
-        id: "3",
-        intersectionName: "Persimpangan Gatot Subroto",
-        lane: "Jalur Barat",
-        avgQueueLength: 15.7,
-        avgGreenDuration: 15,
-        vehiclesPerSecond: 3.2,
-        effectiveness: 78,
-        status: "fair" as const,
-      },
-      {
-        id: "4",
-        intersectionName: "Persimpangan Gatot Subroto",
-        lane: "Jalur Selatan",
-        avgQueueLength: 18.2,
-        avgGreenDuration: 15,
-        vehiclesPerSecond: 2.9,
-        effectiveness: 65,
-        status: "poor" as const,
-      },
-      {
-        id: "5",
-        intersectionName: "Persimpangan Ahmad Yani",
-        lane: "Jalur Utara",
-        avgQueueLength: 9.1,
-        avgGreenDuration: 10,
-        vehiclesPerSecond: 4.1,
-        effectiveness: 90,
-        status: "optimal" as const,
-      },
     ];
   }, []);
 
@@ -394,14 +322,14 @@ export default function AnalitikPage() {
 
         {/* Green Duration Chart - Full Width */}
         <GreenDurationChart
-          data={greenDurationData}
-          isLoading={loadingAnalytics}
+          startDate={startDate}
+          endDate={endDate}
         />
 
         {/* Queue Effectiveness Table - Full Width */}
         <QueueEffectivenessTable
-          data={queueEffectivenessData}
-          isLoading={loadingAnalytics}
+          startDate={startDate}
+          endDate={endDate}
         />
 
         {/* Info Box */}
