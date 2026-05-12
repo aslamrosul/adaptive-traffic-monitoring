@@ -1,57 +1,120 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cacheGet, cacheSet } from '@/lib/redis';
-import { CosmosClient } from '@azure/cosmos';
+import { containers } from "@/lib/azure-cosmos";
+import type { TrafficDataItem } from "@/lib/types/traffic";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const intersectionId = searchParams.get('intersectionId') || 'default';
+export const dynamic = 'force-dynamic';
 
+/**
+ * GET: Fetch latest traffic data per lane (NEW CONCEPT)
+ * Returns the most recent data for each lane with queue level info
+ */
+export async function GET(request: Request) {
   try {
-    // 1. Try cache first
-    const cacheKey = `traffic:latest:${intersectionId}`;
-    const cached = await cacheGet(cacheKey);
+    const { searchParams } = new URL(request.url);
+    const intersectionId = searchParams.get("intersectionId");
+    const deviceId = searchParams.get("deviceId");
 
-    if (cached) {
-      console.log('✅ Cache HIT:', cacheKey);
-      return NextResponse.json({
-        source: 'cache',
-        data: cached
-      });
+    if (!intersectionId && !deviceId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "intersectionId or deviceId is required",
+        },
+        { status: 400 }
+      );
     }
 
-    // 2. Cache MISS - fetch from Cosmos DB
-    console.log('❌ Cache MISS - fetching from Cosmos DB');
-    
-    const cosmosClient = new CosmosClient({
-      endpoint: process.env.COSMOS_ENDPOINT!,
-      key: process.env.COSMOS_KEY!
-    });
+    // Query to get latest data per lane
+    const lanes = ['north', 'south', 'east', 'west'];
+    const latestData: Record<string, TrafficDataItem | null> = {
+      north: null,
+      south: null,
+      east: null,
+      west: null,
+    };
 
-    const database = cosmosClient.database(process.env.COSMOS_DATABASE!);
-    const container = database.container('traffic-data');
+    for (const lane of lanes) {
+      let query = `
+        SELECT TOP 1 * FROM c 
+        WHERE c.lane = @lane
+      `;
+      const parameters: any[] = [{ name: "@lane", value: lane }];
 
-    const { resources } = await container.items
-      .query({
-        query: 'SELECT TOP 1 * FROM c WHERE c.deviceId = @deviceId ORDER BY c.timestamp DESC',
-        parameters: [{ name: '@deviceId', value: intersectionId }]
-      })
-      .fetchAll();
+      if (intersectionId) {
+        query += ` AND c.intersectionId = @intersectionId`;
+        parameters.push({ name: "@intersectionId", value: intersectionId });
+      }
 
-    const data = resources[0];
+      if (deviceId) {
+        query += ` AND c.deviceId = @deviceId`;
+        parameters.push({ name: "@deviceId", value: deviceId });
+      }
 
-    // 3. Update cache (5 minutes TTL)
-    await cacheSet(cacheKey, data, 300);
+      query += ` ORDER BY c._ts DESC`;
+
+      const { resources } = await containers.trafficData.items
+        .query({
+          query,
+          parameters,
+        })
+        .fetchAll();
+
+      if (resources.length > 0) {
+        latestData[lane] = resources[0] as TrafficDataItem;
+      }
+    }
+
+    // Format response with NEW CONCEPT structure
+    const response = {
+      deviceId: deviceId || latestData.north?.deviceId || 'unknown',
+      intersectionId: intersectionId || latestData.north?.intersectionId || 'unknown',
+      timestamp: Date.now(),
+      north: formatLaneData(latestData.north),
+      south: formatLaneData(latestData.south),
+      east: formatLaneData(latestData.east),
+      west: formatLaneData(latestData.west),
+    };
 
     return NextResponse.json({
-      source: 'database',
-      data
+      success: true,
+      data: response,
+      message: "Latest traffic data retrieved (NEW CONCEPT)",
     });
-
-  } catch (error) {
-    console.error('Error:', error);
+  } catch (error: any) {
+    console.error("Error fetching latest traffic data:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch traffic data' },
+      {
+        success: false,
+        error: error.message || "Failed to fetch latest traffic data",
+      },
       { status: 500 }
     );
   }
+}
+
+/**
+ * Helper function to format lane data (NEW CONCEPT)
+ */
+function formatLaneData(data: TrafficDataItem | null) {
+  if (!data) {
+    return {
+      light: 'red' as const,
+      vehicleCount: 0,
+      irState: 'clear' as const,
+      queueLength: 0,
+      queueLevel: 0 as const,
+      greenDuration: 7,
+      timestamp: null,
+    };
+  }
+
+  return {
+    light: data.light || 'red',
+    vehicleCount: data.vehicleCount || 0,
+    irState: data.irState || 'clear',
+    queueLength: data.queueLength || 0,
+    queueLevel: data.queueLevel !== undefined ? data.queueLevel : 0,
+    greenDuration: data.greenDuration || 7,
+    timestamp: data.timestamp,
+  };
 }
