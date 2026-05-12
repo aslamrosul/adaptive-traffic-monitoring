@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import {
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 interface QueueLevelByHourChartProps {
   date: string; // ISO date string (YYYY-MM-DD)
@@ -293,7 +293,6 @@ export default function QueueLevelByHourChart({ date }: QueueLevelByHourChartPro
                   name="Jalur Utara"
                   isAnimationActive={true}
                   animationDuration={800}
-                  tension={0.4}
                 />
               )}
 
@@ -309,7 +308,6 @@ export default function QueueLevelByHourChart({ date }: QueueLevelByHourChartPro
                   name="Jalur Selatan"
                   isAnimationActive={true}
                   animationDuration={800}
-                  tension={0.4}
                 />
               )}
 
@@ -325,7 +323,6 @@ export default function QueueLevelByHourChart({ date }: QueueLevelByHourChartPro
                   name="Jalur Timur"
                   isAnimationActive={true}
                   animationDuration={800}
-                  tension={0.4}
                 />
               )}
 
@@ -341,7 +338,6 @@ export default function QueueLevelByHourChart({ date }: QueueLevelByHourChartPro
                   name="Jalur Barat"
                   isAnimationActive={true}
                   animationDuration={800}
-                  tension={0.4}
                 />
               )}
             </LineChart>
