@@ -38,7 +38,7 @@ interface TrafficTrendChartProps {
   customDates?: any;
 }
 
-export default function TrafficTrendChart({ timeRange, customDates }: TrafficTrendChartProps) {
+export default function TrafficTrendChart({ timeRange = 'today', customDates }: TrafficTrendChartProps) {
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLane, setSelectedLane] = useState<string>("all");
@@ -47,7 +47,7 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
     setIsLoading(true);
     try {
       // Fetch traffic data
-      const response = await fetch(`/api/traffic/realtime?limit=2000`);
+      const response = await fetch(`/api/traffic/realtime?limit=5000`);
       const result = await response.json();
 
       console.log('📊 TrafficTrendChart - Fetched data:', {
@@ -109,21 +109,78 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
           sampleFiltered: filteredData[0]
         });
 
-        // Group by hour for TODAY only
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        // Calculate date range based on timeRange filter
+        let startDate: Date;
+        let endDate: Date = new Date();
         
-        // Filter to today's data only
-        const todayData = filteredData.filter((item: any) => {
-          const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
-          return itemDate === todayStr;
+        switch (timeRange) {
+          case 'today':
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            break;
+          case 'yesterday':
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date();
+            endDate.setDate(endDate.getDate() - 1);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+          case 'week':
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 7);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+          case 'month':
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+          case 'custom':
+            if (customDates?.from && customDates?.to) {
+              startDate = new Date(customDates.from);
+              endDate = new Date(customDates.to);
+            } else {
+              startDate = new Date();
+              startDate.setHours(0, 0, 0, 0);
+            }
+            break;
+          default:
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+        }
+        
+        // Filter data by date range (use processedAt if timestamp is invalid)
+        const rangeData = filteredData.filter((item: any) => {
+          // Try timestamp first, fallback to processedAt
+          const dateField = item.timestamp || item.processedAt;
+          if (!dateField) return false;
+          
+          const itemDate = new Date(dateField);
+          
+          // Check if timestamp is valid (not too old or too far in future)
+          const now = new Date();
+          const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          const oneYearAhead = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+          
+          // If timestamp is invalid, use processedAt
+          if (itemDate < oneYearAgo || itemDate > oneYearAhead) {
+            if (item.processedAt) {
+              const processedDate = new Date(item.processedAt);
+              return processedDate >= startDate && processedDate <= endDate;
+            }
+            return false;
+          }
+          
+          return itemDate >= startDate && itemDate <= endDate;
         });
 
-        console.log('📊 Today data filter:', {
-          todayStr,
-          todayDataCount: todayData.length,
-          allDataCount: filteredData.length,
-          sampleTimestamp: filteredData[0]?.timestamp
+        console.log('📊 Date range filter:', {
+          timeRange,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          rangeDataCount: rangeData.length,
+          allDataCount: filteredData.length
         });
 
         const hourlyMap = new Map<number, { vehicles: number[]; queueLevels: number[] }>();
@@ -133,9 +190,24 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
           hourlyMap.set(i, { vehicles: [], queueLevels: [] });
         }
 
-        // Aggregate data
-        todayData.forEach((item: any) => {
-          const hour = new Date(item.timestamp).getHours();
+        // Aggregate data (use processedAt for hour if timestamp is invalid)
+        rangeData.forEach((item: any) => {
+          const dateField = item.timestamp || item.processedAt;
+          const itemDate = new Date(dateField);
+          
+          // Validate timestamp
+          const now = new Date();
+          const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          const oneYearAhead = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+          
+          let hour: number;
+          if (itemDate < oneYearAgo || itemDate > oneYearAhead) {
+            // Use processedAt for hour
+            hour = new Date(item.processedAt).getHours();
+          } else {
+            hour = itemDate.getHours();
+          }
+          
           const data = hourlyMap.get(hour);
           
           if (data) {
@@ -146,10 +218,13 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
 
         // Calculate averages and create chart data
         const chartData: HourlyData[] = [];
-        const currentHour = new Date().getHours();
         
-        // Show last 12 hours for better visibility
-        for (let i = 11; i >= 0; i--) {
+        // For today/yesterday: show last 12 hours
+        // For week/month: show all 24 hours
+        const hoursToShow = (timeRange === 'today' || timeRange === 'yesterday') ? 12 : 24;
+        const currentHour = timeRange === 'today' ? new Date().getHours() : 23;
+        
+        for (let i = hoursToShow - 1; i >= 0; i--) {
           const hour = (currentHour - i + 24) % 24;
           const data = hourlyMap.get(hour);
           
@@ -197,7 +272,7 @@ export default function TrafficTrendChart({ timeRange, customDates }: TrafficTre
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchChartData, 30000);
     return () => clearInterval(interval);
-  }, [selectedLane]);
+  }, [selectedLane, timeRange, customDates]);
 
   const handleLaneChange = (lane: string) => {
     setSelectedLane(lane);
