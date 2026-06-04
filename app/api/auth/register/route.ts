@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { containers } from "@/lib/azure-cosmos";
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +10,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, email, password, role = "operator" } = body;
 
-    // Validation
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: "Semua field harus diisi" },
@@ -24,43 +24,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const container = containers.users;
+    const normalizedEmail = String(email).trim().toLowerCase();
 
-    // Check if email already exists
-    const { resources: existingUsers } = await container.items
-      .query({
-        query: "SELECT * FROM c WHERE c.email = @email",
-        parameters: [{ name: "@email", value: email }],
+    const existing = await dynamo.send(
+      new GetCommand({
+        TableName: awsTables.users,
+        Key: {
+          email: normalizedEmail,
+        },
       })
-      .fetchAll();
+    );
 
-    if (existingUsers.length > 0) {
+    if (existing.Item) {
       return NextResponse.json(
         { success: false, error: "Email sudah terdaftar" },
         { status: 400 }
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const now = new Date().toISOString();
 
-    // Create new user
     const newUser = {
-      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: normalizedEmail,
+      id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       name,
-      email,
       password: hashedPassword,
       role,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0040a1&color=fff`,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        name
+      )}&background=0040a1&color=fff`,
       status: "active",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      provider: "credentials",
+      createdAt: now,
+      updatedAt: now,
     };
 
-    const { resource: createdUser } = await container.items.create(newUser);
+    await dynamo.send(
+      new PutCommand({
+        TableName: awsTables.users,
+        Item: newUser,
+        ConditionExpression: "attribute_not_exists(email)",
+      })
+    );
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = createdUser as any;
+    const { password: _, ...userWithoutPassword } = newUser;
 
     return NextResponse.json({
       success: true,
@@ -69,6 +77,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Register error:", error);
+
+    if (error.name === "ConditionalCheckFailedException") {
+      return NextResponse.json(
+        { success: false, error: "Email sudah terdaftar" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: error.message || "Gagal registrasi" },
       { status: 500 }

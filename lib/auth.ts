@@ -1,8 +1,60 @@
-import { containers } from "@/lib/azure-cosmos";
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+
+async function getUserByEmail(email: string) {
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  const result = await dynamo.send(
+    new GetCommand({
+      TableName: awsTables.users,
+      Key: {
+        email: normalizedEmail,
+      },
+    })
+  );
+
+  return result.Item || null;
+}
+
+async function createGoogleUser(user: {
+  email: string;
+  name?: string | null;
+  image?: string | null;
+}) {
+  const normalizedEmail = String(user.email).trim().toLowerCase();
+  const now = new Date().toISOString();
+
+  const newUser = {
+    email: normalizedEmail,
+    id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    name: user.name || "User",
+    password: "",
+    role: "operator",
+    avatar:
+      user.image ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        user.name || "User"
+      )}&background=0040a1&color=fff`,
+    status: "active",
+    provider: "google",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await dynamo.send(
+    new PutCommand({
+      TableName: awsTables.users,
+      Item: newUser,
+      ConditionExpression: "attribute_not_exists(email)",
+    })
+  );
+
+  return newUser;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -10,35 +62,36 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email dan password harus diisi");
         }
 
         try {
-          const container = containers.users;
-          
-          // Query user by email
-          const { resources: users } = await container.items
-            .query({
-              query: "SELECT * FROM c WHERE c.email = @email",
-              parameters: [{ name: "@email", value: credentials.email }],
-            })
-            .fetchAll();
-
-          const user = users[0];
+          const user = await getUserByEmail(credentials.email);
 
           if (!user) {
             throw new Error("Email atau password salah");
           }
 
-          // Verify password
+          if (!user.password) {
+            throw new Error(
+              "Akun ini dibuat dengan Google. Silakan login menggunakan Google."
+            );
+          }
+
+          if (user.status && user.status !== "active") {
+            throw new Error("Akun tidak aktif");
+          }
+
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -48,14 +101,13 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email atau password salah");
           }
 
-          // Return user object (without password)
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
             avatar: user.avatar,
-          };
+          } as any;
         } catch (error: any) {
           console.error("Auth error:", error);
           throw new Error(error.message || "Gagal login");
@@ -63,49 +115,41 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
+
   pages: {
     signIn: "/login",
     error: "/login",
   },
+
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Handle Google sign in
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const container = containers.users;
+          if (!user.email) {
+            return false;
+          }
 
-          // Check if user exists
-          const { resources: existingUsers } = await container.items
-            .query({
-              query: "SELECT * FROM c WHERE c.email = @email",
-              parameters: [{ name: "@email", value: user.email }],
-            })
-            .fetchAll();
+          const existingUser = await getUserByEmail(user.email);
 
-          if (existingUsers.length === 0) {
-            // Create new user from Google account
-            const newUser = {
-              id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              name: user.name || "User",
-              email: user.email!,
-              password: "", // No password for OAuth users
-              role: "operator",
-              avatar: user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=0040a1&color=fff`,
-              status: "active",
-              provider: "google",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-
-            await container.items.create(newUser);
+          if (!existingUser) {
+            await createGoogleUser({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            });
           }
 
           return true;
-        } catch (error) {
+        } catch (error: any) {
+          if (error.name === "ConditionalCheckFailedException") {
+            return true;
+          }
+
           console.error("Error in Google sign in:", error);
           return false;
         }
@@ -113,49 +157,47 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
+
     async jwt({ token, user, account }) {
       if (user) {
-        // For Google OAuth, fetch user from database
         if (account?.provider === "google") {
           try {
-            const container = containers.users;
-            const { resources: users } = await container.items
-              .query({
-                query: "SELECT * FROM c WHERE c.email = @email",
-                parameters: [{ name: "@email", value: user.email }],
-              })
-              .fetchAll();
+            if (user.email) {
+              const dbUser = await getUserByEmail(user.email);
 
-            if (users.length > 0) {
-              const dbUser = users[0];
-              token.id = dbUser.id;
-              token.email = dbUser.email;
-              token.name = dbUser.name;
-              token.role = dbUser.role;
-              token.avatar = dbUser.avatar;
+              if (dbUser) {
+                token.id = dbUser.id;
+                token.email = dbUser.email;
+                token.name = dbUser.name;
+                token.role = dbUser.role;
+                token.avatar = dbUser.avatar;
+              }
             }
           } catch (error) {
             console.error("Error fetching user in JWT callback:", error);
           }
         } else {
-          // For credentials login
-          token.id = user.id;
+          token.id = (user as any).id;
           token.email = user.email;
           token.name = user.name;
           token.role = (user as any).role;
           token.avatar = (user as any).avatar;
         }
       }
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).avatar = token.avatar;
       }
+
       return session;
     },
   },
+
   secret: process.env.NEXTAUTH_SECRET,
 };
