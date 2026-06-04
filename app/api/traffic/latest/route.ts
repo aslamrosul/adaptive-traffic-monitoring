@@ -1,45 +1,36 @@
-import { containers } from "@/lib/azure-cosmos";
+import {
+  getLatestTrafficByIntersection,
+  getRecentTraffic,
+} from "@/lib/aws-dynamodb";
+import { normalizeTrafficItems } from "@/lib/traffic-adapter";
 import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-/**
- * GET /api/traffic/latest
- * Fetch latest traffic data (grouped by intersection)
- */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const intersectionId = searchParams.get("intersectionId");
     const limit = parseInt(searchParams.get("limit") || "10");
 
-    let query: string;
-    const parameters: any[] = [];
+    let items: any[] = [];
 
     if (intersectionId && intersectionId !== "all") {
-      // Get latest data for specific intersection
-      query = `
-        SELECT TOP ${limit} * FROM c 
-        WHERE c.intersectionId = @intersectionId 
-        ORDER BY c._ts DESC
-      `;
-      parameters.push({ name: "@intersectionId", value: intersectionId });
+      items = await getLatestTrafficByIntersection(intersectionId, limit);
     } else {
-      // Get latest data for all intersections
-      query = `SELECT TOP ${limit} * FROM c ORDER BY c._ts DESC`;
+      items = await getRecentTraffic(limit);
     }
 
-    const { resources } = await containers.trafficData.items
-      .query({ query, parameters })
-      .fetchAll();
+    const data = normalizeTrafficItems(items);
 
     return NextResponse.json({
       success: true,
-      count: resources.length,
-      data: resources,
+      count: data.length,
+      data,
     });
   } catch (error: any) {
-    console.error("Error fetching latest traffic data:", error);
+    console.error("Error fetching latest traffic from DynamoDB:", error);
+
     return NextResponse.json(
       {
         success: false,

@@ -33,6 +33,8 @@
     "migrate:full": "npm run migrate:backup && npm run migrate:run"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1061.0",
+    "@aws-sdk/lib-dynamodb": "^3.1061.0",
     "@azure/cosmos": "^4.9.3",
     "@azure/identity": "^4.13.1",
     "@azure/storage-blob": "^12.31.0",

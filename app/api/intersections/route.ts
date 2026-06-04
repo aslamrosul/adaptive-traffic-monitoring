@@ -1,95 +1,78 @@
-import { containers } from '@/lib/azure-cosmos';
-import { NextResponse } from 'next/server';
+import { awsTables, scanTable, putItem } from "@/lib/aws-dynamodb";
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// GET: Fetch all intersections
 export async function GET() {
   try {
-    const { resources } = await containers.intersections.items
-      .query({
-        query: 'SELECT * FROM c WHERE (NOT IS_DEFINED(c.type) OR c.type != "iot_config") ORDER BY c.name ASC',
-      })
-      .fetchAll();
+    const items = await scanTable(awsTables.intersections, 100);
+
+    const data = items.map((item: any) => ({
+      ...item,
+      id: item.id || item.intersection_id,
+      intersectionId: item.intersection_id || item.id,
+      deviceId: item.deviceId || item.device_id,
+      name: item.name || item.intersection_id || "Unknown Intersection",
+      status: item.status || "active",
+      address: item.address || "-",
+      lanes: item.lanes || {
+        count: 3,
+        directions: ["north", "south", "east"],
+      },
+    }));
 
     return NextResponse.json({
       success: true,
-      count: resources.length,
-      data: resources,
+      count: data.length,
+      data,
     });
   } catch (error: any) {
-    console.error('Error fetching intersections:', error);
+    console.error("Error fetching intersections from DynamoDB:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch intersections',
+        error: error.message || "Failed to fetch intersections",
       },
       { status: 500 }
     );
   }
 }
 
-// POST: Create new intersection
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
 
-    // Validate required fields
-    if (!data.name || !data.address || !data.deviceId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields: name, address, deviceId',
-        },
-        { status: 400 }
-      );
-    }
+    const intersectionId =
+      body.intersection_id || body.intersectionId || body.id || `intersection_${Date.now()}`;
 
     const item = {
-      id: data.deviceId, // ← ID sama dengan deviceId untuk konsistensi
-      name: data.name,
-      address: data.address,
-      location: {
-        lat: data.latitude || 0,
-        lng: data.longitude || 0,
+      ...body,
+      id: intersectionId,
+      intersection_id: intersectionId,
+      name: body.name || intersectionId,
+      status: body.status || "active",
+      lanes: body.lanes || {
+        count: 3,
+        directions: ["north", "south", "east"],
       },
-      deviceId: data.deviceId,
-      status: data.status || 'active',
-      lanes: {
-        count: data.lanesCount || 4,
-        directions: data.lanesDirections || ['north', 'east', 'south', 'west'],
-      },
-      config: {
-        mode: data.configMode || 'auto',
-        threshold: {
-          low: 50,
-          medium: 100,
-          high: 200,
-          critical: 300,
-        },
-        alertEnabled: true,
-        cycleTime: {
-          min: 30,
-          max: 120,
-        },
-      },
-      createdAt: new Date().toISOString(),
+      createdAt: body.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    const { resource } = await containers.intersections.items.create(item);
+    await putItem(awsTables.intersections, item);
 
     return NextResponse.json({
       success: true,
-      message: 'Intersection created successfully',
-      data: resource,
+      data: item,
     });
   } catch (error: any) {
-    console.error('Error creating intersection:', error);
+    console.error("Error creating intersection:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to create intersection',
+        error: error.message || "Failed to create intersection",
       },
       { status: 500 }
     );

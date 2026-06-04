@@ -1,6 +1,7 @@
 import { app, InvocationContext } from '@azure/functions';
 import { CosmosClient } from '@azure/cosmos';
 import { BlobServiceClient } from '@azure/storage-blob';
+import { createClient } from 'redis';
 import axios from 'axios';
 import crypto from 'crypto';
 
@@ -26,6 +27,29 @@ function getBlobServiceClient(): BlobServiceClient | null {
     blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AzureWebJobsStorage);
   }
   return blobServiceClient;
+}
+
+// Redis client (optional, for caching latest data)
+let redisClient: any = null;
+
+async function getRedisClient() {
+  if (redisClient && redisClient.isOpen) {
+    return redisClient;
+  }
+
+  const useTls = process.env.REDIS_TLS === 'true';
+
+  redisClient = createClient({
+    socket: {
+      host: process.env.REDIS_HOST,
+      port: parseInt(process.env.REDIS_PORT || '6380'),
+      ...(useTls && { tls: true })
+    },
+    password: process.env.REDIS_PASSWORD
+  });
+
+  await redisClient.connect();
+  return redisClient;
 }
 
 /**
@@ -77,6 +101,18 @@ export async function ProcessIoTDataDirect(
 
       // Update device status
       await updateDeviceStatus(iotData.deviceId, context);
+
+      // Cache latest data in Redis (optional)
+      if (process.env.REDIS_HOST) {
+        try {
+          const redis = await getRedisClient();
+          const cacheKey = `traffic:latest:${processedData.intersectionId}`;
+          await redis.setEx(cacheKey, 300, JSON.stringify(processedData)); // 5 min TTL
+          context.log(`✅ Cached in Redis: ${cacheKey}`);
+        } catch (redisError) {
+          context.warn('⚠️ Redis cache failed (non-critical):', redisError);
+        }
+      }
 
       // Send to SignalR for real-time dashboard updates
       if (process.env.SIGNALR_CONNECTION_STRING) {
