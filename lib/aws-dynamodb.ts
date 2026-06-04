@@ -94,3 +94,58 @@ export async function putItem(tableName: string, item: any) {
     })
   );
 }
+
+export async function scanTrafficByDateRange(options: {
+  startDate?: string;
+  endDate?: string;
+  intersectionId?: string | null;
+  limit?: number;
+}) {
+  const {
+    startDate,
+    endDate,
+    intersectionId,
+    limit = 5000,
+  } = options;
+
+  const expressionParts: string[] = [];
+  const expressionValues: Record<string, any> = {};
+
+  if (startDate) {
+    expressionParts.push("#ts >= :startDate");
+    expressionValues[":startDate"] = startDate;
+  }
+
+  if (endDate) {
+    expressionParts.push("#ts <= :endDate");
+    expressionValues[":endDate"] = endDate;
+  }
+
+  if (intersectionId && intersectionId !== "all") {
+    expressionParts.push("intersection_id = :intersectionId");
+    expressionValues[":intersectionId"] = intersectionId;
+  }
+
+  const result = await dynamo.send(
+    new ScanCommand({
+      TableName: awsTables.traffic,
+      Limit: limit,
+      FilterExpression:
+        expressionParts.length > 0 ? expressionParts.join(" AND ") : undefined,
+      ExpressionAttributeNames:
+        expressionParts.length > 0
+          ? {
+              "#ts": "timestamp",
+            }
+          : undefined,
+      ExpressionAttributeValues:
+        Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
+    })
+  );
+
+  return (result.Items || []).sort((a: any, b: any) => {
+    const ta = new Date(a.timestamp || a.received_at_utc || 0).getTime();
+    const tb = new Date(b.timestamp || b.received_at_utc || 0).getTime();
+    return ta - tb;
+  });
+}

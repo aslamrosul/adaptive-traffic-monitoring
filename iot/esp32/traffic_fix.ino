@@ -20,7 +20,7 @@ const char *password = "88888888";
 // MQTT AZURE VM BROKER CONFIG
 // ============================================================
 
-#define MQTT_SERVER "20.2.91.208"
+#define MQTT_SERVER "13.239.2.166"
 #define MQTT_PORT   1883
 
 #define MQTT_USER   "jti"

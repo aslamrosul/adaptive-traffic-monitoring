@@ -93,3 +93,22 @@ export function normalizeTrafficItem(item: any) {
 export function normalizeTrafficItems(items: any[]) {
   return items.map(normalizeTrafficItem);
 }
+
+export const TRAFFIC_LANES = ["north", "south", "east"] as const;
+export type TrafficLane = (typeof TRAFFIC_LANES)[number];
+
+export function getLaneQueueLevel(item: any, lane: TrafficLane): number {
+  return Number(item[`${lane}_density_level`] ?? 0);
+}
+
+export function getLaneGreenDuration(item: any, lane: TrafficLane): number {
+  return Number(item[`${lane}_green_duration_s`] ?? 0);
+}
+
+export function getLaneVehicleCount(item: any, lane: TrafficLane): number {
+  return Number(item[`${lane}_vehicle_count`] ?? 0);
+}
+
+export function getItemTimestamp(item: any): string {
+  return item.timestamp || item.received_at_utc || new Date().toISOString();
+}

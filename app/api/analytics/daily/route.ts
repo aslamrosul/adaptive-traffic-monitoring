@@ -1,94 +1,153 @@
-import { containers } from '@/lib/azure-cosmos';
-import { NextResponse } from 'next/server';
-import { cacheGet, cacheSet } from '@/lib/redis';
+import { scanTrafficByDateRange } from "@/lib/aws-dynamodb";
+import {
+  getItemTimestamp,
+  getLaneGreenDuration,
+  getLaneQueueLevel,
+  getLaneVehicleCount,
+  TRAFFIC_LANES,
+} from "@/lib/traffic-adapter";
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// GET: Fetch daily analytics with Redis caching
+function toIsoStart(date?: string | null) {
+  if (!date) return new Date().toISOString().split("T")[0] + "T00:00:00.000Z";
+  if (date.includes("T")) return date;
+  return `${date}T00:00:00.000Z`;
+}
+
+function toIsoEnd(date?: string | null) {
+  if (!date) return new Date().toISOString().split("T")[0] + "T23:59:59.999Z";
+  if (date.includes("T")) return date;
+  return `${date}T23:59:59.999Z`;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const intersectionId = searchParams.get('intersectionId');
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
-    const limit = parseInt(searchParams.get('limit') || '30');
 
-    // Create cache key based on query parameters
-    const cacheKey = `cache:analytics:daily:${date}:${intersectionId || 'all'}:${limit}`;
+    const intersectionId = searchParams.get("intersectionId");
+    const date = searchParams.get("date");
+    const startDateParam = searchParams.get("startDate") || date;
+    const endDateParam = searchParams.get("endDate") || date;
+    const limit = Number(searchParams.get("limit") || 5000);
 
-    // Try cache first (24 hour TTL for historical data, 5 min for today)
-    const isToday = date === new Date().toISOString().split('T')[0];
-    const cached = await cacheGet(cacheKey);
-    
-    if (cached) {
-      console.log('✅ Cache HIT:', cacheKey);
-      return NextResponse.json({
-        success: true,
-        source: 'cache',
-        count: cached.length,
-        data: cached,
-      });
+    const startDate = toIsoStart(startDateParam);
+    const endDate = toIsoEnd(endDateParam);
+
+    const items = await scanTrafficByDateRange({
+      startDate,
+      endDate,
+      intersectionId,
+      limit,
+    });
+
+    const dailyMap = new Map<
+      string,
+      {
+        date: string;
+        intersectionId: string;
+        totalVehicles: number;
+        totalQueueLevel: number;
+        queueSamples: number;
+        totalGreenDuration: number;
+        greenSamples: number;
+        level0: number;
+        level1: number;
+        level2: number;
+      }
+    >();
+
+    for (const item of items) {
+      const timestamp = getItemTimestamp(item);
+      const day = new Date(timestamp).toISOString().split("T")[0];
+      const key = `${day}_${item.intersection_id || "all"}`;
+
+      if (!dailyMap.has(key)) {
+        dailyMap.set(key, {
+          date: day,
+          intersectionId: item.intersection_id || "SIMPANG_TALUN_01",
+          totalVehicles: 0,
+          totalQueueLevel: 0,
+          queueSamples: 0,
+          totalGreenDuration: 0,
+          greenSamples: 0,
+          level0: 0,
+          level1: 0,
+          level2: 0,
+        });
+      }
+
+      const row = dailyMap.get(key)!;
+
+      for (const lane of TRAFFIC_LANES) {
+        const vehicleCount = getLaneVehicleCount(item, lane);
+        const queueLevel = getLaneQueueLevel(item, lane);
+        const greenDuration = getLaneGreenDuration(item, lane);
+
+        row.totalVehicles += vehicleCount;
+        row.totalQueueLevel += queueLevel;
+        row.queueSamples++;
+
+        if (greenDuration > 0) {
+          row.totalGreenDuration += greenDuration;
+          row.greenSamples++;
+        }
+
+        if (queueLevel === 0) row.level0++;
+        else if (queueLevel === 1) row.level1++;
+        else if (queueLevel === 2) row.level2++;
+      }
     }
 
-    console.log('❌ Cache MISS - fetching from Cosmos DB:', cacheKey);
+    const data = Array.from(dailyMap.values())
+      .map((row) => {
+        const averageQueueLevel =
+          row.queueSamples > 0
+            ? Math.round((row.totalQueueLevel / row.queueSamples) * 10) / 10
+            : 0;
 
-    let query = 'SELECT * FROM c WHERE 1=1';
-    const parameters: any[] = [];
+        const averageWaitTime =
+          row.greenSamples > 0
+            ? Math.round((row.totalGreenDuration / row.greenSamples) * 10) / 10
+            : 0;
 
-    if (intersectionId) {
-      query += ' AND c.intersectionId = @intersectionId';
-      parameters.push({ name: '@intersectionId', value: intersectionId });
-    }
+        const averageCongestionIndex = Math.round((averageQueueLevel / 2) * 100);
 
-    if (date) {
-      query += ' AND c.date = @date';
-      parameters.push({ name: '@date', value: date });
-    }
-
-    query += ` ORDER BY c.date DESC OFFSET 0 LIMIT ${limit}`;
-
-    const { resources } = await containers.analyticsDaily.items
-      .query({ query, parameters })
-      .fetchAll();
-
-    // Cache the results
-    // Historical data: 24 hours (86400s), Today's data: 5 minutes (300s)
-    const ttl = isToday ? 300 : 86400;
-    await cacheSet(cacheKey, resources, ttl);
-    console.log(`✅ Cached for ${ttl}s:`, cacheKey);
+        return {
+          id: `analytics_${row.intersectionId}_${row.date}`,
+          date: row.date,
+          intersectionId: row.intersectionId,
+          summary: {
+            totalVehicles: row.totalVehicles,
+            averageWaitTime,
+            averageCongestionIndex,
+            averageQueueLevel,
+            queueDistribution: {
+              level0: row.level0,
+              level1: row.level1,
+              level2: row.level2,
+            },
+          },
+        };
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
 
     return NextResponse.json({
       success: true,
-      source: 'database',
-      count: resources.length,
-      data: resources,
+      source: "dynamodb",
+      count: data.length,
+      data,
     });
   } catch (error: any) {
-    console.error('Error fetching analytics:', error);
-    
-    // Provide more helpful error messages
-    let errorMessage = error.message || 'Failed to fetch analytics';
-    let statusCode = 500;
-    
-    if (error.code === 401) {
-      errorMessage = 'Azure Cosmos DB authentication failed. Please check AZURE_COSMOS_KEY in .env.local';
-      statusCode = 401;
-    } else if (error.code === 404) {
-      errorMessage = 'Container "analytics_daily" not found. Please run: npm run db:seed:azure';
-      statusCode = 404;
-    }
-    
+    console.error("Error fetching daily analytics:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
-        code: error.code,
-        hint: error.code === 401 
-          ? 'Get the correct key from Azure Portal > Cosmos DB > Keys' 
-          : error.code === 404
-          ? 'Run "npm run db:seed:azure" to create containers and seed data'
-          : 'Check server logs for more details',
+        error: error.message || "Failed to fetch analytics",
       },
-      { status: statusCode }
+      { status: 500 }
     );
   }
 }

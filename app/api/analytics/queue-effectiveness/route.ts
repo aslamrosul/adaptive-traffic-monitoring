@@ -1,141 +1,144 @@
-import { containers } from "@/lib/azure-cosmos";
-import { QUEUE_LEVEL_CONFIG } from "@/lib/types/traffic";
+import { scanTrafficByDateRange } from "@/lib/aws-dynamodb";
+import {
+  getLaneGreenDuration,
+  getLaneQueueLevel,
+  TRAFFIC_LANES,
+  type TrafficLane,
+} from "@/lib/traffic-adapter";
 import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-/**
- * GET: Queue Effectiveness Table (NEW CONCEPT)
- * Returns effectiveness metrics per lane and queue level
- */
+const EXPECTED_GREEN: Record<number, number> = {
+  0: 10,
+  1: 20,
+  2: 30,
+};
+
+const LANE_NAMES: Record<string, string> = {
+  north: "Jalur Utara",
+  south: "Jalur Selatan",
+  east: "Jalur Timur",
+  west: "Jalur Barat",
+};
+
+function toIsoStart(date?: string | null) {
+  if (!date) return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  if (date.includes("T")) return date;
+  return `${date}T00:00:00.000Z`;
+}
+
+function toIsoEnd(date?: string | null) {
+  if (!date) return new Date().toISOString();
+  if (date.includes("T")) return date;
+  return `${date}T23:59:59.999Z`;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    const lane = searchParams.get("lane"); // Optional filter
 
-    // Default to last 7 days if not provided
-    const end = endDate ? new Date(endDate) : new Date();
-    const start = startDate 
-      ? new Date(startDate) 
-      : new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const startDate = toIsoStart(searchParams.get("startDate"));
+    const endDate = toIsoEnd(searchParams.get("endDate"));
+    const lane = searchParams.get("lane") as TrafficLane | "all" | null;
+    const intersectionId = searchParams.get("intersectionId");
+    const limit = Number(searchParams.get("limit") || 5000);
 
-    // Build query
-    let query = `
-      SELECT 
-        c.lane,
-        c.queueLevel,
-        c.greenDuration
-      FROM c
-      WHERE c.timestamp >= @startDate 
-        AND c.timestamp <= @endDate
-        AND IS_DEFINED(c.queueLevel)
-        AND IS_DEFINED(c.greenDuration)
-    `;
+    const items = await scanTrafficByDateRange({
+      startDate,
+      endDate,
+      intersectionId,
+      limit,
+    });
 
-    const parameters: any[] = [
-      { name: "@startDate", value: start.toISOString() },
-      { name: "@endDate", value: end.toISOString() },
-    ];
+    const selectedLanes =
+      lane && lane !== "all" && TRAFFIC_LANES.includes(lane as TrafficLane)
+        ? [lane as TrafficLane]
+        : [...TRAFFIC_LANES];
 
-    // Add lane filter if specified
-    if (lane) {
-      query += ` AND c.lane = @lane`;
-      parameters.push({ name: "@lane", value: lane });
-    }
-
-    // Execute query
-    const { resources } = await containers.trafficData.items
-      .query({ query, parameters })
-      .fetchAll();
-
-    // Aggregate data by lane and queue level
     const stats: Record<string, Record<number, { total: number; count: number }>> = {};
-    const lanes = ['north', 'south', 'east', 'west'];
 
-    lanes.forEach((l) => {
-      stats[l] = {
+    for (const currentLane of selectedLanes) {
+      stats[currentLane] = {
         0: { total: 0, count: 0 },
         1: { total: 0, count: 0 },
         2: { total: 0, count: 0 },
       };
-    });
+    }
 
-    resources.forEach((item: any) => {
-      const l = item.lane;
-      const level = item.queueLevel;
-      
-      if (stats[l] && stats[l][level] !== undefined) {
-        stats[l][level].total += item.greenDuration;
-        stats[l][level].count++;
+    for (const item of items) {
+      for (const currentLane of selectedLanes) {
+        const level = getLaneQueueLevel(item, currentLane);
+        const greenDuration = getLaneGreenDuration(item, currentLane);
+
+        if (stats[currentLane]?.[level] && greenDuration > 0) {
+          stats[currentLane][level].total += greenDuration;
+          stats[currentLane][level].count++;
+        }
       }
-    });
+    }
 
-    // Build response table
-    const table: any[] = [];
+    const rows: any[] = [];
 
-    lanes.forEach((l) => {
+    for (const currentLane of selectedLanes) {
       [0, 1, 2].forEach((level) => {
-        const expected = QUEUE_LEVEL_CONFIG[level as 0 | 1 | 2].greenDuration;
-        const count = stats[l][level].count;
-        const avgGreenDuration = count > 0 
-          ? Math.round((stats[l][level].total / count) * 10) / 10 
-          : 0;
-        
-        // Effectiveness = (expected / actual) * 100
-        const effectiveness = avgGreenDuration > 0
-          ? Math.min(Math.round((expected / avgGreenDuration) * 100 * 10) / 10, 100)
-          : 0;
+        const expectedDuration = EXPECTED_GREEN[level];
+        const count = stats[currentLane][level].count;
 
-        table.push({
-          lane: l,
+        const avgGreenDuration =
+          count > 0
+            ? Math.round((stats[currentLane][level].total / count) * 10) / 10
+            : 0;
+
+        const effectiveness =
+          avgGreenDuration > 0
+            ? Math.min(
+                Math.round((expectedDuration / avgGreenDuration) * 1000) / 10,
+                100
+              )
+            : 0;
+
+        rows.push({
+          lane: LANE_NAMES[currentLane] || currentLane,
           queueLevel: level,
           count,
           avgGreenDuration,
-          expectedDuration: expected,
           effectiveness,
-          status: effectiveness >= 95 ? 'excellent' : effectiveness >= 85 ? 'good' : 'needs-improvement',
         });
       });
-    });
+    }
 
-    // Sort by lane and queue level
-    table.sort((a, b) => {
-      if (a.lane !== b.lane) {
-        return lanes.indexOf(a.lane) - lanes.indexOf(b.lane);
-      }
-      return a.queueLevel - b.queueLevel;
-    });
+    const totalCount = rows.reduce((sum, row) => sum + row.count, 0);
 
-    // Calculate summary statistics
-    const totalCount = table.reduce((sum, row) => sum + row.count, 0);
-    const avgEffectiveness = totalCount > 0
-      ? Math.round(
-          (table.reduce((sum, row) => sum + row.effectiveness * row.count, 0) / totalCount) * 10
-        ) / 10
-      : 0;
-
-    const summary = {
-      totalRecords: totalCount,
-      avgEffectiveness,
-      excellentCount: table.filter((r) => r.status === 'excellent').length,
-      goodCount: table.filter((r) => r.status === 'good').length,
-      needsImprovementCount: table.filter((r) => r.status === 'needs-improvement').length,
-      period: {
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
-      },
-    };
+    const avgEffectiveness =
+      totalCount > 0
+        ? Math.round(
+            (rows.reduce(
+              (sum, row) => sum + row.effectiveness * row.count,
+              0
+            ) /
+              totalCount) *
+              10
+          ) / 10
+        : 0;
 
     return NextResponse.json({
       success: true,
-      data: table,
-      summary,
-      message: "Queue effectiveness table retrieved successfully",
+      rows,
+      summary: {
+        totalRecords: totalCount,
+        avgEffectiveness,
+        period: {
+          startDate,
+          endDate,
+          intersectionId: intersectionId || "all",
+          lane: lane || "all",
+        },
+      },
     });
   } catch (error: any) {
     console.error("Error fetching queue effectiveness:", error);
+
     return NextResponse.json(
       {
         success: false,

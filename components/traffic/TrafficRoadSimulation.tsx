@@ -23,31 +23,51 @@ function TrafficLight({
   light: string;
   className: string;
 }) {
-  const colors = ["red", "yellow", "green"];
+  const activeLight = String(light || "red").trim().toLowerCase();
+
+  const bulbs = [
+    {
+      key: "red",
+      activeColor: "#ef4444",
+      glow: "0 0 26px 8px rgba(239, 68, 68, 0.85)",
+    },
+    {
+      key: "yellow",
+      activeColor: "#facc15",
+      glow: "0 0 26px 8px rgba(250, 204, 21, 0.9)",
+    },
+    {
+      key: "green",
+      activeColor: "#22c55e",
+      glow: "0 0 26px 8px rgba(34, 197, 94, 0.85)",
+    },
+  ];
 
   return (
-    <div className={`absolute z-30 w-[62px] rounded-xl bg-black p-2 shadow-2xl border-2 border-black ${className}`}>
+    <div
+      className={`absolute z-50 w-[62px] rounded-xl bg-black p-2 shadow-2xl border-2 border-black ${className}`}
+    >
       <div className="text-white text-center text-xs font-bold mb-1">
         {laneLabels[lane][0]}
       </div>
 
-      {colors.map((color) => (
-        <div
-          key={color}
-          className={[
-            "w-10 h-10 rounded-full mx-auto my-1.5 bg-slate-600 opacity-30 transition-all",
-            light === color && color === "red"
-              ? "opacity-100 bg-red-500 shadow-[0_0_20px_#ef4444]"
-              : "",
-            light === color && color === "yellow"
-              ? "opacity-100 bg-yellow-400 shadow-[0_0_20px_#facc15]"
-              : "",
-            light === color && color === "green"
-              ? "opacity-100 bg-green-500 shadow-[0_0_20px_#22c55e]"
-              : "",
-          ].join(" ")}
-        />
-      ))}
+      {bulbs.map((bulb) => {
+        const active = activeLight === bulb.key;
+
+        return (
+          <div
+            key={bulb.key}
+            className="w-10 h-10 rounded-full mx-auto my-1.5 transition-all duration-300 border"
+            style={{
+              backgroundColor: active ? bulb.activeColor : "#1f2937",
+              opacity: active ? 1 : 0.28,
+              boxShadow: active ? bulb.glow : "inset 0 0 8px rgba(0,0,0,0.8)",
+              borderColor: active ? "#ffffff" : "#374151",
+              transform: active ? "scale(1.12)" : "scale(1)",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
