@@ -20,18 +20,22 @@ export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahU
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedRole =
+      formData.role === "ADMIN PUSAT" ? "admin" : "operator";
+
     const newUser = {
-      id: Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      status: "Aktif",
+      name: formData.name.trim(),
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+      role: normalizedRole,
+      status: "active",
     };
+
     onAdd(newUser);
-    toast.success(`Pengguna ${formData.name} berhasil ditambahkan!`, {
-      icon: "👤",
-    });
+
     onClose();
+
     setFormData({
       name: "",
       email: "",

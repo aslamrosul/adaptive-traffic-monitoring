@@ -122,7 +122,7 @@ export default function ModalEditUser({
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
+                    readOnly
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                     placeholder="email@example.com"
                   />

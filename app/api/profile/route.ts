@@ -1,10 +1,76 @@
 import { authOptions } from "@/lib/auth";
-import { containers } from "@/lib/azure-cosmos";
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET - Ambil data profile dari Cosmos DB
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+function defaultAvatar(name: string) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || "User"
+  )}&background=0040a1&color=fff`;
+}
+
+function buildProfileData(user: any) {
+  const name = user.name || "User";
+  const role = user.role || "operator";
+
+  return {
+    id: user.id,
+    name,
+    email: user.email,
+    phone: user.phone || "",
+    position:
+      user.position ||
+      (role === "admin" ? "Administrator" : "Operator"),
+    department: user.department || "Traffic Control Center",
+    bio: user.bio || "Operator sistem monitoring lalu lintas.",
+    avatar: user.avatar || user.photoURL || defaultAvatar(name),
+    memberSince: user.createdAt || new Date().toISOString(),
+    lastLogin: user.updatedAt || user.createdAt || new Date().toISOString(),
+    accountType: role === "admin" ? "Premium" : "Standard",
+    stats: {
+      totalLogin: user.totalLogin || 0,
+      incidentsHandled: user.incidentsHandled || 0,
+      reportsCreated: user.reportsCreated || 0,
+      activeHours: user.activeHours || 0,
+    },
+    performance: user.performance || {
+      responseTime: 95,
+      accuracy: 98,
+      efficiency: 92,
+    },
+    skills: user.skills || [
+      "Traffic Management",
+      "IoT Systems",
+      "Data Analysis",
+      "Emergency Response",
+    ],
+    settings: user.profileSettings || {
+      publicProfile: true,
+      showEmail: false,
+      showActivity: true,
+    },
+  };
+}
+
+async function getCurrentUserByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const result = await dynamo.send(
+    new GetCommand({
+      TableName: awsTables.users,
+      Key: {
+        email: normalizedEmail,
+      },
+    })
+  );
+
+  return result.Item || null;
+}
+
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,17 +84,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const container = containers.users;
+    const user = await getCurrentUserByEmail(session.user.email);
 
-    // Query user by email
-    const { resources: users } = await container.items
-      .query({
-        query: "SELECT * FROM c WHERE c.email = @email",
-        parameters: [{ name: "@email", value: session.user.email }],
-      })
-      .fetchAll();
-
-    if (users.length === 0) {
+    if (!user) {
       return NextResponse.json(
         {
           success: false,
@@ -38,62 +96,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = users[0];
-
-    // Transform database user to profile format
-    const profileData = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone || "+62 812-3456-7890",
-      position: user.role === "admin" ? "Administrator" : "Operator",
-      department: "Traffic Control Center",
-      bio: user.bio || "Operator sistem monitoring lalu lintas.",
-      avatar: user.avatar,
-      memberSince: user.createdAt,
-      lastLogin: user.updatedAt,
-      accountType: user.role === "admin" ? "Premium" : "Standard",
-      stats: {
-        totalLogin: user.reportsCreated || 0,
-        incidentsHandled: 0,
-        reportsCreated: user.reportsCreated || 0,
-        activeHours: user.activeHours || 0,
-      },
-      performance: {
-        responseTime: 95,
-        accuracy: 98,
-        efficiency: 92,
-      },
-      skills: [
-        "Traffic Management",
-        "IoT Systems",
-        "Data Analysis",
-        "Emergency Response",
-      ],
-      settings: {
-        publicProfile: true,
-        showEmail: false,
-        showActivity: true,
-      },
-    };
-
     return NextResponse.json({
       success: true,
-      data: profileData,
+      data: buildProfileData(user),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Profile fetch error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch profile",
+        error: error.message || "Failed to fetch profile",
       },
       { status: 500 }
     );
   }
 }
 
-// PUT - Update data profile di Cosmos DB
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -110,28 +129,9 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validasi data
-    if (body.email && !body.email.includes("@")) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid email format",
-        },
-        { status: 400 }
-      );
-    }
+    const currentUser = await getCurrentUserByEmail(session.user.email);
 
-    const container = containers.users;
-
-    // Get current user
-    const { resources: users } = await container.items
-      .query({
-        query: "SELECT * FROM c WHERE c.email = @email",
-        parameters: [{ name: "@email", value: session.user.email }],
-      })
-      .fetchAll();
-
-    if (users.length === 0) {
+    if (!currentUser) {
       return NextResponse.json(
         {
           success: false,
@@ -141,76 +141,43 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const user = users[0];
-
-    // Update allowed fields only
+    // Email tidak diubah karena email adalah partition key DynamoDB.
     const updatedUser = {
-      ...user,
-      name: body.name || user.name,
-      phone: body.phone || user.phone,
-      bio: body.bio || user.bio,
+      ...currentUser,
+      name: body.name || currentUser.name,
+      phone: body.phone ?? currentUser.phone ?? "",
+      position: body.position ?? currentUser.position,
+      department: body.department ?? currentUser.department,
+      bio: body.bio ?? currentUser.bio,
       updatedAt: new Date().toISOString(),
     };
 
-    // Update in database
-    await container.item(user.id, user.email).replace(updatedUser);
-
-    // Return updated profile
-    const profileData = {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      phone: updatedUser.phone || "+62 812-3456-7890",
-      position: updatedUser.role === "admin" ? "Administrator" : "Operator",
-      department: "Traffic Control Center",
-      bio: updatedUser.bio || "Operator sistem monitoring lalu lintas.",
-      avatar: updatedUser.avatar,
-      memberSince: updatedUser.createdAt,
-      lastLogin: updatedUser.updatedAt,
-      accountType: updatedUser.role === "admin" ? "Premium" : "Standard",
-      stats: {
-        totalLogin: updatedUser.reportsCreated || 0,
-        incidentsHandled: 0,
-        reportsCreated: updatedUser.reportsCreated || 0,
-        activeHours: updatedUser.activeHours || 0,
-      },
-      performance: {
-        responseTime: 95,
-        accuracy: 98,
-        efficiency: 92,
-      },
-      skills: [
-        "Traffic Management",
-        "IoT Systems",
-        "Data Analysis",
-        "Emergency Response",
-      ],
-      settings: {
-        publicProfile: true,
-        showEmail: false,
-        showActivity: true,
-      },
-    };
+    await dynamo.send(
+      new PutCommand({
+        TableName: awsTables.users,
+        Item: updatedUser,
+      })
+    );
 
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      data: profileData,
+      data: buildProfileData(updatedUser),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Profile update error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to update profile",
+        error: error.message || "Failed to update profile",
       },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Hapus akun (soft delete)
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -224,17 +191,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const container = containers.users;
+    const currentUser = await getCurrentUserByEmail(session.user.email);
 
-    // Get current user
-    const { resources: users } = await container.items
-      .query({
-        query: "SELECT * FROM c WHERE c.email = @email",
-        parameters: [{ name: "@email", value: session.user.email }],
-      })
-      .fetchAll();
-
-    if (users.length === 0) {
+    if (!currentUser) {
       return NextResponse.json(
         {
           success: false,
@@ -244,27 +203,31 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const user = users[0];
-
-    // Soft delete - update status to inactive
     const updatedUser = {
-      ...user,
+      ...currentUser,
       status: "inactive",
+      deletedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    await container.item(user.id, user.email).replace(updatedUser);
+    await dynamo.send(
+      new PutCommand({
+        TableName: awsTables.users,
+        Item: updatedUser,
+      })
+    );
 
     return NextResponse.json({
       success: true,
-      message: "Account deleted successfully",
+      message: "Account deactivated successfully",
     });
-  } catch (error) {
-    console.error("Account delete error:", error);
+  } catch (error: any) {
+    console.error("Profile delete error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to delete account",
+        error: error.message || "Failed to delete profile",
       },
       { status: 500 }
     );
