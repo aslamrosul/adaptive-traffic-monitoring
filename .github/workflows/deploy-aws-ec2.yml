@@ -22,6 +22,10 @@ jobs:
 
             cd ${{ secrets.EC2_APP_PATH }}
 
+            echo "Cleaning local changes..."
+            # Paksa git untuk membuang perubahan lokal (package-lock.json dll)
+            git reset --hard origin/main
+            
             echo "Pull latest code..."
             git pull origin main
 
