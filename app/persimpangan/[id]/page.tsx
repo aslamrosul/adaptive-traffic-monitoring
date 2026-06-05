@@ -121,61 +121,49 @@ export default function DetailPersimpanganPage({
 
   const isOnline = intersection.status === 'active';
   
-  // Filter data untuk 1 jam terakhir - HARUS DIDEFINISIKAN DULU
+  // Filter data untuk 1 jam terakhir
   const oneHourAgo = Date.now() - (60 * 60 * 1000);
   const recentTrafficData = trafficData.filter((t: any) => {
     const timestamp = new Date(t.timestamp).getTime();
     return timestamp > oneHourAgo;
   });
   
-  // Calculate lane data from traffic data
-  const laneDirections = ['Utara', 'Timur', 'Selatan', 'Barat'];
-  const lanes = laneDirections.map((direction, idx) => {
-    const laneTraffic = recentTrafficData.filter((t: any) => 
-      t.direction?.toLowerCase() === direction.toLowerCase()
-    );
+  // Get latest traffic data (most recent timestamp)
+  const latestTraffic = recentTrafficData.length > 0
+    ? recentTrafficData.sort((a: any, b: any) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )[0]
+    : null;
+  
+  // Calculate lane data from nested structure
+  const laneDirections: Array<{ key: 'north' | 'south' | 'east' | 'west'; label: string }> = [
+    { key: 'north', label: 'Utara' },
+    { key: 'east', label: 'Timur' },
+    { key: 'south', label: 'Selatan' },
+    { key: 'west', label: 'Barat' },
+  ];
+  
+  const lanes = laneDirections.map(({ key, label }) => {
+    // Calculate total vehicle count for this lane from all recent data
+    const totalVolume = recentTrafficData.reduce((sum: number, t: any) => {
+      return sum + (t[key]?.vehicleCount || 0);
+    }, 0);
     
-    // Get latest traffic data for this lane (most recent)
-    const latestTraffic = laneTraffic.length > 0 
-      ? laneTraffic.sort((a: any, b: any) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        )[0] 
-      : null;
+    // Get latest data for this lane
+    const laneData = latestTraffic?.[key];
     
-    // Calculate total volume from all traffic data for this lane
-    const totalVolume = laneTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
-    
-    // Get traffic light status from database (from latest traffic data)
+    // Get traffic light status from latest data
     let light: LightColor = 'red';
-    let duration = 30; // Default duration
+    let duration = 0;
     
-    if (latestTraffic?.trafficLight) {
-      // Use actual traffic light data from database
-      const lightStatus = latestTraffic.trafficLight.toLowerCase();
-      if (lightStatus === 'green' || lightStatus === 'hijau') {
-        light = 'green';
-        duration = latestTraffic.greenDuration || 45;
-      } else if (lightStatus === 'yellow' || lightStatus === 'kuning') {
-        light = 'yellow';
-        duration = latestTraffic.yellowDuration || 12;
-      } else {
-        light = 'red';
-        duration = latestTraffic.redDuration || 30;
-      }
-    } else {
-      // Fallback: simulate based on index if no data
-      if (idx === 0) {
-        light = 'green';
-        duration = 45;
-      } else if (idx === 2) {
-        light = 'yellow';
-        duration = 12;
-      }
+    if (laneData) {
+      light = laneData.light || 'red';
+      duration = laneData.greenDuration || 0;
     }
     
     return {
-      direction,
-      street: intersection.address?.split(',')[0] || direction,
+      direction: label,
+      street: intersection.address?.split(',')[0] || label,
       volume: totalVolume,
       duration,
       light,
@@ -183,10 +171,24 @@ export default function DetailPersimpanganPage({
   });
 
   // Calculate metrics
-  const totalVolume = recentTrafficData.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
-  const avgCongestion = recentTrafficData.length > 0
-    ? recentTrafficData.reduce((sum: number, t: any) => sum + (t.congestionIndex || 0), 0) / recentTrafficData.length
+  const totalVolume = recentTrafficData.reduce((sum: number, t: any) => {
+    return sum + (t.north?.vehicleCount || 0) + (t.south?.vehicleCount || 0) + 
+           (t.east?.vehicleCount || 0) + (t.west?.vehicleCount || 0);
+  }, 0);
+  
+  // Calculate average queue level as congestion indicator
+  const avgQueueLevel = recentTrafficData.length > 0
+    ? recentTrafficData.reduce((sum: number, t: any) => {
+        const northQueue = t.north?.queueLevel || 0;
+        const southQueue = t.south?.queueLevel || 0;
+        const eastQueue = t.east?.queueLevel || 0;
+        const westQueue = t.west?.queueLevel || 0;
+        return sum + (northQueue + southQueue + eastQueue + westQueue) / 4;
+      }, 0) / recentTrafficData.length
     : 0;
+  
+  // Congestion index based on queue level (0-2 scale to 0-100 percentage)
+  const avgCongestion = (avgQueueLevel / 2) * 100;
   const congestionLevel = avgCongestion > 70 ? 'Macet Parah' : avgCongestion > 50 ? 'Padat' : avgCongestion > 30 ? 'Sedang' : 'Lancar';
   const vcRatio = avgCongestion / 100;
 

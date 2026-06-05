@@ -1,7 +1,49 @@
-import { getIntersectionById, awsTables, putItem } from "@/lib/aws-dynamodb";
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+
+function normalizeIntersection(item: any) {
+  if (!item) return null;
+
+  const intersectionId = item.intersection_id || item.id;
+
+  return {
+    ...item,
+
+    id: intersectionId,
+    intersection_id: intersectionId,
+    intersectionId,
+
+    device_id: item.device_id || item.deviceId || "",
+    deviceId: item.deviceId || item.device_id || "",
+
+    name: item.name || intersectionId,
+    address: item.address || "-",
+    status: item.status || "active",
+
+    lanes: item.lanes || {
+      count: 3,
+      directions: ["north", "south", "east"],
+    },
+
+    config: item.config || {
+      mode: "auto",
+      cycleTime: {
+        min: 30,
+        max: 120,
+      },
+    },
+
+    createdAt: item.createdAt || new Date().toISOString(),
+    updatedAt: item.updatedAt || new Date().toISOString(),
+  };
+}
 
 export async function GET(
   request: Request,
@@ -10,28 +52,26 @@ export async function GET(
   try {
     const { id } = await context.params;
 
-    const item = await getIntersectionById(id);
+    const result = await dynamo.send(
+      new GetCommand({
+        TableName: awsTables.intersections,
+        Key: {
+          intersection_id: id,
+        },
+      })
+    );
 
-    if (!item) {
+    const data = normalizeIntersection(result.Item);
+
+    if (!data) {
       return NextResponse.json(
         {
           success: false,
-          error: "Intersection not found",
+          error: "Persimpangan tidak ditemukan",
         },
         { status: 404 }
       );
     }
-
-    const data = {
-      ...item,
-      id: item.id || item.intersection_id,
-      intersectionId: item.intersection_id || item.id,
-      deviceId: item.deviceId || item.device_id,
-      lanes: item.lanes || {
-        count: 3,
-        directions: ["north", "south", "east"],
-      },
-    };
 
     return NextResponse.json({
       success: true,
@@ -43,7 +83,81 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to fetch intersection",
+        error: error.message || "Gagal memuat persimpangan",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const body = await request.json();
+
+    const existingResult = await dynamo.send(
+      new GetCommand({
+        TableName: awsTables.intersections,
+        Key: {
+          intersection_id: id,
+        },
+      })
+    );
+
+    if (!existingResult.Item) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Persimpangan tidak ditemukan",
+        },
+        { status: 404 }
+      );
+    }
+
+    const updated = normalizeIntersection({
+      ...existingResult.Item,
+      ...body,
+
+      id,
+      intersection_id: id,
+
+      device_id:
+        body.device_id ||
+        body.deviceId ||
+        existingResult.Item.device_id ||
+        existingResult.Item.deviceId,
+
+      deviceId:
+        body.deviceId ||
+        body.device_id ||
+        existingResult.Item.deviceId ||
+        existingResult.Item.device_id,
+
+      updatedAt: new Date().toISOString(),
+    });
+
+    await dynamo.send(
+      new PutCommand({
+        TableName: awsTables.intersections,
+        Item: updated,
+      })
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Persimpangan berhasil diperbarui",
+      data: updated,
+    });
+  } catch (error: any) {
+    console.error("Error updating intersection:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Gagal memperbarui persimpangan",
       },
       { status: 500 }
     );
@@ -54,43 +168,36 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  return PUT(request, context);
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await context.params;
-    const body = await request.json();
 
-    const existing = await getIntersectionById(id);
-
-    if (!existing) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Intersection not found",
+    await dynamo.send(
+      new DeleteCommand({
+        TableName: awsTables.intersections,
+        Key: {
+          intersection_id: id,
         },
-        { status: 404 }
-      );
-    }
-
-    const updated = {
-      ...existing,
-      ...body,
-      intersection_id: id,
-      id: existing.id || id,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await putItem(awsTables.intersections, updated);
+      })
+    );
 
     return NextResponse.json({
       success: true,
-      data: updated,
+      message: "Persimpangan berhasil dihapus",
     });
   } catch (error: any) {
-    console.error("Error updating intersection:", error);
+    console.error("Error deleting intersection:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to update intersection",
+        error: error.message || "Gagal menghapus persimpangan",
       },
       { status: 500 }
     );

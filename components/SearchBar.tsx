@@ -1,126 +1,181 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useTrafficStore } from "@/lib/store";
+import { useEffect, useRef, useState } from "react";
 
 interface SearchBarProps {
   isMobile?: boolean;
   autoFocus?: boolean;
 }
 
-export default function SearchBar({ isMobile = false, autoFocus = false }: SearchBarProps) {
-  const [query, setQuery] = useState("");
-  const [showResults, setShowResults] = useState(false);
-  const [filteredResults, setFilteredResults] = useState<any[]>([]);
+interface SearchResult {
+  id: string;
+  type: "intersection" | "device" | "user";
+  title: string;
+  subtitle: string;
+  href: string;
+  icon: string;
+  status?: string;
+}
+
+export default function SearchBar({
+  isMobile = false,
+  autoFocus = false,
+}: SearchBarProps) {
+  const router = useRouter();
+
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-  
-  const { intersections, fetchIntersections, isLoading } = useTrafficStore();
 
-  // Fetch intersections on mount
-  useEffect(() => {
-    if (intersections.length === 0) {
-      fetchIntersections();
-    }
-  }, [intersections.length, fetchIntersections]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Auto focus for mobile
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
+    if (autoFocus) {
+      inputRef.current?.focus();
     }
   }, [autoFocus]);
 
-  // Filter results based on query
   useEffect(() => {
-    if (query.trim() === "") {
-      // Show all intersections when query is empty (on focus)
-      if (showResults) {
-        setFilteredResults(intersections);
-      } else {
-        setFilteredResults([]);
-      }
-    } else {
-      const filtered = intersections.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          (item.address && item.address.toLowerCase().includes(query.toLowerCase()))
-      );
-      setFilteredResults(filtered);
-      setShowResults(true);
-    }
-  }, [query, intersections, showResults]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+    const closeWhenClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", closeWhenClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", closeWhenClickOutside);
+    };
   }, []);
 
-  const handleSelectIntersection = (id: string, name: string) => {
-    setQuery(name);
+  useEffect(() => {
+    const normalizedQuery = query.trim();
+
+    if (normalizedQuery.length < 2) {
+      setResults([]);
+      setIsLoading(false);
+      setShowResults(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        setIsLoading(true);
+        setShowResults(true);
+
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(normalizedQuery)}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        const json = await response.json();
+
+        if (!response.ok || json.success === false) {
+          throw new Error(json.error || "Pencarian gagal");
+        }
+
+        setResults(json.data || []);
+      } catch (error) {
+        console.error("Search error:", error);
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [query]);
+
+  const handleSelect = (result: SearchResult) => {
+    setQuery(result.title);
     setShowResults(false);
-    router.push(`/persimpangan/${id}`);
+    router.push(result.href);
   };
 
-  const getStatusColor = (status: string) => {
-    const statusLower = status?.toLowerCase() || '';
-    if (statusLower.includes('padat') || statusLower.includes('macet')) {
-      return "bg-red-100 text-red-700";
-    } else if (statusLower.includes('ramai') || statusLower.includes('sedang')) {
-      return "bg-yellow-100 text-yellow-700";
-    } else if (statusLower.includes('lancar')) {
+  const getTypeLabel = (type: SearchResult["type"]) => {
+    if (type === "intersection") return "Persimpangan";
+    if (type === "device") return "Perangkat IoT";
+    return "Pengguna";
+  };
+
+  const getStatusClass = (status?: string) => {
+    const value = String(status || "").toLowerCase();
+
+    if (value === "active" || value === "online") {
       return "bg-green-100 text-green-700";
     }
+
+    if (value === "maintenance") {
+      return "bg-orange-100 text-orange-700";
+    }
+
+    if (value === "inactive" || value === "offline") {
+      return "bg-red-100 text-red-700";
+    }
+
     return "bg-slate-100 text-slate-700";
   };
 
   return (
     <div ref={searchRef} className="relative w-full">
-      <div className={`flex items-center rounded-full px-4 gap-2 border transition-all ${
-        isMobile 
-          ? 'bg-white border-slate-300 focus-within:ring-2 focus-within:ring-primary/20 shadow-lg py-1' 
-          : 'bg-white/20 backdrop-blur-sm border-white/30 focus-within:ring-2 focus-within:ring-white/50 py-1'
-      }`}>
-        <span className={`material-symbols-outlined text-sm ${isMobile ? 'text-slate-600' : 'text-white'}`}>search</span>
+      <div
+        className={`flex items-center rounded-full px-4 gap-2 border transition-all ${
+          isMobile
+            ? "bg-white border-slate-300 focus-within:ring-2 focus-within:ring-primary/20 shadow-lg py-1"
+            : "bg-white/20 backdrop-blur-sm border-white/30 focus-within:ring-2 focus-within:ring-white/50 py-1"
+        }`}
+      >
+        <span
+          className={`material-symbols-outlined text-sm ${
+            isMobile ? "text-slate-600" : "text-white"
+          }`}
+        >
+          search
+        </span>
+
         <input
           ref={inputRef}
-          className={`bg-transparent border-none focus:ring-0 text-sm font-label outline-none w-full ${
-            isMobile 
-              ? 'text-slate-900 placeholder:text-slate-400' 
-              : 'text-white placeholder:text-white/60'
-          }`}
-          placeholder="Cari simpangan..."
-          type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
           onFocus={() => {
-            setShowResults(true);
-            // Show all results when focused with empty query
-            if (query.trim() === "") {
-              setFilteredResults(intersections);
+            if (query.trim().length >= 2) {
+              setShowResults(true);
             }
           }}
+          className={`bg-transparent border-none focus:ring-0 text-sm outline-none w-full ${
+            isMobile
+              ? "text-slate-900 placeholder:text-slate-400"
+              : "text-white placeholder:text-white/60"
+          }`}
+          placeholder="Cari simpangan, device, atau pengguna..."
+          type="text"
         />
+
         {query && (
           <button
+            type="button"
             onClick={() => {
               setQuery("");
+              setResults([]);
               setShowResults(false);
             }}
-            className={`transition-colors flex-shrink-0 ${
-              isMobile 
-                ? 'text-slate-400 hover:text-slate-600' 
-                : 'text-white/60 hover:text-white'
-            }`}
+            className={
+              isMobile
+                ? "text-slate-400 hover:text-slate-600"
+                : "text-white/60 hover:text-white"
+            }
           >
             <span className="material-symbols-outlined text-sm">close</span>
           </button>
@@ -130,85 +185,76 @@ export default function SearchBar({ isMobile = false, autoFocus = false }: Searc
       <AnimatePresence>
         {showResults && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: -8 }}
             className={`absolute top-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] ${
-              isMobile ? "left-0 right-0 w-full" : "left-0 w-[400px] max-w-[90vw]"
+              isMobile
+                ? "left-0 right-0 w-full"
+                : "left-0 w-[460px] max-w-[90vw]"
             }`}
           >
             <div className="p-3 border-b border-slate-100 bg-slate-50">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {isLoading 
-                  ? 'Mencari...' 
-                  : query.trim() === "" 
-                    ? `${filteredResults.length} Simpangan Tersedia`
-                    : `${filteredResults.length} Simpangan Ditemukan`
-                }
+                {isLoading
+                  ? "Mencari..."
+                  : `${results.length} hasil ditemukan`}
               </p>
             </div>
 
             <div className="max-h-96 overflow-y-auto">
               {isLoading ? (
                 <div className="p-8 text-center">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-slate-500">Memuat data...</p>
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-slate-500">Mencari data...</p>
                 </div>
-              ) : filteredResults.length > 0 ? (
-                filteredResults.map((item) => (
+              ) : results.length > 0 ? (
+                results.map((result) => (
                   <button
-                    key={item.id}
-                    onClick={() => handleSelectIntersection(item.id, item.name)}
-                    className="w-full px-4 py-3 hover:bg-slate-50 transition-colors text-left flex items-center justify-between group"
+                    key={result.id}
+                    type="button"
+                    onClick={() => handleSelect(result)}
+                    className="w-full px-4 py-3 hover:bg-slate-50 transition-colors text-left flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-primary text-sm">
-                          traffic
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-primary text-base">
+                          {result.icon}
                         </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors truncate">
-                          {item.name}
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 group-hover:text-primary truncate">
+                          {result.title}
                         </p>
-                        <p className="text-xs text-slate-500 truncate">{item.address || 'Jakarta'}</p>
+
+                        <p className="text-xs text-slate-500 truncate">
+                          {getTypeLabel(result.type)} • {result.subtitle}
+                        </p>
                       </div>
                     </div>
+
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ml-2 ${getStatusColor(
-                        item.status
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${getStatusClass(
+                        result.status
                       )}`}
                     >
-                      {item.status || 'AKTIF'}
+                      {result.status || result.type}
                     </span>
                   </button>
                 ))
               ) : (
                 <div className="p-8 text-center">
-                  <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">
+                  <span className="material-symbols-outlined text-slate-300 text-4xl">
                     search_off
                   </span>
-                  <p className="text-sm text-slate-500">Simpangan tidak ditemukan</p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Coba kata kunci lain
+
+                  <p className="text-sm text-slate-500 mt-2">
+                    Data tidak ditemukan
                   </p>
                 </div>
               )}
             </div>
-
-            {filteredResults.length > 0 && (
-              <div className="p-3 bg-gradient-to-b from-slate-50 to-slate-100 border-t border-slate-200">
-                <button
-                  onClick={() => {
-                    router.push("/persimpangan");
-                    setShowResults(false);
-                  }}
-                  className="text-xs font-bold text-primary hover:underline"
-                >
-                  Lihat Semua Simpangan →
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

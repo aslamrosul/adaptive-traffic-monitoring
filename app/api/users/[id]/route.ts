@@ -177,10 +177,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
+    
+    console.log('🗑️ DELETE user request:', { id });
 
     const existingUser = await findUserById(id);
 
     if (!existingUser) {
+      console.log('❌ User not found:', { id });
       return NextResponse.json(
         {
           success: false,
@@ -189,6 +192,12 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    console.log('🔍 Found user to delete:', { 
+      id: existingUser.id, 
+      email: existingUser.email,
+      name: existingUser.name 
+    });
 
     await dynamo.send(
       new DeleteCommand({
@@ -199,12 +208,14 @@ export async function DELETE(
       })
     );
 
+    console.log('✅ User deleted successfully:', { email: existingUser.email });
+
     return NextResponse.json({
       success: true,
       message: "Pengguna berhasil dihapus",
     });
   } catch (error: any) {
-    console.error("Error deleting user:", error);
+    console.error("❌ Error deleting user:", error);
 
     return NextResponse.json(
       {

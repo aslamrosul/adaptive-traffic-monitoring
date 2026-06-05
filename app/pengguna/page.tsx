@@ -101,15 +101,18 @@ export default function PenggunaPage() {
         <div className="flex gap-2">
           <button
             onClick={async () => {
+              toast.dismiss(t.id);
+              const loadingToast = toast.loading("Menghapus pengguna...");
+              
               try {
                 const response = await fetch(`/api/users/${userId}`, {
                   method: "DELETE",
                 });
 
                 const result = await response.json();
+                toast.dismiss(loadingToast);
 
                 if (result.success) {
-                  toast.dismiss(t.id);
                   toast.success("Pengguna berhasil dihapus");
                   fetchUsers(); // Refresh list
                 } else {
@@ -117,22 +120,29 @@ export default function PenggunaPage() {
                 }
               } catch (error) {
                 console.error("Error deleting user:", error);
+                toast.dismiss(loadingToast);
                 toast.error("Gagal menghapus pengguna");
               }
             }}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold"
+            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
           >
             Hapus
           </button>
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold"
+            className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 transition-colors"
           >
             Batal
           </button>
         </div>
       </div>
-    ), { duration: 5000 });
+    ), { 
+      duration: 5000,
+      position: 'top-center',  // Pindah ke tengah atas
+      style: {
+        minWidth: '300px'
+      }
+    });
   };
 
   // Filter users based on search
