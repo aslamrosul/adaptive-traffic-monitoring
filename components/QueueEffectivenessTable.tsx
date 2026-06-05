@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Download,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { ChevronUp, ChevronDown, Download } from "lucide-react";
+
+type LaneFilter = "all" | "north" | "south" | "east";
 
 interface RowData {
   lane: string;
@@ -14,8 +22,10 @@ interface RowData {
 }
 
 interface QueueEffectivenessTableProps {
-  startDate: string; // ISO date string (YYYY-MM-DD)
-  endDate: string;   // ISO date string (YYYY-MM-DD)
+  startDate: string;
+  endDate: string;
+  intersectionId?: string;
+  lane?: LaneFilter;
 }
 
 interface SortConfig {
@@ -23,579 +33,476 @@ interface SortConfig {
   direction: "asc" | "desc";
 }
 
-// Expected green light durations for each queue level
-const EXPECTED_DURATIONS: Record<number, number> = {
-  0: 7,   // Level 0 (Lancar): 7 seconds
-  1: 10,  // Level 1 (Sedang): 10 seconds
-  2: 15,  // Level 2 (Padat): 15 seconds
+const EXPECTED_DURATIONS: Record<0 | 1 | 2, number> = {
+  0: 10,
+  1: 20,
+  2: 30,
 };
-
-// Lane names
-const LANE_NAMES: Record<string, string> = {
-  north: "Jalur Utara",
-  south: "Jalur Selatan",
-  east: "Jalur Timur",
-  west: "Jalur Barat",
-};
-
-// Mock data generator
-function generateMockData(): RowData[] {
-  return [
-    {
-      lane: "Jalur Utara",
-      queueLevel: 0,
-      count: 450,
-      avgGreenDuration: 7.2,
-      effectiveness: 97.1,
-    },
-    {
-      lane: "Jalur Utara",
-      queueLevel: 1,
-      count: 320,
-      avgGreenDuration: 10.5,
-      effectiveness: 95.2,
-    },
-    {
-      lane: "Jalur Utara",
-      queueLevel: 2,
-      count: 180,
-      avgGreenDuration: 15.8,
-      effectiveness: 94.9,
-    },
-    {
-      lane: "Jalur Selatan",
-      queueLevel: 0,
-      count: 480,
-      avgGreenDuration: 7.1,
-      effectiveness: 98.6,
-    },
-    {
-      lane: "Jalur Selatan",
-      queueLevel: 1,
-      count: 350,
-      avgGreenDuration: 10.3,
-      effectiveness: 96.8,
-    },
-    {
-      lane: "Jalur Selatan",
-      queueLevel: 2,
-      count: 170,
-      avgGreenDuration: 15.2,
-      effectiveness: 98.7,
-    },
-    {
-      lane: "Jalur Timur",
-      queueLevel: 0,
-      count: 420,
-      avgGreenDuration: 7.3,
-      effectiveness: 95.9,
-    },
-    {
-      lane: "Jalur Timur",
-      queueLevel: 1,
-      count: 310,
-      avgGreenDuration: 10.7,
-      effectiveness: 93.5,
-    },
-    {
-      lane: "Jalur Timur",
-      queueLevel: 2,
-      count: 190,
-      avgGreenDuration: 16.1,
-      effectiveness: 93.1,
-    },
-    {
-      lane: "Jalur Barat",
-      queueLevel: 0,
-      count: 460,
-      avgGreenDuration: 7.0,
-      effectiveness: 100.0,
-    },
-    {
-      lane: "Jalur Barat",
-      queueLevel: 1,
-      count: 340,
-      avgGreenDuration: 10.2,
-      effectiveness: 97.9,
-    },
-    {
-      lane: "Jalur Barat",
-      queueLevel: 2,
-      count: 200,
-      avgGreenDuration: 15.5,
-      effectiveness: 96.7,
-    },
-  ];
-}
 
 export default function QueueEffectivenessTable({
   startDate,
   endDate,
+  intersectionId = "all",
+  lane = "all",
 }: QueueEffectivenessTableProps) {
-  const [tableData, setTableData] = useState<RowData[]>(generateMockData());
+  const [tableData, setTableData] = useState<RowData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "lane",
     direction: "asc",
   });
+
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  // Fetch data from API
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `/api/analytics/queue-effectiveness?startDate=${startDate}&endDate=${endDate}`
-      );
+  const itemsPerPage = 9;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-
-      const data = await response.json();
-      setTableData(data.rows || generateMockData());
-      toast.success("Data berhasil dimuat");
-    } catch (error) {
-      console.error("Error fetching queue effectiveness data:", error);
-      toast.error("Gagal memuat data, menggunakan data demo");
-      setTableData(generateMockData());
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch data when dates change
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchData();
+    if (!startDate || !endDate) {
+      return;
     }
-  }, [startDate, endDate]);
 
-  // Sort data
+    const controller = new AbortController();
+
+    async function fetchData() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const params = new URLSearchParams({
+          startDate,
+          endDate,
+          lane,
+          limit: "5000",
+        });
+
+        if (intersectionId && intersectionId !== "all") {
+          params.set("intersectionId", intersectionId);
+        }
+
+        const response = await fetch(
+          `/api/analytics/queue-effectiveness?${params.toString()}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+          throw new Error(
+            result.error || "Gagal mengambil efektivitas antrian"
+          );
+        }
+
+        const rows = Array.isArray(result.rows)
+          ? result.rows.filter((row: RowData) => row.count > 0)
+          : [];
+
+        setTableData(rows);
+        setCurrentPage(1);
+      } catch (fetchError: any) {
+        if (fetchError.name === "AbortError") {
+          return;
+        }
+
+        console.error("Error fetching queue effectiveness:", fetchError);
+
+        setError(
+          fetchError.message || "Gagal memuat tabel efektivitas antrian"
+        );
+
+        setTableData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+
+    return () => controller.abort();
+  }, [startDate, endDate, intersectionId, lane]);
+
   const sortedData = useMemo(() => {
-    const sorted = [...tableData].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
+    return [...tableData].sort((a, b) => {
+      const first = a[sortConfig.key];
+      const second = b[sortConfig.key];
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
+      if (typeof first === "string" && typeof second === "string") {
         return sortConfig.direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+          ? first.localeCompare(second)
+          : second.localeCompare(first);
       }
 
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
+      if (typeof first === "number" && typeof second === "number") {
+        return sortConfig.direction === "asc"
+          ? first - second
+          : second - first;
       }
 
       return 0;
     });
-
-    return sorted;
   }, [tableData, sortConfig]);
 
-  // Paginate data
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedData.length / itemsPerPage)
+  );
+
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return sortedData.slice(startIndex, endIndex);
+
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedData, currentPage]);
 
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, sortedData.length);
-
-  // Helper functions
-  const getLevelBadge = (level: number): string => {
-    switch (level) {
-      case 0:
-        return "bg-green-100 text-green-800";
-      case 1:
-        return "bg-yellow-100 text-yellow-800";
-      case 2:
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getLevelName = (level: number): string => {
-    switch (level) {
-      case 0:
-        return "Lancar";
-      case 1:
-        return "Sedang";
-      case 2:
-        return "Padat";
-      default:
-        return "Unknown";
-    }
-  };
-
-  const getEffectivenessColor = (effectiveness: number): string => {
-    if (effectiveness >= 95) return "text-green-600 font-semibold";
-    if (effectiveness >= 90) return "text-yellow-600 font-semibold";
-    return "text-red-600 font-semibold";
-  };
-
-  const getEffectivenessStatus = (effectiveness: number): string => {
-    if (effectiveness >= 95) return "✅ Excellent";
-    if (effectiveness >= 90) return "✅ Good";
-    if (effectiveness >= 85) return "⚠️ Fair";
-    return "❌ Poor";
-  };
-
-  // Handle sort
   const handleSort = (key: keyof RowData) => {
-    setSortConfig({
+    setSortConfig((current) => ({
       key,
       direction:
-        sortConfig.key === key && sortConfig.direction === "asc"
+        current.key === key && current.direction === "asc"
           ? "desc"
           : "asc",
-    });
+    }));
+
     setCurrentPage(1);
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
-    try {
-      const headers = [
-        "Lane",
-        "Queue Level",
-        "Count",
-        "Avg Duration (s)",
-        "Expected (s)",
-        "Effectiveness (%)",
-      ];
-
-      const rows = sortedData.map((row) => [
-        row.lane,
-        `${row.queueLevel} (${getLevelName(row.queueLevel)})`,
-        row.count,
-        row.avgGreenDuration.toFixed(1),
-        EXPECTED_DURATIONS[row.queueLevel],
-        row.effectiveness.toFixed(1),
-      ]);
-
-      const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
-        "\n"
-      );
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `queue-effectiveness-${startDate}-${endDate}.csv`
-      );
-      link.style.visibility = "hidden";
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.success("Data berhasil diexport ke CSV");
-    } catch (error) {
-      console.error("Error exporting CSV:", error);
-      toast.error("Gagal mengexport data");
-    }
+  const getLevelName = (level: number) => {
+    if (level === 0) return "Lancar";
+    if (level === 1) return "Sedang";
+    return "Padat";
   };
 
-  // Sort indicator component
-  const SortIndicator = ({ column }: { column: keyof RowData }) => {
+  const getLevelBadgeClass = (level: number) => {
+    if (level === 0) return "bg-emerald-100 text-emerald-700";
+    if (level === 1) return "bg-amber-100 text-amber-700";
+    return "bg-red-100 text-red-700";
+  };
+
+  const getEffectivenessClass = (value: number) => {
+    if (value >= 95) return "text-emerald-600";
+    if (value >= 85) return "text-amber-600";
+    return "text-red-600";
+  };
+
+  const getEffectivenessLabel = (value: number) => {
+    if (value >= 95) return "Sangat Efektif";
+    if (value >= 85) return "Efektif";
+    if (value >= 70) return "Cukup";
+    return "Perlu Evaluasi";
+  };
+
+  const escapeCsvValue = (value: string | number) => {
+    const text = String(value).replaceAll('"', '""');
+
+    return `"${text}"`;
+  };
+
+  const exportToCsv = () => {
+    if (sortedData.length === 0) {
+      toast.error("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const headers = [
+      "Jalur",
+      "Queue Level",
+      "Kondisi",
+      "Jumlah Sampel",
+      "Rata-rata Durasi Aktual",
+      "Target Durasi",
+      "Efektivitas",
+    ];
+
+    const rows = sortedData.map((row) => [
+      row.lane,
+      row.queueLevel,
+      getLevelName(row.queueLevel),
+      row.count,
+      row.avgGreenDuration.toFixed(1),
+      EXPECTED_DURATIONS[row.queueLevel],
+      row.effectiveness.toFixed(1),
+    ]);
+
+    const content = [
+      headers.map(escapeCsvValue).join(","),
+      ...rows.map((row) => row.map(escapeCsvValue).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([content], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = url;
+    anchor.download = `queue-effectiveness-${startDate}-${endDate}.csv`;
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    URL.revokeObjectURL(url);
+
+    toast.success("Data berhasil diekspor");
+  };
+
+  const SortIcon = ({ column }: { column: keyof RowData }) => {
     if (sortConfig.key !== column) {
-      return <div className="w-4 h-4 opacity-0" />;
+      return null;
     }
 
     return sortConfig.direction === "asc" ? (
-      <ChevronUp className="w-4 h-4 inline ml-1" />
+      <ChevronUp className="h-4 w-4" />
     ) : (
-      <ChevronDown className="w-4 h-4 inline ml-1" />
+      <ChevronDown className="h-4 w-4" />
     );
   };
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white rounded-lg p-4 lg:p-6 shadow-lg border border-slate-100"
+      className="rounded-xl border border-slate-200 bg-white p-4 shadow-lg lg:p-6"
     >
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-lg lg:text-xl font-bold font-headline text-on-surface mb-2">
-              📊 Tabel Efektivitas Antrian
-            </h3>
-            <p className="text-sm text-slate-500">
-              Detail efektivitas durasi lampu hijau per jalur dan level antrian dari{" "}
-              <span className="font-semibold">{startDate}</span> hingga{" "}
-              <span className="font-semibold">{endDate}</span>
-            </p>
-          </div>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 lg:text-xl">
+            Efektivitas Durasi Hijau per Jalur
+          </h3>
 
-          {/* Export Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={exportToCSV}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all"
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </motion.button>
+          <p className="mt-1 text-xs text-slate-500 lg:text-sm">
+            Perbandingan durasi aktual terhadap target setiap level antrian.
+          </p>
         </div>
+
+        <button
+          type="button"
+          onClick={exportToCsv}
+          disabled={isLoading || sortedData.length === 0}
+          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" />
+          Ekspor CSV
+        </button>
       </div>
 
-      {/* Loading State */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-96">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium">Memuat data efektivitas antrian...</p>
+            <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+
+            <p className="text-sm text-slate-500">
+              Memuat tabel efektivitas...
+            </p>
           </div>
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+          <span className="material-symbols-outlined text-4xl text-red-400">
+            error
+          </span>
+
+          <p className="mt-2 font-bold text-red-700">
+            Data gagal dimuat
+          </p>
+
+          <p className="mt-1 text-sm text-red-600">{error}</p>
+        </div>
+      ) : sortedData.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+          <span className="material-symbols-outlined text-5xl text-slate-300">
+            table_rows
+          </span>
+
+          <p className="mt-2 font-bold text-slate-700">
+            Belum ada data efektivitas
+          </p>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Tidak ditemukan telemetry pada filter yang dipilih.
+          </p>
         </div>
       ) : (
         <>
-          {/* Table Container */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full min-w-[850px]">
+              <thead className="bg-slate-50">
+                <tr className="border-b border-slate-200">
                   <th className="px-4 py-3 text-left">
                     <button
+                      type="button"
                       onClick={() => handleSort("lane")}
-                      className="flex items-center gap-2 font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+                      className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
                       Jalur
-                      <SortIndicator column="lane" />
+                      <SortIcon column="lane" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center">
+
+                  <th className="px-4 py-3 text-left">
                     <button
+                      type="button"
                       onClick={() => handleSort("queueLevel")}
-                      className="flex items-center justify-center gap-2 font-semibold text-slate-700 hover:text-slate-900 transition-colors w-full"
+                      className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
                       Level
-                      <SortIndicator column="queueLevel" />
+                      <SortIcon column="queueLevel" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center">
+
+                  <th className="px-4 py-3 text-right">
                     <button
+                      type="button"
                       onClick={() => handleSort("count")}
-                      className="flex items-center justify-center gap-2 font-semibold text-slate-700 hover:text-slate-900 transition-colors w-full"
+                      className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Jumlah
-                      <SortIndicator column="count" />
+                      Sampel
+                      <SortIcon column="count" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center">
+
+                  <th className="px-4 py-3 text-right">
                     <button
+                      type="button"
                       onClick={() => handleSort("avgGreenDuration")}
-                      className="flex items-center justify-center gap-2 font-semibold text-slate-700 hover:text-slate-900 transition-colors w-full"
+                      className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Rata-rata
-                      <SortIndicator column="avgGreenDuration" />
+                      Aktual
+                      <SortIcon column="avgGreenDuration" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-center font-semibold text-slate-700">
-                    Diharapkan
+
+                  <th className="px-4 py-3 text-right">
+                    <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                      Target
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-center">
+
+                  <th className="px-4 py-3 text-right">
                     <button
+                      type="button"
                       onClick={() => handleSort("effectiveness")}
-                      className="flex items-center justify-center gap-2 font-semibold text-slate-700 hover:text-slate-900 transition-colors w-full"
+                      className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
                       Efektivitas
-                      <SortIndicator column="effectiveness" />
+                      <SortIcon column="effectiveness" />
                     </button>
+                  </th>
+
+                  <th className="px-4 py-3 text-left">
+                    <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                      Evaluasi
+                    </span>
                   </th>
                 </tr>
               </thead>
+
               <tbody>
-                {paginatedData.map((row, index) => (
-                  <motion.tr
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                {paginatedData.map((row) => (
+                  <tr
+                    key={`${row.lane}-${row.queueLevel}`}
+                    className="border-b border-slate-100 transition-colors last:border-b-0 hover:bg-slate-50"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-800">
+                    <td className="px-4 py-4 text-sm font-bold text-slate-800">
                       {row.lane}
                     </td>
-                    <td className="px-4 py-3 text-center">
+
+                    <td className="px-4 py-4">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getLevelBadge(
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${getLevelBadgeClass(
                           row.queueLevel
                         )}`}
                       >
-                        Level {row.queueLevel} ({getLevelName(row.queueLevel)})
+                        Level {row.queueLevel} ·{" "}
+                        {getLevelName(row.queueLevel)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-700">
-                      {row.count.toLocaleString()}
+
+                    <td className="px-4 py-4 text-right text-sm font-semibold text-slate-700">
+                      {row.count.toLocaleString("id-ID")}
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-700 font-medium">
+
+                    <td className="px-4 py-4 text-right text-sm font-bold text-blue-600">
                       {row.avgGreenDuration.toFixed(1)}s
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-700 font-medium">
+
+                    <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                       {EXPECTED_DURATIONS[row.queueLevel]}s
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className={getEffectivenessColor(row.effectiveness)}>
-                          {row.effectiveness.toFixed(1)}%
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {getEffectivenessStatus(row.effectiveness)}
-                        </span>
-                      </div>
+
+                    <td
+                      className={`px-4 py-4 text-right text-sm font-black ${getEffectivenessClass(
+                        row.effectiveness
+                      )}`}
+                    >
+                      {row.effectiveness.toFixed(1)}%
                     </td>
-                  </motion.tr>
+
+                    <td className="px-4 py-4 text-sm text-slate-600">
+                      {getEffectivenessLabel(row.effectiveness)}
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mt-6 pt-6 border-t border-slate-200"
-          >
-            <div className="text-sm text-slate-600">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-slate-500">
               Menampilkan{" "}
-              <span className="font-semibold">{startIndex + 1}</span> hingga{" "}
-              <span className="font-semibold">{endIndex}</span> dari{" "}
-              <span className="font-semibold">{sortedData.length}</span> data
-            </div>
+              <span className="font-bold text-slate-700">
+                {(currentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              hingga{" "}
+              <span className="font-bold text-slate-700">
+                {Math.min(currentPage * itemsPerPage, sortedData.length)}
+              </span>{" "}
+              dari{" "}
+              <span className="font-bold text-slate-700">
+                {sortedData.length}
+              </span>{" "}
+              data
+            </p>
 
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Sebelumnya
-              </motion.button>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((current) => Math.max(1, current - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
 
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg">
-                <span className="text-sm font-semibold text-slate-700">
-                  Halaman {currentPage} dari {totalPages}
+                <span className="text-xs font-bold text-slate-600">
+                  Halaman {currentPage} / {totalPages}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((current) =>
+                      Math.min(totalPages, current + 1)
+                    )
+                  }
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-30"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Berikutnya
-              </motion.button>
-            </div>
-          </motion.div>
-
-          {/* Summary Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6"
-          >
-            {/* Total Records */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-slate-600 mb-1">Total Data</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {sortedData.length.toLocaleString()}
-              </p>
-            </div>
-
-            {/* Average Effectiveness */}
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-slate-600 mb-1">Rata-rata Efektivitas</p>
-              <p className="text-2xl font-bold text-green-600">
-                {(
-                  sortedData.reduce((sum, row) => sum + row.effectiveness, 0) /
-                  sortedData.length
-                ).toFixed(1)}
-                %
-              </p>
-            </div>
-
-            {/* Highest Effectiveness */}
-            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-              <p className="text-sm text-slate-600 mb-1">Efektivitas Tertinggi</p>
-              <p className="text-2xl font-bold text-emerald-600">
-                {Math.max(...sortedData.map((row) => row.effectiveness)).toFixed(
-                  1
-                )}
-                %
-              </p>
-            </div>
-
-            {/* Lowest Effectiveness */}
-            <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <p className="text-sm text-slate-600 mb-1">Efektivitas Terendah</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {Math.min(...sortedData.map((row) => row.effectiveness)).toFixed(
-                  1
-                )}
-                %
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Info Box */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200"
-          >
-            <h4 className="font-bold text-sm text-indigo-900 mb-2">
-              💡 Cara Membaca Tabel
-            </h4>
-            <ul className="text-xs text-indigo-800 space-y-1">
-              <li>
-                • <span className="font-semibold">Jalur:</span> Nama jalur lalu lintas
-              </li>
-              <li>
-                • <span className="font-semibold">Level:</span> Level antrian (0=Lancar,
-                1=Sedang, 2=Padat)
-              </li>
-              <li>
-                • <span className="font-semibold">Jumlah:</span> Berapa kali level ini
-                terdeteksi
-              </li>
-              <li>
-                • <span className="font-semibold">Rata-rata:</span> Durasi lampu hijau
-                rata-rata yang digunakan
-              </li>
-              <li>
-                • <span className="font-semibold">Diharapkan:</span> Durasi lampu hijau
-                yang seharusnya digunakan
-              </li>
-              <li>
-                • <span className="font-semibold">Efektivitas:</span> Persentase sesuai
-                antara durasi aktual dan diharapkan
-              </li>
-            </ul>
-          </motion.div>
+            )}
+          </div>
         </>
       )}
-    </motion.div>
+    </motion.section>
   );
 }

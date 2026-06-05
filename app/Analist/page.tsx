@@ -1,5 +1,9 @@
 "use client";
 
+import AnalyticsTimeFilter, {
+  type DateRange,
+  type TimeRange,
+} from "@/components/AnalyticsTimeFilter";
 import DashboardLayout from "@/components/DashboardLayout";
 import GreenDurationChart from "@/components/GreenDurationChart";
 import QueueDistributionChart from "@/components/QueueDistributionChart";
@@ -10,65 +14,140 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-type QueueDistributionItem = {
+type LaneFilter = "all" | "north" | "south" | "east";
+
+
+interface QueueDistributionItem {
   level: 0 | 1 | 2;
   count: number;
   percentage: number;
-};
+}
+
+interface DeviceStats {
+  total: number;
+  online: number;
+  offline: number;
+}
+
+function dateToInputValue(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+function calculateDateRange(
+  timeRange: TimeRange,
+  customDates?: DateRange
+): {
+  startDate: string;
+  endDate: string;
+} {
+  const end = new Date();
+  const start = new Date(end);
+
+  switch (timeRange) {
+    case "today":
+      break;
+
+    case "yesterday":
+      start.setDate(start.getDate() - 1);
+      end.setDate(end.getDate() - 1);
+      break;
+
+    case "30days":
+      start.setDate(start.getDate() - 30);
+      break;
+
+    case "custom":
+      if (customDates) {
+        return {
+          startDate: customDates.startDate,
+          endDate: customDates.endDate,
+        };
+      }
+
+      start.setDate(start.getDate() - 7);
+      break;
+
+    case "7days":
+    default:
+      start.setDate(start.getDate() - 7);
+      break;
+  }
+
+  return {
+    startDate: dateToInputValue(start),
+    endDate: dateToInputValue(end),
+  };
+}
 
 export default function AnalitikPage() {
-  const [selectedIntersection, setSelectedIntersection] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return { start: sevenDaysAgo, end: today };
+  const [selectedIntersection, setSelectedIntersection] =
+    useState<string>("all");
+
+  const [selectedLane, setSelectedLane] =
+    useState<LaneFilter>("all");
+
+  const [timeRange, setTimeRange] =
+    useState<TimeRange>("7days");
+
+  const [customDates, setCustomDates] =
+    useState<DateRange | undefined>();
+
+  const [queueDistributionData, setQueueDistributionData] =
+    useState<QueueDistributionItem[]>([]);
+
+  const [loadingQueueDistribution, setLoadingQueueDistribution] =
+    useState(false);
+
+  const [deviceStats, setDeviceStats] = useState<DeviceStats>({
+    total: 0,
+    online: 0,
+    offline: 0,
   });
 
-  const [queueDistributionData, setQueueDistributionData] = useState<QueueDistributionItem[]>([]);
-  const [loadingQueueDistribution, setLoadingQueueDistribution] = useState(false);
+  const { intersections, isLoading: loadingIntersections } =
+    useIntersections();
 
-  const { intersections, isLoading: loadingIntersections } = useIntersections();
+  const { startDate, endDate } = useMemo(
+    () => calculateDateRange(timeRange, customDates),
+    [timeRange, customDates]
+  );
+
+  const analyticsDate = endDate;
+
+  const intersectionId =
+    selectedIntersection === "all"
+      ? undefined
+      : selectedIntersection;
 
   useEffect(() => {
-    const start = dateRange.start.toISOString().split("T")[0];
-    const end = dateRange.end.toISOString().split("T")[0];
-    setStartDate(start);
-    setEndDate(end);
-  }, [dateRange]);
-
-  const analyticsDate = useMemo(() => {
-    return endDate || new Date().toISOString().split("T")[0];
-  }, [endDate]);
-
-  useEffect(() => {
-    async function fetchQueueDistribution() {
-      if (!startDate || !endDate) return;
-
+    async function fetchDistribution() {
       setLoadingQueueDistribution(true);
 
       try {
         const params = new URLSearchParams({
           startDate,
           endDate,
-          lane: "all",
+          lane: selectedLane,
           limit: "5000",
         });
 
-        if (selectedIntersection !== "all") {
-          params.set("intersectionId", selectedIntersection);
+        if (intersectionId) {
+          params.set("intersectionId", intersectionId);
         }
 
-        const res = await fetch(`/api/analytics/queue-distribution?${params.toString()}`, {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          `/api/analytics/queue-distribution?${params.toString()}`,
+          {
+            cache: "no-store",
+          }
+        );
 
-        const json = await res.json();
+        const json = await response.json();
 
-        if (!res.ok || json.success === false) {
-          throw new Error(json.error || "Gagal mengambil distribusi antrian");
+        if (!response.ok || json.success === false) {
+          throw new Error(
+            json.error || "Gagal mengambil distribusi antrian"
+          );
         }
 
         setQueueDistributionData([
@@ -89,225 +168,424 @@ export default function AnalitikPage() {
           },
         ]);
       } catch (error: any) {
-        console.error("Error fetching queue distribution:", error);
-        toast.error(error.message || "Gagal memuat distribusi antrian");
+        console.error("Queue distribution error:", error);
         setQueueDistributionData([]);
+        toast.error(
+          error.message || "Gagal memuat distribusi antrian"
+        );
       } finally {
         setLoadingQueueDistribution(false);
       }
     }
 
-    fetchQueueDistribution();
-  }, [startDate, endDate, selectedIntersection]);
+    fetchDistribution();
+  }, [startDate, endDate, selectedLane, intersectionId]);
+
+  useEffect(() => {
+    async function fetchDeviceStats() {
+      try {
+        const response = await fetch("/api/devices/status", {
+          cache: "no-store",
+        });
+
+        const json = await response.json();
+
+        if (!response.ok || json.success === false) {
+          throw new Error(json.error || "Gagal memuat status perangkat");
+        }
+
+        setDeviceStats({
+          total: json.stats?.total ?? json.count ?? 0,
+          online: json.stats?.online ?? 0,
+          offline: json.stats?.offline ?? 0,
+        });
+      } catch (error) {
+        console.error("Device stats error:", error);
+        setDeviceStats({
+          total: 0,
+          online: 0,
+          offline: 0,
+        });
+      }
+    }
+
+    fetchDeviceStats();
+
+    const interval = window.setInterval(fetchDeviceStats, 60_000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const totalSamples = useMemo(() => {
+    return queueDistributionData.reduce(
+      (sum, item) => sum + item.count,
+      0
+    );
+  }, [queueDistributionData]);
+
+  const averageQueueLevel = useMemo(() => {
+    if (totalSamples === 0) {
+      return 0;
+    }
+
+    const weightedTotal = queueDistributionData.reduce(
+      (sum, item) => sum + item.level * item.count,
+      0
+    );
+
+    return Math.round((weightedTotal / totalSamples) * 100) / 100;
+  }, [queueDistributionData, totalSamples]);
+
+  const dominantCondition = useMemo(() => {
+    if (totalSamples === 0) {
+      return "Belum ada data";
+    }
+
+    const dominant = [...queueDistributionData].sort(
+      (a, b) => b.count - a.count
+    )[0];
+
+    if (dominant.level === 0) {
+      return "Lancar";
+    }
+
+    if (dominant.level === 1) {
+      return "Sedang";
+    }
+
+    return "Padat";
+  }, [queueDistributionData, totalSamples]);
+
+  const selectedIntersectionName = useMemo(() => {
+    if (selectedIntersection === "all") {
+      return "Semua Persimpangan";
+    }
+
+    const intersection = intersections.find((item: any) => {
+      const id = item.id || item.intersection_id;
+      return id === selectedIntersection;
+    });
+
+    return intersection?.name || selectedIntersection;
+  }, [intersections, selectedIntersection]);
+
+  const handleFilterChange = (
+    range: TimeRange,
+    dates?: DateRange
+  ) => {
+    setTimeRange(range);
+
+    if (range === "custom" && dates) {
+      setCustomDates(dates);
+    } else {
+      setCustomDates(undefined);
+    }
+  };
 
   const handleIntersectionChange = (value: string) => {
     setSelectedIntersection(value);
 
-    const intersection = intersections.find((i: any) => i.id === value);
+    const intersection = intersections.find((item: any) => {
+      return (item.id || item.intersection_id) === value;
+    });
+
     toast.success(
-      `Filter diubah ke: ${intersection?.name || "Semua Persimpangan"}`
+      `Persimpangan: ${intersection?.name || "Semua Persimpangan"}`
     );
   };
 
-  const handleApplyFilter = () => {
-    if (!startDate || !endDate) {
-      toast.error("Tanggal awal dan akhir harus diisi");
-      return;
-    }
+  const handleLaneChange = (value: LaneFilter) => {
+    setSelectedLane(value);
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const labels: Record<LaneFilter, string> = {
+      all: "Semua Jalur",
+      north: "Jalur Utara",
+      south: "Jalur Selatan",
+      east: "Jalur Timur",
+    };
 
-    if (start > end) {
-      toast.error("Tanggal awal harus lebih kecil dari tanggal akhir");
-      return;
-    }
-
-    setDateRange({ start, end });
-    toast.success("Filter tanggal berhasil diterapkan");
+    toast.success(`Filter jalur: ${labels[value]}`);
   };
 
-  const handleResetFilter = () => {
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const handleExportSummary = () => {
+    const rows = [
+      ["Metrik", "Nilai"],
+      ["Persimpangan", selectedIntersectionName],
+      ["Jalur", selectedLane],
+      ["Tanggal Awal", startDate],
+      ["Tanggal Akhir", endDate],
+      ["Total Sampel Antrian", totalSamples],
+      ["Rata-rata Queue Level", averageQueueLevel],
+      ["Kondisi Dominan", dominantCondition],
+      ["Perangkat Online", `${deviceStats.online}/${deviceStats.total}`],
+      [],
+      ["Level", "Jumlah", "Persentase"],
+      ...queueDistributionData.map((item) => [
+        `Level ${item.level}`,
+        item.count,
+        `${item.percentage}%`,
+      ]),
+    ];
 
-    setDateRange({ start: sevenDaysAgo, end: today });
-    toast.success("Filter tanggal direset ke 7 hari terakhir");
-  };
+    const csv = rows
+      .map((row) =>
+        row
+          .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+          .join(",")
+      )
+      .join("\n");
 
-  const handleQuickPreset = (preset: string) => {
-    const today = new Date();
-    let start = new Date(today);
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
 
-    switch (preset) {
-      case "today":
-        start = new Date(today);
-        break;
-      case "yesterday":
-        start = new Date(today);
-        start.setDate(start.getDate() - 1);
-        today.setDate(today.getDate() - 1);
-        break;
-      case "last7days":
-        start.setDate(start.getDate() - 7);
-        break;
-      case "last30days":
-        start.setDate(start.getDate() - 30);
-        break;
-      case "thisMonth":
-        start = new Date(today.getFullYear(), today.getMonth(), 1);
-        break;
-    }
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
 
-    setDateRange({ start, end: today });
-    toast.success(`Filter diubah ke: ${preset}`);
+    anchor.href = url;
+    anchor.download = `ringkasan-analitik-${startDate}-${endDate}.csv`;
+    anchor.click();
+
+    URL.revokeObjectURL(url);
+
+    toast.success("Ringkasan analitik berhasil diekspor");
   };
 
   return (
-    <DashboardLayout title="Analitik Lalu Lintas - Queue-Based Analytics">
-      <div className="p-3 lg:p-6 space-y-4 lg:space-y-6 max-w-[1920px] mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
+    <DashboardLayout title="Analitik Lalu Lintas">
+      <div className="mx-auto max-w-[1920px] space-y-4 p-3 lg:space-y-6 lg:p-6">
+        <motion.section
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+          className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
         >
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold font-headline text-on-surface">
-              Dashboard Analitik Antrian
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+              Queue-Based Analytics
+            </p>
+
+            <h1 className="text-2xl font-black text-slate-900 lg:text-3xl">
+              Dashboard Analitik Lalu Lintas
             </h1>
-            <p className="text-sm lg:text-base text-slate-500 mt-1">
-              Analisis berbasis level antrian dari DynamoDB TrafficTelemetry
+
+            <p className="mt-1 text-sm text-slate-500">
+              Analisis nyata dari DynamoDB TrafficTelemetry tanpa data dummy.
             </p>
           </div>
 
-          <select
-            value={selectedIntersection}
-            onChange={(e) => handleIntersectionChange(e.target.value)}
-            className="bg-white border border-outline-variant/30 rounded px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-primary/20 shadow-sm"
-            disabled={loadingIntersections}
+          <button
+            type="button"
+            onClick={handleExportSummary}
+            className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:shadow-xl"
           >
-            <option value="all">Semua Persimpangan</option>
-            {intersections.map((intersection: any) => (
-              <option key={intersection.id} value={intersection.id}>
-                {intersection.name}
-              </option>
-            ))}
-          </select>
-        </motion.div>
+            <span className="material-symbols-outlined text-lg">
+              download
+            </span>
+            Ekspor Ringkasan
+          </button>
+        </motion.section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+        <AnalyticsTimeFilter
+          currentRange={timeRange}
+          onFilterChange={handleFilterChange}
+        />
+
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-white rounded-lg p-4 lg:p-6 shadow-lg border border-slate-100"
+          className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2"
         >
-          <h3 className="text-sm lg:text-base font-bold font-headline text-on-surface mb-4">
-            Filter Rentang Tanggal
-          </h3>
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+              Persimpangan
+            </label>
 
-          <div className="flex flex-wrap gap-2 mb-6">
-            <button onClick={() => handleQuickPreset("today")} className="px-3 py-2 text-xs lg:text-sm font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-              Hari Ini
-            </button>
-            <button onClick={() => handleQuickPreset("yesterday")} className="px-3 py-2 text-xs lg:text-sm font-semibold bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-              Kemarin
-            </button>
-            <button onClick={() => handleQuickPreset("last7days")} className="px-3 py-2 text-xs lg:text-sm font-semibold bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-              7 Hari Terakhir
-            </button>
-            <button onClick={() => handleQuickPreset("last30days")} className="px-3 py-2 text-xs lg:text-sm font-semibold bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-              30 Hari Terakhir
-            </button>
-            <button onClick={() => handleQuickPreset("thisMonth")} className="px-3 py-2 text-xs lg:text-sm font-semibold bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-              Bulan Ini
-            </button>
+            <select
+              value={selectedIntersection}
+              onChange={(event) =>
+                handleIntersectionChange(event.target.value)
+              }
+              disabled={loadingIntersections}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Semua Persimpangan</option>
+
+              {intersections.map((intersection: any) => {
+                const id =
+                  intersection.id || intersection.intersection_id;
+
+                return (
+                  <option key={id} value={id}>
+                    {intersection.name || id}
+                  </option>
+                );
+              })}
+            </select>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 items-start lg:items-end">
-            <div className="flex-1">
-              <label className="block text-xs lg:text-sm font-semibold text-slate-600 mb-2">
-                Tanggal Awal
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-outline-variant/30 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+              Jalur
+            </label>
 
-            <div className="flex-1">
-              <label className="block text-xs lg:text-sm font-semibold text-slate-600 mb-2">
-                Tanggal Akhir
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-outline-variant/30 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div className="flex gap-2 w-full lg:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleApplyFilter}
-                className="flex-1 lg:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded text-xs lg:text-sm font-bold shadow-md hover:shadow-lg transition-all"
-              >
-                Terapkan
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleResetFilter}
-                className="flex-1 lg:flex-none bg-slate-200 text-slate-700 px-4 py-2 rounded text-xs lg:text-sm font-bold hover:bg-slate-300 transition-all"
-              >
-                Reset
-              </motion.button>
-            </div>
+            <select
+              value={selectedLane}
+              onChange={(event) =>
+                handleLaneChange(event.target.value as LaneFilter)
+              }
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Semua Jalur</option>
+              <option value="north">Jalur Utara</option>
+              <option value="south">Jalur Selatan</option>
+              <option value="east">Jalur Timur</option>
+            </select>
           </div>
-        </motion.div>
+        </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          <QueueDistributionChart
-            data={queueDistributionData}
-            isLoading={loadingQueueDistribution}
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          <KpiCard
+            title="Total Sampel"
+            value={totalSamples.toLocaleString("id-ID")}
+            subtitle="Sampel level antrian"
+            icon="database"
+            variant="blue"
           />
 
-          <QueueLevelByHourChart date={analyticsDate} />
-        </div>
+          <KpiCard
+            title="Rata-rata Queue"
+            value={averageQueueLevel.toFixed(2)}
+            subtitle="Rentang level 0–2"
+            icon="monitoring"
+            variant="indigo"
+          />
 
-        <GreenDurationChart startDate={startDate} endDate={endDate} />
+          <KpiCard
+            title="Kondisi Dominan"
+            value={dominantCondition}
+            subtitle={selectedIntersectionName}
+            icon="traffic"
+            variant="amber"
+          />
 
-        <QueueEffectivenessTable startDate={startDate} endDate={endDate} />
+          <KpiCard
+            title="Perangkat Online"
+            value={`${deviceStats.online}/${deviceStats.total}`}
+            subtitle={`${deviceStats.offline} perangkat offline`}
+            icon="sensors"
+            variant="emerald"
+          />
+        </section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+        <section className="grid grid-cols-12 gap-4 lg:gap-6">
+          <div className="col-span-12 lg:col-span-8">
+            <QueueLevelByHourChart
+              date={analyticsDate}
+              intersectionId={intersectionId}
+              lane={selectedLane}
+            />
+          </div>
+
+          <div className="col-span-12 lg:col-span-4">
+            <QueueDistributionChart
+              data={queueDistributionData}
+              isLoading={loadingQueueDistribution}
+            />
+          </div>
+
+          <div className="col-span-12">
+            <GreenDurationChart
+              startDate={startDate}
+              endDate={endDate}
+              intersectionId={intersectionId}
+              lane={selectedLane}
+            />
+          </div>
+
+          <div className="col-span-12">
+            <QueueEffectivenessTable
+              startDate={startDate}
+              endDate={endDate}
+              intersectionId={intersectionId}
+              lane={selectedLane}
+            />
+          </div>
+        </section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 lg:p-6 border-l-4 border-blue-500"
+          className="rounded-xl border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 p-5"
         >
           <div className="flex gap-3">
-            <span className="material-symbols-outlined text-blue-600 text-2xl flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl text-blue-600">
               info
             </span>
+
             <div>
-              <h4 className="font-bold text-slate-800 mb-1">
-                Tentang Queue-Based Analytics
-              </h4>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Analitik ini dihitung langsung dari DynamoDB table TrafficTelemetry.
-                Data dummy/hardcode sudah tidak digunakan. S3 tetap menjadi data lake
-                raw, sedangkan Spark/Azure lama bisa dianggap legacy untuk batch processing.
+              <h3 className="font-bold text-slate-900">
+                Tentang Analitik
+              </h3>
+
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                Level 0 menunjukkan kondisi lancar, Level 1 menunjukkan
+                antrean sedang, dan Level 2 menunjukkan antrean padat.
+                Target durasi hijau sistem adalah 10, 20, dan 30 detik
+                berdasarkan level antrean.
               </p>
             </div>
           </div>
-        </motion.div>
+        </motion.section>
       </div>
     </DashboardLayout>
+  );
+}
+
+function KpiCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  variant,
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: string;
+  variant: "blue" | "indigo" | "amber" | "emerald";
+}) {
+  const styles = {
+    blue: "from-blue-600 to-blue-700 shadow-blue-600/20",
+    indigo: "from-indigo-600 to-violet-700 shadow-indigo-600/20",
+    amber: "from-amber-500 to-orange-600 shadow-amber-500/20",
+    emerald: "from-emerald-600 to-teal-700 shadow-emerald-600/20",
+  };
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-xl bg-gradient-to-br p-4 text-white shadow-lg ${styles[variant]}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/70 lg:text-xs">
+            {title}
+          </p>
+
+          <p className="mt-2 truncate text-xl font-black lg:text-3xl">
+            {value}
+          </p>
+
+          <p className="mt-1 truncate text-[10px] text-white/70 lg:text-xs">
+            {subtitle}
+          </p>
+        </div>
+
+        <span className="material-symbols-outlined rounded-lg bg-white/15 p-2 text-xl">
+          {icon}
+        </span>
+      </div>
+    </motion.article>
   );
 }

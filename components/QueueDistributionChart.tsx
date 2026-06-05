@@ -3,145 +3,175 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 
+interface DistributionItem {
+  level: 0 | 1 | 2;
+  count: number;
+  percentage: number;
+}
+
 interface QueueDistributionChartProps {
-  data: Array<{
-    level: 0 | 1 | 2;
-    count: number;
-    percentage: number;
-  }>;
+  data: DistributionItem[];
   isLoading?: boolean;
 }
+
+const LEVEL_METADATA = {
+  0: {
+    label: "Lancar",
+    color: "#10b981",
+    className: "bg-emerald-500",
+  },
+  1: {
+    label: "Sedang",
+    color: "#f59e0b",
+    className: "bg-amber-500",
+  },
+  2: {
+    label: "Padat",
+    color: "#ef4444",
+    className: "bg-red-500",
+  },
+};
 
 export default function QueueDistributionChart({
   data,
   isLoading = false,
 }: QueueDistributionChartProps) {
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) {
-      return [
-        { level: 0, label: "Level 0 (Lancar)", count: 45, percentage: 45, color: "#10b981" },
-        { level: 1, label: "Level 1 (Sedang)", count: 35, percentage: 35, color: "#f59e0b" },
-        { level: 2, label: "Level 2 (Padat)", count: 20, percentage: 20, color: "#ef4444" },
-      ];
-    }
-    return data.map((d) => ({
-      ...d,
-      label: `Level ${d.level} ${
-        d.level === 0 ? "(Lancar)" : d.level === 1 ? "(Sedang)" : "(Padat)"
-      }`,
-      color:
-        d.level === 0 ? "#10b981" : d.level === 1 ? "#f59e0b" : "#ef4444",
-    }));
+  const normalizedData = useMemo(() => {
+    return ([0, 1, 2] as const).map((level) => {
+      const item = data.find((current) => current.level === level);
+
+      return {
+        level,
+        count: item?.count ?? 0,
+        percentage: item?.percentage ?? 0,
+        ...LEVEL_METADATA[level],
+      };
+    });
   }, [data]);
 
-  const total = useMemo(
-    () => chartData.reduce((sum, d) => sum + d.count, 0),
-    [chartData]
-  );
+  const total = useMemo(() => {
+    return normalizedData.reduce(
+      (sum, item) => sum + item.count,
+      0
+    );
+  }, [normalizedData]);
+
+  const gradient = useMemo(() => {
+    const level0 = normalizedData[0].percentage;
+    const level1 = normalizedData[1].percentage;
+
+    const firstEnd = level0;
+    const secondEnd = level0 + level1;
+
+    return `conic-gradient(
+      ${LEVEL_METADATA[0].color} 0% ${firstEnd}%,
+      ${LEVEL_METADATA[1].color} ${firstEnd}% ${secondEnd}%,
+      ${LEVEL_METADATA[2].color} ${secondEnd}% 100%
+    )`;
+  }, [normalizedData]);
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg p-4 lg:p-6 shadow-lg border border-slate-100 h-full flex items-center justify-center">
+      <div className="flex h-full min-h-[420px] items-center justify-center rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-slate-500">Memuat data distribusi antrian...</p>
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+          <p className="text-sm text-slate-500">
+            Memuat distribusi antrian...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.15 }}
-      className="bg-white rounded-lg p-4 lg:p-6 shadow-lg border border-slate-100"
+      className="h-full min-h-[420px] rounded-xl border border-slate-200 bg-white p-5 shadow-lg"
     >
-      <h3 className="text-sm lg:text-base font-bold font-headline text-on-surface mb-4">
-        Distribusi Antrian
-      </h3>
-      <p className="text-[9px] lg:text-[10px] text-slate-500 mb-6">
-        Persentase distribusi level antrian berdasarkan data sensor ultrasonic.
-      </p>
+      <div>
+        <h3 className="text-lg font-bold text-slate-900">
+          Distribusi Antrian
+        </h3>
 
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
-        {/* Pie Chart */}
-        <div className="relative w-40 h-40 lg:w-48 lg:h-48 flex-shrink-0">
-          <svg className="w-full h-full" viewBox="0 0 100 100">
-            {chartData.map((item, idx) => {
-              const startAngle = chartData
-                .slice(0, idx)
-                .reduce((sum, d) => sum + (d.percentage / 100) * 360, 0);
-              const endAngle = startAngle + (item.percentage / 100) * 360;
+        <p className="mt-1 text-xs text-slate-500">
+          Persentase sampel berdasarkan level antrean.
+        </p>
+      </div>
 
-              const startRad = (startAngle * Math.PI) / 180;
-              const endRad = (endAngle * Math.PI) / 180;
-
-              const x1 = 50 + 40 * Math.cos(startRad);
-              const y1 = 50 + 40 * Math.sin(startRad);
-              const x2 = 50 + 40 * Math.cos(endRad);
-              const y2 = 50 + 40 * Math.sin(endRad);
-
-              const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-
-              const pathData = [
-                `M 50 50`,
-                `L ${x1} ${y1}`,
-                `A 40 40 0 ${largeArc} 1 ${x2} ${y2}`,
-                `Z`,
-              ].join(" ");
-
-              return (
-                <motion.path
-                  key={`slice-${idx}`}
-                  d={pathData}
-                  fill={item.color}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 + idx * 0.1 }}
-                  className="hover:opacity-80 transition-opacity cursor-pointer"
-                />
-              );
-            })}
-          </svg>
-
-          {/* Center text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xl lg:text-2xl font-black font-headline text-on-surface">
-              {total}
-            </span>
-            <span className="text-[9px] lg:text-[10px] text-slate-400 font-semibold">
-              Total Data
-            </span>
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-col gap-3 lg:gap-4">
-          {chartData.map((item, idx) => (
-            <motion.div
-              key={`legend-${idx}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 + idx * 0.1 }}
-              className="flex items-center gap-3"
+      {total === 0 ? (
+        <EmptyState message="Belum ada data distribusi pada periode ini." />
+      ) : (
+        <>
+          <div className="my-7 flex justify-center">
+            <div
+              className="relative flex h-48 w-48 items-center justify-center rounded-full"
+              style={{ background: gradient }}
             >
+              <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white shadow-inner">
+                <span className="text-3xl font-black text-slate-900">
+                  {total.toLocaleString("id-ID")}
+                </span>
+
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Sampel
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {normalizedData.map((item) => (
               <div
-                className="w-3 h-3 lg:w-4 lg:h-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: item.color }}
-              ></div>
-              <div className="flex-1">
-                <p className="text-xs lg:text-sm font-semibold text-on-surface">
-                  {item.label}
-                </p>
-                <p className="text-[9px] lg:text-[10px] text-slate-500">
-                  {item.count} ({item.percentage}%)
+                key={item.level}
+                className="rounded-xl border border-slate-100 bg-slate-50 p-3"
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-3 w-3 rounded-full ${item.className}`}
+                    />
+
+                    <span className="text-sm font-bold text-slate-700">
+                      Level {item.level} — {item.label}
+                    </span>
+                  </div>
+
+                  <span className="text-sm font-black text-slate-900">
+                    {item.percentage.toFixed(1)}%
+                  </span>
+                </div>
+
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.percentage}%` }}
+                    className={`h-full rounded-full ${item.className}`}
+                  />
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  {item.count.toLocaleString("id-ID")} sampel
                 </p>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
+            ))}
+          </div>
+        </>
+      )}
+    </motion.article>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-[320px] flex-col items-center justify-center text-center">
+      <span className="material-symbols-outlined text-5xl text-slate-300">
+        donut_large
+      </span>
+
+      <p className="mt-3 text-sm font-semibold text-slate-500">
+        {message}
+      </p>
+    </div>
   );
 }
