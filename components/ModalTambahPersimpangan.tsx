@@ -1,8 +1,23 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+
+interface DeviceOption {
+  device_id: string;
+  deviceId: string;
+
+  intersection_id?: string | null;
+  intersectionId?: string | null;
+
+  status: "online" | "offline";
+  last_seen?: string | null;
+  lastSeen?: string | null;
+
+  wifi_rssi?: number | null;
+  uptime_s?: number | null;
+}
 
 interface ModalTambahPersimpanganProps {
   isOpen: boolean;
@@ -10,472 +25,646 @@ interface ModalTambahPersimpanganProps {
   onSuccess: () => void;
 }
 
+interface IntersectionFormData {
+  name: string;
+  address: string;
+
+  latitude: string;
+  longitude: string;
+
+  intersectionId: string;
+  deviceId: string;
+
+  status: "active" | "maintenance" | "inactive";
+  configMode: "auto" | "manual";
+
+  lanesCount: string;
+  lanesDirections: string[];
+}
+
+const INITIAL_FORM: IntersectionFormData = {
+  name: "",
+  address: "",
+
+  latitude: "",
+  longitude: "",
+
+  intersectionId: "",
+  deviceId: "",
+
+  status: "active",
+  configMode: "auto",
+
+  // Firmware ESP32 saat ini memiliki north, south, east.
+  lanesCount: "3",
+  lanesDirections: ["north", "south", "east"],
+};
+
+function getDirectionsByLaneCount(count: number): string[] {
+  if (count <= 3) {
+    return ["north", "south", "east"];
+  }
+
+  if (count === 4) {
+    return ["north", "east", "south", "west"];
+  }
+
+  if (count === 5) {
+    return ["north", "north-east", "east", "south", "west"];
+  }
+
+  return ["north", "north-east", "east", "south", "south-west", "west"];
+}
+
+function formatLastSeen(value?: string | null): string {
+  if (!value) {
+    return "Belum diketahui";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Belum diketahui";
+  }
+
+  return date.toLocaleString("id-ID");
+}
+
 export default function ModalTambahPersimpangan({
   isOpen,
   onClose,
   onSuccess,
 }: ModalTambahPersimpanganProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [devices, setDevices] = useState<any[]>([]);
-  const [loadingDevices, setLoadingDevices] = useState(false);
-  const [usedDevices, setUsedDevices] = useState<string[]>([]);
-  const [showAddDevice, setShowAddDevice] = useState(false);
-  const [newDeviceId, setNewDeviceId] = useState("");
-  const [creatingDevice, setCreatingDevice] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    latitude: "",
-    longitude: "",
-    deviceId: "",
-    status: "active",
-    lanesCount: "4",
-    lanesDirections: ["north", "east", "south", "west"],
-    configMode: "auto",
-  });
+  const [formData, setFormData] =
+    useState<IntersectionFormData>(INITIAL_FORM);
 
-  // Fetch devices from IoT Hub when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchDevices();
-      fetchUsedDevices();
-    }
-  }, [isOpen]);
+  const [devices, setDevices] = useState<DeviceOption[]>([]);
+  const [usedDeviceIds, setUsedDeviceIds] = useState<string[]>([]);
 
-  const fetchDevices = async () => {
-    setLoadingDevices(true);
-    try {
-      const response = await fetch('/api/iot/devices');
-      const data = await response.json();
-      
-      if (data.success) {
-        setDevices(data.activeDevices || []);
-      } else {
-        toast.error('Gagal memuat daftar device dari IoT Hub');
-      }
-    } catch (error) {
-      console.error('Error fetching devices:', error);
-      toast.error('Gagal memuat daftar device');
-    } finally {
-      setLoadingDevices(false);
-    }
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+  const [deviceLoadError, setDeviceLoadError] = useState("");
+
+  const [manualDeviceMode, setManualDeviceMode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const availableDevices = useMemo(() => {
+    return devices.filter((device) => {
+      const deviceId = device.device_id || device.deviceId;
+
+      return deviceId && !usedDeviceIds.includes(deviceId);
+    });
+  }, [devices, usedDeviceIds]);
+
+  const selectedDevice = useMemo(() => {
+    return devices.find((device) => {
+      const deviceId = device.device_id || device.deviceId;
+
+      return deviceId === formData.deviceId;
+    });
+  }, [devices, formData.deviceId]);
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM);
+    setManualDeviceMode(false);
+    setDeviceLoadError("");
   };
 
-  const fetchUsedDevices = async () => {
-    try {
-      const response = await fetch('/api/intersections');
-      const data = await response.json();
-      
-      if (data.success) {
-        // Get all deviceIds that are already used
-        const used = data.data.map((i: any) => i.deviceId);
-        setUsedDevices(used);
-      }
-    } catch (error) {
-      console.error('Error fetching used devices:', error);
-    }
-  };
-
-  // Filter available devices (not used by other intersections)
-  const availableDevices = devices.filter(
-    (device) => !usedDevices.includes(device.deviceId)
-  );
-
-  const handleCreateDevice = async () => {
-    if (!newDeviceId.trim()) {
-      toast.error('Device ID tidak boleh kosong');
+  const handleClose = () => {
+    if (isSubmitting) {
       return;
     }
 
-    setCreatingDevice(true);
+    resetForm();
+    onClose();
+  };
+
+  const loadDevices = async () => {
+    setIsLoadingDevices(true);
+    setDeviceLoadError("");
+
     try {
-      const response = await fetch('/api/iot/devices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId: newDeviceId.trim() }),
-      });
+      const [devicesResponse, intersectionsResponse] = await Promise.all([
+        fetch("/api/devices/status", {
+          cache: "no-store",
+        }),
+        fetch("/api/intersections", {
+          cache: "no-store",
+        }),
+      ]);
 
-      const data = await response.json();
+      const devicesJson = await devicesResponse.json();
+      const intersectionsJson = await intersectionsResponse.json();
 
-      if (data.success) {
-        toast.success(`Device ${newDeviceId} berhasil dibuat!`);
-        
-        // Show connection string in a modal or copy to clipboard
-        if (data.device?.connectionString) {
-          navigator.clipboard.writeText(data.device.connectionString);
-          toast.success('Connection string disalin ke clipboard!');
-        }
-
-        // Refresh device list
-        await fetchDevices();
-        
-        // Auto-select the new device
-        setFormData(prev => ({ ...prev, deviceId: newDeviceId.trim() }));
-        
-        // Close add device form
-        setShowAddDevice(false);
-        setNewDeviceId('');
-      } else {
-        toast.error(data.error || 'Gagal membuat device');
+      if (!devicesResponse.ok || devicesJson.success === false) {
+        throw new Error(
+          devicesJson.error || "Gagal memuat perangkat dari DeviceStatus"
+        );
       }
-    } catch (error) {
-      console.error('Error creating device:', error);
-      toast.error('Terjadi kesalahan saat membuat device');
+
+      const loadedDevices: DeviceOption[] =
+        devicesJson.data || devicesJson.devices || [];
+
+      const intersections =
+        intersectionsResponse.ok && intersectionsJson.success
+          ? intersectionsJson.data || []
+          : [];
+
+      const usedIds = intersections
+        .map((intersection: any) => {
+          return intersection.device_id || intersection.deviceId;
+        })
+        .filter(Boolean);
+
+      setDevices(loadedDevices);
+      setUsedDeviceIds(usedIds);
+    } catch (error: any) {
+      console.error("Error loading devices:", error);
+
+      setDevices([]);
+      setUsedDeviceIds([]);
+
+      setDeviceLoadError(
+        error.message || "Gagal memuat daftar perangkat yang terdeteksi"
+      );
     } finally {
-      setCreatingDevice(false);
+      setIsLoadingDevices(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    resetForm();
+    loadDevices();
+  }, [isOpen]);
+
+  const handleTextChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.target;
+
+    if (name === "lanesCount") {
+      const laneCount = Number(value);
+
+      setFormData((current) => ({
+        ...current,
+        lanesCount: value,
+        lanesDirections: getDirectionsByLaneCount(laneCount),
+      }));
+
+      return;
+    }
+
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleDeviceSelection = (deviceId: string) => {
+    const device = devices.find((item) => {
+      const currentDeviceId = item.device_id || item.deviceId;
+
+      return currentDeviceId === deviceId;
+    });
+
+    const intersectionId =
+      device?.intersection_id || device?.intersectionId || "";
+
+    setFormData((current) => ({
+      ...current,
+      deviceId,
+      intersectionId,
+    }));
+  };
+
+  const handleManualModeChange = () => {
+    setManualDeviceMode((current) => {
+      const nextValue = !current;
+
+      setFormData((form) => ({
+        ...form,
+        deviceId: "",
+        intersectionId: "",
+      }));
+
+      return nextValue;
+    });
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const name = formData.name.trim();
+    const address = formData.address.trim();
+    const deviceId = formData.deviceId.trim();
+    const intersectionId = formData.intersectionId.trim();
+
+    if (!name) {
+      toast.error("Nama persimpangan wajib diisi");
+      return;
+    }
+
+    if (!address) {
+      toast.error("Alamat persimpangan wajib diisi");
+      return;
+    }
+
+    if (!deviceId) {
+      toast.error("Pilih atau masukkan Device ID");
+      return;
+    }
+
+    if (!intersectionId) {
+      toast.error("Intersection ID wajib tersedia");
+      return;
+    }
+
+    if (!manualDeviceMode) {
+      const device = devices.find((item) => {
+        return (item.device_id || item.deviceId) === deviceId;
+      });
+
+      if (!device) {
+        toast.error("Device yang dipilih tidak ditemukan");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
 
     try {
+      const payload = {
+        id: intersectionId,
+
+        intersection_id: intersectionId,
+        intersectionId,
+
+        name,
+        address,
+
+        latitude: Number.parseFloat(formData.latitude) || 0,
+        longitude: Number.parseFloat(formData.longitude) || 0,
+
+        device_id: deviceId,
+        deviceId,
+
+        status: formData.status,
+
+        lanes: {
+          count: Number.parseInt(formData.lanesCount, 10),
+          directions: formData.lanesDirections,
+        },
+
+        lanesCount: Number.parseInt(formData.lanesCount, 10),
+        lanesDirections: formData.lanesDirections,
+
+        config: {
+          mode: formData.configMode,
+        },
+
+        configMode: formData.configMode,
+      };
+
       const response = await fetch("/api/intersections", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name,
-          address: formData.address,
-          latitude: parseFloat(formData.latitude) || 0,
-          longitude: parseFloat(formData.longitude) || 0,
-          deviceId: formData.deviceId,
-          status: formData.status,
-          lanesCount: parseInt(formData.lanesCount),
-          lanesDirections: formData.lanesDirections,
-          configMode: formData.configMode,
-        }),
+
+        body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
-        toast.success("Persimpangan berhasil ditambahkan!");
-        onSuccess();
-        onClose();
-        // Reset form
-        setFormData({
-          name: "",
-          address: "",
-          latitude: "",
-          longitude: "",
-          deviceId: "",
-          status: "active",
-          lanesCount: "4",
-          lanesDirections: ["north", "east", "south", "west"],
-          configMode: "auto",
-        });
-      } else {
-        toast.error(data.error || "Gagal menambahkan persimpangan");
+      if (!response.ok || result.success === false) {
+        throw new Error(
+          result.error || "Gagal menambahkan persimpangan"
+        );
       }
-    } catch (error) {
-      console.error("Error adding intersection:", error);
-      toast.error("Terjadi kesalahan saat menambahkan persimpangan");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+      toast.success("Persimpangan berhasil ditambahkan");
+
+      resetForm();
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error("Error adding intersection:", error);
+
+      toast.error(
+        error.message || "Terjadi kesalahan saat menambahkan persimpangan"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            initial={{
+              opacity: 0,
+              scale: 0.94,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.94,
+              y: 20,
+            }}
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
-              <div className="flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-5 text-white lg:p-6">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-headline font-bold">
+                  <h3 className="text-xl font-bold lg:text-2xl">
                     Tambah Persimpangan Baru
                   </h3>
-                  <p className="text-sm text-white/80 mt-1">
-                    Isi data persimpangan yang akan ditambahkan
+
+                  <p className="mt-1 text-sm text-white/80">
+                    Hubungkan persimpangan dengan perangkat ESP32 yang terdeteksi
                   </p>
                 </div>
+
                 <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
-                  disabled={isLoading}
+                  type="button"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  className="rounded-full p-2 transition-colors hover:bg-white/20 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">close</span>
+                  <span className="material-symbols-outlined">
+                    close
+                  </span>
                 </button>
               </div>
             </div>
 
-            {/* Content */}
-            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="space-y-4">
-                {/* Nama Persimpangan */}
+            <form
+              onSubmit={handleSubmit}
+              className="max-h-[calc(92vh-110px)] overflow-y-auto p-5 lg:p-6"
+            >
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Nama Persimpangan <span className="text-red-500">*</span>
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
+                    Nama Persimpangan{" "}
+                    <span className="text-red-500">*</span>
                   </label>
+
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
-                    onChange={handleChange}
+                    onChange={handleTextChange}
                     required
-                    placeholder="Contoh: Persimpangan Sudirman-Thamrin"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Contoh: Simpang Talun"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
 
-                {/* Alamat */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
                     Alamat <span className="text-red-500">*</span>
                   </label>
+
                   <input
                     type="text"
                     name="address"
                     value={formData.address}
-                    onChange={handleChange}
+                    onChange={handleTextChange}
                     required
-                    placeholder="Contoh: Jl. Sudirman - Jl. Thamrin, Jakarta Pusat"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Contoh: Jl. Talun, Kabupaten Malang"
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
 
-                {/* Koordinat */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
                       Latitude
                     </label>
+
                     <input
                       type="number"
                       step="any"
                       name="latitude"
                       value={formData.latitude}
-                      onChange={handleChange}
-                      placeholder="-6.2088"
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handleTextChange}
+                      placeholder="-7.978"
+                      className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
                       Longitude
                     </label>
+
                     <input
                       type="number"
                       step="any"
                       name="longitude"
                       value={formData.longitude}
-                      onChange={handleChange}
-                      placeholder="106.8456"
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handleTextChange}
+                      placeholder="112.630"
+                      className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     />
                   </div>
                 </div>
 
-                {/* Device ID - Dropdown or Manual Input */}
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Device ID <span className="text-red-500">*</span>
-                  </label>
-                  {loadingDevices ? (
-                    <div className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      <span className="text-sm text-slate-500">Memuat device dari IoT Hub...</span>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700">
+                        Device ID <span className="text-red-500">*</span>
+                      </label>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        Device diambil dari DynamoDB DeviceStatus.
+                      </p>
                     </div>
-                  ) : availableDevices.length > 0 ? (
-                    <>
-                      <select
-                        name="deviceId"
-                        value={formData.deviceId}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      >
-                        <option value="">-- Pilih Device --</option>
-                        {availableDevices.map((device) => (
-                          <option key={device.deviceId} value={device.deviceId}>
-                            {device.deviceId} {device.connectionState === 'Connected' ? '🟢' : '⚪'}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-slate-500">
-                          Hanya menampilkan device yang belum digunakan ({availableDevices.length} tersedia)
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddDevice(!showAddDevice)}
-                          className="text-xs font-bold text-primary hover:text-blue-700 flex items-center gap-1"
-                        >
-                          <span className="material-symbols-outlined text-sm">add_circle</span>
-                          Tambah Device Baru
-                        </button>
-                      </div>
 
-                      {/* Add Device Form */}
-                      {showAddDevice && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-3 p-4 border border-blue-200 rounded-lg bg-blue-50"
-                        >
-                          <p className="text-sm font-bold text-blue-900 mb-2">Buat Device Baru di IoT Hub</p>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={newDeviceId}
-                              onChange={(e) => setNewDeviceId(e.target.value)}
-                              placeholder="Contoh: esp32-traffic-monitor-2"
-                              className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                              disabled={creatingDevice}
-                            />
-                            <button
-                              type="button"
-                              onClick={handleCreateDevice}
-                              disabled={creatingDevice || !newDeviceId.trim()}
-                              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                            >
-                              {creatingDevice ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                                  <span>Membuat...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="material-symbols-outlined text-sm">add</span>
-                                  <span>Buat</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                          <p className="text-xs text-blue-700 mt-2">
-                            💡 Connection string akan otomatis disalin ke clipboard
-                          </p>
-                        </motion.div>
-                      )}
-                    </>
-                  ) : devices.length > 0 ? (
-                    <>
-                      <div className="w-full px-4 py-3 border border-amber-300 rounded-lg bg-amber-50">
-                        <p className="text-sm text-amber-800 mb-2">
-                          ⚠️ Semua device sudah digunakan.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddDevice(!showAddDevice)}
-                          className="text-sm font-bold text-amber-900 hover:text-amber-700 flex items-center gap-1"
-                        >
-                          <span className="material-symbols-outlined text-base">add_circle</span>
-                          Tambah Device Baru di IoT Hub
-                        </button>
-                      </div>
+                    <button
+                      type="button"
+                      onClick={handleManualModeChange}
+                      className="shrink-0 text-xs font-bold text-blue-600 hover:text-blue-800"
+                    >
+                      {manualDeviceMode
+                        ? "Pilih device terdeteksi"
+                        : "Masukkan manual"}
+                    </button>
+                  </div>
 
-                      {/* Add Device Form */}
-                      {showAddDevice && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-3 p-4 border border-blue-200 rounded-lg bg-blue-50"
-                        >
-                          <p className="text-sm font-bold text-blue-900 mb-2">Buat Device Baru di IoT Hub</p>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={newDeviceId}
-                              onChange={(e) => setNewDeviceId(e.target.value)}
-                              placeholder="Contoh: esp32-traffic-monitor-2"
-                              className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                              disabled={creatingDevice}
-                            />
-                            <button
-                              type="button"
-                              onClick={handleCreateDevice}
-                              disabled={creatingDevice || !newDeviceId.trim()}
-                              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                            >
-                              {creatingDevice ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                                  <span>Membuat...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="material-symbols-outlined text-sm">add</span>
-                                  <span>Buat</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                          <p className="text-xs text-blue-700 mt-2">
-                            💡 Connection string akan otomatis disalin ke clipboard
-                          </p>
-                        </motion.div>
-                      )}
-                    </>
+                  {manualDeviceMode ? (
+                    <input
+                      type="text"
+                      name="deviceId"
+                      value={formData.deviceId}
+                      onChange={handleTextChange}
+                      required
+                      placeholder="Contoh: ESP32_TRAFFIC_01"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
+                    />
                   ) : (
-                    <>
-                      <input
-                        type="text"
-                        name="deviceId"
-                        value={formData.deviceId}
-                        onChange={handleChange}
-                        required
-                        placeholder="Contoh: esp32-traffic-monitor"
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                      <div className="mt-2 p-3 border border-amber-300 rounded-lg bg-amber-50">
+                    <select
+                      name="deviceId"
+                      value={formData.deviceId}
+                      onChange={(event) =>
+                        handleDeviceSelection(event.target.value)
+                      }
+                      required
+                      disabled={isLoadingDevices}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600 disabled:bg-slate-100"
+                    >
+                      <option value="">
+                        {isLoadingDevices
+                          ? "Memuat perangkat..."
+                          : "Pilih perangkat terdeteksi"}
+                      </option>
+
+                      {availableDevices.map((device) => {
+                        const deviceId =
+                          device.device_id || device.deviceId;
+
+                        const intersectionId =
+                          device.intersection_id ||
+                          device.intersectionId ||
+                          "Tanpa Intersection ID";
+
+                        return (
+                          <option key={deviceId} value={deviceId}>
+                            {deviceId} — {device.status} — {intersectionId}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500">
+                      {availableDevices.length} perangkat tersedia
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={loadDevices}
+                      disabled={isLoadingDevices}
+                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        refresh
+                      </span>
+                      Muat ulang
+                    </button>
+                  </div>
+
+                  {deviceLoadError && (
+                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                      <p className="text-xs text-red-700">
+                        {deviceLoadError}
+                      </p>
+                    </div>
+                  )}
+
+                  {!isLoadingDevices &&
+                    !deviceLoadError &&
+                    availableDevices.length === 0 &&
+                    !manualDeviceMode && (
+                      <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
                         <p className="text-xs text-amber-800">
-                          ⚠️ Tidak dapat memuat device dari IoT Hub. Masukkan Device ID secara manual.
-                          Pastikan device sudah terdaftar di Azure IoT Hub.
+                          Tidak ada device tersedia. Pastikan ESP32 sudah
+                          mengirim telemetry atau gunakan input manual.
                         </p>
                       </div>
-                    </>
+                    )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
+                    Intersection ID{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    name="intersectionId"
+                    value={formData.intersectionId}
+                    onChange={handleTextChange}
+                    readOnly={!manualDeviceMode}
+                    required
+                    placeholder="Otomatis mengikuti data ESP32"
+                    className={`w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600 ${
+                      !manualDeviceMode
+                        ? "cursor-not-allowed bg-slate-100 text-slate-600"
+                        : "bg-white"
+                    }`}
+                  />
+
+                  {!manualDeviceMode && selectedDevice && (
+                    <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+                        <p className="text-blue-800">
+                          Status:{" "}
+                          <span className="font-bold">
+                            {selectedDevice.status}
+                          </span>
+                        </p>
+
+                        <p className="text-blue-800">
+                          Last seen:{" "}
+                          <span className="font-bold">
+                            {formatLastSeen(
+                              selectedDevice.last_seen ||
+                                selectedDevice.lastSeen
+                            )}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Status & Mode */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
                       Status
                     </label>
+
                     <select
                       name="status"
                       value={formData.status}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handleTextChange}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     >
                       <option value="active">Active</option>
                       <option value="maintenance">Maintenance</option>
                       <option value="inactive">Inactive</option>
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                    <label className="mb-2 block text-sm font-bold text-slate-700">
                       Mode Operasi
                     </label>
+
                     <select
                       name="configMode"
                       value={formData.configMode}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={handleTextChange}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     >
                       <option value="auto">Auto</option>
                       <option value="manual">Manual</option>
@@ -483,67 +672,77 @@ export default function ModalTambahPersimpangan({
                   </div>
                 </div>
 
-                {/* Jumlah Jalur */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
                     Jumlah Jalur
                   </label>
+
                   <select
                     name="lanesCount"
                     value={formData.lanesCount}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    onChange={handleTextChange}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   >
                     <option value="3">3 Jalur</option>
                     <option value="4">4 Jalur</option>
                     <option value="5">5 Jalur</option>
                     <option value="6">6 Jalur</option>
                   </select>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    Arah jalur: {formData.lanesDirections.join(", ")}
+                  </p>
                 </div>
 
-                {/* Info Box */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-blue-600 text-xl">
+                    <span className="material-symbols-outlined text-xl text-blue-600">
                       info
                     </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-blue-900 mb-1">
+
+                    <div>
+                      <p className="text-sm font-bold text-blue-900">
                         Informasi
                       </p>
-                      <p className="text-xs text-blue-700">
-                        Setelah persimpangan ditambahkan, Anda dapat mengkonfigurasi
-                        detail lebih lanjut di halaman detail persimpangan.
+
+                      <p className="mt-1 text-xs leading-relaxed text-blue-700">
+                        Device muncul setelah ESP32 mengirim telemetry ke MQTT.
+                        Satu device hanya dapat dihubungkan ke satu persimpangan.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+              <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
                 <button
                   type="button"
-                  onClick={onClose}
-                  disabled={isLoading}
-                  className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  className="rounded-lg border border-slate-300 px-6 py-3 font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
                 >
                   Batal
                 </button>
+
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  disabled={
+                    isSubmitting ||
+                    (!manualDeviceMode && availableDevices.length === 0)
+                  }
+                  className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Menyimpan...</span>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Menyimpan...
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-sm">add</span>
-                      <span>Tambah Persimpangan</span>
+                      <span className="material-symbols-outlined text-sm">
+                        add
+                      </span>
+                      Tambah Persimpangan
                     </>
                   )}
                 </button>

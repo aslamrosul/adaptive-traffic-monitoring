@@ -207,7 +207,7 @@ function DensityIndicator({
 export default function TrafficRoadSimulation({ data }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [scale, setScale] = useState(0.65);
+  const [scale, setScale] = useState(0.72);
   const [mapX, setMapX] = useState(0);
   const [mapY, setMapY] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -228,7 +228,7 @@ export default function TrafficRoadSimulation({ data }: Props) {
   const east = data?.east ?? north;
 
   const resetMap = () => {
-    setScale(0.65);
+    setScale(0.72);
     setMapX(0);
     setMapY(0);
   };
@@ -268,7 +268,7 @@ export default function TrafficRoadSimulation({ data }: Props) {
       </div>
 
       <div
-        className={`relative w-full h-[640px] lg:h-[720px] overflow-hidden rounded-2xl bg-green-700 select-none touch-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+        className={`relative w-full h-[520px] lg:h-[600px] overflow-hidden rounded-2xl bg-green-700 select-none touch-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
         onMouseDown={(e) => {
           setDragging(true);
           setStart({ x: e.clientX, y: e.clientY, mapX, mapY });

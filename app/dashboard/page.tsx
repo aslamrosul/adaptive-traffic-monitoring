@@ -9,19 +9,22 @@ import Sidebar from "@/components/Sidebar";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
+
 import type {
   DateRange,
   TimeRange,
 } from "@/lib/hooks/useDashboardWithFilter";
+
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { useMqttTraffic } from "@/lib/hooks/useMqttTraffic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
   const [selectedIntersection, setSelectedIntersection] =
     useState<string>("all");
+
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -41,9 +44,10 @@ export default function DashboardPage() {
 
     if (savedState !== null) {
       setIsSidebarOpen(savedState === "true");
-    } else {
-      setIsSidebarOpen(window.innerWidth >= 1024);
+      return;
     }
+
+    setIsSidebarOpen(window.innerWidth >= 1024);
   }, []);
 
   useEffect(() => {
@@ -62,20 +66,38 @@ export default function DashboardPage() {
 
     if (range === "custom" && dates) {
       setCustomDates(dates);
-    } else {
-      setCustomDates(undefined);
+      return;
     }
+
+    setCustomDates(undefined);
   };
 
   const handleIntersectionChange = (intersectionId: string) => {
     setSelectedIntersection(intersectionId);
   };
 
+  const selectedIntersectionName = useMemo(() => {
+    if (selectedIntersection === "all") {
+      return "Semua Persimpangan";
+    }
+
+    const intersection = intersections.find(
+      (item: any) =>
+        item.id === selectedIntersection ||
+        item.intersection_id === selectedIntersection,
+    );
+
+    return intersection?.name ?? selectedIntersection;
+  }, [intersections, selectedIntersection]);
+
   return (
     <div className="flex min-h-screen bg-surface overflow-hidden">
-      <Sidebar isOpen={isSidebarOpen} onToggle={handleToggleSidebar} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={handleToggleSidebar}
+      />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Header
           title="Sistem Pantauan Lalu Lintas"
           onToggleSidebar={() => handleToggleSidebar(!isSidebarOpen)}
@@ -85,40 +107,55 @@ export default function DashboardPage() {
         />
 
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out lg:pt-16 ${
-            isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
-          }`}
+          className={[
+            "flex-1 transition-all duration-300 ease-in-out lg:pt-16",
+            isSidebarOpen ? "lg:ml-64" : "lg:ml-20",
+          ].join(" ")}
         >
-          <div className="p-3 lg:p-6 space-y-4 lg:space-y-6 max-w-[1920px] mx-auto">
-            <div
+          <div className="mx-auto max-w-[1920px] space-y-4 p-3 lg:space-y-6 lg:p-6">
+            {/* MQTT STATUS */}
+            <section
               className={[
-                "rounded-xl p-4 border",
+                "rounded-xl border p-4",
                 isConnected
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-red-50 border-red-200",
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-red-200 bg-red-50",
               ].join(" ")}
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-xl">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined mt-0.5 text-xl">
                     sensors
                   </span>
 
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">
-                      MQTT Realtime Status: {connectionState}
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-bold text-slate-900">
+                        MQTT Realtime Status
+                      </h3>
 
-                    <p className="text-xs text-slate-700">
-                      Device: {latestData?.deviceId || "-"} • Intersection:{" "}
-                      {latestData?.intersectionId || "-"} • Last update:{" "}
+                      <span
+                        className={[
+                          "rounded-full px-2.5 py-1 text-xs font-bold uppercase",
+                          isConnected
+                            ? "bg-emerald-200 text-emerald-800"
+                            : "bg-red-200 text-red-800",
+                        ].join(" ")}
+                      >
+                        {connectionState}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-xs text-slate-700">
+                      Device: {latestData?.deviceId || "-"} · Persimpangan:{" "}
+                      {latestData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
                       {lastUpdate
                         ? lastUpdate.toLocaleTimeString("id-ID")
                         : "-"}
                     </p>
 
                     {error && (
-                      <p className="text-xs text-red-700 mt-1">
+                      <p className="mt-1 text-xs font-medium text-red-700">
                         Error: {error}
                       </p>
                     )}
@@ -127,53 +164,71 @@ export default function DashboardPage() {
 
                 {!isConnected && (
                   <button
+                    type="button"
                     onClick={reconnect}
-                    className="px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold"
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
                   >
-                    Reconnect
+                    Hubungkan Ulang
                   </button>
                 )}
               </div>
-            </div>
+            </section>
 
+            {/* FILTER */}
             <DashboardTimeFilter
               onFilterChange={handleFilterChange}
               currentRange={timeRange}
               onIntersectionChange={handleIntersectionChange}
               selectedIntersection={selectedIntersection}
-              intersections={intersections.map((i: any) => ({
-                id: i.id,
-                name: i.name,
+              intersections={intersections.map((item: any) => ({
+                id: item.id ?? item.intersection_id,
+                name: item.name,
               }))}
             />
 
-            <DashboardStats timeRange={timeRange} customDates={customDates} />
+            {/* STATISTICS */}
+            <DashboardStats
+              timeRange={timeRange}
+              customDates={customDates}
+            />
 
-            <section className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
-              <div className="xl:col-span-8 space-y-4 lg:space-y-6">
+            {/* MAIN DASHBOARD GRID */}
+            <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
+              {/* LEFT COLUMN */}
+              <div className="space-y-4 lg:space-y-6 xl:col-span-8">
                 <TrafficRoadSimulation data={latestData} />
-              </div>
 
-              <div className="xl:col-span-4">
-                <TrafficControlPanel
-                  data={latestData}
-                  publishMqtt={publishMqtt}
-                />
-              </div>
-            </section>
-
-            <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-              <div className="lg:col-span-8 space-y-4 lg:space-y-6">
                 <TrafficTrendChart
                   timeRange={timeRange}
                   customDates={customDates}
                 />
+
                 <IntersectionGrid />
               </div>
 
-              <div className="lg:col-span-4">
-                <LaneStatusPanel intersectionId={selectedIntersection} />
-              </div>
+              {/* RIGHT COLUMN */}
+              <aside className="space-y-4 lg:space-y-6 xl:col-span-4">
+                <TrafficControlPanel
+                  data={latestData}
+                  publishMqtt={publishMqtt}
+                />
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Status jalur
+                    </p>
+
+                    <h2 className="text-lg font-bold text-slate-900">
+                      {selectedIntersectionName}
+                    </h2>
+                  </div>
+
+                  <LaneStatusPanel
+                    intersectionId={selectedIntersection}
+                  />
+                </div>
+              </aside>
             </section>
           </div>
         </main>

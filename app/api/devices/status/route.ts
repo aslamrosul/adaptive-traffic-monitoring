@@ -1,138 +1,111 @@
-import { NextResponse } from 'next/server';
-import { CosmosClient } from '@azure/cosmos';
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { NextResponse } from "next/server";
 
-// Device Status interface
-interface DeviceStatus {
-  id: string;
-  deviceId: string;
-  intersectionId: string;
-  status: 'online' | 'offline' | 'error';
-  lastHeartbeat: string;
-  lastDataReceived: string;
-  updatedAt: string;
-}
+export const dynamic = "force-dynamic";
 
-// Lazy initialization - only create client when needed
-let cosmosClient: CosmosClient | null = null;
-let deviceStatusContainer: any = null;
+function normalizeDevice(item: any) {
+  const lastSeen =
+    item.last_seen ||
+    item.lastSeen ||
+    item.updated_at ||
+    item.updatedAt ||
+    null;
 
-function getDeviceStatusContainer() {
-  if (!deviceStatusContainer) {
-    cosmosClient = new CosmosClient({
-      endpoint: process.env.COSMOS_ENDPOINT!,
-      key: process.env.COSMOS_KEY!
-    });
-    const database = cosmosClient.database(process.env.COSMOS_DATABASE || 'TrafficDB');
-    deviceStatusContainer = database.container('device-status');
-  }
-  return deviceStatusContainer;
+  const lastSeenTime = lastSeen
+    ? new Date(lastSeen).getTime()
+    : 0;
+
+  const isOnline =
+    lastSeenTime > 0 &&
+    Date.now() - lastSeenTime < 2 * 60 * 1000;
+
+  return {
+    device_id: item.device_id || item.deviceId || item.device,
+    deviceId: item.deviceId || item.device_id || item.device,
+
+    intersection_id:
+      item.intersection_id || item.intersectionId || null,
+
+    intersectionId:
+      item.intersectionId || item.intersection_id || null,
+
+    status: isOnline ? "online" : "offline",
+
+    last_seen: lastSeen,
+    lastSeen,
+
+    wifi_rssi: item.wifi_rssi ?? null,
+    uptime_s: item.uptime_s ?? null,
+
+    auto_mode: item.auto_mode ?? false,
+    adaptive_mode: item.adaptive_mode ?? false,
+  };
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const deviceId = searchParams.get('deviceId');
-    const intersectionId = searchParams.get('intersectionId');
+    const deviceId = searchParams.get("deviceId");
 
-    let query = 'SELECT * FROM c';
-    const parameters: any[] = [];
-
-    // Filter by deviceId
     if (deviceId) {
-      query += ' WHERE c.deviceId = @deviceId';
-      parameters.push({ name: '@deviceId', value: deviceId });
-    }
-    // Filter by intersectionId
-    else if (intersectionId) {
-      query += ' WHERE c.intersectionId = @intersectionId';
-      parameters.push({ name: '@intersectionId', value: intersectionId });
-    }
-
-    query += ' ORDER BY c.updatedAt DESC';
-
-    const container = getDeviceStatusContainer();
-    const { resources } = await container.items
-      .query({
-        query,
-        parameters
-      })
-      .fetchAll();
-
-    // Type assertion for resources
-    const devices = resources as DeviceStatus[];
-
-    // Calculate stats
-    const stats = {
-      total: devices.length,
-      online: devices.filter(d => d.status === 'online').length,
-      offline: devices.filter(d => d.status === 'offline').length,
-      error: devices.filter(d => d.status === 'error').length
-    };
-
-    // Check for stale devices (no heartbeat in last 5 minutes)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const staleDevices = devices.filter(d => {
-      const lastHeartbeat = new Date(d.lastHeartbeat);
-      return lastHeartbeat < fiveMinutesAgo && d.status === 'online';
-    });
-
-    return NextResponse.json({
-      success: true,
-      stats,
-      devices,
-      staleDevices: staleDevices.map(d => d.deviceId)
-    });
-
-  } catch (error: any) {
-    console.error('Error fetching device status:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message 
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Manual update device status (for testing)
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { deviceId, intersectionId, status } = body;
-
-    if (!deviceId || !intersectionId) {
-      return NextResponse.json(
-        { success: false, error: 'deviceId and intersectionId required' },
-        { status: 400 }
+      const result = await dynamo.send(
+        new GetCommand({
+          TableName: awsTables.deviceStatus,
+          Key: {
+            device_id: deviceId,
+          },
+        })
       );
+
+      if (!result.Item) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Device tidak ditemukan",
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: normalizeDevice(result.Item),
+      });
     }
 
-    const deviceStatus = {
-      id: deviceId,
-      deviceId,
-      intersectionId,
-      status: status || 'online',
-      lastHeartbeat: new Date().toISOString(),
-      lastDataReceived: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.deviceStatus,
+        Limit: 500,
+      })
+    );
 
-    const container = getDeviceStatusContainer();
-    await container.items.upsert(deviceStatus);
+    const devices = (result.Items || [])
+      .map(normalizeDevice)
+      .filter((device: any) => Boolean(device.device_id))
+      .sort((a: any, b: any) =>
+        String(a.device_id).localeCompare(String(b.device_id))
+      );
 
     return NextResponse.json({
       success: true,
-      message: 'Device status updated',
-      data: deviceStatus
+      count: devices.length,
+      stats: {
+        total: devices.length,
+        online: devices.filter((d: any) => d.status === "online").length,
+        offline: devices.filter((d: any) => d.status === "offline").length,
+      },
+      data: devices,
+      devices,
     });
-
   } catch (error: any) {
-    console.error('Error updating device status:', error);
+    console.error("Error fetching device status:", error);
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message 
+      {
+        success: false,
+        error: error.message || "Gagal memuat device",
       },
       { status: 500 }
     );

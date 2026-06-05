@@ -33,21 +33,31 @@ function normalizeStatus(status: any) {
 }
 
 async function findUserById(id: string) {
-  const result = await dynamo.send(
-    new ScanCommand({
-      TableName: awsTables.users,
-      FilterExpression: "#id = :id",
-      ExpressionAttributeNames: {
-        "#id": "id",
-      },
-      ExpressionAttributeValues: {
-        ":id": id,
-      },
-      Limit: 1,
-    })
-  );
+  let exclusiveStartKey: Record<string, any> | undefined;
 
-  return result.Items?.[0] || null;
+  do {
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.users,
+        FilterExpression: "#userId = :userId",
+        ExpressionAttributeNames: {
+          "#userId": "id",
+        },
+        ExpressionAttributeValues: {
+          ":userId": id,
+        },
+        ExclusiveStartKey: exclusiveStartKey,
+      })
+    );
+
+    if (result.Items && result.Items.length > 0) {
+      return result.Items[0];
+    }
+
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+
+  return null;
 }
 
 export async function GET(
