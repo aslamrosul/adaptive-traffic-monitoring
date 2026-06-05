@@ -158,11 +158,12 @@ export default function NotificationList() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-400">
                       {new Date(notif.createdAt).toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
                         day: 'numeric',
                         month: 'short',
                         hour: '2-digit',
                         minute: '2-digit',
-                      })}
+                      })} WIB
                     </span>
                     {notif.actionUrl && (
                       <span className="text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">

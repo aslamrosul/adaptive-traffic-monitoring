@@ -203,7 +203,7 @@ export default function DetailPersimpanganPage({
     algorithm: intersection.config?.mode === 'auto' ? 'Adaptive-Flow v2.4' : 'Manual Override',
     lanes,
     logs: events.map((event: any) => ({
-      time: new Date(event.timestamp).toLocaleTimeString('id-ID'),
+      time: new Date(event.timestamp).toLocaleTimeString('id-ID', { timeZone: "Asia/Jakarta" }) + " WIB",
       type: event.type,
       description: event.description,
       priority: event.priority.toUpperCase(),

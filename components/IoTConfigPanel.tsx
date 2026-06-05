@@ -393,8 +393,9 @@ export default function IoTConfigPanel({
 
           <p className="text-sm text-green-900 mt-1">
             {new Date(config.lastSyncedAt).toLocaleString(
-              "id-ID"
-            )}
+              "id-ID",
+              { timeZone: "Asia/Jakarta" }
+            )} WIB
           </p>
         </div>
       )}

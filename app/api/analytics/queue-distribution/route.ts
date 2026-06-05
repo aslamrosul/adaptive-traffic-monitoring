@@ -6,34 +6,22 @@ import {
   type TrafficLane,
 } from "@/lib/traffic-adapter";
 import { NextResponse } from "next/server";
+import { resolveWibAnalyticsRange } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
-
-function toIsoStart(date?: string | null) {
-  if (!date) return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  if (date.includes("T")) return date;
-  return `${date}T00:00:00.000Z`;
-}
-
-function toIsoEnd(date?: string | null) {
-  if (!date) return new Date().toISOString();
-  if (date.includes("T")) return date;
-  return `${date}T23:59:59.999Z`;
-}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const startDate = toIsoStart(searchParams.get("startDate"));
-    const endDate = toIsoEnd(searchParams.get("endDate"));
+    const { startUtc, endUtc } = resolveWibAnalyticsRange(searchParams);
     const lane = searchParams.get("lane") as TrafficLane | "all" | null;
     const intersectionId = searchParams.get("intersectionId");
     const limit = Number(searchParams.get("limit") || 5000);
 
     const items = await scanTrafficByDateRange({
-      startDate,
-      endDate,
+      startDate: startUtc,
+      endDate: endUtc,
       intersectionId,
       limit,
     });
@@ -51,7 +39,7 @@ export async function GET(request: Request) {
 
     for (const item of items) {
       const timestamp = getItemTimestamp(item);
-      if (timestamp < startDate || timestamp > endDate) continue;
+      if (timestamp < startUtc || timestamp > endUtc) continue;
 
       for (const currentLane of selectedLanes) {
         const level = getLaneQueueLevel(item, currentLane);
@@ -90,8 +78,8 @@ export async function GET(request: Request) {
       },
       total,
       period: {
-        startDate,
-        endDate,
+        startDate: startUtc,
+        endDate: endUtc,
         lane: lane || "all",
         intersectionId: intersectionId || "all",
       },

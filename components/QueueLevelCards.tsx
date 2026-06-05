@@ -1,5 +1,6 @@
 "use client";
 
+import { formatWib } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
@@ -228,7 +229,7 @@ export default function QueueLevelCards() {
             Update otomatis setiap 5 detik • 
             {lastUpdated && (
               <span className="ml-1">
-                Terakhir: {lastUpdated.toLocaleTimeString('id-ID')}
+                Terakhir: {lastUpdated.toLocaleTimeString('id-ID', { timeZone: "Asia/Jakarta" })} WIB
               </span>
             )}
           </p>
@@ -334,7 +335,7 @@ export default function QueueLevelCards() {
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <p className="text-[10px] text-slate-400 flex items-center gap-1">
                   <span className="material-symbols-outlined text-xs">update</span>
-                  {new Date(lane.timestamp).toLocaleTimeString('id-ID')}
+                  {formatWib(lane.timestamp)} WIB
                 </p>
               </div>
             </motion.div>

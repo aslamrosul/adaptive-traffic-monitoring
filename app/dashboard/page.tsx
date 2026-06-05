@@ -17,6 +17,7 @@ import type {
 
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { useMqttTraffic } from "@/lib/hooks/useMqttTraffic";
+import { formatWib } from "@/lib/timezone";
 import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardPage() {
@@ -150,7 +151,9 @@ export default function DashboardPage() {
                       Device: {latestData?.deviceId || "-"} · Persimpangan:{" "}
                       {latestData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
                       {lastUpdate
-                        ? lastUpdate.toLocaleTimeString("id-ID")
+                        ? lastUpdate.toLocaleTimeString("id-ID", {
+                            timeZone: "Asia/Jakarta",
+                          }) + " WIB"
                         : "-"}
                     </p>
 

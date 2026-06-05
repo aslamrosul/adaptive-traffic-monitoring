@@ -13,6 +13,10 @@ import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import {
+  addDaysToDateValue,
+  getWibDateValue,
+} from "@/lib/timezone";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -29,32 +33,36 @@ interface DeviceStats {
   offline: number;
 }
 
-function dateToInputValue(date: Date): string {
-  return date.toISOString().split("T")[0];
-}
-
 function calculateDateRange(
   timeRange: TimeRange,
-  customDates?: DateRange
+  customDates?: DateRange,
 ): {
   startDate: string;
   endDate: string;
 } {
-  const end = new Date();
-  const start = new Date(end);
+  const today = getWibDateValue();
 
   switch (timeRange) {
     case "today":
-      break;
+      return {
+        startDate: today,
+        endDate: today,
+      };
 
-    case "yesterday":
-      start.setDate(start.getDate() - 1);
-      end.setDate(end.getDate() - 1);
-      break;
+    case "yesterday": {
+      const yesterday = addDaysToDateValue(today, -1);
+
+      return {
+        startDate: yesterday,
+        endDate: yesterday,
+      };
+    }
 
     case "30days":
-      start.setDate(start.getDate() - 30);
-      break;
+      return {
+        startDate: addDaysToDateValue(today, -29),
+        endDate: today,
+      };
 
     case "custom":
       if (customDates) {
@@ -64,19 +72,18 @@ function calculateDateRange(
         };
       }
 
-      start.setDate(start.getDate() - 7);
-      break;
+      return {
+        startDate: addDaysToDateValue(today, -6),
+        endDate: today,
+      };
 
     case "7days":
     default:
-      start.setDate(start.getDate() - 7);
-      break;
+      return {
+        startDate: addDaysToDateValue(today, -6),
+        endDate: today,
+      };
   }
-
-  return {
-    startDate: dateToInputValue(start),
-    endDate: dateToInputValue(end),
-  };
 }
 
 export default function AnalitikPage() {
@@ -111,8 +118,6 @@ export default function AnalitikPage() {
     () => calculateDateRange(timeRange, customDates),
     [timeRange, customDates]
   );
-
-  const analyticsDate = endDate;
 
   const intersectionId =
     selectedIntersection === "all"
@@ -480,7 +485,8 @@ export default function AnalitikPage() {
         <section className="grid grid-cols-12 gap-4 lg:gap-6">
           <div className="col-span-12 lg:col-span-8">
             <QueueLevelByHourChart
-              date={analyticsDate}
+              startDate={startDate}
+              endDate={endDate}
               intersectionId={intersectionId}
               lane={selectedLane}
             />

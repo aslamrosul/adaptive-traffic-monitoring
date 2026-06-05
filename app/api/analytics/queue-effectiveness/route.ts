@@ -6,6 +6,7 @@ import {
   type TrafficLane,
 } from "@/lib/traffic-adapter";
 import { NextResponse } from "next/server";
+import { resolveWibAnalyticsRange } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -22,31 +23,18 @@ const LANE_NAMES: Record<string, string> = {
   west: "Jalur Barat",
 };
 
-function toIsoStart(date?: string | null) {
-  if (!date) return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  if (date.includes("T")) return date;
-  return `${date}T00:00:00.000Z`;
-}
-
-function toIsoEnd(date?: string | null) {
-  if (!date) return new Date().toISOString();
-  if (date.includes("T")) return date;
-  return `${date}T23:59:59.999Z`;
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const startDate = toIsoStart(searchParams.get("startDate"));
-    const endDate = toIsoEnd(searchParams.get("endDate"));
+    const { startUtc, endUtc } = resolveWibAnalyticsRange(searchParams);
     const lane = searchParams.get("lane") as TrafficLane | "all" | null;
     const intersectionId = searchParams.get("intersectionId");
     const limit = Number(searchParams.get("limit") || 5000);
 
     const items = await scanTrafficByDateRange({
-      startDate,
-      endDate,
+      startDate: startUtc,
+      endDate: endUtc,
       intersectionId,
       limit,
     });
@@ -129,8 +117,8 @@ export async function GET(request: Request) {
         totalRecords: totalCount,
         avgEffectiveness,
         period: {
-          startDate,
-          endDate,
+          startDate: startUtc,
+          endDate: endUtc,
           intersectionId: intersectionId || "all",
           lane: lane || "all",
         },

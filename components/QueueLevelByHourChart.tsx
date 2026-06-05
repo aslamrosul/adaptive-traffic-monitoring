@@ -18,16 +18,18 @@ type LaneFilter = "all" | "north" | "south" | "east";
 type TrafficLane = Exclude<LaneFilter, "all">;
 
 interface QueueLevelByHourChartProps {
-  date: string;
+  startDate: string;
+  endDate: string;
   intersectionId?: string;
   lane?: LaneFilter;
 }
 
 interface HourlyData {
   hour: string;
-  north: number;
-  south: number;
-  east: number;
+  north: number | null;
+  south: number | null;
+  east: number | null;
+  sampleCount: number;
 }
 
 const LANES: Array<{
@@ -53,7 +55,8 @@ const LANES: Array<{
 ];
 
 export default function QueueLevelByHourChart({
-  date,
+  startDate,
+  endDate,
   intersectionId,
   lane = "all",
 }: QueueLevelByHourChartProps) {
@@ -70,8 +73,10 @@ export default function QueueLevelByHourChart({
   });
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchData() {
-      if (!date) {
+      if (!startDate || !endDate) {
         return;
       }
 
@@ -79,7 +84,8 @@ export default function QueueLevelByHourChart({
 
       try {
         const params = new URLSearchParams({
-          date,
+          startDate,
+          endDate,
           lane,
           limit: "5000",
         });
@@ -92,27 +98,47 @@ export default function QueueLevelByHourChart({
           `/api/analytics/queue-by-hour?${params.toString()}`,
           {
             cache: "no-store",
-          }
+            signal: controller.signal,
+          },
         );
 
         const json = await response.json();
 
         if (!response.ok || json.success === false) {
           throw new Error(
-            json.error || "Gagal memuat level antrian per jam"
+            json.error ||
+              "Gagal memuat level antrian per jam",
           );
         }
 
-        setChartData(json.hours || []);
-        setTotalSamples(json.totalSamples || 0);
+        const receivedHours: HourlyData[] =
+          Array.isArray(json.hours)
+            ? json.hours
+            : [];
+
+        const derivedSamples = receivedHours.reduce(
+          (sum, item) => sum + Number(item.sampleCount || 0),
+          0,
+        );
+
+        setChartData(receivedHours);
+
+        setTotalSamples(
+          Number(json.totalSamples ?? derivedSamples),
+        );
       } catch (error: any) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
         console.error("Queue by hour error:", error);
 
         setChartData([]);
         setTotalSamples(0);
 
         toast.error(
-          error.message || "Gagal memuat level antrian per jam"
+          error.message ||
+            "Gagal memuat level antrian per jam",
         );
       } finally {
         setIsLoading(false);
@@ -120,7 +146,14 @@ export default function QueueLevelByHourChart({
     }
 
     fetchData();
-  }, [date, intersectionId, lane]);
+
+    return () => controller.abort();
+  }, [
+    startDate,
+    endDate,
+    intersectionId,
+    lane,
+  ]);
 
   const displayedLanes = useMemo(() => {
     if (lane === "all") {
@@ -133,23 +166,43 @@ export default function QueueLevelByHourChart({
   const peakInformation = useMemo(() => {
     let peakHour = "-";
     let peakValue = -1;
+    let peakLane = "-";
 
     for (const row of chartData) {
       for (const currentLane of displayedLanes) {
-        const value = Number(row[currentLane.id] || 0);
+        const rawValue = row[currentLane.id];
+
+        if (rawValue === null || rawValue === undefined) {
+          continue;
+        }
+
+        const value = Number(rawValue);
 
         if (value > peakValue) {
           peakValue = value;
           peakHour = row.hour;
+          peakLane = currentLane.name;
         }
       }
     }
 
     return {
       hour: totalSamples > 0 ? peakHour : "-",
-      value: totalSamples > 0 ? Math.max(peakValue, 0) : 0,
+      lane: totalSamples > 0 ? peakLane : "-",
+      value: totalSamples > 0
+        ? Math.max(peakValue, 0)
+        : 0,
     };
-  }, [chartData, displayedLanes, totalSamples]);
+  }, [
+    chartData,
+    displayedLanes,
+    totalSamples,
+  ]);
+
+  const periodLabel =
+    startDate === endDate
+      ? startDate
+      : `${startDate} sampai ${endDate}`;
 
   const toggleLane = (laneId: TrafficLane) => {
     setVisibleLanes((current) => ({
@@ -160,8 +213,14 @@ export default function QueueLevelByHourChart({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{
+        opacity: 0,
+        y: 16,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
       className="h-full min-h-[420px] rounded-xl border border-blue-100 bg-white p-5 shadow-lg"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -171,7 +230,12 @@ export default function QueueLevelByHourChart({
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Rata-rata level antrean pada {date}.
+            Rata-rata level antrean berdasarkan jam WIB pada{" "}
+            {periodLabel}.
+          </p>
+
+          <p className="mt-1 text-[10px] font-semibold text-slate-400">
+            {totalSamples.toLocaleString("id-ID")} sampel jalur
           </p>
         </div>
 
@@ -185,7 +249,11 @@ export default function QueueLevelByHourChart({
           </p>
 
           <p className="text-[10px] text-blue-600">
-            Level {peakInformation.value.toFixed(1)}
+            Level {peakInformation.value.toFixed(2)}
+          </p>
+
+          <p className="text-[9px] text-blue-500">
+            {peakInformation.lane}
           </p>
         </div>
       </div>
@@ -245,10 +313,16 @@ export default function QueueLevelByHourChart({
             />
 
             <Tooltip
-              formatter={(value: any, name: any) => [
-                Number(value).toFixed(2),
-                name,
-              ]}
+              formatter={(value: any, name: any) => {
+                if (value === null || value === undefined) {
+                  return ["Tidak ada sampel", name];
+                }
+
+                return [
+                  `Level ${Number(value).toFixed(2)}`,
+                  name,
+                ];
+              }}
             />
 
             <Legend />
@@ -270,6 +344,7 @@ export default function QueueLevelByHourChart({
                   activeDot={{
                     r: 5,
                   }}
+                  connectNulls={false}
                 />
               );
             })}
@@ -285,6 +360,7 @@ function ChartLoading() {
     <div className="flex h-[300px] items-center justify-center">
       <div className="text-center">
         <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+
         <p className="text-sm text-slate-500">
           Memuat level antrian...
         </p>
@@ -301,7 +377,7 @@ function ChartEmpty() {
       </span>
 
       <p className="mt-3 text-sm font-semibold text-slate-500">
-        Belum ada data antrian untuk tanggal ini.
+        Belum ada data antrean pada periode ini.
       </p>
     </div>
   );

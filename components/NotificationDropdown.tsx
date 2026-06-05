@@ -181,11 +181,12 @@ export default function NotificationDropdown() {
                             <p className="text-xs text-slate-600 mt-1 line-clamp-2">{notif.message}</p>
                             <p className="text-[10px] text-slate-400 mt-2">
                               {new Date(notif.createdAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
                                 day: 'numeric',
                                 month: 'short',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                              })}
+                              })} WIB
                             </p>
                           </div>
                         </div>
