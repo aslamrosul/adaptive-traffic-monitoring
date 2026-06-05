@@ -24,6 +24,7 @@ export const awsTables = {
   intersections: process.env.DYNAMODB_INTERSECTIONS_TABLE || "Intersections",
   deviceStatus: process.env.DYNAMODB_DEVICE_STATUS_TABLE || "DeviceStatus",
   users: process.env.DYNAMODB_USERS_TABLE || "Users",
+  iotConfigs: process.env.DYNAMODB_IOT_CONFIGS_TABLE || "IoTConfigs",
 };
 
 export async function getLatestTrafficByIntersection(
@@ -135,8 +136,8 @@ export async function scanTrafficByDateRange(options: {
       ExpressionAttributeNames:
         expressionParts.length > 0
           ? {
-              "#ts": "timestamp",
-            }
+            "#ts": "timestamp",
+          }
           : undefined,
       ExpressionAttributeValues:
         Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
