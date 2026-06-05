@@ -36,76 +36,201 @@ export default function TrafficControlPanel({
 }: Props) {
   const [greenInput, setGreenInput] = useState(10);
   const [yellowInput, setYellowInput] = useState(3);
-
   const [level0Input, setLevel0Input] = useState(10);
   const [level1Input, setLevel1Input] = useState(20);
   const [level2Input, setLevel2Input] = useState(30);
 
-  const [message, setMessage] = useState<string | null>(
-    null,
-  );
+  const [savedAutoMode, setSavedAutoMode] = useState(true);
+  const [savedAdaptiveMode, setSavedAdaptiveMode] = useState(true);
 
-  useEffect(() => {
-    if (!data) return;
+  const [message, setMessage] = useState<string | null>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
 
-    setGreenInput(data.greenTimeS);
-    setYellowInput(data.yellowTimeS);
-
-    setLevel0Input(data.densityLevel0GreenS);
-    setLevel1Input(data.densityLevel1GreenS);
-    setLevel2Input(data.densityLevel2GreenS);
-  }, [
-    data?.greenTimeS,
-    data?.yellowTimeS,
-    data?.densityLevel0GreenS,
-    data?.densityLevel1GreenS,
-    data?.densityLevel2GreenS,
-  ]);
-
-  const autoMode = data?.autoMode ?? true;
-  const adaptiveMode = data?.adaptiveMode ?? true;
+  const deviceId = data?.deviceId || "";
+  const intersectionId = data?.intersectionId || null;
 
   const showMessage = (text: string) => {
     setMessage(text);
 
     window.setTimeout(() => {
       setMessage(null);
-    }, 2500);
+    }, 3000);
   };
 
-  const publishCommand = (
-    topic: string,
-    payload: string | number | boolean,
-    successMessage: string,
-  ) => {
-    const success = publishMqtt(topic, payload);
-
-    if (!success) {
-      showMessage("Gagal mengirim perintah MQTT.");
-      return false;
-    }
-
-    showMessage(successMessage);
-    return true;
-  };
-
-  const changeAutoMode = (enabled: boolean) => {
-    publishCommand(
-      "traffic/config/auto_mode/set",
-      enabled ? "on" : "off",
-      enabled
-        ? "Auto Mode diaktifkan."
-        : "Auto Mode dimatikan. Kontrol manual sekarang dapat digunakan.",
+  const applyConfigToInputs = (config: any) => {
+    setGreenInput(
+      Number(config.greenTime ?? data?.greenTimeS ?? 10),
+    );
+    setYellowInput(
+      Number(config.yellowTime ?? data?.yellowTimeS ?? 3),
+    );
+    setLevel0Input(
+      Number(
+        config.densityLevel0Green ??
+          data?.densityLevel0GreenS ??
+          10,
+      ),
+    );
+    setLevel1Input(
+      Number(
+        config.densityLevel1Green ??
+          data?.densityLevel1GreenS ??
+          20,
+      ),
+    );
+    setLevel2Input(
+      Number(
+        config.densityLevel2Green ??
+          data?.densityLevel2GreenS ??
+          30,
+      ),
+    );
+    setSavedAutoMode(
+      typeof config.autoMode === "boolean"
+        ? config.autoMode
+        : data?.autoMode ?? true,
+    );
+    setSavedAdaptiveMode(
+      typeof config.adaptiveMode === "boolean"
+        ? config.adaptiveMode
+        : data?.adaptiveMode ?? true,
     );
   };
 
-  const changeAdaptiveMode = (enabled: boolean) => {
-    publishCommand(
-      "traffic/config/adaptive_mode/set",
-      enabled ? "on" : "off",
+  const loadSavedConfig = async () => {
+    if (!deviceId) {
+      return;
+    }
+
+    setIsLoadingConfig(true);
+
+    try {
+      const response = await fetch(
+        `/api/iot/config/${encodeURIComponent(deviceId)}`,
+        {
+          cache: "no-store",
+        },
+      );
+
+      const result = await response.json();
+
+      if (
+        response.ok &&
+        result.success &&
+        result.data
+      ) {
+        applyConfigToInputs(result.data);
+        return;
+      }
+
+      /** Jika belum ada config di DynamoDB, gunakan telemetry
+       * sebagai nilai awal, tetapi jangan terus menimpa input.
+       */
+      applyConfigToInputs({});
+    } catch (error) {
+      console.error(
+        "Gagal mengambil konfigurasi:",
+        error,
+      );
+      applyConfigToInputs({});
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId]);
+
+  const saveConfigPatch = async (
+    patch: Record<string, unknown>,
+    successMessage: string,
+  ) => {
+    if (!deviceId) {
+      showMessage("Device ID belum tersedia.");
+      return false;
+    }
+
+    setIsSavingConfig(true);
+
+    try {
+      const response = await fetch(
+        `/api/iot/config/${encodeURIComponent(deviceId)}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...patch,
+            deviceId,
+            device_id: deviceId,
+            intersectionId,
+            intersection_id: intersectionId,
+          }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error ||
+            "Gagal menyimpan konfigurasi",
+        );
+      }
+
+      applyConfigToInputs(result.data);
+
+      if (result.mqttSent) {
+        showMessage(successMessage);
+      } else {
+        showMessage(
+          "Konfigurasi tersimpan, tetapi pengiriman MQTT tidak sepenuhnya berhasil.",
+        );
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error(
+        "Gagal menyimpan konfigurasi:",
+        error,
+      );
+      showMessage(
+        error.message || "Gagal menyimpan konfigurasi.",
+      );
+      return false;
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+  const autoMode = savedAutoMode;
+  const adaptiveMode = savedAdaptiveMode;
+
+  const changeAutoMode = async (enabled: boolean) => {
+    await saveConfigPatch(
+      {
+        autoMode: enabled,
+      },
       enabled
-        ? "Adaptive Mode diaktifkan."
-        : "Adaptive Mode dimatikan.",
+        ? "Auto Mode berhasil diaktifkan dan disimpan."
+        : "Auto Mode berhasil dimatikan dan disimpan.",
+    );
+  };
+
+  const changeAdaptiveMode = async (
+    enabled: boolean,
+  ) => {
+    await saveConfigPatch(
+      {
+        adaptiveMode: enabled,
+      },
+      enabled
+        ? "Adaptive Mode berhasil diaktifkan dan disimpan."
+        : "Adaptive Mode berhasil dimatikan dan disimpan.",
     );
   };
 
@@ -121,9 +246,22 @@ export default function TrafficControlPanel({
       return;
     }
 
-    publishCommand(
+    /** Lampu manual bersifat sementara sehingga belum disimpan ke IoTConfigs.
+     * Nantinya sebaiknya dipindahkan ke API server khusus command.
+     */
+    const success = publishMqtt(
       `traffic/light/${lane}/set`,
       color,
+    );
+
+    if (!success) {
+      showMessage(
+        "Gagal mengirim perintah lampu melalui MQTT.",
+      );
+      return;
+    }
+
+    showMessage(
       `Lampu Jalur ${laneLabels[lane]} diubah menjadi ${getLightLabel(
         color,
       )}.`,
@@ -306,10 +444,24 @@ export default function TrafficControlPanel({
           </h3>
 
           <p className="mt-0.5 text-xs text-slate-500">
-            Nilai akan langsung dikirim menuju ESP32
-            melalui MQTT.
+            Nilai akan disimpan ke DynamoDB dan
+            dikirim menuju ESP32 melalui MQTT
+            retained.
           </p>
         </div>
+
+        {isLoadingConfig && (
+          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
+            Memuat konfigurasi tersimpan...
+          </div>
+        )}
+
+        {isSavingConfig && (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+            Menyimpan ke DynamoDB dan mengirim
+            ke ESP32...
+          </div>
+        )}
 
         <div className="space-y-2">
           <InputRow
@@ -319,12 +471,14 @@ export default function TrafficControlPanel({
             max={120}
             onChange={setGreenInput}
             onSet={(value) =>
-              publishCommand(
-                "traffic/config/green_time/set",
-                value,
-                `Durasi hijau manual diubah menjadi ${value} detik.`,
+              saveConfigPatch(
+                {
+                  greenTime: value,
+                },
+                `Durasi hijau manual disimpan menjadi ${value} detik.`,
               )
             }
+            disabled={isSavingConfig || !deviceId}
           />
 
           <InputRow
@@ -334,12 +488,14 @@ export default function TrafficControlPanel({
             max={30}
             onChange={setYellowInput}
             onSet={(value) =>
-              publishCommand(
-                "traffic/config/yellow_time/set",
-                value,
-                `Durasi lampu kuning diubah menjadi ${value} detik.`,
+              saveConfigPatch(
+                {
+                  yellowTime: value,
+                },
+                `Durasi lampu kuning disimpan menjadi ${value} detik.`,
               )
             }
+            disabled={isSavingConfig || !deviceId}
           />
 
           <InputRow
@@ -349,12 +505,14 @@ export default function TrafficControlPanel({
             max={120}
             onChange={setLevel0Input}
             onSet={(value) =>
-              publishCommand(
-                "traffic/config/level0_green/set",
-                value,
-                `Durasi Level 0 diubah menjadi ${value} detik.`,
+              saveConfigPatch(
+                {
+                  densityLevel0Green: value,
+                },
+                `Durasi Level 0 disimpan menjadi ${value} detik.`,
               )
             }
+            disabled={isSavingConfig || !deviceId}
           />
 
           <InputRow
@@ -364,12 +522,14 @@ export default function TrafficControlPanel({
             max={120}
             onChange={setLevel1Input}
             onSet={(value) =>
-              publishCommand(
-                "traffic/config/level1_green/set",
-                value,
-                `Durasi Level 1 diubah menjadi ${value} detik.`,
+              saveConfigPatch(
+                {
+                  densityLevel1Green: value,
+                },
+                `Durasi Level 1 disimpan menjadi ${value} detik.`,
               )
             }
+            disabled={isSavingConfig || !deviceId}
           />
 
           <InputRow
@@ -379,12 +539,14 @@ export default function TrafficControlPanel({
             max={120}
             onChange={setLevel2Input}
             onSet={(value) =>
-              publishCommand(
-                "traffic/config/level2_green/set",
-                value,
-                `Durasi Level 2 diubah menjadi ${value} detik.`,
+              saveConfigPatch(
+                {
+                  densityLevel2Green: value,
+                },
+                `Durasi Level 2 disimpan menjadi ${value} detik.`,
               )
             }
+            disabled={isSavingConfig || !deviceId}
           />
         </div>
       </section>
@@ -677,6 +839,7 @@ function InputRow({
   max,
   onChange,
   onSet,
+  disabled = false,
 }: {
   label: string;
   value: number;
@@ -684,6 +847,7 @@ function InputRow({
   max: number;
   onChange: (value: number) => void;
   onSet: (value: number) => void;
+  disabled?: boolean;
 }) {
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -720,7 +884,8 @@ function InputRow({
           min={min}
           max={max}
           onChange={handleChange}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          disabled={disabled}
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
         />
 
         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
@@ -730,8 +895,9 @@ function InputRow({
 
       <button
         type="button"
+        disabled={disabled}
         onClick={handleSet}
-        className="rounded-lg bg-blue-600 px-2 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
+        className="rounded-lg bg-blue-600 px-2 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Set
       </button>
