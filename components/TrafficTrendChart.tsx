@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -40,11 +40,28 @@ interface TrafficTrendChartProps {
 
 export default function TrafficTrendChart({ timeRange = 'today', customDates }: TrafficTrendChartProps) {
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedLane, setSelectedLane] = useState<string>("all");
+  
+  const hasLoadedRef = useRef(false);
+  const isFetchingRef = useRef(false);
 
-  const fetchChartData = async () => {
-    setIsLoading(true);
+  const fetchChartData = async (showRefreshIndicator = false) => {
+    // Mencegah request bertumpuk
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+
+    // Skeleton hanya ketika load pertama
+    if (!hasLoadedRef.current) {
+      setIsInitialLoading(true);
+    } else if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    }
+
     try {
       // Fetch traffic data
       const response = await fetch(`/api/traffic/realtime?limit=5000`);
@@ -257,20 +274,25 @@ export default function TrafficTrendChart({ timeRange = 'today', customDates }: 
         console.warn('⚠️ No traffic data available from API');
         setHourlyData([]);
       }
-      
-      setIsLoading(false);
     } catch (error) {
       console.error('❌ Error fetching chart data:', error);
       setHourlyData([]);
-      setIsLoading(false);
+    } finally {
+      hasLoadedRef.current = true;
+      isFetchingRef.current = false;
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchChartData();
+    // Fetch data tanpa menampilkan skeleton setelah load pertama
+    void fetchChartData(false);
 
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchChartData, 30000);
+    const interval = setInterval(() => {
+      void fetchChartData(false);
+    }, 30000);
+
     return () => clearInterval(interval);
   }, [selectedLane, timeRange, customDates]);
 
@@ -429,7 +451,7 @@ export default function TrafficTrendChart({ timeRange = 'today', customDates }: 
     },
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-slate-200 animate-pulse">
         <div className="h-6 bg-slate-200 rounded w-48 mb-4"></div>
@@ -473,13 +495,21 @@ export default function TrafficTrendChart({ timeRange = 'today', customDates }: 
 
           {/* Refresh Button */}
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={fetchChartData}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            whileHover={{ scale: isRefreshing ? 1 : 1.05 }}
+            whileTap={{ scale: isRefreshing ? 1 : 0.95 }}
+            onClick={() => void fetchChartData(true)}
+            disabled={isRefreshing}
+            className="rounded-lg p-2 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             title="Refresh data"
           >
-            <span className="material-symbols-outlined text-slate-600">refresh</span>
+            <span
+              className={[
+                "material-symbols-outlined text-slate-600",
+                isRefreshing ? "animate-spin" : "",
+              ].join(" ")}
+            >
+              refresh
+            </span>
           </motion.button>
         </div>
       </div>

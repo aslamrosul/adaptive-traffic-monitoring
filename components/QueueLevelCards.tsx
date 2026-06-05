@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LaneData {
   lane: string;
@@ -78,10 +78,28 @@ function getLightColor(light: string): { bg: string; text: string } {
 
 export default function QueueLevelCards() {
   const [laneData, setLaneData] = useState<LaneData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchQueueData = async () => {
+  const hasLoadedRef = useRef(false);
+  const isFetchingRef = useRef(false);
+
+  const fetchQueueData = async (showRefreshIndicator = false) => {
+    // Mencegah request bertumpuk
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+
+    // Skeleton hanya ketika load pertama
+    if (!hasLoadedRef.current) {
+      setIsInitialLoading(true);
+    } else if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    }
+
     try {
       const response = await fetch('/api/traffic/realtime?limit=100');
       const result = await response.json();
@@ -137,26 +155,28 @@ export default function QueueLevelCards() {
         setLaneData(lanes);
         setLastUpdated(new Date());
       }
-      
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching queue data:', error);
-      setIsLoading(false);
+    } finally {
+      hasLoadedRef.current = true;
+      isFetchingRef.current = false;
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchQueueData();
+    void fetchQueueData(false);
 
     // Auto-refresh every 5 seconds for real-time updates
     const interval = setInterval(() => {
-      fetchQueueData();
+      void fetchQueueData(false);
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -214,13 +234,21 @@ export default function QueueLevelCards() {
           </p>
         </div>
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={fetchQueueData}
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          whileHover={{ scale: isRefreshing ? 1 : 1.05 }}
+          whileTap={{ scale: isRefreshing ? 1 : 0.95 }}
+          onClick={() => void fetchQueueData(true)}
+          disabled={isRefreshing}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-60"
           title="Refresh data"
         >
-          <span className="material-symbols-outlined text-slate-600">refresh</span>
+          <span
+            className={[
+              "material-symbols-outlined text-slate-600",
+              isRefreshing ? "animate-spin" : "",
+            ].join(" ")}
+          >
+            refresh
+          </span>
         </motion.button>
       </div>
 

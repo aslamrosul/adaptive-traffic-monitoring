@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LaneData {
   name: string;
@@ -19,13 +19,31 @@ interface LaneStatusPanelProps {
 
 export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPanelProps) {
   const [lanes, setLanes] = useState<LaneData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [intersectionName, setIntersectionName] = useState<string>("Semua Persimpangan");
   const [laneCount, setLaneCount] = useState<number>(4);
 
+  const hasLoadedRef = useRef(false);
+  const isFetchingRef = useRef(false);
+
   // Fetch lane status
-  const fetchLaneStatus = async () => {
+  const fetchLaneStatus = async (showRefreshIndicator = false) => {
+    // Mencegah request bertumpuk
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+
+    // Skeleton hanya ketika load pertama
+    if (!hasLoadedRef.current) {
+      setIsInitialLoading(true);
+    } else if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    }
+
     try {
       // Fetch intersection details if specific intersection selected
       if (intersectionId !== "all") {
@@ -96,18 +114,23 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
       }
 
       setLastUpdate(new Date());
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching lane status:', error);
-      setIsLoading(false);
+    } finally {
+      hasLoadedRef.current = true;
+      isFetchingRef.current = false;
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchLaneStatus();
+    void fetchLaneStatus(false);
 
     // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchLaneStatus, 5000);
+    const interval = setInterval(() => {
+      void fetchLaneStatus(false);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [intersectionId]);
@@ -185,13 +208,19 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
             </div>
           </div>
           <motion.button
-            whileHover={{ scale: 1.05, rotate: 180 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={fetchLaneStatus}
-            className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors"
+            whileHover={{ scale: isRefreshing ? 1 : 1.05, rotate: isRefreshing ? 0 : 180 }}
+            whileTap={{ scale: isRefreshing ? 1 : 0.95 }}
+            onClick={() => void fetchLaneStatus(true)}
+            disabled={isRefreshing}
+            className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             title="Refresh"
           >
-            <span className="material-symbols-outlined text-white text-xl">
+            <span
+              className={[
+                "material-symbols-outlined text-white text-xl",
+                isRefreshing ? "animate-spin" : "",
+              ].join(" ")}
+            >
               refresh
             </span>
           </motion.button>
@@ -208,7 +237,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
 
       {/* Content */}
       <div className="p-4 lg:p-6">
-        {isLoading ? (
+        {isInitialLoading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].slice(0, laneCount).map((i) => (
               <div key={i} className="animate-pulse">
