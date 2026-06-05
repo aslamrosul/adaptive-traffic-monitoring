@@ -2,6 +2,7 @@
 
 import type {
   LaneName,
+  LightStatus,
   TrafficUpdate,
 } from "@/lib/hooks/useMqttTraffic";
 
@@ -9,22 +10,25 @@ import { useEffect, useState } from "react";
 
 interface Props {
   data: TrafficUpdate | null;
+
   publishMqtt: (
     topic: string,
     payload: string | number | boolean,
   ) => boolean;
 }
 
-const activeLanes: LaneName[] = ["north", "south", "east"];
+const activeLanes: LaneName[] = [
+  "north",
+  "south",
+  "east",
+];
 
-const laneLabel: Record<LaneName, string> = {
+const laneLabels: Record<LaneName, string> = {
   north: "Utara",
   south: "Selatan",
   east: "Timur",
   west: "Barat",
 };
-
-type LightColor = "red" | "yellow" | "green";
 
 export default function TrafficControlPanel({
   data,
@@ -32,59 +36,118 @@ export default function TrafficControlPanel({
 }: Props) {
   const [greenInput, setGreenInput] = useState(10);
   const [yellowInput, setYellowInput] = useState(3);
+
   const [level0Input, setLevel0Input] = useState(10);
   const [level1Input, setLevel1Input] = useState(20);
   const [level2Input, setLevel2Input] = useState(30);
 
+  const [message, setMessage] = useState<string | null>(
+    null,
+  );
+
   useEffect(() => {
     if (!data) return;
 
-    setGreenInput(data.greenTimeS ?? 10);
-    setYellowInput(data.yellowTimeS ?? 3);
-    setLevel0Input(data.densityLevel0GreenS ?? 10);
-    setLevel1Input(data.densityLevel1GreenS ?? 20);
-    setLevel2Input(data.densityLevel2GreenS ?? 30);
-  }, [data]);
+    setGreenInput(data.greenTimeS);
+    setYellowInput(data.yellowTimeS);
+
+    setLevel0Input(data.densityLevel0GreenS);
+    setLevel1Input(data.densityLevel1GreenS);
+    setLevel2Input(data.densityLevel2GreenS);
+  }, [
+    data?.greenTimeS,
+    data?.yellowTimeS,
+    data?.densityLevel0GreenS,
+    data?.densityLevel1GreenS,
+    data?.densityLevel2GreenS,
+  ]);
 
   const autoMode = data?.autoMode ?? true;
   const adaptiveMode = data?.adaptiveMode ?? true;
 
-  const publish = (
+  const showMessage = (text: string) => {
+    setMessage(text);
+
+    window.setTimeout(() => {
+      setMessage(null);
+    }, 2500);
+  };
+
+  const publishCommand = (
     topic: string,
     payload: string | number | boolean,
+    successMessage: string,
   ) => {
     const success = publishMqtt(topic, payload);
 
     if (!success) {
-      console.error("Gagal publish MQTT:", {
-        topic,
-        payload,
-      });
+      showMessage("Gagal mengirim perintah MQTT.");
+      return false;
     }
+
+    showMessage(successMessage);
+    return true;
+  };
+
+  const changeAutoMode = (enabled: boolean) => {
+    publishCommand(
+      "traffic/config/auto_mode/set",
+      enabled ? "on" : "off",
+      enabled
+        ? "Auto Mode diaktifkan."
+        : "Auto Mode dimatikan. Kontrol manual sekarang dapat digunakan.",
+    );
+  };
+
+  const changeAdaptiveMode = (enabled: boolean) => {
+    publishCommand(
+      "traffic/config/adaptive_mode/set",
+      enabled ? "on" : "off",
+      enabled
+        ? "Adaptive Mode diaktifkan."
+        : "Adaptive Mode dimatikan.",
+    );
   };
 
   const setLight = (
     lane: LaneName,
-    color: LightColor,
+    color: LightStatus,
   ) => {
-    if (autoMode) return;
+    if (autoMode) {
+      showMessage(
+        "Matikan Auto Mode sebelum mengontrol lampu secara manual.",
+      );
 
-    publish(`traffic/light/${lane}/set`, color);
+      return;
+    }
+
+    publishCommand(
+      `traffic/light/${lane}/set`,
+      color,
+      `Lampu Jalur ${laneLabels[lane]} diubah menjadi ${getLightLabel(
+        color,
+      )}.`,
+    );
   };
 
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg lg:p-5">
-      <div>
+      <header>
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Realtime control
+          Realtime Control
         </p>
 
         <h2 className="text-xl font-bold text-slate-900">
           Data & Kontrol
         </h2>
-      </div>
+      </header>
 
-      {/* DEVICE INFORMATION */}
+      {message && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-800">
+          {message}
+        </div>
+      )}
+
       <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
         <div className="grid gap-2 text-sm">
           <InformationRow
@@ -106,10 +169,18 @@ export default function TrafficControlPanel({
             label="Uptime"
             value={`${data?.uptimeS ?? 0} detik`}
           />
+
+          <InformationRow
+            label="Dummy Mode"
+            value={
+              data?.dummyMode
+                ? "Aktif"
+                : "Tidak Aktif"
+            }
+          />
         </div>
       </section>
 
-      {/* MODE CONTROL */}
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <h3 className="mb-3 font-bold text-slate-900">
           Mode Operasi
@@ -118,31 +189,22 @@ export default function TrafficControlPanel({
         <div className="space-y-3">
           <ModeControl
             label="Auto Mode"
-            description="Lampu berpindah otomatis"
+            description="Lampu berpindah secara otomatis."
             active={autoMode}
-            onEnable={() =>
-              publish("traffic/config/auto_mode/set", "on")
-            }
-            onDisable={() =>
-              publish("traffic/config/auto_mode/set", "off")
-            }
+            onEnable={() => changeAutoMode(true)}
+            onDisable={() => changeAutoMode(false)}
           />
 
           <ModeControl
             label="Adaptive Mode"
-            description="Durasi hijau mengikuti kepadatan"
+            description="Durasi hijau mengikuti tingkat kepadatan."
             active={adaptiveMode}
-            onEnable={() =>
-              publish("traffic/config/adaptive_mode/set", "on")
-            }
-            onDisable={() =>
-              publish("traffic/config/adaptive_mode/set", "off")
-            }
+            onEnable={() => changeAdaptiveMode(true)}
+            onDisable={() => changeAdaptiveMode(false)}
           />
         </div>
       </section>
 
-      {/* LIGHT CONTROL */}
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
@@ -155,37 +217,41 @@ export default function TrafficControlPanel({
             </p>
           </div>
 
-          <span
-            className={[
-              "rounded-full px-2.5 py-1 text-xs font-bold",
-              autoMode
-                ? "bg-amber-100 text-amber-700"
-                : "bg-emerald-100 text-emerald-700",
-            ].join(" ")}
-          >
-            {autoMode ? "Terkunci" : "Manual aktif"}
-          </span>
+          <StatusBadge
+            active={!autoMode}
+            activeText="Manual Aktif"
+            inactiveText="Terkunci"
+          />
         </div>
 
         <div className="space-y-3">
           {activeLanes.map((lane) => {
             const laneData = data?.[lane];
-            const currentLight = normalizeLight(laneData?.light);
+
+            const currentLight = normalizeLight(
+              laneData?.light,
+            );
 
             return (
-              <div
+              <article
                 key={lane}
                 className="rounded-xl border border-slate-200 bg-white p-3"
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="font-bold text-slate-900">
-                      Jalur {laneLabel[lane]}
+                      Jalur {laneLabels[lane]}
                     </p>
 
                     <p className="text-xs text-slate-500">
-                      Kendaraan: {laneData?.vehicleCount ?? 0} · Density:{" "}
+                      Kendaraan:{" "}
+                      {laneData?.vehicleCount ?? 0}
+                      {" · "}
+                      Density:{" "}
                       {laneData?.queueLevel ?? 0}
+                      {" · "}
+                      Antrean:{" "}
+                      {laneData?.queueLength ?? 0} cm
                     </p>
                   </div>
 
@@ -198,32 +264,41 @@ export default function TrafficControlPanel({
                     color="red"
                     active={currentLight === "red"}
                     disabled={autoMode}
-                    onClick={() => setLight(lane, "red")}
+                    onClick={() =>
+                      setLight(lane, "red")
+                    }
                   />
 
                   <LightButton
                     label="Kuning"
                     color="yellow"
-                    active={currentLight === "yellow"}
+                    active={
+                      currentLight === "yellow"
+                    }
                     disabled={autoMode}
-                    onClick={() => setLight(lane, "yellow")}
+                    onClick={() =>
+                      setLight(lane, "yellow")
+                    }
                   />
 
                   <LightButton
                     label="Hijau"
                     color="green"
-                    active={currentLight === "green"}
+                    active={
+                      currentLight === "green"
+                    }
                     disabled={autoMode}
-                    onClick={() => setLight(lane, "green")}
+                    onClick={() =>
+                      setLight(lane, "green")
+                    }
                   />
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
       </section>
 
-      {/* TIME CONFIGURATION */}
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3">
           <h3 className="font-bold text-slate-900">
@@ -231,7 +306,8 @@ export default function TrafficControlPanel({
           </h3>
 
           <p className="mt-0.5 text-xs text-slate-500">
-            Durasi dikirim langsung menuju perangkat melalui MQTT.
+            Nilai akan langsung dikirim menuju ESP32
+            melalui MQTT.
           </p>
         </div>
 
@@ -241,10 +317,13 @@ export default function TrafficControlPanel({
             value={greenInput}
             min={1}
             max={120}
-            suffix="detik"
             onChange={setGreenInput}
-            onSet={() =>
-              publish("traffic/config/green_time/set", greenInput)
+            onSet={(value) =>
+              publishCommand(
+                "traffic/config/green_time/set",
+                value,
+                `Durasi hijau manual diubah menjadi ${value} detik.`,
+              )
             }
           />
 
@@ -253,10 +332,13 @@ export default function TrafficControlPanel({
             value={yellowInput}
             min={1}
             max={30}
-            suffix="detik"
             onChange={setYellowInput}
-            onSet={() =>
-              publish("traffic/config/yellow_time/set", yellowInput)
+            onSet={(value) =>
+              publishCommand(
+                "traffic/config/yellow_time/set",
+                value,
+                `Durasi lampu kuning diubah menjadi ${value} detik.`,
+              )
             }
           />
 
@@ -265,12 +347,12 @@ export default function TrafficControlPanel({
             value={level0Input}
             min={1}
             max={120}
-            suffix="detik"
             onChange={setLevel0Input}
-            onSet={() =>
-              publish(
+            onSet={(value) =>
+              publishCommand(
                 "traffic/config/level0_green/set",
-                level0Input,
+                value,
+                `Durasi Level 0 diubah menjadi ${value} detik.`,
               )
             }
           />
@@ -280,12 +362,12 @@ export default function TrafficControlPanel({
             value={level1Input}
             min={1}
             max={120}
-            suffix="detik"
             onChange={setLevel1Input}
-            onSet={() =>
-              publish(
+            onSet={(value) =>
+              publishCommand(
                 "traffic/config/level1_green/set",
-                level1Input,
+                value,
+                `Durasi Level 1 diubah menjadi ${value} detik.`,
               )
             }
           />
@@ -295,25 +377,34 @@ export default function TrafficControlPanel({
             value={level2Input}
             min={1}
             max={120}
-            suffix="detik"
             onChange={setLevel2Input}
-            onSet={() =>
-              publish(
+            onSet={(value) =>
+              publishCommand(
                 "traffic/config/level2_green/set",
-                level2Input,
+                value,
+                `Durasi Level 2 diubah menjadi ${value} detik.`,
               )
             }
           />
         </div>
       </section>
 
-      {/* CURRENT CONFIG */}
       <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
         <h3 className="mb-2 text-sm font-bold text-indigo-950">
           Konfigurasi Aktif
         </h3>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
+          <ConfigItem
+            label="Auto Mode"
+            value={autoMode ? "ON" : "OFF"}
+          />
+
+          <ConfigItem
+            label="Adaptive Mode"
+            value={adaptiveMode ? "ON" : "OFF"}
+          />
+
           <ConfigItem
             label="Manual"
             value={`${data?.greenTimeS ?? 10}s`}
@@ -326,22 +417,30 @@ export default function TrafficControlPanel({
 
           <ConfigItem
             label="Density 0"
-            value={`${data?.densityLevel0GreenS ?? 10}s`}
+            value={`${
+              data?.densityLevel0GreenS ?? 10
+            }s`}
           />
 
           <ConfigItem
             label="Density 1"
-            value={`${data?.densityLevel1GreenS ?? 20}s`}
+            value={`${
+              data?.densityLevel1GreenS ?? 20
+            }s`}
           />
 
           <ConfigItem
             label="Density 2"
-            value={`${data?.densityLevel2GreenS ?? 30}s`}
+            value={`${
+              data?.densityLevel2GreenS ?? 30
+            }s`}
           />
 
           <ConfigItem
             label="Dummy Mode"
-            value={String(data?.dummyMode ?? false)}
+            value={
+              data?.dummyMode ? "ON" : "OFF"
+            }
           />
         </div>
       </section>
@@ -350,21 +449,30 @@ export default function TrafficControlPanel({
 }
 
 function normalizeLight(
-  light?: string,
-): LightColor {
-  const normalized = String(light || "red")
+  value?: string,
+): LightStatus {
+  const normalized = String(value ?? "red")
     .trim()
     .toLowerCase();
 
   if (
-    normalized === "green" ||
+    normalized === "red" ||
     normalized === "yellow" ||
-    normalized === "red"
+    normalized === "green"
   ) {
     return normalized;
   }
 
   return "red";
+}
+
+function getLightLabel(
+  light: LightStatus,
+): string {
+  if (light === "green") return "hijau";
+  if (light === "yellow") return "kuning";
+
+  return "merah";
 }
 
 function InformationRow({
@@ -413,27 +521,23 @@ function ModeControl({
           </p>
         </div>
 
-        <span
-          className={[
-            "rounded-full px-2.5 py-1 text-xs font-bold",
-            active
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-red-100 text-red-700",
-          ].join(" ")}
-        >
-          {active ? "ON" : "OFF"}
-        </span>
+        <StatusBadge
+          active={active}
+          activeText="ON"
+          inactiveText="OFF"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
+          disabled={active}
           onClick={onEnable}
           className={[
             "rounded-lg px-3 py-2 text-xs font-bold transition",
             active
-              ? "bg-emerald-600 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-emerald-100",
+              ? "cursor-default bg-emerald-600 text-white"
+              : "bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800",
           ].join(" ")}
         >
           Aktifkan
@@ -441,12 +545,13 @@ function ModeControl({
 
         <button
           type="button"
+          disabled={!active}
           onClick={onDisable}
           className={[
             "rounded-lg px-3 py-2 text-xs font-bold transition",
             !active
-              ? "bg-red-600 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-red-100",
+              ? "cursor-default bg-red-600 text-white"
+              : "bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800",
           ].join(" ")}
         >
           Matikan
@@ -456,21 +561,46 @@ function ModeControl({
   );
 }
 
+function StatusBadge({
+  active,
+  activeText,
+  inactiveText,
+}: {
+  active: boolean;
+  activeText: string;
+  inactiveText: string;
+}) {
+  return (
+    <span
+      className={[
+        "rounded-full px-2.5 py-1 text-xs font-bold",
+        active
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-red-100 text-red-700",
+      ].join(" ")}
+    >
+      {active ? activeText : inactiveText}
+    </span>
+  );
+}
+
 function LightBadge({
   light,
 }: {
-  light: LightColor;
+  light: LightStatus;
 }) {
-  const classes: Record<LightColor, string> = {
-    red: "bg-red-100 text-red-700",
-    yellow: "bg-yellow-100 text-yellow-700",
-    green: "bg-emerald-100 text-emerald-700",
+  const classes: Record<LightStatus, string> = {
+    red: "bg-red-600 text-white shadow-md shadow-red-200",
+    yellow:
+      "bg-yellow-400 text-slate-950 shadow-md shadow-yellow-200",
+    green:
+      "bg-emerald-600 text-white shadow-md shadow-emerald-200",
   };
 
   return (
     <span
       className={[
-        "rounded-full px-2.5 py-1 text-xs font-bold uppercase",
+        "rounded-full px-3 py-1 text-xs font-bold uppercase",
         classes[light],
       ].join(" ")}
     >
@@ -487,35 +617,51 @@ function LightButton({
   onClick,
 }: {
   label: string;
-  color: LightColor;
+  color: LightStatus;
   active: boolean;
   disabled: boolean;
   onClick: () => void;
 }) {
-  const activeClasses: Record<LightColor, string> = {
-    red: "bg-red-600 text-white",
-    yellow: "bg-yellow-400 text-slate-900",
-    green: "bg-emerald-600 text-white",
+  const activeClasses: Record<
+    LightStatus,
+    string
+  > = {
+    red: "bg-red-600 text-white ring-2 ring-red-300 shadow-md",
+    yellow:
+      "bg-yellow-400 text-slate-950 ring-2 ring-yellow-200 shadow-md",
+    green:
+      "bg-emerald-600 text-white ring-2 ring-emerald-300 shadow-md",
   };
 
-  const inactiveClasses: Record<LightColor, string> = {
+  const inactiveClasses: Record<
+    LightStatus,
+    string
+  > = {
     red: "bg-red-50 text-red-700 hover:bg-red-100",
-    yellow: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100",
-    green: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+    yellow:
+      "bg-yellow-50 text-yellow-800 hover:bg-yellow-100",
+    green:
+      "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
   };
 
   return (
     <button
       type="button"
       disabled={disabled}
+      aria-pressed={active}
       onClick={onClick}
       className={[
         "rounded-lg px-2 py-2 text-xs font-bold transition",
         active
           ? activeClasses[color]
           : inactiveClasses[color],
-        disabled
-          ? "cursor-not-allowed opacity-40"
+
+        disabled && !active
+          ? "cursor-not-allowed opacity-35"
+          : "",
+
+        disabled && active
+          ? "cursor-not-allowed opacity-100"
           : "",
       ].join(" ")}
     >
@@ -529,7 +675,6 @@ function InputRow({
   value,
   min,
   max,
-  suffix,
   onChange,
   onSet,
 }: {
@@ -537,16 +682,17 @@ function InputRow({
   value: number;
   min: number;
   max: number;
-  suffix: string;
   onChange: (value: number) => void;
-  onSet: () => void;
+  onSet: (value: number) => void;
 }) {
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const parsed = Number(event.target.value);
 
-    if (Number.isNaN(parsed)) return;
+    if (!Number.isFinite(parsed)) {
+      return;
+    }
 
     onChange(parsed);
   };
@@ -558,7 +704,7 @@ function InputRow({
     );
 
     onChange(normalizedValue);
-    onSet();
+    onSet(normalizedValue);
   };
 
   return (
@@ -578,7 +724,7 @@ function InputRow({
         />
 
         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
-          {suffix}
+          detik
         </span>
       </div>
 
