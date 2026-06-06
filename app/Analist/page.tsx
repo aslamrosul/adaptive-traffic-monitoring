@@ -8,18 +8,21 @@ import DashboardLayout from "@/components/DashboardLayout";
 import GreenDurationChart from "@/components/GreenDurationChart";
 import QueueDistributionChart from "@/components/QueueDistributionChart";
 import QueueEffectivenessTable from "@/components/QueueEffectivenessTable";
+import QueueHourlyHeatmap from "@/components/QueueHourlyHeatmap";
 import QueueLevelByHourChart from "@/components/QueueLevelByHourChart";
+import VehicleVolumeChart from "@/components/VehicleVolumeChart";
+
 import { useIntersections } from "@/lib/hooks/useIntersections";
-import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
 import {
   addDaysToDateValue,
   getWibDateValue,
 } from "@/lib/timezone";
 
-type LaneFilter = "all" | "north" | "south" | "east";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
+type LaneFilter = "all" | "north" | "south" | "east";
 
 interface QueueDistributionItem {
   level: 0 | 1 | 2;
@@ -31,6 +34,19 @@ interface DeviceStats {
   total: number;
   online: number;
   offline: number;
+}
+
+interface VehiclePeak {
+  period: string;
+  label?: string;
+  count: number;
+  lane?: string;
+}
+
+interface VehicleVolumeSummary {
+  totalVehicles: number;
+  groupBy: "hour" | "day";
+  peak: VehiclePeak | null;
 }
 
 function calculateDateRange(
@@ -111,12 +127,22 @@ export default function AnalitikPage() {
     offline: 0,
   });
 
+  const [vehicleSummary, setVehicleSummary] =
+    useState<VehicleVolumeSummary>({
+      totalVehicles: 0,
+      groupBy: "day",
+      peak: null,
+    });
+
+  const [loadingVehicleSummary, setLoadingVehicleSummary] =
+    useState(false);
+
   const { intersections, isLoading: loadingIntersections } =
     useIntersections();
 
   const { startDate, endDate } = useMemo(
     () => calculateDateRange(timeRange, customDates),
-    [timeRange, customDates]
+    [timeRange, customDates],
   );
 
   const intersectionId =
@@ -125,7 +151,9 @@ export default function AnalitikPage() {
       : selectedIntersection;
 
   useEffect(() => {
-    async function fetchDistribution() {
+    const controller = new AbortController();
+
+    async function fetchQueueDistribution() {
       setLoadingQueueDistribution(true);
 
       try {
@@ -133,7 +161,7 @@ export default function AnalitikPage() {
           startDate,
           endDate,
           lane: selectedLane,
-          limit: "5000",
+          limit: "10000",
         });
 
         if (intersectionId) {
@@ -144,14 +172,15 @@ export default function AnalitikPage() {
           `/api/analytics/queue-distribution?${params.toString()}`,
           {
             cache: "no-store",
-          }
+            signal: controller.signal,
+          },
         );
 
         const json = await response.json();
 
         if (!response.ok || json.success === false) {
           throw new Error(
-            json.error || "Gagal mengambil distribusi antrian"
+            json.error || "Gagal mengambil distribusi antrean",
           );
         }
 
@@ -173,18 +202,96 @@ export default function AnalitikPage() {
           },
         ]);
       } catch (error: any) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
         console.error("Queue distribution error:", error);
         setQueueDistributionData([]);
+
         toast.error(
-          error.message || "Gagal memuat distribusi antrian"
+          error.message || "Gagal memuat distribusi antrean",
         );
       } finally {
         setLoadingQueueDistribution(false);
       }
     }
 
-    fetchDistribution();
-  }, [startDate, endDate, selectedLane, intersectionId]);
+    fetchQueueDistribution();
+
+    return () => controller.abort();
+  }, [
+    startDate,
+    endDate,
+    selectedLane,
+    intersectionId,
+  ]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchVehicleSummary() {
+      setLoadingVehicleSummary(true);
+
+      try {
+        const params = new URLSearchParams({
+          startDate,
+          endDate,
+          lane: selectedLane,
+          limit: "20000",
+        });
+
+        if (intersectionId) {
+          params.set("intersectionId", intersectionId);
+        }
+
+        const response = await fetch(
+          `/api/analytics/vehicle-volume?${params.toString()}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const json = await response.json();
+
+        if (!response.ok || json.success === false) {
+          throw new Error(
+            json.error || "Gagal mengambil volume kendaraan",
+          );
+        }
+
+        setVehicleSummary({
+          totalVehicles: Number(json.totalVehicles || 0),
+          groupBy: json.groupBy === "hour" ? "hour" : "day",
+          peak: json.peak || null,
+        });
+      } catch (error: any) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        console.error("Vehicle summary error:", error);
+
+        setVehicleSummary({
+          totalVehicles: 0,
+          groupBy: "day",
+          peak: null,
+        });
+      } finally {
+        setLoadingVehicleSummary(false);
+      }
+    }
+
+    fetchVehicleSummary();
+
+    return () => controller.abort();
+  }, [
+    startDate,
+    endDate,
+    selectedLane,
+    intersectionId,
+  ]);
 
   useEffect(() => {
     async function fetchDeviceStats() {
@@ -196,7 +303,9 @@ export default function AnalitikPage() {
         const json = await response.json();
 
         if (!response.ok || json.success === false) {
-          throw new Error(json.error || "Gagal memuat status perangkat");
+          throw new Error(
+            json.error || "Gagal memuat status perangkat",
+          );
         }
 
         setDeviceStats({
@@ -206,6 +315,7 @@ export default function AnalitikPage() {
         });
       } catch (error) {
         console.error("Device stats error:", error);
+
         setDeviceStats({
           total: 0,
           online: 0,
@@ -216,7 +326,10 @@ export default function AnalitikPage() {
 
     fetchDeviceStats();
 
-    const interval = window.setInterval(fetchDeviceStats, 60_000);
+    const interval = window.setInterval(
+      fetchDeviceStats,
+      60_000,
+    );
 
     return () => window.clearInterval(interval);
   }, []);
@@ -224,7 +337,7 @@ export default function AnalitikPage() {
   const totalSamples = useMemo(() => {
     return queueDistributionData.reduce(
       (sum, item) => sum + item.count,
-      0
+      0,
     );
   }, [queueDistributionData]);
 
@@ -235,10 +348,12 @@ export default function AnalitikPage() {
 
     const weightedTotal = queueDistributionData.reduce(
       (sum, item) => sum + item.level * item.count,
-      0
+      0,
     );
 
-    return Math.round((weightedTotal / totalSamples) * 100) / 100;
+    return (
+      Math.round((weightedTotal / totalSamples) * 100) / 100
+    );
   }, [queueDistributionData, totalSamples]);
 
   const dominantCondition = useMemo(() => {
@@ -247,7 +362,7 @@ export default function AnalitikPage() {
     }
 
     const dominant = [...queueDistributionData].sort(
-      (a, b) => b.count - a.count
+      (a, b) => b.count - a.count,
     )[0];
 
     if (dominant.level === 0) {
@@ -268,15 +383,28 @@ export default function AnalitikPage() {
 
     const intersection = intersections.find((item: any) => {
       const id = item.id || item.intersection_id;
+
       return id === selectedIntersection;
     });
 
     return intersection?.name || selectedIntersection;
   }, [intersections, selectedIntersection]);
 
+  const peakLabel = useMemo(() => {
+    if (!vehicleSummary.peak) {
+      return "-";
+    }
+
+    return (
+      vehicleSummary.peak.label ||
+      vehicleSummary.peak.period ||
+      "-"
+    );
+  }, [vehicleSummary.peak]);
+
   const handleFilterChange = (
     range: TimeRange,
-    dates?: DateRange
+    dates?: DateRange,
   ) => {
     setTimeRange(range);
 
@@ -295,7 +423,9 @@ export default function AnalitikPage() {
     });
 
     toast.success(
-      `Persimpangan: ${intersection?.name || "Semua Persimpangan"}`
+      `Persimpangan: ${
+        intersection?.name || "Semua Persimpangan"
+      }`,
     );
   };
 
@@ -319,12 +449,21 @@ export default function AnalitikPage() {
       ["Jalur", selectedLane],
       ["Tanggal Awal", startDate],
       ["Tanggal Akhir", endDate],
-      ["Total Sampel Antrian", totalSamples],
+      ["Total Kendaraan", vehicleSummary.totalVehicles],
+      ["Periode Volume Tertinggi", peakLabel],
+      [
+        "Jumlah Pada Periode Tertinggi",
+        vehicleSummary.peak?.count || 0,
+      ],
+      ["Total Sampel Antrean", totalSamples],
       ["Rata-rata Queue Level", averageQueueLevel],
       ["Kondisi Dominan", dominantCondition],
-      ["Perangkat Online", `${deviceStats.online}/${deviceStats.total}`],
+      [
+        "Perangkat Online",
+        `${deviceStats.online}/${deviceStats.total}`,
+      ],
       [],
-      ["Level", "Jumlah", "Persentase"],
+      ["Queue Level", "Jumlah", "Persentase"],
       ...queueDistributionData.map((item) => [
         `Level ${item.level}`,
         item.count,
@@ -335,8 +474,11 @@ export default function AnalitikPage() {
     const csv = rows
       .map((row) =>
         row
-          .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
-          .join(",")
+          .map(
+            (value) =>
+              `"${String(value ?? "").replaceAll('"', '""')}"`,
+          )
+          .join(","),
       )
       .join("\n");
 
@@ -349,7 +491,10 @@ export default function AnalitikPage() {
 
     anchor.href = url;
     anchor.download = `ringkasan-analitik-${startDate}-${endDate}.csv`;
+
+    document.body.appendChild(anchor);
     anchor.click();
+    anchor.remove();
 
     URL.revokeObjectURL(url);
 
@@ -366,7 +511,7 @@ export default function AnalitikPage() {
         >
           <div>
             <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-              Queue-Based Analytics
+              Traffic & Queue Analytics
             </p>
 
             <h1 className="text-2xl font-black text-slate-900 lg:text-3xl">
@@ -374,7 +519,8 @@ export default function AnalitikPage() {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Analisis nyata dari DynamoDB TrafficTelemetry tanpa data dummy.
+              Analisis volume kendaraan, antrean, dan efektivitas
+              lampu dari DynamoDB tanpa data dummy.
             </p>
           </div>
 
@@ -386,6 +532,7 @@ export default function AnalitikPage() {
             <span className="material-symbols-outlined text-lg">
               download
             </span>
+
             Ekspor Ringkasan
           </button>
         </motion.section>
@@ -417,7 +564,8 @@ export default function AnalitikPage() {
 
               {intersections.map((intersection: any) => {
                 const id =
-                  intersection.id || intersection.intersection_id;
+                  intersection.id ||
+                  intersection.intersection_id;
 
                 return (
                   <option key={id} value={id}>
@@ -436,7 +584,9 @@ export default function AnalitikPage() {
             <select
               value={selectedLane}
               onChange={(event) =>
-                handleLaneChange(event.target.value as LaneFilter)
+                handleLaneChange(
+                  event.target.value as LaneFilter,
+                )
               }
               className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -450,25 +600,33 @@ export default function AnalitikPage() {
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           <KpiCard
-            title="Total Sampel"
-            value={totalSamples.toLocaleString("id-ID")}
-            subtitle="Sampel level antrian"
-            icon="database"
+            title="Total Kendaraan"
+            value={
+              loadingVehicleSummary
+                ? "..."
+                : vehicleSummary.totalVehicles.toLocaleString(
+                    "id-ID",
+                  )
+            }
+            subtitle="Kendaraan baru terdeteksi"
+            icon="directions_car"
             variant="blue"
           />
 
           <KpiCard
-            title="Rata-rata Queue"
-            value={averageQueueLevel.toFixed(2)}
-            subtitle="Rentang level 0–2"
-            icon="monitoring"
+            title="Volume Tertinggi"
+            value={loadingVehicleSummary ? "..." : peakLabel}
+            subtitle={`${
+              vehicleSummary.peak?.count || 0
+            } kendaraan`}
+            icon="trending_up"
             variant="indigo"
           />
 
           <KpiCard
-            title="Kondisi Dominan"
-            value={dominantCondition}
-            subtitle={selectedIntersectionName}
+            title="Rata-rata Antrean"
+            value={averageQueueLevel.toFixed(2)}
+            subtitle={`${dominantCondition} · Level 0–2`}
             icon="traffic"
             variant="amber"
           />
@@ -484,7 +642,7 @@ export default function AnalitikPage() {
 
         <section className="grid grid-cols-12 gap-4 lg:gap-6">
           <div className="col-span-12 lg:col-span-8">
-            <QueueLevelByHourChart
+            <VehicleVolumeChart
               startDate={startDate}
               endDate={endDate}
               intersectionId={intersectionId}
@@ -496,6 +654,24 @@ export default function AnalitikPage() {
             <QueueDistributionChart
               data={queueDistributionData}
               isLoading={loadingQueueDistribution}
+            />
+          </div>
+
+          <div className="col-span-12">
+            <QueueHourlyHeatmap
+              startDate={startDate}
+              endDate={endDate}
+              intersectionId={intersectionId}
+              lane={selectedLane}
+            />
+          </div>
+
+          <div className="col-span-12">
+            <QueueLevelByHourChart
+              startDate={startDate}
+              endDate={endDate}
+              intersectionId={intersectionId}
+              lane={selectedLane}
             />
           </div>
 
@@ -534,10 +710,16 @@ export default function AnalitikPage() {
               </h3>
 
               <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                Level 0 menunjukkan kondisi lancar, Level 1 menunjukkan
-                antrean sedang, dan Level 2 menunjukkan antrean padat.
-                Target durasi hijau sistem adalah 10, 20, dan 30 detik
-                berdasarkan level antrean.
+                Volume kendaraan dihitung berdasarkan kenaikan counter
+                kendaraan, bukan dengan menjumlahkan seluruh telemetry.
+                Level 0 berarti lancar, Level 1 berarti antrean sedang,
+                dan Level 2 berarti antrean padat. Seluruh tanggal dan
+                pengelompokan jam menggunakan WIB.
+              </p>
+
+              <p className="mt-2 text-xs font-semibold text-slate-500">
+                Sampel antrean pada periode ini:{" "}
+                {totalSamples.toLocaleString("id-ID")}
               </p>
             </div>
           </div>
@@ -562,9 +744,12 @@ function KpiCard({
 }) {
   const styles = {
     blue: "from-blue-600 to-blue-700 shadow-blue-600/20",
-    indigo: "from-indigo-600 to-violet-700 shadow-indigo-600/20",
-    amber: "from-amber-500 to-orange-600 shadow-amber-500/20",
-    emerald: "from-emerald-600 to-teal-700 shadow-emerald-600/20",
+    indigo:
+      "from-indigo-600 to-violet-700 shadow-indigo-600/20",
+    amber:
+      "from-amber-500 to-orange-600 shadow-amber-500/20",
+    emerald:
+      "from-emerald-600 to-teal-700 shadow-emerald-600/20",
   };
 
   return (
