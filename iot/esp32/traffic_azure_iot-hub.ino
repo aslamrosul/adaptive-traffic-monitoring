@@ -16,7 +16,6 @@
  * - Kalau queue detected, queue length bertambah (level 1: 20m, level 2: 40m)
  * 
  * VEHICLE COUNTING:
- * - Debounce 2 detik untuk mencegah double counting
  * - Hitung kendaraan di semua warna lampu (merah, kuning, hijau)
  */
 
