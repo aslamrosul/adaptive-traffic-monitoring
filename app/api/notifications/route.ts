@@ -1,25 +1,52 @@
+import { authOptions } from "@/lib/auth";
 import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import {
   DeleteCommand,
   PutCommand,
-  ScanCommand,
+  QueryCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+async function getCurrentUserId() {
+  const session = await getServerSession(authOptions);
+  return (session?.user as any)?.id || null;
+}
+
 export async function GET(request: Request) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     const unreadOnly = searchParams.get("unreadOnly") === "true";
-    const limit = Number(searchParams.get("limit") || 50);
+    const limit = Math.min(
+      Math.max(Number(searchParams.get("limit") || 50), 1),
+      100,
+    );
 
     const result = await dynamo.send(
-      new ScanCommand({
+      new QueryCommand({
         TableName: awsTables.notifications,
-        Limit: Math.min(Math.max(limit, 1), 200),
+        KeyConditionExpression: "user_id = :userId",
+        ExpressionAttributeValues: {
+          ":userId": userId,
+        },
+        ScanIndexForward: false,
+        Limit: limit,
       }),
     );
 
@@ -28,10 +55,6 @@ export async function GET(request: Request) {
     if (unreadOnly) {
       items = items.filter((item: any) => !item.read);
     }
-
-    items = items.sort((a: any, b: any) =>
-      String(b.createdAt || "").localeCompare(String(a.createdAt || "")),
-    );
 
     return NextResponse.json({
       success: true,
@@ -54,6 +77,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
 
     if (!body.title || !body.message) {
@@ -67,22 +102,34 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
+    const notificationId =
+      body.notification_id || `notif_${Date.now()}`;
 
     const item = {
-      notification_id: body.notification_id || `notif_${Date.now()}`,
-      id: body.id || body.notification_id || `notif_${Date.now()}`,
-      type: body.type || "info",
+      user_id: userId,
+      created_at: body.created_at || now,
+
+      notification_id: notificationId,
+      id: notificationId,
+
+      type: body.type || body.severity || "info",
       severity: body.severity || body.type || "info",
       category: body.category || "system",
+
       title: body.title,
       message: body.message,
+
       read: false,
+
       actionUrl: body.actionUrl || null,
       relatedTo: body.relatedTo || null,
+
       intersection_id: body.intersection_id || null,
       device_id: body.device_id || null,
       lane: body.lane || null,
+
       metadata: body.metadata || {},
+
       createdAt: body.createdAt || now,
       updatedAt: now,
     };
@@ -114,13 +161,29 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
 
     if (body.markAllAsRead) {
       const result = await dynamo.send(
-        new ScanCommand({
+        new QueryCommand({
           TableName: awsTables.notifications,
-          Limit: 500,
+          KeyConditionExpression: "user_id = :userId",
+          ExpressionAttributeValues: {
+            ":userId": userId,
+          },
+          Limit: 100,
         }),
       );
 
@@ -132,9 +195,11 @@ export async function PATCH(request: Request) {
             new UpdateCommand({
               TableName: awsTables.notifications,
               Key: {
-                notification_id: item.notification_id || item.id,
+                user_id: userId,
+                created_at: item.created_at,
               },
-              UpdateExpression: "SET #read = :read, updatedAt = :updatedAt",
+              UpdateExpression:
+                "SET #read = :read, updatedAt = :updatedAt",
               ExpressionAttributeNames: {
                 "#read": "read",
               },
@@ -153,13 +218,13 @@ export async function PATCH(request: Request) {
       });
     }
 
-    const id = body.id || body.notification_id;
+    const createdAt = body.created_at || body.createdAt;
 
-    if (!id) {
+    if (!createdAt) {
       return NextResponse.json(
         {
           success: false,
-          error: "id wajib diisi",
+          error: "created_at wajib diisi",
         },
         { status: 400 },
       );
@@ -169,9 +234,11 @@ export async function PATCH(request: Request) {
       new UpdateCommand({
         TableName: awsTables.notifications,
         Key: {
-          notification_id: id,
+          user_id: userId,
+          created_at: createdAt,
         },
-        UpdateExpression: "SET #read = :read, updatedAt = :updatedAt",
+        UpdateExpression:
+          "SET #read = :read, updatedAt = :updatedAt",
         ExpressionAttributeNames: {
           "#read": "read",
         },
@@ -201,14 +268,26 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const userId = await getCurrentUserId();
 
-    if (!id) {
+    if (!userId) {
       return NextResponse.json(
         {
           success: false,
-          error: "id wajib diisi",
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const createdAt = searchParams.get("created_at");
+
+    if (!createdAt) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "created_at wajib diisi",
         },
         { status: 400 },
       );
@@ -218,7 +297,8 @@ export async function DELETE(request: Request) {
       new DeleteCommand({
         TableName: awsTables.notifications,
         Key: {
-          notification_id: id,
+          user_id: userId,
+          created_at: createdAt,
         },
       }),
     );

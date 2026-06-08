@@ -287,18 +287,28 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
 interface NotificationData {
   id: string;
   notification_id?: string;
+
+  user_id?: string;
+  created_at?: string;
+
   type: string;
   severity?: string;
   category?: string;
+
   title: string;
   message: string;
+
   read: boolean;
+
   actionUrl?: string | null;
   relatedTo?: string | null;
+
   intersection_id?: string | null;
   device_id?: string | null;
   lane?: string | null;
+
   metadata?: any;
+
   createdAt: string;
   updatedAt?: string;
 }
@@ -309,13 +319,9 @@ interface NotificationStore {
   error: string | null;
   unreadCount: number;
 
-  fetchNotifications: (
-    userId?: string,
-    unreadOnly?: boolean,
-  ) => Promise<void>;
-
+  fetchNotifications: (unreadOnly?: boolean) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
-  markAllAsRead: (userId?: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -324,17 +330,30 @@ function normalizeNotification(item: any): NotificationData {
 
   return {
     ...item,
+
     id,
     notification_id: item.notification_id || id,
+
+    user_id: item.user_id,
+    created_at: item.created_at,
+
     type: item.type || item.severity || "info",
     severity: item.severity || item.type || "info",
     category: item.category || "system",
+
     title: item.title || "Notifikasi",
     message: item.message || "",
+
     read: Boolean(item.read),
+
     actionUrl: item.actionUrl ?? null,
     relatedTo: item.relatedTo ?? null,
-    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+
+    createdAt:
+      item.createdAt ||
+      item.created_at ||
+      new Date().toISOString(),
+
     updatedAt: item.updatedAt,
   };
 }
@@ -345,7 +364,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   error: null,
   unreadCount: 0,
 
-  fetchNotifications: async (_userId, unreadOnly = false) => {
+  fetchNotifications: async (unreadOnly = false) => {
     set({
       isLoading: true,
       error: null,
@@ -360,27 +379,32 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
         params.set("unreadOnly", "true");
       }
 
-      const response = await fetch(`/api/notifications?${params.toString()}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/notifications?${params.toString()}`,
+        {
+          cache: "no-store",
+        },
+      );
 
       const result = await response.json();
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.error || "Failed to fetch notifications");
+        throw new Error(
+          result.error || "Failed to fetch notifications",
+        );
       }
 
-      const notifications = Array.isArray(result.data)
-        ? result.data.map(normalizeNotification)
+      const notifications: NotificationData[] = Array.isArray(result.data)
+        ? result.data.map((item: any) => normalizeNotification(item))
         : [];
 
       set({
         notifications,
         unreadCount: Number(
           result.unreadCount ??
-          notifications.filter(
-            (notification: NotificationData) => !notification.read,
-          ).length
+            notifications.filter(
+              (notification: NotificationData) => !notification.read,
+            ).length,
         ),
         isLoading: false,
         error: null,
@@ -398,6 +422,18 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       return;
     }
 
+    const notification = get().notifications.find(
+      (item) => item.id === id,
+    );
+
+    if (!notification) {
+      return;
+    }
+
+    if (notification.read) {
+      return;
+    }
+
     try {
       const response = await fetch("/api/notifications", {
         method: "PATCH",
@@ -405,7 +441,8 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id,
+          created_at:
+            notification.created_at || notification.createdAt,
           read: true,
         }),
       });
@@ -413,30 +450,22 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       const result = await response.json();
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.error || "Failed to mark notification as read");
+        throw new Error(
+          result.error || "Failed to mark notification as read",
+        );
       }
 
-      set((state) => {
-        const wasUnread = state.notifications.some(
-          (notification) =>
-            notification.id === id && !notification.read,
-        );
-
-        return {
-          notifications: state.notifications.map((notification) =>
-            notification.id === id
-              ? {
-                ...notification,
+      set((state) => ({
+        notifications: state.notifications.map((item) =>
+          item.id === id
+            ? {
+                ...item,
                 read: true,
               }
-              : notification,
-          ),
-
-          unreadCount: wasUnread
-            ? Math.max(0, state.unreadCount - 1)
-            : state.unreadCount,
-        };
-      });
+            : item,
+        ),
+        unreadCount: Math.max(0, state.unreadCount - 1),
+      }));
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     }
@@ -457,12 +486,14 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       const result = await response.json();
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.error || "Failed to mark all notifications as read");
+        throw new Error(
+          result.error || "Failed to mark all notifications as read",
+        );
       }
 
       set((state) => ({
-        notifications: state.notifications.map((notification) => ({
-          ...notification,
+        notifications: state.notifications.map((item) => ({
+          ...item,
           read: true,
         })),
         unreadCount: 0,
