@@ -21,7 +21,7 @@ export default function NotificationDropdown() {
 
   // Fetch notifications on mount
   useEffect(() => {
-    fetchNotifications('user-001', false);
+    fetchNotifications('undefined', false);
   }, [fetchNotifications]);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function NotificationDropdown() {
   };
 
   const handleMarkAllRead = () => {
-    markAllAsRead('user-001');
+    markAllAsRead('');
   };
 
   const getIcon = (type: string, category?: string) => {

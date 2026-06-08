@@ -20,7 +20,7 @@ export default function NotificationList() {
 
   // Fetch notifications on mount
   useEffect(() => {
-    fetchNotifications('user-001', false);
+    fetchNotifications(undefined, false);
   }, [fetchNotifications]);
 
   const filteredNotifs = filter === "unread" 
@@ -88,7 +88,7 @@ export default function NotificationList() {
           </p>
         </div>
         <button
-          onClick={() => markAllAsRead('user-001')}
+          onClick={() => markAllAsRead()}
           disabled={unreadCount === 0}
           className="px-4 py-2 text-sm font-semibold text-primary hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >

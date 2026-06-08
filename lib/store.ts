@@ -22,7 +22,7 @@ interface TrafficStore {
   isLoading: boolean;
   isInitialLoad: boolean;
   error: string | null;
-  
+
   // Actions
   fetchIntersections: (isBackgroundRefresh?: boolean) => Promise<void>;
   searchIntersections: (query: string) => Promise<void>;
@@ -144,7 +144,7 @@ interface ProfileStore {
   profile: ProfileData | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   fetchProfile: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
@@ -283,18 +283,24 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
 
 
 // Notification Store
+// Notification Store
 interface NotificationData {
   id: string;
-  userId: string;
+  notification_id?: string;
   type: string;
+  severity?: string;
   category?: string;
   title: string;
   message: string;
   read: boolean;
   actionUrl?: string | null;
   relatedTo?: string | null;
+  intersection_id?: string | null;
+  device_id?: string | null;
+  lane?: string | null;
   metadata?: any;
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface NotificationStore {
@@ -303,11 +309,34 @@ interface NotificationStore {
   error: string | null;
   unreadCount: number;
 
-  // Actions
-  fetchNotifications: (userId?: string, unreadOnly?: boolean) => Promise<void>;
+  fetchNotifications: (
+    userId?: string,
+    unreadOnly?: boolean,
+  ) => Promise<void>;
+
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: (userId?: string) => Promise<void>;
   clearError: () => void;
+}
+
+function normalizeNotification(item: any): NotificationData {
+  const id = item.id || item.notification_id;
+
+  return {
+    ...item,
+    id,
+    notification_id: item.notification_id || id,
+    type: item.type || item.severity || "info",
+    severity: item.severity || item.type || "info",
+    category: item.category || "system",
+    title: item.title || "Notifikasi",
+    message: item.message || "",
+    read: Boolean(item.read),
+    actionUrl: item.actionUrl ?? null,
+    relatedTo: item.relatedTo ?? null,
+    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+    updatedAt: item.updatedAt,
+  };
 }
 
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
@@ -316,81 +345,135 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   error: null,
   unreadCount: 0,
 
-  fetchNotifications: async (userId = 'user-001', unreadOnly = false) => {
-    set({ isLoading: true, error: null });
+  fetchNotifications: async (_userId, unreadOnly = false) => {
+    set({
+      isLoading: true,
+      error: null,
+    });
+
     try {
       const params = new URLSearchParams({
-        userId,
-        ...(unreadOnly && { unreadOnly: 'true' }),
+        limit: "50",
       });
 
-      const response = await fetch(`/api/notifications?${params}`);
+      if (unreadOnly) {
+        params.set("unreadOnly", "true");
+      }
+
+      const response = await fetch(`/api/notifications?${params.toString()}`, {
+        cache: "no-store",
+      });
+
       const result = await response.json();
 
-      if (result.success) {
-        set({
-          notifications: result.data,
-          unreadCount: result.unreadCount,
-          isLoading: false,
-        });
-      } else {
-        set({ error: result.error, isLoading: false });
+      if (!response.ok || result.success === false) {
+        throw new Error(result.error || "Failed to fetch notifications");
       }
-    } catch (error) {
-      set({ error: 'Failed to fetch notifications', isLoading: false });
+
+      const notifications = Array.isArray(result.data)
+        ? result.data.map(normalizeNotification)
+        : [];
+
+      set({
+        notifications,
+        unreadCount: Number(
+          result.unreadCount ??
+          notifications.filter(
+            (notification: NotificationData) => !notification.read,
+          ).length
+        ),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      set({
+        error: error.message || "Failed to fetch notifications",
+        isLoading: false,
+      });
     }
   },
 
   markAsRead: async (id: string) => {
+    if (!id) {
+      return;
+    }
+
     try {
-      const response = await fetch('/api/notifications', {
-        method: 'PATCH',
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id, read: true }),
+        body: JSON.stringify({
+          id,
+          read: true,
+        }),
       });
 
       const result = await response.json();
 
-      if (result.success) {
-        set((state) => ({
-          notifications: state.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-          ),
-          unreadCount: Math.max(0, state.unreadCount - 1),
-        }));
+      if (!response.ok || result.success === false) {
+        throw new Error(result.error || "Failed to mark notification as read");
       }
+
+      set((state) => {
+        const wasUnread = state.notifications.some(
+          (notification) =>
+            notification.id === id && !notification.read,
+        );
+
+        return {
+          notifications: state.notifications.map((notification) =>
+            notification.id === id
+              ? {
+                ...notification,
+                read: true,
+              }
+              : notification,
+          ),
+
+          unreadCount: wasUnread
+            ? Math.max(0, state.unreadCount - 1)
+            : state.unreadCount,
+        };
+      });
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      console.error("Failed to mark notification as read:", error);
     }
   },
 
-  markAllAsRead: async (userId = 'user-001') => {
+  markAllAsRead: async () => {
     try {
-      const unreadNotifications = get().notifications.filter((n) => !n.read);
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          markAllAsRead: true,
+        }),
+      });
 
-      // Mark all as read in parallel
-      await Promise.all(
-        unreadNotifications.map((n) =>
-          fetch('/api/notifications', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: n.id, read: true }),
-          })
-        )
-      );
+      const result = await response.json();
+
+      if (!response.ok || result.success === false) {
+        throw new Error(result.error || "Failed to mark all notifications as read");
+      }
 
       set((state) => ({
-        notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        notifications: state.notifications.map((notification) => ({
+          ...notification,
+          read: true,
+        })),
         unreadCount: 0,
       }));
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      console.error("Failed to mark all notifications as read:", error);
     }
   },
 
-  clearError: () => set({ error: null }),
+  clearError: () =>
+    set({
+      error: null,
+    }),
 }));

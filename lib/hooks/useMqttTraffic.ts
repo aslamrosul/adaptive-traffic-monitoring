@@ -493,7 +493,7 @@ export function useMqttTraffic() {
 
   const host =
     process.env.NEXT_PUBLIC_MQTT_HOST ??
-    "13.239.2.166";
+    "13.211.191.195";
 
   const port =
     process.env.NEXT_PUBLIC_MQTT_PORT ??

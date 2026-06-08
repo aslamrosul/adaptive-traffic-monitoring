@@ -7,6 +7,7 @@ import {
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 
+
 const region = process.env.AWS_REGION || "ap-southeast-2";
 
 const client = new DynamoDBClient({
@@ -25,6 +26,7 @@ export const awsTables = {
   deviceStatus: process.env.DYNAMODB_DEVICE_STATUS_TABLE || "DeviceStatus",
   users: process.env.DYNAMODB_USERS_TABLE || "Users",
   iotConfigs: process.env.DYNAMODB_IOT_CONFIGS_TABLE || "IoTConfigs",
+  notifications: process.env.DYNAMODB_NOTIFICATIONS_TABLE || "Notifications",
 };
 
 export async function getLatestTrafficByIntersection(
