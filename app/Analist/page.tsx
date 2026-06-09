@@ -503,22 +503,22 @@ export default function AnalitikPage() {
 
   return (
     <DashboardLayout title="Analitik Lalu Lintas">
-      <div className="mx-auto max-w-[1920px] space-y-4 p-3 lg:space-y-6 lg:p-6">
+      <div className="mx-auto max-w-[1920px] space-y-3 p-3 lg:space-y-6 lg:p-6">
         <motion.section
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+          className="flex items-center justify-between gap-3 lg:items-end"
         >
-          <div>
-            <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+          <div className="min-w-0">
+            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 lg:mb-1 lg:text-xs">
               Traffic & Queue Analytics
             </p>
 
-            <h1 className="text-2xl font-black text-slate-900 lg:text-3xl">
+            <h1 className="text-lg font-black text-slate-900 lg:text-3xl">
               Dashboard Analitik Lalu Lintas
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-0.5 hidden text-sm text-slate-500 lg:block">
               Analisis volume kendaraan, antrean, dan efektivitas
               lampu dari DynamoDB tanpa data dummy.
             </p>
@@ -527,13 +527,13 @@ export default function AnalitikPage() {
           <button
             type="button"
             onClick={handleExportSummary}
-            className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:shadow-xl"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:shadow-lg lg:rounded-xl lg:px-5 lg:py-3 lg:text-sm"
           >
-            <span className="material-symbols-outlined text-lg">
+            <span className="material-symbols-outlined text-base lg:text-lg">
               download
             </span>
-
-            Ekspor Ringkasan
+            <span className="hidden sm:inline">Ekspor Ringkasan</span>
+            <span className="sm:hidden">Ekspor</span>
           </button>
         </motion.section>
 
@@ -545,10 +545,10 @@ export default function AnalitikPage() {
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2"
+          className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm lg:gap-3 lg:p-4"
         >
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:mb-2 lg:text-xs">
               Persimpangan
             </label>
 
@@ -558,7 +558,7 @@ export default function AnalitikPage() {
                 handleIntersectionChange(event.target.value)
               }
               disabled={loadingIntersections}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 lg:px-4 lg:py-3 lg:text-sm"
             >
               <option value="all">Semua Persimpangan</option>
 
@@ -577,7 +577,7 @@ export default function AnalitikPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:mb-2 lg:text-xs">
               Jalur
             </label>
 
@@ -588,7 +588,7 @@ export default function AnalitikPage() {
                   event.target.value as LaneFilter,
                 )
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 lg:px-4 lg:py-3 lg:text-sm"
             >
               <option value="all">Semua Jalur</option>
               <option value="north">Jalur Utara</option>
