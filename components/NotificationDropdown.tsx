@@ -4,12 +4,14 @@ import { useNotificationStore } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { showBrowserNotification } from "@/lib/browser-notification";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const lastNotificationIdRef = useRef<string | null>(null);
 
   const {
     notifications,
@@ -30,6 +32,22 @@ export default function NotificationDropdown() {
 
     return () => window.clearInterval(interval);
   }, [fetchNotifications]);
+
+  useEffect(() => {
+    const newest = notifications.find((item) => !item.read);
+
+    if (!newest) return;
+
+    if (lastNotificationIdRef.current === newest.id) return;
+
+    lastNotificationIdRef.current = newest.id;
+
+    showBrowserNotification({
+      title: newest.title,
+      body: newest.message,
+      url: newest.actionUrl || "/notifikasi",
+    });
+  }, [notifications]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

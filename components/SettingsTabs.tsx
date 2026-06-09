@@ -1,5 +1,6 @@
 "use client";
 
+import { requestBrowserNotificationPermission } from "@/lib/browser-notification";
 import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/user-settings";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -23,6 +24,8 @@ export default function SettingsTabs() {
     browserNotification: false,
     emailNotification: false,
     telegramNotification: false,
+    telegramBotToken: "",
+    telegramChatId: "",
     queueAlert: true,
     deviceOfflineAlert: true,
     dummyModeAlert: true,
@@ -58,7 +61,60 @@ export default function SettingsTabs() {
       setIsLoading(false);
     }
   };
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
+  const handleChangePassword = async () => {
+    try {
+      const response = await fetch("/api/profile/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passwordForm),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal mengubah password");
+      }
+
+      setPasswordForm({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast.success("Password berhasil diubah");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mengubah password");
+    }
+  };
+
+  const handleTelegramTest = async () => {
+    try {
+      const response = await fetch("/api/telegram/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          botToken: settings.telegramBotToken,
+          chatId: settings.telegramChatId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal test Telegram");
+      }
+
+      toast.success("Telegram berhasil dites");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal test Telegram");
+    }
+  };
   const updateSetting = (key: string, value: any) => {
     setSettings((current) => ({
       ...current,
@@ -93,23 +149,14 @@ export default function SettingsTabs() {
   };
 
   const requestBrowserNotification = async () => {
-    if (!("Notification" in window)) {
-      toast.error("Browser tidak mendukung notifikasi");
-      return;
-    }
+    const granted = await requestBrowserNotificationPermission();
 
-    const permission = await Notification.requestPermission();
-
-    if (permission === "granted") {
+    if (granted) {
       updateSetting("browserNotification", true);
       toast.success("Notifikasi browser diaktifkan");
-
-      new Notification("Aerial Command", {
-        body: "Notifikasi browser berhasil diaktifkan.",
-      });
     } else {
       updateSetting("browserNotification", false);
-      toast.error("Izin notifikasi ditolak");
+      toast.error("Izin notifikasi browser ditolak");
     }
   };
 
@@ -129,11 +176,10 @@ export default function SettingsTabs() {
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-semibold transition-all lg:gap-2 lg:px-4 lg:py-3 lg:text-sm ${
-              activeTab === tab.id
-                ? "border-b-2 border-primary text-primary"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
+            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-semibold transition-all lg:gap-2 lg:px-4 lg:py-3 lg:text-sm ${activeTab === tab.id
+              ? "border-b-2 border-primary text-primary"
+              : "text-slate-500 hover:text-slate-700"
+              }`}
           >
             <span className="material-symbols-outlined text-base lg:text-lg">
               {tab.icon}
@@ -224,6 +270,48 @@ export default function SettingsTabs() {
               }
             />
 
+            {settings.telegramNotification && (
+              <div className="rounded-lg bg-slate-50 p-4 space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-slate-900">
+                    Telegram Bot Token
+                  </label>
+                  <input
+                    type="password"
+                    value={settings.telegramBotToken || ""}
+                    onChange={(e) =>
+                      updateSetting("telegramBotToken", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                    placeholder="123456:ABC..."
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-slate-900">
+                    Telegram Chat ID
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.telegramChatId || ""}
+                    onChange={(e) =>
+                      updateSetting("telegramChatId", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                    placeholder="123456789"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleTelegramTest}
+                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Test Telegram
+                </button>
+              </div>
+            )}
+
             <div className="rounded-lg bg-slate-50 p-4">
               <p className="mb-3 font-semibold text-slate-900">
                 Jenis Alert Aktif
@@ -312,11 +400,63 @@ export default function SettingsTabs() {
               color="green"
             />
 
-            <InfoBox
-              icon="lock"
-              title="Ubah password"
-              description="Fitur ubah password bisa ditambahkan khusus untuk akun credentials. Akun Google tidak memakai password lokal."
-            />
+            <div className="rounded-lg bg-slate-50 p-4">
+              <h4 className="mb-3 font-bold text-slate-900">Ubah Password</h4>
+
+              <div className="space-y-3">
+                <input
+                  type="password"
+                  value={passwordForm.oldPassword}
+                  onChange={(e) =>
+                    setPasswordForm((current) => ({
+                      ...current,
+                      oldPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Password lama"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                />
+
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm((current) => ({
+                      ...current,
+                      newPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Password baru"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                />
+
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordForm((current) => ({
+                      ...current,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Konfirmasi password baru"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Simpan Password Baru
+                </button>
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                Catatan: fitur ini hanya berlaku untuk akun email/password. Akun
+                Google tidak memiliki password lokal.
+              </p>
+            </div>
           </div>
         )}
 
@@ -366,14 +506,12 @@ function SwitchRow({
       <button
         type="button"
         onClick={onChange}
-        className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors lg:h-8 lg:w-14 ${
-          checked ? "bg-primary" : "bg-slate-300"
-        }`}
+        className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors lg:h-8 lg:w-14 ${checked ? "bg-primary" : "bg-slate-300"
+          }`}
       >
         <div
-          className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform lg:h-6 lg:w-6 ${
-            checked ? "translate-x-6 lg:translate-x-7" : "translate-x-1"
-          }`}
+          className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform lg:h-6 lg:w-6 ${checked ? "translate-x-6 lg:translate-x-7" : "translate-x-1"
+            }`}
         />
       </button>
     </div>

@@ -9,13 +9,19 @@ export const dynamic = "force-dynamic";
 const defaultSettings = {
   language: "id",
   timezone: "Asia/Jakarta",
+
   browserNotification: false,
   emailNotification: false,
   telegramNotification: false,
+
+  telegramBotToken: "",
+  telegramChatId: "",
+
   queueAlert: true,
   deviceOfflineAlert: true,
   dummyModeAlert: true,
   weakWifiAlert: true,
+
   autoMode: true,
   sensorInterval: 5,
 };
@@ -74,16 +80,14 @@ export async function PUT(request: Request) {
     ...body,
   };
 
-  const updatedUser = {
-    ...user,
-    appSettings,
-    updatedAt: new Date().toISOString(),
-  };
-
   await dynamo.send(
     new PutCommand({
       TableName: awsTables.users,
-      Item: updatedUser,
+      Item: {
+        ...user,
+        appSettings,
+        updatedAt: new Date().toISOString(),
+      },
     }),
   );
 
