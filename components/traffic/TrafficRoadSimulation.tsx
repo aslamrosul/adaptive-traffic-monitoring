@@ -415,6 +415,37 @@ export default function TrafficRoadSimulation({ data }: Props) {
     mapX: 0,
     mapY: 0,
   });
+  const touchStartRef = useRef<{ x: number; y: number; mapX: number; mapY: number } | null>(null);
+  const isPanningRef = useRef(false);
+
+  // Attach non-passive touchmove listener so we can call preventDefault for map panning
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || !touchStartRef.current) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+
+      if (!isPanningRef.current) {
+        if (Math.abs(dx) > Math.abs(dy) + 5) {
+          isPanningRef.current = true;
+        } else {
+          return; // let page scroll naturally
+        }
+      }
+
+      event.preventDefault();
+      const origin = touchStartRef.current;
+      setMapX(origin.mapX + touch.clientX - origin.x);
+      setMapY(origin.mapY + touch.clientY - origin.y);
+    };
+
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", handleTouchMove);
+  }, []);
 
   const north = data?.north ?? EMPTY_LANE;
   const south = data?.south ?? EMPTY_LANE;
@@ -658,7 +689,7 @@ export default function TrafficRoadSimulation({ data }: Props) {
       </div>
 
       <div
-        className={`relative h-[520px] w-full touch-none select-none overflow-hidden rounded-2xl bg-green-700 lg:h-[600px] ${
+        className={`relative h-[520px] w-full select-none overflow-hidden rounded-2xl bg-green-700 lg:h-[600px] ${
           dragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onMouseDown={(event) => {
@@ -687,6 +718,16 @@ export default function TrafficRoadSimulation({ data }: Props) {
               ? Math.min(3, value + 0.08)
               : Math.max(0.35, value - 0.08),
           );
+        }}
+        onTouchStart={(event) => {
+          if (event.touches.length !== 1) return;
+          const touch = event.touches[0];
+          touchStartRef.current = { x: touch.clientX, y: touch.clientY, mapX, mapY };
+          isPanningRef.current = false;
+        }}
+        onTouchEnd={() => {
+          touchStartRef.current = null;
+          isPanningRef.current = false;
         }}
       >
         <div
