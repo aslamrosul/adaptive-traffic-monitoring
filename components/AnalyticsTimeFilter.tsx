@@ -105,23 +105,23 @@ export default function AnalyticsTimeFilter({ onFilterChange, currentRange }: An
         </div>
 
         {/* Right: Quick Filters */}
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid grid-cols-5 gap-1.5 lg:flex lg:flex-wrap">
           {filters.map((filter) => (
             <motion.button
               key={filter.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleQuickFilter(filter.id)}
-              className={`flex items-center gap-1 px-2 lg:px-2.5 py-1 rounded-md text-[10px] lg:text-xs font-bold transition-all ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-md text-[10px] font-bold transition-all lg:flex-row lg:gap-1 lg:px-2.5 lg:py-1 lg:text-xs ${
                 currentRange === filter.id
                   ? "bg-primary text-white shadow-md shadow-primary/20"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined text-base lg:text-sm">
                 {filter.icon}
               </span>
-              <span className="hidden sm:inline">{filter.label}</span>
+              <span className="hidden sm:inline lg:inline">{filter.label}</span>
             </motion.button>
           ))}
         </div>
