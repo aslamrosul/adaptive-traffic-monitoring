@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { useProfileStore } from "@/lib/store";
 
-const [activityLog, setActivityLog] = useState<any[]>([]);
 const achievements = [
   {
     title: "Verified Operator",
@@ -36,6 +35,8 @@ export default function ProfileContent() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [activityLog, setActivityLog] = useState<any[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
