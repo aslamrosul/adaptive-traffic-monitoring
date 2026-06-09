@@ -6,77 +6,38 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { useProfileStore } from "@/lib/store";
 
-const activityLog = [
-  {
-    action: "Login ke sistem",
-    time: "2 menit yang lalu",
-    icon: "login",
-    color: "text-green-600 bg-green-100",
-  },
-  {
-    action: "Mengubah pengaturan notifikasi",
-    time: "1 jam yang lalu",
-    icon: "settings",
-    color: "text-blue-600 bg-blue-100",
-  },
-  {
-    action: "Mengunduh laporan bulanan",
-    time: "3 jam yang lalu",
-    icon: "download",
-    color: "text-purple-600 bg-purple-100",
-  },
-  {
-    action: "Manual override di Simpangan Sarinah",
-    time: "5 jam yang lalu",
-    icon: "emergency",
-    color: "text-red-600 bg-red-100",
-  },
-  {
-    action: "Membuat laporan custom",
-    time: "1 hari yang lalu",
-    icon: "description",
-    color: "text-orange-600 bg-orange-100",
-  },
-];
-
+const [activityLog, setActivityLog] = useState<any[]>([]);
 const achievements = [
   {
-    title: "Early Adopter",
-    description: "Pengguna sejak tahun pertama",
-    icon: "emoji_events",
-    color: "bg-yellow-100 text-yellow-600",
-    earned: true,
-  },
-  {
-    title: "Problem Solver",
-    description: "Menyelesaikan 50+ insiden",
-    icon: "verified",
+    title: "Verified Operator",
+    description: "Akun operator sudah aktif dan terverifikasi",
+    icon: "verified_user",
     color: "bg-blue-100 text-blue-600",
     earned: true,
   },
   {
-    title: "Night Owl",
-    description: "Aktif di shift malam",
-    icon: "nightlight",
-    color: "bg-purple-100 text-purple-600",
+    title: "Realtime Monitoring",
+    description: "Dapat memantau status persimpangan secara realtime",
+    icon: "sensors",
+    color: "bg-green-100 text-green-600",
     earned: true,
   },
   {
-    title: "Data Master",
-    description: "Generate 100+ laporan",
-    icon: "analytics",
-    color: "bg-green-100 text-green-600",
-    earned: false,
+    title: "IoT Controller",
+    description: "Memiliki akses konfigurasi perangkat IoT",
+    icon: "memory",
+    color: "bg-purple-100 text-purple-600",
+    earned: true,
   },
 ];
 
 export default function ProfileContent() {
   const { profile, isLoading, fetchProfile, updateProfile, uploadAvatar, deleteAvatar, updateSettings } = useProfileStore();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: "",
@@ -91,6 +52,26 @@ export default function ProfileContent() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    async function fetchActivity() {
+      try {
+        const response = await fetch("/api/profile/activity", {
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setActivityLog(result.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch activity:", error);
+      }
+    }
+
+    fetchActivity();
+  }, []);
 
   // Update form when profile loads
   useEffect(() => {
@@ -173,7 +154,7 @@ export default function ProfileContent() {
 
   const handleExportData = () => {
     if (!profile) return;
-    
+
     const dataStr = JSON.stringify(profile, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
@@ -187,7 +168,7 @@ export default function ProfileContent() {
 
   const handleToggleSetting = async (key: "publicProfile" | "showEmail" | "showActivity") => {
     if (!profile) return;
-    
+
     try {
       await updateSettings({
         [key]: !profile.settings[key],
@@ -227,10 +208,30 @@ export default function ProfileContent() {
   }
 
   const stats = [
-    { label: "Total Login", value: profile.stats.totalLogin.toLocaleString(), icon: "login", color: "bg-blue-100 text-blue-600" },
-    { label: "Insiden Ditangani", value: profile.stats.incidentsHandled.toString(), icon: "task_alt", color: "bg-green-100 text-green-600" },
-    { label: "Laporan Dibuat", value: profile.stats.reportsCreated.toString(), icon: "description", color: "bg-purple-100 text-purple-600" },
-    { label: "Jam Aktif", value: profile.stats.activeHours.toLocaleString(), icon: "schedule", color: "bg-orange-100 text-orange-600" },
+    {
+      label: "Jam Aktif",
+      value: `${profile.stats.activeHours.toLocaleString()} jam`,
+      icon: "schedule",
+      color: "bg-orange-100 text-orange-600",
+    },
+    {
+      label: "Status Akun",
+      value: "Aktif",
+      icon: "verified_user",
+      color: "bg-green-100 text-green-600",
+    },
+    {
+      label: "Role",
+      value: profile.position || "Operator",
+      icon: "badge",
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      label: "Akun",
+      value: profile.accountType,
+      icon: "workspace_premium",
+      color: "bg-yellow-100 text-yellow-600",
+    },
   ];
 
   return (
@@ -318,7 +319,7 @@ export default function ProfileContent() {
                   </button>
                 )}
               </div>
-              
+
               {/* Contact Info & Badges - 2 Rows on Desktop */}
               <div className="flex flex-col gap-2 mt-2 md:mt-3">
                 {/* Row 1: Contact Info - Spread across on Desktop */}
@@ -387,11 +388,10 @@ export default function ProfileContent() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3 font-semibold text-xs lg:text-sm transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? "text-primary border-b-2 border-primary"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
+            className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3 font-semibold text-xs lg:text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+              ? "text-primary border-b-2 border-primary"
+              : "text-slate-500 hover:text-slate-700"
+              }`}
           >
             <span className="material-symbols-outlined text-base lg:text-lg">{tab.icon}</span>
             <span className="hidden sm:inline">{tab.label}</span>
@@ -435,199 +435,199 @@ export default function ProfileContent() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
               {/* Left Column - Main Info */}
               <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-              {/* About Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
-              >
-                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">info</span>
-                  <span className="truncate">Tentang</span>
-                </h3>
-                {isEditing ? (
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    rows={4}
-                    className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm lg:text-base"
-                    placeholder="Ceritakan tentang diri Anda..."
-                  />
-                ) : (
-                  <p className="text-slate-600 leading-relaxed text-sm lg:text-base break-words">{profile.bio}</p>
-                )}
-              </motion.div>
+                {/* About Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-lg lg:text-xl">info</span>
+                    <span className="truncate">Tentang</span>
+                  </h3>
+                  {isEditing ? (
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm lg:text-base"
+                      placeholder="Ceritakan tentang diri Anda..."
+                    />
+                  ) : (
+                    <p className="text-slate-600 leading-relaxed text-sm lg:text-base break-words">{profile.bio}</p>
+                  )}
+                </motion.div>
 
-              {/* Personal Info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
-              >
-                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">badge</span>
-                  <span className="truncate">Informasi Personal</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Nama Lengkap</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                      />
-                    ) : (
-                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.name}</p>
-                    )}
-                  </div>
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Email</label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                      />
-                    ) : (
-                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.email}</p>
-                    )}
-                  </div>
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Telepon</label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                      />
-                    ) : (
-                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.phone}</p>
-                    )}
-                  </div>
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Posisi</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.position}
-                        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                      />
-                    ) : (
-                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.position}</p>
-                    )}
-                  </div>
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Departemen</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                      />
-                    ) : (
-                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.department}</p>
-                    )}
-                  </div>
-                  <div className="overflow-x-hidden">
-                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Bergabung Sejak</label>
-                    <p className="text-slate-900 font-medium text-sm lg:text-base truncate">
-                      {new Date(profile.memberSince).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                {isEditing && (
-                  <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-slate-200">
-                    <button
-                      onClick={handleSave}
-                      disabled={isLoading}
-                      className="w-full sm:flex-1 px-4 lg:px-6 py-2 lg:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
-                    >
-                      {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      disabled={isLoading}
-                      className="w-full sm:w-auto px-4 lg:px-6 py-2 lg:py-3 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
-                    >
-                      Batal
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Skills */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
-              >
-                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">psychology</span>
-                  <span className="truncate">Keahlian</span>
-                </h3>
-                <div className="flex flex-wrap gap-1.5 lg:gap-2">
-                  {profile.skills.map((skill, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="px-3 lg:px-4 py-1.5 lg:py-2 bg-blue-50 text-primary rounded-full text-xs lg:text-sm font-semibold truncate max-w-full"
-                    >
-                      {skill}
-                    </motion.span>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Performance */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
-              >
-                <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg lg:text-xl">trending_up</span>
-                  <span className="truncate">Performa</span>
-                </h3>
-                <div className="space-y-3 lg:space-y-4">
-                  {[
-                    { label: "Response Time", value: profile.performance.responseTime, color: "bg-green-500" },
-                    { label: "Accuracy", value: profile.performance.accuracy, color: "bg-blue-500" },
-                    { label: "Efficiency", value: profile.performance.efficiency, color: "bg-purple-500" },
-                  ].map((metric, idx) => (
-                    <div key={idx} className="overflow-x-hidden">
-                      <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
-                        <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">{metric.label}</span>
-                        <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">{metric.value}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${metric.value}%` }}
-                          transition={{ delay: 0.3 + idx * 0.1, duration: 0.8 }}
-                          className={`h-full ${metric.color}`}
+                {/* Personal Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-lg lg:text-xl">badge</span>
+                    <span className="truncate">Informasi Personal</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Nama Lengkap</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
                         />
-                      </div>
+                      ) : (
+                        <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.name}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Email</label>
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
+                        />
+                      ) : (
+                        <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.email}</p>
+                      )}
+                    </div>
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Telepon</label>
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
+                        />
+                      ) : (
+                        <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.phone}</p>
+                      )}
+                    </div>
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Posisi</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={formData.position}
+                          onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                          className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
+                        />
+                      ) : (
+                        <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.position}</p>
+                      )}
+                    </div>
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Departemen</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={formData.department}
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          className="w-full px-3 lg:px-4 py-1.5 lg:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
+                        />
+                      ) : (
+                        <p className="text-slate-900 font-medium text-sm lg:text-base truncate">{profile.department}</p>
+                      )}
+                    </div>
+                    <div className="overflow-x-hidden">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">Bergabung Sejak</label>
+                      <p className="text-slate-900 font-medium text-sm lg:text-base truncate">
+                        {new Date(profile.memberSince).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isEditing && (
+                    <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-slate-200">
+                      <button
+                        onClick={handleSave}
+                        disabled={isLoading}
+                        className="w-full sm:flex-1 px-4 lg:px-6 py-2 lg:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
+                      >
+                        {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-4 lg:px-6 py-2 lg:py-3 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Skills */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-lg lg:text-xl">psychology</span>
+                    <span className="truncate">Keahlian</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5 lg:gap-2">
+                    {profile.skills.map((skill, idx) => (
+                      <motion.span
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="px-3 lg:px-4 py-1.5 lg:py-2 bg-blue-50 text-primary rounded-full text-xs lg:text-sm font-semibold truncate max-w-full"
+                      >
+                        {skill}
+                      </motion.span>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Performance */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                >
+                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-lg lg:text-xl">trending_up</span>
+                    <span className="truncate">Performa</span>
+                  </h3>
+                  <div className="space-y-3 lg:space-y-4">
+                    {[
+                      { label: "Response Time", value: profile.performance.responseTime, color: "bg-green-500" },
+                      { label: "Accuracy", value: profile.performance.accuracy, color: "bg-blue-500" },
+                      { label: "Efficiency", value: profile.performance.efficiency, color: "bg-purple-500" },
+                    ].map((metric, idx) => (
+                      <div key={idx} className="overflow-x-hidden">
+                        <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
+                          <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">{metric.label}</span>
+                          <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">{metric.value}%</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${metric.value}%` }}
+                            transition={{ delay: 0.3 + idx * 0.1, duration: 0.8 }}
+                            className={`h-full ${metric.color}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
 
               {/* Right Column - Quick Actions & Account Info (Desktop Only) */}
               <div className="hidden lg:block space-y-4 lg:space-y-6">
@@ -768,11 +768,10 @@ export default function ProfileContent() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`p-3 lg:p-6 rounded-xl border-2 overflow-hidden ${
-                    achievement.earned
-                      ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
-                      : "bg-slate-50 border-slate-200 opacity-60"
-                  }`}
+                  className={`p-3 lg:p-6 rounded-xl border-2 overflow-hidden ${achievement.earned
+                    ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200"
+                    : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
                 >
                   <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full ${achievement.color} flex items-center justify-center mb-2 lg:mb-4`}>
                     <span className="material-symbols-outlined text-xl lg:text-2xl">{achievement.icon}</span>
@@ -816,9 +815,8 @@ export default function ProfileContent() {
                 <button
                   onClick={() => handleToggleSetting("publicProfile")}
                   disabled={isLoading}
-                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
-                    profile.settings.publicProfile ? "bg-primary" : "bg-slate-300"
-                  } disabled:opacity-50`}
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${profile.settings.publicProfile ? "bg-primary" : "bg-slate-300"
+                    } disabled:opacity-50`}
                 >
                   <motion.div
                     animate={{ x: profile.settings.publicProfile ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}
@@ -835,9 +833,8 @@ export default function ProfileContent() {
                 <button
                   onClick={() => handleToggleSetting("showEmail")}
                   disabled={isLoading}
-                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
-                    profile.settings.showEmail ? "bg-primary" : "bg-slate-300"
-                  } disabled:opacity-50`}
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${profile.settings.showEmail ? "bg-primary" : "bg-slate-300"
+                    } disabled:opacity-50`}
                 >
                   <motion.div
                     animate={{ x: profile.settings.showEmail ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}
@@ -854,9 +851,8 @@ export default function ProfileContent() {
                 <button
                   onClick={() => handleToggleSetting("showActivity")}
                   disabled={isLoading}
-                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${
-                    profile.settings.showActivity ? "bg-primary" : "bg-slate-300"
-                  } disabled:opacity-50`}
+                  className={`relative w-12 h-7 lg:w-14 lg:h-7 rounded-full transition-colors flex-shrink-0 ${profile.settings.showActivity ? "bg-primary" : "bg-slate-300"
+                    } disabled:opacity-50`}
                 >
                   <motion.div
                     animate={{ x: profile.settings.showActivity ? (window.innerWidth >= 1024 ? 28 : 20) : 2 }}

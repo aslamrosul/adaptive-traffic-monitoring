@@ -1,7 +1,8 @@
 "use client";
 
+import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/user-settings";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const tabs = [
@@ -9,343 +10,456 @@ const tabs = [
   { id: "notifications", label: "Notifikasi", icon: "notifications" },
   { id: "iot", label: "IoT & Sensor", icon: "sensors" },
   { id: "security", label: "Keamanan", icon: "shield" },
-  { id: "advanced", label: "Lanjutan", icon: "tune" },
 ];
 
 export default function SettingsTabs() {
   const [activeTab, setActiveTab] = useState("general");
-  const [autoMode, setAutoMode] = useState(true);
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [pushNotif, setPushNotif] = useState(true);
-  const [sensorInterval, setSensorInterval] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    toast.success("Pengaturan berhasil disimpan!");
+  const [settings, setSettings] = useState({
+    language: "id",
+    timezone: "Asia/Jakarta",
+    browserNotification: false,
+    emailNotification: false,
+    telegramNotification: false,
+    queueAlert: true,
+    deviceOfflineAlert: true,
+    dummyModeAlert: true,
+    weakWifiAlert: true,
+    autoMode: true,
+    sensorInterval: 5,
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch("/api/settings", {
+        cache: "no-store",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSettings((current) => ({
+          ...current,
+          ...result.data,
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal memuat pengaturan");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const updateSetting = (key: string, value: any) => {
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settings),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal menyimpan pengaturan");
+      }
+
+      toast.success("Pengaturan berhasil disimpan");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menyimpan pengaturan");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const requestBrowserNotification = async () => {
+    if (!("Notification" in window)) {
+      toast.error("Browser tidak mendukung notifikasi");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+
+    if (permission === "granted") {
+      updateSetting("browserNotification", true);
+      toast.success("Notifikasi browser diaktifkan");
+
+      new Notification("Aerial Command", {
+        body: "Notifikasi browser berhasil diaktifkan.",
+      });
+    } else {
+      updateSetting("browserNotification", false);
+      toast.error("Izin notifikasi ditolak");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
-      {/* Tabs */}
-      <div className="flex gap-1 lg:gap-2 border-b border-slate-200 overflow-x-auto scrollbar-hide">
+    <div className="space-y-4 overflow-x-hidden lg:space-y-6">
+      <div className="scrollbar-hide flex gap-1 overflow-x-auto border-b border-slate-200 lg:gap-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 lg:py-3 font-semibold text-xs lg:text-sm transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-semibold transition-all lg:gap-2 lg:px-4 lg:py-3 lg:text-sm ${
               activeTab === tab.id
-                ? "text-primary border-b-2 border-primary"
+                ? "border-b-2 border-primary text-primary"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <span className="material-symbols-outlined text-base lg:text-lg">{tab.icon}</span>
+            <span className="material-symbols-outlined text-base lg:text-lg">
+              {tab.icon}
+            </span>
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Content */}
       <motion.div
         key={activeTab}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-4 lg:p-8 overflow-x-hidden"
+        className="overflow-x-hidden rounded-xl bg-white p-4 shadow-sm lg:p-8"
       >
         {activeTab === "general" && (
           <div className="space-y-4 lg:space-y-6">
-            <div>
-              <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4">Pengaturan Umum</h3>
-              <div className="space-y-3 lg:space-y-4">
-                <div className="flex items-center justify-between p-3 lg:p-4 bg-slate-50 rounded-lg gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 text-sm lg:text-base truncate">Mode Otomatis</p>
-                    <p className="text-xs lg:text-sm text-slate-500">
-                      Sistem akan mengatur lampu lalu lintas secara otomatis
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setAutoMode(!autoMode)}
-                    className={`relative w-12 h-7 lg:w-14 lg:h-8 rounded-full transition-colors flex-shrink-0 ${
-                      autoMode ? "bg-primary" : "bg-slate-300"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 w-5 h-5 lg:w-6 lg:h-6 bg-white rounded-full transition-transform ${
-                        autoMode ? "translate-x-6 lg:translate-x-7" : "translate-x-1"
-                      }`}
-                    ></div>
-                  </button>
-                </div>
+            <h3 className="text-base font-bold text-slate-900 lg:text-lg">
+              Pengaturan Umum
+            </h3>
 
-                <div className="p-3 lg:p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2 text-sm lg:text-base">
-                    Bahasa Sistem
-                  </label>
-                  <select className="w-full px-3 lg:px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm lg:text-base">
-                    <option>Bahasa Indonesia</option>
-                    <option>English</option>
-                    <option>中文</option>
-                  </select>
-                </div>
+            <SwitchRow
+              title="Mode Otomatis"
+              description="Sistem akan mengatur lampu lalu lintas secara otomatis."
+              checked={settings.autoMode}
+              onChange={() => updateSetting("autoMode", !settings.autoMode)}
+            />
 
-                <div className="p-3 lg:p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2 text-sm lg:text-base">
-                    Zona Waktu
-                  </label>
-                  <select className="w-full px-3 lg:px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm lg:text-base">
-                    <option>WIB (GMT+7)</option>
-                    <option>WITA (GMT+8)</option>
-                    <option>WIT (GMT+9)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <SelectRow
+              title="Bahasa Sistem"
+              value={settings.language}
+              onChange={(value) => updateSetting("language", value)}
+              options={LANGUAGE_OPTIONS}
+            />
+
+            <SelectRow
+              title="Zona Waktu"
+              value={settings.timezone}
+              onChange={(value) => updateSetting("timezone", value)}
+              options={TIMEZONE_OPTIONS}
+            />
+
+            <InfoBox
+              icon="schedule"
+              title="Catatan zona waktu"
+              description="Data tetap disimpan UTC di database. Zona waktu hanya memengaruhi tampilan dashboard."
+            />
           </div>
         )}
 
         {activeTab === "notifications" && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Pengaturan Notifikasi</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-slate-900">Email Notifikasi</p>
-                    <p className="text-sm text-slate-500">
-                      Terima notifikasi melalui email
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setEmailNotif(!emailNotif)}
-                    className={`relative w-14 h-8 rounded-full transition-colors ${
-                      emailNotif ? "bg-primary" : "bg-slate-300"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                        emailNotif ? "translate-x-7" : "translate-x-1"
-                      }`}
-                    ></div>
-                  </button>
-                </div>
+          <div className="space-y-4 lg:space-y-6">
+            <h3 className="text-base font-bold text-slate-900 lg:text-lg">
+              Pengaturan Notifikasi
+            </h3>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-slate-900">Push Notifikasi</p>
-                    <p className="text-sm text-slate-500">
-                      Terima notifikasi push di browser
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setPushNotif(!pushNotif)}
-                    className={`relative w-14 h-8 rounded-full transition-colors ${
-                      pushNotif ? "bg-primary" : "bg-slate-300"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                        pushNotif ? "translate-x-7" : "translate-x-1"
-                      }`}
-                    ></div>
-                  </button>
-                </div>
+            <SwitchRow
+              title="Notifikasi Browser"
+              description="Menampilkan alert di browser saat ada antrean padat atau perangkat offline."
+              checked={settings.browserNotification}
+              onChange={() => {
+                if (!settings.browserNotification) {
+                  requestBrowserNotification();
+                } else {
+                  updateSetting("browserNotification", false);
+                }
+              }}
+            />
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
-                    Prioritas Notifikasi
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm">Kepadatan Ekstrem</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm">Anomali IoT</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Pemeliharaan Rutin</span>
-                    </label>
-                  </div>
-                </div>
+            <SwitchRow
+              title="Email Notifikasi"
+              description="Kirim ringkasan alert penting ke email akun."
+              checked={settings.emailNotification}
+              onChange={() =>
+                updateSetting("emailNotification", !settings.emailNotification)
+              }
+            />
+
+            <SwitchRow
+              title="Telegram Bot"
+              description="Kirim alert penting ke bot Telegram."
+              checked={settings.telegramNotification}
+              onChange={() =>
+                updateSetting(
+                  "telegramNotification",
+                  !settings.telegramNotification,
+                )
+              }
+            />
+
+            <div className="rounded-lg bg-slate-50 p-4">
+              <p className="mb-3 font-semibold text-slate-900">
+                Jenis Alert Aktif
+              </p>
+
+              <div className="space-y-2">
+                <CheckboxRow
+                  label="Antrean Level 2 / padat"
+                  checked={settings.queueAlert}
+                  onChange={() => updateSetting("queueAlert", !settings.queueAlert)}
+                />
+                <CheckboxRow
+                  label="Perangkat offline"
+                  checked={settings.deviceOfflineAlert}
+                  onChange={() =>
+                    updateSetting(
+                      "deviceOfflineAlert",
+                      !settings.deviceOfflineAlert,
+                    )
+                  }
+                />
+                <CheckboxRow
+                  label="Dummy mode aktif"
+                  checked={settings.dummyModeAlert}
+                  onChange={() =>
+                    updateSetting("dummyModeAlert", !settings.dummyModeAlert)
+                  }
+                />
+                <CheckboxRow
+                  label="Sinyal WiFi ESP32 lemah"
+                  checked={settings.weakWifiAlert}
+                  onChange={() =>
+                    updateSetting("weakWifiAlert", !settings.weakWifiAlert)
+                  }
+                />
               </div>
             </div>
           </div>
         )}
 
         {activeTab === "iot" && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Pengaturan IoT & Sensor</h3>
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
-                    Interval Pengambilan Data (detik)
-                  </label>
-                  <input
-                    type="number"
-                    value={sensorInterval}
-                    onChange={(e) => setSensorInterval(Number(e.target.value))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    min="1"
-                    max="60"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Saat ini: {sensorInterval} detik
-                  </p>
-                </div>
+          <div className="space-y-4 lg:space-y-6">
+            <h3 className="text-base font-bold text-slate-900 lg:text-lg">
+              Pengaturan IoT & Sensor
+            </h3>
 
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-blue-600">info</span>
-                    <div>
-                      <p className="font-semibold text-blue-900 text-sm">Status Koneksi</p>
-                      <p className="text-xs text-blue-700 mt-1">
-                        42 dari 43 sensor aktif (98.4%)
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <div className="rounded-lg bg-slate-50 p-4">
+              <label className="mb-2 block font-semibold text-slate-900">
+                Interval Pengambilan Data (detik)
+              </label>
 
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-2">
-                    Algoritma Optimasi
-                  </label>
-                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    <option>Adaptive-Flow v2.4</option>
-                    <option>Fixed-Time Classic</option>
-                    <option>AI-Predictive Beta</option>
-                  </select>
-                </div>
-              </div>
+              <input
+                type="number"
+                value={settings.sensorInterval}
+                onChange={(event) =>
+                  updateSetting("sensorInterval", Number(event.target.value))
+                }
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                min={1}
+                max={60}
+              />
+
+              <p className="mt-1 text-xs text-slate-500">
+                Saat ini: {settings.sensorInterval} detik
+              </p>
             </div>
+
+            <InfoBox
+              icon="sensors"
+              title="Konfigurasi IoT utama"
+              description="Pengaturan waktu lampu dan mode adaptif tetap diatur melalui halaman IoT Config agar tersinkron ke ESP32."
+            />
           </div>
         )}
 
         {activeTab === "security" && (
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Keamanan</h3>
-              <div className="space-y-2.5">
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
-                    Ubah Password
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Password lama"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-1.5 focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password baru"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg mb-1.5 focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Konfirmasi password baru"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                  />
-                </div>
+          <div className="space-y-4">
+            <h3 className="text-base font-bold text-slate-900 lg:text-lg">
+              Keamanan
+            </h3>
 
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-green-600 text-lg">verified_user</span>
-                    <div>
-                      <p className="font-semibold text-green-900 text-sm">Two-Factor Authentication</p>
-                      <p className="text-xs text-green-700 mt-0.5">
-                        Aktif - Terakhir digunakan 2 jam yang lalu
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <InfoBox
+              icon="verified_user"
+              title="Login aman"
+              description="Akun menggunakan NextAuth. Password lokal terenkripsi bcrypt, sedangkan akun Google memakai OAuth."
+              color="green"
+            />
 
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="font-semibold text-slate-900 mb-1.5 text-sm">Sesi Aktif</p>
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Windows - Chrome</span>
-                      <span className="text-green-600 font-semibold">Saat ini</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Android - Mobile App</span>
-                      <button className="text-red-600 font-semibold hover:underline">
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <InfoBox
+              icon="lock"
+              title="Ubah password"
+              description="Fitur ubah password bisa ditambahkan khusus untuk akun credentials. Akun Google tidak memakai password lokal."
+            />
           </div>
         )}
 
-        {activeTab === "advanced" && (
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Pengaturan Lanjutan</h3>
-              <div className="space-y-2.5">
-                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-yellow-600 text-lg">warning</span>
-                    <div>
-                      <p className="font-semibold text-yellow-900 text-sm">Peringatan</p>
-                      <p className="text-xs text-yellow-700 mt-0.5">
-                        Pengaturan ini hanya untuk pengguna advanced. Perubahan dapat mempengaruhi kinerja sistem.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
-                    Mode Debug
-                  </label>
-                  <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm">
-                    <option>Disabled</option>
-                    <option>Enabled (Console Only)</option>
-                    <option>Enabled (Full Logging)</option>
-                  </select>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <label className="block font-semibold text-slate-900 mb-1.5 text-sm">
-                    API Rate Limit
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={100}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Requests per minute
-                  </p>
-                </div>
-
-                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                  <p className="font-semibold text-red-900 mb-1.5 text-sm">Danger Zone</p>
-                  <button className="px-3 py-1.5 bg-red-600 text-white rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors">
-                    Reset Semua Pengaturan
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Save Button */}
-        <div className="flex flex-col sm:flex-row justify-end gap-2 lg:gap-3 mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-200">
-          <button className="w-full sm:w-auto px-4 lg:px-6 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-sm lg:text-base">
-            Batal
-          </button>
+        <div className="mt-6 flex flex-col justify-end gap-2 border-t border-slate-200 pt-4 sm:flex-row lg:mt-8 lg:gap-3 lg:pt-6">
           <button
-            onClick={handleSave}
-            className="w-full sm:w-auto px-4 lg:px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm lg:text-base"
+            type="button"
+            onClick={fetchSettings}
+            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto lg:px-6 lg:text-base"
           >
-            Simpan Perubahan
+            Reset
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto lg:px-6 lg:text-base"
+          >
+            {isSaving ? "Menyimpan..." : "Simpan Pengaturan"}
           </button>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function SwitchRow({
+  title,
+  description,
+  checked,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 lg:p-4">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-slate-900 lg:text-base">
+          {title}
+        </p>
+        <p className="text-xs text-slate-500 lg:text-sm">{description}</p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onChange}
+        className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors lg:h-8 lg:w-14 ${
+          checked ? "bg-primary" : "bg-slate-300"
+        }`}
+      >
+        <div
+          className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform lg:h-6 lg:w-6 ${
+            checked ? "translate-x-6 lg:translate-x-7" : "translate-x-1"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function SelectRow({
+  title,
+  value,
+  onChange,
+  options,
+}: {
+  title: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ label: string; value: string }>;
+}) {
+  return (
+    <div className="rounded-lg bg-slate-50 p-3 lg:p-4">
+      <label className="mb-2 block text-sm font-semibold text-slate-900 lg:text-base">
+        {title}
+      </label>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 lg:px-4 lg:text-base"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function CheckboxRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="rounded"
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function InfoBox({
+  icon,
+  title,
+  description,
+  color = "blue",
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  color?: "blue" | "green";
+}) {
+  const cls =
+    color === "green"
+      ? "border-green-200 bg-green-50 text-green-700"
+      : "border-blue-200 bg-blue-50 text-blue-700";
+
+  return (
+    <div className={`rounded-lg border p-4 ${cls}`}>
+      <div className="flex items-start gap-3">
+        <span className="material-symbols-outlined">{icon}</span>
+
+        <div>
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="mt-1 text-xs">{description}</p>
+        </div>
+      </div>
     </div>
   );
 }
