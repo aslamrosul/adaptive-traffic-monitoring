@@ -7,6 +7,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 export type LaneName = "north" | "south" | "east" | "west";
 export type LightStatus = "red" | "yellow" | "green";
@@ -471,6 +476,8 @@ function applyPendingCommands(
 }
 
 export function useMqttTraffic() {
+  const { timezone } = useAppSettings();
+  
   const clientRef = useRef<MqttClient | null>(null);
 
   const pendingCommandsRef =
@@ -498,6 +505,9 @@ export function useMqttTraffic() {
   const port =
     process.env.NEXT_PUBLIC_MQTT_PORT ??
     "8089";
+  const protocol = 
+    process.env.NEXT_PUBLIC_MQTT_PROTOCOL 
+    ?? "wss";
 
   const username =
     process.env.NEXT_PUBLIC_MQTT_USER ??
@@ -774,7 +784,7 @@ export function useMqttTraffic() {
 
     loadLatestFromApi();
 
-    const url = `ws://${host}:${port}`;
+    const url = `${protocol}${host}:${port}`;
 
     console.log("Menghubungkan MQTT WebSocket:", url);
 

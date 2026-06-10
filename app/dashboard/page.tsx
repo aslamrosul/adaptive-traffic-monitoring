@@ -19,8 +19,14 @@ import { useIntersections } from "@/lib/hooks/useIntersections";
 import { useMqttTraffic } from "@/lib/hooks/useMqttTraffic";
 import { formatWib } from "@/lib/timezone";
 import { useEffect, useMemo, useState } from "react";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 export default function DashboardPage() {
+  const { timezone } = useAppSettings();
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
   const [selectedIntersection, setSelectedIntersection] =
@@ -150,10 +156,10 @@ export default function DashboardPage() {
                     <p className="mt-1 text-xs text-slate-700">
                       Device: {latestData?.deviceId || "-"} · Persimpangan:{" "}
                       {latestData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
-                      {lastUpdate
-                        ? lastUpdate.toLocaleTimeString("id-ID", {
-                            timeZone: "Asia/Jakarta",
-                          }) + " WIB"
+                      {latestData?.timestamp
+                        ? `${formatWithTimezone(latestData.timestamp, timezone)} ${getTimezoneLabel(timezone)}`
+                        : lastUpdate
+                        ? `${formatWithTimezone(lastUpdate.toISOString(), timezone)} ${getTimezoneLabel(timezone)}`
                         : "-"}
                     </p>
 

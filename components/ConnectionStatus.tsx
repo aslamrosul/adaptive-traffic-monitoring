@@ -2,6 +2,11 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import type { ConnectionState } from "@/lib/hooks/useSignalR";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 interface ConnectionStatusProps {
   connectionState: ConnectionState;
@@ -22,6 +27,7 @@ export default function ConnectionStatus({
   compact = false,
   className = "",
 }: ConnectionStatusProps) {
+  const { timezone } = useAppSettings();
   
   // Get status config based on connection state
   const getStatusConfig = () => {
@@ -100,7 +106,7 @@ export default function ConnectionStatus({
         </span>
         {lastUpdate && isConnected && (
           <span className="text-xs text-slate-500">
-            • {lastUpdate.toLocaleTimeString('id-ID')}
+            • {formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}
           </span>
         )}
       </div>
@@ -139,7 +145,7 @@ export default function ConnectionStatus({
                 </span>
                 {lastUpdate && isConnected && (
                   <span className="text-xs text-slate-500">
-                    • Update: {lastUpdate.toLocaleTimeString('id-ID')}
+                    • Update: {formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}
                   </span>
                 )}
               </div>

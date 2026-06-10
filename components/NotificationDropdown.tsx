@@ -5,8 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { showBrowserNotification } from "@/lib/browser-notification";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 export default function NotificationDropdown() {
+  const { timezone } = useAppSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -291,17 +297,8 @@ export default function NotificationDropdown() {
                             </p>
 
                             <p className="mt-2 text-[10px] text-slate-400">
-                              {new Date(notif.createdAt).toLocaleString(
-                                "id-ID",
-                                {
-                                  timeZone: "Asia/Jakarta",
-                                  day: "numeric",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}{" "}
-                              WIB
+                              {formatWithTimezone(notif.createdAt, timezone)}{" "}
+                              {getTimezoneLabel(timezone)}
                             </p>
                           </div>
                         </div>

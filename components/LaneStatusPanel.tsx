@@ -2,6 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 interface LaneData {
   name: string;
@@ -18,6 +23,7 @@ interface LaneStatusPanelProps {
 }
 
 export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPanelProps) {
+  const { timezone } = useAppSettings();
   const [lanes, setLanes] = useState<LaneData[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -231,7 +237,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
           <span className="material-symbols-outlined text-sm">schedule</span>
           <span>Update otomatis setiap 5 detik</span>
           <span>•</span>
-          <span>Terakhir: {lastUpdate.toLocaleTimeString('id-ID')}</span>
+          <span>Terakhir: {formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}</span>
         </div>
       </div>
 
@@ -320,7 +326,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                 {/* Timestamp */}
                 <div className="flex items-center gap-1 mt-3 text-xs text-slate-400">
                   <span className="material-symbols-outlined text-xs">update</span>
-                  <span>{lastUpdate.toLocaleTimeString('id-ID')}</span>
+                  <span>{formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}</span>
                 </div>
               </motion.div>
             ))}

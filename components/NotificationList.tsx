@@ -4,8 +4,14 @@ import { useNotificationStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import {
+  formatWithTimezone,
+  getTimezoneLabel,
+} from "@/lib/user-settings";
 
 export default function NotificationList() {
+  const { timezone } = useAppSettings();
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
@@ -191,14 +197,8 @@ export default function NotificationList() {
 
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-400">
-                      {new Date(notif.createdAt).toLocaleString("id-ID", {
-                        timeZone: "Asia/Jakarta",
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      WIB
+                      {formatWithTimezone(notif.createdAt, timezone)}{" "}
+                      {getTimezoneLabel(timezone)}
                     </span>
 
                     {notif.actionUrl && (

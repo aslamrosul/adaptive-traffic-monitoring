@@ -115,6 +115,24 @@ export default function SettingsTabs() {
       toast.error(error.message || "Gagal test Telegram");
     }
   };
+
+  const handleEmailTest = async () => {
+    try {
+      const response = await fetch("/api/email/test", {
+        method: "POST",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Gagal test email");
+      }
+
+      toast.success("Email test berhasil dikirim");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal test email");
+    }
+  };
   const updateSetting = (key: string, value: any) => {
     setSettings((current) => ({
       ...current,
@@ -257,6 +275,21 @@ export default function SettingsTabs() {
                 updateSetting("emailNotification", !settings.emailNotification)
               }
             />
+            {settings.emailNotification && (
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="mb-3 text-sm text-slate-600">
+                  Email alert akan dikirim ke email akun login.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleEmailTest}
+                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Test Email
+                </button>
+              </div>
+            )}
 
             <SwitchRow
               title="Telegram Bot"
