@@ -784,7 +784,7 @@ export function useMqttTraffic() {
 
     loadLatestFromApi();
 
-    const url = `${protocol}${host}:${port}`;
+    const url = `${protocol}://${host}:${port}`;
 
     console.log("Menghubungkan MQTT WebSocket:", url);
 
