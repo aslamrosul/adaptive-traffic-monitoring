@@ -3,6 +3,7 @@ import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,21 @@ export async function PUT(request: Request) {
       },
     }),
   );
+
+  // Log settings update
+  await createActivityLog({
+    userId: String(user.id),
+    email: String(user.email),
+    name: String(user.name),
+    type: "settings.update",
+    action: "Mengubah pengaturan aplikasi",
+    description: "Pengguna memperbarui pengaturan aplikasi",
+    metadata: {
+      changedFields: Object.keys(body || {}),
+    },
+  }).catch((error) => {
+    console.error("Failed to log settings update:", error);
+  });
 
   return NextResponse.json({
     success: true,

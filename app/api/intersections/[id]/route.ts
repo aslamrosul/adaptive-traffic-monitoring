@@ -3,8 +3,12 @@ import {
   DeleteCommand,
   GetCommand,
   PutCommand,
+  ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +150,39 @@ export async function PUT(
       })
     );
 
+    // Log intersection update
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const userResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (userResult.Items && userResult.Items.length > 0) {
+        const user = userResult.Items[0];
+        await createActivityLog({
+          userId: String(user.id),
+          email: String(user.email),
+          name: String(user.name),
+          type: "intersection.update",
+          action: "Mengubah persimpangan",
+          description: `Memperbarui data persimpangan ${updated.name}`,
+          metadata: {
+            intersectionId: id,
+            intersectionName: updated.name,
+          },
+        }).catch((error) => {
+          console.error("Failed to log intersection update:", error);
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Persimpangan berhasil diperbarui",
@@ -178,6 +215,17 @@ export async function DELETE(
   try {
     const { id } = await context.params;
 
+    const existingResult = await dynamo.send(
+      new GetCommand({
+        TableName: awsTables.intersections,
+        Key: {
+          intersection_id: id,
+        },
+      })
+    );
+
+    const intersectionName = existingResult.Item?.name || id;
+
     await dynamo.send(
       new DeleteCommand({
         TableName: awsTables.intersections,
@@ -186,6 +234,39 @@ export async function DELETE(
         },
       })
     );
+
+    // Log intersection deletion
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const userResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (userResult.Items && userResult.Items.length > 0) {
+        const user = userResult.Items[0];
+        await createActivityLog({
+          userId: String(user.id),
+          email: String(user.email),
+          name: String(user.name),
+          type: "intersection.delete",
+          action: "Menghapus persimpangan",
+          description: `Menghapus persimpangan ${intersectionName}`,
+          metadata: {
+            intersectionId: id,
+            intersectionName,
+          },
+        }).catch((error) => {
+          console.error("Failed to log intersection deletion:", error);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

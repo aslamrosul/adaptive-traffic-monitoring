@@ -131,13 +131,21 @@ interface ProfileData {
     responseTime: number;
     accuracy: number;
     efficiency: number;
-  };
+  } | null;
   skills: string[];
   settings: {
     publicProfile: boolean;
     showEmail: boolean;
     showActivity: boolean;
   };
+  achievements: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    color: string;
+    earned: boolean;
+  }>;
 }
 
 interface ProfileStore {

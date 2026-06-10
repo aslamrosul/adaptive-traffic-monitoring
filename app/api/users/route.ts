@@ -2,6 +2,9 @@ import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +138,40 @@ export async function POST(request: Request) {
         ConditionExpression: "attribute_not_exists(email)",
       })
     );
+
+    // Log user creation
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const adminUser = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (adminUser.Items && adminUser.Items.length > 0) {
+        const admin = adminUser.Items[0];
+        await createActivityLog({
+          userId: String(admin.id),
+          email: String(admin.email),
+          name: String(admin.name),
+          type: "user.create",
+          action: "Menambah pengguna baru",
+          description: `Menambahkan pengguna ${normalizedName} dengan role ${normalizeRole(data.role)}`,
+          metadata: {
+            targetUserId: item.id,
+            targetUserEmail: item.email,
+            targetUserRole: item.role,
+          },
+        }).catch((error) => {
+          console.error("Failed to log user creation:", error);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

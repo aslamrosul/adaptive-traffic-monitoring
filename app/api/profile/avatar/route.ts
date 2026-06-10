@@ -6,6 +6,7 @@ import { mkdir, unlink, writeFile } from "fs/promises";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
+import { createActivityLog } from "@/lib/activity-log-service";
 
 export const dynamic = "force-dynamic";
 
@@ -123,6 +124,18 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    // Log avatar upload
+    await createActivityLog({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      type: "profile.avatar.upload",
+      action: "Mengubah foto profil",
+      description: "Pengguna mengupload foto profil baru",
+    }).catch((error) => {
+      console.error("Failed to log avatar upload:", error);
+    });
+
     return NextResponse.json({
       success: true,
       message: "Avatar uploaded successfully",
@@ -202,6 +215,18 @@ export async function DELETE() {
         Item: updatedUser,
       })
     );
+
+    // Log avatar delete
+    await createActivityLog({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      type: "profile.avatar.delete",
+      action: "Menghapus foto profil",
+      description: "Pengguna menghapus foto profil",
+    }).catch((error) => {
+      console.error("Failed to log avatar delete:", error);
+    });
 
     return NextResponse.json({
       success: true,

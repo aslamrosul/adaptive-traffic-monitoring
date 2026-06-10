@@ -4,6 +4,7 @@ import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,18 @@ export async function PUT(request: Request) {
         },
       }),
     );
+
+    // Log password change
+    await createActivityLog({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      type: "profile.password.change",
+      action: "Mengubah password",
+      description: "Password akun lokal berhasil diperbarui",
+    }).catch((error) => {
+      console.error("Failed to log password change:", error);
+    });
 
     return NextResponse.json({
       success: true,

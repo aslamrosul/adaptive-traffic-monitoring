@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { createActivityLog } from "@/lib/activity-log-service";
 
 async function getUserByEmail(email: string) {
   const normalizedEmail = String(email).trim().toLowerCase();
@@ -101,6 +102,35 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email atau password salah");
           }
 
+          // Update login info and log activity
+          const updatedUser = {
+            ...user,
+            lastLoginAt: new Date().toISOString(),
+            totalLogin: Number(user.totalLogin || 0) + 1,
+            updatedAt: new Date().toISOString(),
+          };
+
+          await dynamo.send(
+            new PutCommand({
+              TableName: awsTables.users,
+              Item: updatedUser,
+            })
+          );
+
+          await createActivityLog({
+            userId: String(user.id),
+            email: String(user.email),
+            name: String(user.name),
+            type: "auth.login",
+            action: "Login ke sistem",
+            description: "Pengguna berhasil masuk menggunakan email dan password",
+            metadata: {
+              provider: "credentials",
+            },
+          }).catch((error) => {
+            console.error("Failed to log login:", error);
+          });
+
           return {
             id: user.id,
             email: user.email,
@@ -166,6 +196,35 @@ export const authOptions: NextAuthOptions = {
               const dbUser = await getUserByEmail(user.email);
 
               if (dbUser) {
+                // Update login info for Google login
+                const updatedUser = {
+                  ...dbUser,
+                  lastLoginAt: new Date().toISOString(),
+                  totalLogin: Number(dbUser.totalLogin || 0) + 1,
+                  updatedAt: new Date().toISOString(),
+                };
+
+                await dynamo.send(
+                  new PutCommand({
+                    TableName: awsTables.users,
+                    Item: updatedUser,
+                  })
+                );
+
+                await createActivityLog({
+                  userId: String(dbUser.id),
+                  email: String(dbUser.email),
+                  name: String(dbUser.name),
+                  type: "auth.login",
+                  action: "Login ke sistem",
+                  description: "Pengguna berhasil masuk menggunakan Google",
+                  metadata: {
+                    provider: "google",
+                  },
+                }).catch((error) => {
+                  console.error("Failed to log Google login:", error);
+                });
+
                 token.id = dbUser.id;
                 token.email = dbUser.email;
                 token.name = dbUser.name;

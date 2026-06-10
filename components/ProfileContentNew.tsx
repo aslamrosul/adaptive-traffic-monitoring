@@ -6,36 +6,14 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { useProfileStore } from "@/lib/store";
 
-const achievements = [
-  {
-    title: "Verified Operator",
-    description: "Akun operator sudah aktif dan terverifikasi",
-    icon: "verified_user",
-    color: "bg-blue-100 text-blue-600",
-    earned: true,
-  },
-  {
-    title: "Realtime Monitoring",
-    description: "Dapat memantau status persimpangan secara realtime",
-    icon: "sensors",
-    color: "bg-green-100 text-green-600",
-    earned: true,
-  },
-  {
-    title: "IoT Controller",
-    description: "Memiliki akses konfigurasi perangkat IoT",
-    icon: "memory",
-    color: "bg-purple-100 text-purple-600",
-    earned: true,
-  },
-];
-
 export default function ProfileContent() {
   const { profile, isLoading, fetchProfile, updateProfile, uploadAvatar, deleteAvatar, updateSettings } = useProfileStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [activityLog, setActivityLog] = useState<any[]>([]);
+  
+  const achievements = profile?.achievements || [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,14 +35,53 @@ export default function ProfileContent() {
   useEffect(() => {
     async function fetchActivity() {
       try {
-        const response = await fetch("/api/profile/activity", {
+        const response = await fetch("/api/profile/activity?limit=20", {
           cache: "no-store",
         });
 
         const result = await response.json();
 
         if (result.success) {
-          setActivityLog(result.data || []);
+          // Map data dari API ke format yang dibutuhkan komponen
+          const mappedActivity = (result.data || []).map((item: any) => {
+            // Mapping icon dan color berdasarkan type
+            let icon = "history";
+            let color = "bg-blue-100 text-blue-600";
+            
+            if (item.type.startsWith("auth.")) {
+              icon = "login";
+              color = "bg-green-100 text-green-600";
+            } else if (item.type.startsWith("profile.avatar")) {
+              icon = "photo_camera";
+              color = "bg-purple-100 text-purple-600";
+            } else if (item.type.startsWith("profile.password")) {
+              icon = "lock";
+              color = "bg-orange-100 text-orange-600";
+            } else if (item.type.startsWith("profile.settings")) {
+              icon = "settings";
+              color = "bg-cyan-100 text-cyan-600";
+            } else if (item.type.startsWith("profile.")) {
+              icon = "person";
+              color = "bg-blue-100 text-blue-600";
+            }
+
+            return {
+              id: item.id,
+              action: item.action,
+              description: item.description,
+              icon,
+              color,
+              time: new Date(item.timestamp).toLocaleString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
+          });
+
+          setActivityLog(mappedActivity);
         }
       } catch (error) {
         console.error("Failed to fetch activity:", error);
@@ -153,7 +170,7 @@ export default function ProfileContent() {
     }
   };
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
     if (!profile) return;
 
     const dataStr = JSON.stringify(profile, null, 2);
@@ -165,6 +182,21 @@ export default function ProfileContent() {
     link.click();
     URL.revokeObjectURL(url);
     toast.success("Data profil berhasil diexport!");
+
+    // Log export action
+    try {
+      await fetch("/api/profile/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "profile.export",
+          action: "Export data profil",
+          description: "Pengguna mengekspor data profil pribadi",
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to log export action:", error);
+    }
   };
 
   const handleToggleSetting = async (key: "publicProfile" | "showEmail" | "showActivity") => {
@@ -580,17 +612,23 @@ export default function ProfileContent() {
                     <span className="truncate">Keahlian</span>
                   </h3>
                   <div className="flex flex-wrap gap-1.5 lg:gap-2">
-                    {profile.skills.map((skill, idx) => (
-                      <motion.span
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="px-3 lg:px-4 py-1.5 lg:py-2 bg-blue-50 text-primary rounded-full text-xs lg:text-sm font-semibold truncate max-w-full"
-                      >
-                        {skill}
-                      </motion.span>
-                    ))}
+                    {profile.skills.length > 0 ? (
+                      profile.skills.map((skill, idx) => (
+                        <motion.span
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="px-3 lg:px-4 py-1.5 lg:py-2 bg-blue-50 text-primary rounded-full text-xs lg:text-sm font-semibold truncate max-w-full"
+                        >
+                          {skill}
+                        </motion.span>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500">
+                        Belum ada keahlian yang ditambahkan.
+                      </p>
+                    )}
                   </div>
                 </motion.div>
 
@@ -606,26 +644,58 @@ export default function ProfileContent() {
                     <span className="truncate">Performa</span>
                   </h3>
                   <div className="space-y-3 lg:space-y-4">
-                    {[
-                      { label: "Response Time", value: profile.performance.responseTime, color: "bg-green-500" },
-                      { label: "Accuracy", value: profile.performance.accuracy, color: "bg-blue-500" },
-                      { label: "Efficiency", value: profile.performance.efficiency, color: "bg-purple-500" },
-                    ].map((metric, idx) => (
-                      <div key={idx} className="overflow-x-hidden">
-                        <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
-                          <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">{metric.label}</span>
-                          <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">{metric.value}%</span>
+                    {(() => {
+                      if (!profile.performance) {
+                        return (
+                          <p className="text-sm text-slate-500">
+                            Data performa belum tersedia.
+                          </p>
+                        );
+                      }
+
+                      const performanceItems = [
+                        {
+                          label: "Response Time",
+                          value: profile.performance.responseTime,
+                          color: "bg-green-500",
+                        },
+                        {
+                          label: "Accuracy",
+                          value: profile.performance.accuracy,
+                          color: "bg-blue-500",
+                        },
+                        {
+                          label: "Efficiency",
+                          value: profile.performance.efficiency,
+                          color: "bg-purple-500",
+                        },
+                      ].filter((item) => item.value !== null && item.value !== undefined);
+
+                      if (performanceItems.length === 0) {
+                        return (
+                          <p className="text-sm text-slate-500">
+                            Data performa belum tersedia.
+                          </p>
+                        );
+                      }
+
+                      return performanceItems.map((metric, idx) => (
+                        <div key={idx} className="overflow-x-hidden">
+                          <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
+                            <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">{metric.label}</span>
+                            <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">{metric.value}%</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${metric.value}%` }}
+                              transition={{ delay: 0.3 + idx * 0.1, duration: 0.8 }}
+                              className={`h-full ${metric.color}`}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${metric.value}%` }}
-                            transition={{ delay: 0.3 + idx * 0.1, duration: 0.8 }}
-                            className={`h-full ${metric.color}`}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
                 </motion.div>
               </div>
@@ -731,23 +801,40 @@ export default function ProfileContent() {
               <span className="truncate">Aktivitas Terbaru</span>
             </h3>
             <div className="space-y-3 lg:space-y-4">
-              {activityLog.map((activity, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-start gap-2 lg:gap-4 p-2 lg:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors overflow-hidden"
-                >
-                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full ${activity.color} flex items-center justify-center flex-shrink-0`}>
-                    <span className="material-symbols-outlined text-base lg:text-lg">{activity.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">{activity.action}</p>
-                    <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">{activity.time}</p>
-                  </div>
-                </motion.div>
-              ))}
+              {activityLog.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <span className="material-symbols-outlined text-5xl text-slate-300">history</span>
+                  <p className="mt-2 font-bold text-slate-700">Belum ada aktivitas</p>
+                  <p className="text-sm text-slate-500">
+                    Aktivitas pengguna akan muncul setelah ada aksi di sistem.
+                  </p>
+                </div>
+              ) : (
+                activityLog.map((activity, idx) => (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="flex items-start gap-3 lg:gap-4 p-3 lg:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors overflow-hidden"
+                  >
+                    <div
+                      className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${activity.color}`}
+                    >
+                      <span className="material-symbols-outlined text-lg lg:text-xl">{activity.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 text-sm lg:text-base truncate">{activity.action}</p>
+                      {activity.description && (
+                        <p className="text-xs lg:text-sm text-slate-500 mt-1 line-clamp-2">
+                          {activity.description}
+                        </p>
+                      )}
+                      <p className="mt-1 text-[10px] lg:text-xs font-medium text-slate-400">{activity.time}</p>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </motion.div>
         )}
@@ -763,7 +850,7 @@ export default function ProfileContent() {
               <span className="truncate">Pencapaian</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
-              {achievements.map((achievement, idx) => (
+              {achievements.map((achievement: any, idx: number) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, scale: 0.9 }}

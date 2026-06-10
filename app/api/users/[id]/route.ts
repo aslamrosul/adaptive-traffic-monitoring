@@ -6,6 +6,9 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -163,6 +166,39 @@ export async function PUT(
       })
     );
 
+    // Log user update
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const adminResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (adminResult.Items && adminResult.Items.length > 0) {
+        const admin = adminResult.Items[0];
+        await createActivityLog({
+          userId: String(admin.id),
+          email: String(admin.email),
+          name: String(admin.name),
+          type: "user.update",
+          action: "Mengubah data pengguna",
+          description: `Memperbarui data pengguna ${updatedUser.name}`,
+          metadata: {
+            targetUserId: updatedUser.id,
+            targetUserEmail: updatedUser.email,
+          },
+        }).catch((error) => {
+          console.error("Failed to log user update:", error);
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Pengguna berhasil diperbarui",
@@ -219,6 +255,39 @@ export async function DELETE(
     );
 
     console.log('✅ User deleted successfully:', { email: existingUser.email });
+
+    // Log user deletion
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const adminResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (adminResult.Items && adminResult.Items.length > 0) {
+        const admin = adminResult.Items[0];
+        await createActivityLog({
+          userId: String(admin.id),
+          email: String(admin.email),
+          name: String(admin.name),
+          type: "user.delete",
+          action: "Menghapus pengguna",
+          description: `Menghapus pengguna ${existingUser.name}`,
+          metadata: {
+            targetUserId: existingUser.id,
+            targetUserEmail: existingUser.email,
+          },
+        }).catch((error) => {
+          console.error("Failed to log user deletion:", error);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

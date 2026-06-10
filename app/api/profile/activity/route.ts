@@ -1,71 +1,154 @@
 import { authOptions } from "@/lib/auth";
+import { listUserActivities, createActivityLog } from "@/lib/activity-log-service";
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-function timeAgo(date: Date) {
-  const diffMs = Date.now() - date.getTime();
-  const diffMin = Math.max(1, Math.floor(diffMs / 60000));
+async function getCurrentUser(email: string) {
+  const result = await dynamo.send(
+    new GetCommand({
+      TableName: awsTables.users,
+      Key: {
+        email: email.toLowerCase(),
+      },
+    }),
+  );
 
-  if (diffMin < 60) return `${diffMin} menit yang lalu`;
-
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour} jam yang lalu`;
-
-  const diffDay = Math.floor(diffHour / 24);
-  return `${diffDay} hari yang lalu`;
+  return result.Item || null;
 }
 
-export async function GET() {
-  const session = await getServerSession(authOptions);
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    const user = await getCurrentUser(session.user.email);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const limit = Number(searchParams.get("limit") || 20);
+
+    const activities = await listUserActivities({
+      userId: user.id,
+      limit,
+    });
+
+    return NextResponse.json({
+      success: true,
+      count: activities.length,
+      data: activities,
+    });
+  } catch (error: any) {
+    console.error("Profile activity error:", error);
+
     return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 },
+      {
+        success: false,
+        error:
+          error.message ||
+          "Gagal mengambil aktivitas pengguna",
+      },
+      {
+        status: 500,
+      },
     );
   }
+}
 
-  const now = new Date();
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
 
-  const activities = [
-    {
-      id: "login",
-      action: "Login ke sistem",
-      description: "Pengguna berhasil masuk ke dashboard",
-      time: timeAgo(new Date(now.getTime() - 2 * 60000)),
-      icon: "login",
-      color: "text-green-600 bg-green-100",
-    },
-    {
-      id: "dashboard",
-      action: "Membuka dashboard monitoring",
-      description: "Melihat status persimpangan dan perangkat IoT",
-      time: timeAgo(new Date(now.getTime() - 10 * 60000)),
-      icon: "dashboard",
-      color: "text-blue-600 bg-blue-100",
-    },
-    {
-      id: "notifications",
-      action: "Melihat notifikasi sistem",
-      description: "Memantau alert antrean, sensor, dan koneksi perangkat",
-      time: timeAgo(new Date(now.getTime() - 45 * 60000)),
-      icon: "notifications",
-      color: "text-purple-600 bg-purple-100",
-    },
-    {
-      id: "profile",
-      action: "Membuka halaman profil",
-      description: "Memeriksa informasi akun dan preferensi pengguna",
-      time: timeAgo(new Date(now.getTime() - 90 * 60000)),
-      icon: "person",
-      color: "text-orange-600 bg-orange-100",
-    },
-  ];
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
 
-  return NextResponse.json({
-    success: true,
-    data: activities,
-  });
+    const user = await getCurrentUser(session.user.email);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const body = await request.json();
+
+    if (!body.type || !body.action) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Type and action are required",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    await createActivityLog({
+      userId: String(user.id),
+      email: String(user.email),
+      name: String(user.name),
+      type: body.type,
+      action: body.action,
+      description: body.description || "",
+      metadata: body.metadata || {},
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Activity logged successfully",
+    });
+  } catch (error: any) {
+    console.error("Log activity error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to log activity",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }

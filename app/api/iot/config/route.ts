@@ -5,6 +5,9 @@ import {
   saveIoTConfig,
 } from "@/lib/iot-config-service";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +64,42 @@ export async function POST(request: Request) {
     }
 
     const result = await saveIoTConfig(body);
+
+    // Log IoT config update
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const { dynamo, awsTables } = await import("@/lib/aws-dynamodb");
+      const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
+      
+      const userResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (userResult.Items && userResult.Items.length > 0) {
+        const user = userResult.Items[0];
+        await createActivityLog({
+          userId: String(user.id),
+          email: String(user.email),
+          name: String(user.name),
+          type: "iot.config.update",
+          action: "Mengubah konfigurasi IoT",
+          description: `Mengupdate konfigurasi perangkat ${deviceId}`,
+          metadata: {
+            deviceId,
+            intersectionId: body.intersectionId || body.intersection_id,
+          },
+        }).catch((error) => {
+          console.error("Failed to log IoT config update:", error);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

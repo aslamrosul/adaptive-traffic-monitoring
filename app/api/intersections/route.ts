@@ -1,5 +1,10 @@
 import { awsTables, scanTable, putItem } from "@/lib/aws-dynamodb";
 import { NextResponse } from "next/server";
+import { createActivityLog } from "@/lib/activity-log-service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { dynamo } from "@/lib/aws-dynamodb";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +66,39 @@ export async function POST(request: Request) {
     };
 
     await putItem(awsTables.intersections, item);
+
+    // Log intersection creation
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      const userResult = await dynamo.send(
+        new ScanCommand({
+          TableName: awsTables.users,
+          FilterExpression: "email = :email",
+          ExpressionAttributeValues: {
+            ":email": session.user.email.toLowerCase(),
+          },
+          Limit: 1,
+        })
+      );
+
+      if (userResult.Items && userResult.Items.length > 0) {
+        const user = userResult.Items[0];
+        await createActivityLog({
+          userId: String(user.id),
+          email: String(user.email),
+          name: String(user.name),
+          type: "intersection.create",
+          action: "Menambah persimpangan",
+          description: `Menambahkan persimpangan ${item.name}`,
+          metadata: {
+            intersectionId,
+            intersectionName: item.name,
+          },
+        }).catch((error) => {
+          console.error("Failed to log intersection creation:", error);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
