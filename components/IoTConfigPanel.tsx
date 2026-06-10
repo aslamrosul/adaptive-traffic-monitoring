@@ -230,47 +230,43 @@ export default function IoTConfigPanel({
           : "bg-slate-100 text-slate-600";
 
   return (
-    <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-slate-200 space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+    <div className="bg-white rounded-xl p-3 lg:p-6 shadow-sm border border-slate-200 space-y-4 lg:space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2">
         <div>
-          <h3 className="text-lg font-bold text-slate-900">
+          <h3 className="text-base font-bold text-slate-900 lg:text-lg">
             Konfigurasi Perangkat
           </h3>
 
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5 lg:text-sm lg:mt-1">
             Konfigurasi disimpan ke DynamoDB dan dikirim ke ESP32
             melalui Mosquitto MQTT.
           </p>
         </div>
 
         <span
-          className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase ${syncStatusClass}`}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase shrink-0 ${syncStatusClass}`}
         >
           Sync: {config.lastSyncStatus || "pending"}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+      <div className="grid grid-cols-2 gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3 lg:gap-3 lg:p-4">
         <InfoItem label="Device ID" value={deviceId} />
-
-        <InfoItem
-          label="Intersection ID"
-          value={intersectionId || "-"}
-        />
+        <InfoItem label="Intersection ID" value={intersectionId || "-"} />
       </div>
 
       <section>
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-outlined text-blue-600">
+        <div className="flex items-center gap-2 mb-2 lg:mb-4">
+          <span className="material-symbols-outlined text-blue-600 text-base">
             timer
           </span>
 
-          <h4 className="font-bold text-slate-900">
+          <h4 className="font-bold text-slate-900 text-sm lg:text-base">
             Waktu Lampu Manual
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 lg:gap-4">
           <NumberInput
             label="Waktu Hijau Manual"
             description="Digunakan ketika Adaptive Mode dimatikan."
@@ -297,18 +293,18 @@ export default function IoTConfigPanel({
         </div>
       </section>
 
-      <section className="border-t border-slate-200 pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-outlined text-blue-600">
+      <section className="border-t border-slate-200 pt-3 lg:pt-6">
+        <div className="flex items-center gap-2 mb-2 lg:mb-4">
+          <span className="material-symbols-outlined text-blue-600 text-base">
             traffic
           </span>
 
-          <h4 className="font-bold text-slate-900">
+          <h4 className="font-bold text-slate-900 text-sm lg:text-base">
             Durasi Hijau Berdasarkan Density
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 lg:gap-4">
           <NumberInput
             label="Density Level 0"
             description="Tidak ada atau sangat sedikit kendaraan."
@@ -347,18 +343,18 @@ export default function IoTConfigPanel({
         </div>
       </section>
 
-      <section className="border-t border-slate-200 pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-outlined text-blue-600">
+      <section className="border-t border-slate-200 pt-3 lg:pt-6">
+        <div className="flex items-center gap-2 mb-2 lg:mb-4">
+          <span className="material-symbols-outlined text-blue-600 text-base">
             tune
           </span>
 
-          <h4 className="font-bold text-slate-900">
+          <h4 className="font-bold text-slate-900 text-sm lg:text-base">
             Mode Operasi
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <ToggleCard
             title="Auto Mode"
             description="Lampu berganti jalur secara otomatis."
@@ -420,7 +416,7 @@ export default function IoTConfigPanel({
           </div>
         )}
 
-      <div className="flex flex-col sm:flex-row gap-3 border-t border-slate-200 pt-6">
+      <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 border-t border-slate-200 pt-3 lg:pt-6">
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleSaveConfig}
@@ -493,26 +489,26 @@ function NumberInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="block bg-slate-50 border border-slate-200 rounded-xl p-4">
-      <span className="text-sm font-bold text-slate-900">
+    <label className="block bg-slate-50 border border-slate-200 rounded-xl p-2.5 lg:p-4">
+      <span className="text-xs font-bold text-slate-900 lg:text-sm">
         {label}
       </span>
 
-      <span className="block text-xs text-slate-500 mt-1 mb-3">
+      <span className="block text-[10px] text-slate-500 mt-0.5 mb-2 lg:text-xs lg:mt-1 lg:mb-3">
         {description}
       </span>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <input
           type="number"
           value={value}
           min={min}
           max={max}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 lg:px-3 lg:py-2"
         />
 
-        <span className="text-xs font-semibold text-slate-500">
+        <span className="text-[10px] font-semibold text-slate-500 shrink-0 lg:text-xs">
           {suffix}
         </span>
       </div>

@@ -59,33 +59,46 @@ export default function IoTConfigPage() {
 
   return (
     <DashboardLayout title="Remote Configuration IoT">
-      <div className="p-4 lg:p-6 space-y-3 max-w-[1920px] mx-auto">
-        {/* Info Banner */}
+      <div className="p-3 lg:p-6 space-y-3 max-w-[1920px] mx-auto">
+        {/* Info Banner — collapsible on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 border border-blue-400 rounded-lg p-3 shadow-lg"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 border border-blue-400 rounded-lg shadow-lg overflow-hidden"
         >
-          <div className="flex items-start gap-2">
-            <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-white text-lg">info</span>
+          {/* Mobile: compact one-liner */}
+          <div className="flex items-center gap-2 p-2.5 lg:hidden">
+            <span className="material-symbols-outlined text-white text-base shrink-0">info</span>
+            <p className="text-white text-xs font-semibold flex-1 truncate">
+              Remote Config Smart Traffic Light
+            </p>
+            <div className="flex gap-1 shrink-0">
+              {["Real-time", "MQTT", "Auto Sync"].map((tag) => (
+                <span key={tag} className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-semibold text-white">
+                  ✓ {tag}
+                </span>
+              ))}
             </div>
-            <div>
-              <h3 className="font-bold text-white mb-1 text-xs">Remote Configuration untuk Smart Traffic Light</h3>
-              <p className="text-blue-100 text-[10px] leading-relaxed">
-                Atur durasi lampu lalu lintas berdasarkan jumlah kendaraan secara real-time.
-                Konfigurasi akan disimpan ke database dan dikirim ke ESP32 melalui MQTT/API.
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
-                  ✓ Real-time
-                </span>
-                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
-                  ✓ MQTT
-                </span>
-                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
-                  ✓ Auto Sync
-                </span>
+          </div>
+          {/* Desktop: full banner */}
+          <div className="hidden lg:block p-3">
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-white text-lg">info</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-white mb-1 text-xs">Remote Configuration untuk Smart Traffic Light</h3>
+                <p className="text-blue-100 text-[10px] leading-relaxed">
+                  Atur durasi lampu lalu lintas berdasarkan jumlah kendaraan secara real-time.
+                  Konfigurasi akan disimpan ke database dan dikirim ke ESP32 melalui MQTT/API.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {["Real-time", "MQTT", "Auto Sync"].map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[9px] font-semibold text-white">
+                      ✓ {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -93,7 +106,7 @@ export default function IoTConfigPage() {
 
         {/* Main Content - 2 Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-          {/* Left Column - Device List (Mobile: full width, Desktop: 3 cols) */}
+          {/* Left Column - Device List */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -101,82 +114,74 @@ export default function IoTConfigPage() {
             className="lg:col-span-3 space-y-4"
           >
             {/* Device Selector */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
-              <h3 className="font-bold text-slate-900 mb-3 text-sm flex items-center gap-2">
-                <span className="material-symbols-outlined text-blue-600">devices</span>
+            <div className="bg-white rounded-lg p-3 lg:p-4 shadow-sm border border-slate-200">
+              <h3 className="font-bold text-slate-900 mb-2 text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-600 text-base">devices</span>
                 Pilih Perangkat IoT
               </h3>
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
+                <div className="flex items-center justify-center py-6">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : intersections.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-6 text-slate-500">
                   <span className="material-symbols-outlined text-4xl mb-2">device_hub</span>
                   <p className="text-sm">Belum ada perangkat IoT terdaftar</p>
                 </div>
               ) : (
                 <div>
-                  {/* Mobile: Dropdown Selector */}
+                  {/* Mobile: Compact Dropdown */}
                   <div className="lg:hidden">
                     <div className="relative">
                       <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-300 rounded-lg transition-all shadow-sm"
+                        className="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-300 rounded-lg transition-all shadow-sm"
                       >
-                        <div className="flex items-center gap-3 flex-1 text-left min-w-0">
-                          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-white text-lg">router</span>
+                        <div className="flex items-center gap-2 flex-1 text-left min-w-0">
+                          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-white text-base">router</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 truncate text-sm">
+                            <p className="font-semibold text-slate-900 truncate text-xs">
                               {selectedIntersection?.name || 'Pilih Persimpangan'}
                             </p>
-                            <p className="text-xs text-slate-500 truncate">
+                            <p className="text-[10px] text-slate-500 truncate">
                               {selectedIntersection?.deviceId || 'Tidak ada device dipilih'}
                             </p>
                           </div>
                         </div>
-                        <span className={`material-symbols-outlined text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                        <span className={`material-symbols-outlined text-slate-400 text-base transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}>
                           expand_more
                         </span>
                       </button>
 
-                      {/* Dropdown Menu */}
                       {isDropdownOpen && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="absolute z-50 w-full mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-2xl overflow-hidden"
                         >
-                          {/* Search Bar */}
-                          <div className="p-3 border-b border-slate-200 bg-slate-50">
+                          <div className="p-2.5 border-b border-slate-200 bg-slate-50">
                             <div className="relative">
-                              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                                search
-                              </span>
+                              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
                               <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Cari perangkat..."
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </div>
                           </div>
-
-                          {/* Device List */}
-                          <div className="max-h-80 overflow-y-auto">
+                          <div className="max-h-56 overflow-y-auto">
                             {filteredIntersections.length === 0 ? (
-                              <div className="p-8 text-center text-slate-500">
-                                <span className="material-symbols-outlined text-3xl mb-2">search_off</span>
-                                <p className="text-sm">Tidak ada hasil untuk "{searchQuery}"</p>
+                              <div className="p-6 text-center text-slate-500">
+                                <p className="text-xs">Tidak ada hasil untuk "{searchQuery}"</p>
                               </div>
                             ) : (
-                              filteredIntersections.map((intersection, index) => {
+                              filteredIntersections.map((intersection) => {
                                 const actualIndex = intersections.findIndex(i => i.id === intersection.id);
                                 const isSelected = selectedIndex === actualIndex;
-
                                 return (
                                   <button
                                     key={`int-mobile-${actualIndex}-${intersection.id}`}
@@ -185,30 +190,16 @@ export default function IoTConfigPage() {
                                       setIsDropdownOpen(false);
                                       setSearchQuery("");
                                     }}
-                                    className={`w-full p-3 flex items-start gap-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-blue-50' : ''
-                                      }`}
+                                    className={`w-full p-2.5 flex items-center gap-2.5 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-blue-50' : ''}`}
                                   >
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600' : 'bg-slate-200'
-                                      }`}>
-                                      <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-white' : 'text-slate-500'
-                                        }`}>
-                                        router
-                                      </span>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                                      <span className={`material-symbols-outlined text-base ${isSelected ? 'text-white' : 'text-slate-500'}`}>router</span>
                                     </div>
                                     <div className="flex-1 text-left min-w-0">
-                                      <p className={`font-semibold text-sm truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'
-                                        }`}>
-                                        {intersection.name}
-                                      </p>
-                                      <p className="text-xs text-slate-500 truncate mb-1">
-                                        {intersection.address}
-                                      </p>
-                                      <div className="flex items-center gap-2">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${intersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-300'
-                                          }`}></span>
-                                        <span className="text-xs font-mono text-slate-600 truncate">
-                                          {intersection.deviceId}
-                                        </span>
+                                      <p className={`font-semibold text-xs truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>{intersection.name}</p>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${intersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span>
+                                        <span className="text-[10px] font-mono text-slate-500 truncate">{intersection.deviceId}</span>
                                       </div>
                                     </div>
                                   </button>
@@ -216,12 +207,8 @@ export default function IoTConfigPage() {
                               })
                             )}
                           </div>
-
-                          {/* Footer Info */}
-                          <div className="p-3 bg-slate-50 border-t border-slate-200">
-                            <p className="text-xs text-slate-500 text-center">
-                              {filteredIntersections.length} dari {intersections.length} perangkat
-                            </p>
+                          <div className="p-2 bg-slate-50 border-t border-slate-200">
+                            <p className="text-[10px] text-slate-500 text-center">{filteredIntersections.length} dari {intersections.length} perangkat</p>
                           </div>
                         </motion.div>
                       )}
@@ -230,11 +217,8 @@ export default function IoTConfigPage() {
 
                   {/* Desktop: Full List */}
                   <div className="hidden lg:block">
-                    {/* Search Bar */}
                     <div className="relative mb-3">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                        search
-                      </span>
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
                       <input
                         type="text"
                         value={searchQuery}
@@ -243,8 +227,6 @@ export default function IoTConfigPage() {
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       />
                     </div>
-
-                    {/* Device List */}
                     <div className="space-y-2 max-h-[600px] overflow-y-auto">
                       {filteredIntersections.length === 0 ? (
                         <div className="p-8 text-center text-slate-500">
@@ -252,40 +234,24 @@ export default function IoTConfigPage() {
                           <p className="text-sm">Tidak ada hasil untuk "{searchQuery}"</p>
                         </div>
                       ) : (
-                        filteredIntersections.map((intersection, index) => {
+                        filteredIntersections.map((intersection) => {
                           const actualIndex = intersections.findIndex(i => i.id === intersection.id);
                           const isSelected = selectedIndex === actualIndex;
-
                           return (
                             <button
                               key={`int-desktop-${actualIndex}-${intersection.id}`}
                               onClick={() => setSelectedIndex(actualIndex)}
-                              className={`w-full p-3 flex items-start gap-3 rounded-lg transition-all border-2 ${isSelected
-                                ? 'bg-blue-50 border-blue-500 shadow-md'
-                                : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50'
-                                }`}
+                              className={`w-full p-3 flex items-start gap-3 rounded-lg transition-all border-2 ${isSelected ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}
                             >
-                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600' : 'bg-slate-200'
-                                }`}>
-                                <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-white' : 'text-slate-500'
-                                  }`}>
-                                  router
-                                </span>
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600' : 'bg-slate-200'}`}>
+                                <span className={`material-symbols-outlined text-lg ${isSelected ? 'text-white' : 'text-slate-500'}`}>router</span>
                               </div>
                               <div className="flex-1 text-left min-w-0">
-                                <p className={`font-semibold text-sm truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'
-                                  }`}>
-                                  {intersection.name}
-                                </p>
-                                <p className="text-xs text-slate-500 truncate mb-1">
-                                  {intersection.address}
-                                </p>
+                                <p className={`font-semibold text-sm truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>{intersection.name}</p>
+                                <p className="text-xs text-slate-500 truncate mb-1">{intersection.address}</p>
                                 <div className="flex items-center gap-2">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${intersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-300'
-                                    }`}></span>
-                                  <span className="text-xs font-mono text-slate-600 truncate">
-                                    {intersection.deviceId}
-                                  </span>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${intersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span>
+                                  <span className="text-xs font-mono text-slate-600 truncate">{intersection.deviceId}</span>
                                 </div>
                               </div>
                             </button>
@@ -293,12 +259,8 @@ export default function IoTConfigPage() {
                         })
                       )}
                     </div>
-
-                    {/* Footer Info */}
                     <div className="pt-3 border-t border-slate-200">
-                      <p className="text-xs text-slate-500 text-center">
-                        {filteredIntersections.length} dari {intersections.length} perangkat
-                      </p>
+                      <p className="text-xs text-slate-500 text-center">{filteredIntersections.length} dari {intersections.length} perangkat</p>
                     </div>
                   </div>
                 </div>
@@ -306,38 +268,35 @@ export default function IoTConfigPage() {
             </div>
           </motion.div>
 
-          {/* Right Column - Configuration Panel (Mobile: full width, Desktop: 9 cols) */}
-          <div className="lg:col-span-9 space-y-4">
+          {/* Right Column - Configuration Panel */}
+          <div className="lg:col-span-9 space-y-3">
             {selectedIntersection ? (
               <>
-                {/* Selected Device Info Card */}
+                {/* Selected Device Info Card — compact on mobile */}
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl"
+                  className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-white text-xl">settings_remote</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-white text-base">settings_remote</span>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-blue-900 mb-1">{selectedIntersection.name}</h4>
-                        <p className="text-sm text-blue-700">{selectedIntersection.address}</p>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-blue-900 text-sm truncate">{selectedIntersection.name}</h4>
+                        <p className="text-xs text-blue-700 truncate">{selectedIntersection.address}</p>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 items-end flex-shrink-0">
-                      <span className="px-2 py-1 bg-white rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="px-2 py-1 bg-white rounded-lg text-[10px] font-semibold text-slate-700 flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">memory</span>
-                        {selectedIntersection.deviceId}
+                        <span className="hidden sm:inline">{selectedIntersection.deviceId}</span>
+                        <span className="sm:hidden">{(selectedIntersection.deviceId || '').slice(-6)}</span>
                       </span>
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${selectedIntersection.status === 'active'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-slate-100 text-slate-600'
-                        }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${selectedIntersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'
-                          }`}></span>
+                      <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 ${selectedIntersection.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${selectedIntersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></span>
                         {selectedIntersection.status === 'active' ? 'Online' : 'Offline'}
                       </span>
                     </div>
@@ -352,17 +311,9 @@ export default function IoTConfigPage() {
                   transition={{ delay: 0.3 }}
                 >
                   <IoTConfigPanel
-                    deviceId={
-                      selectedIntersection.deviceId ||
-                      selectedIntersection.device_id
-                    }
-                    intersectionId={
-                      selectedIntersection.id ||
-                      selectedIntersection.intersection_id
-                    }
-                    onConfigSaved={(config) => {
-                      console.log('Config saved:', config);
-                    }}
+                    deviceId={selectedIntersection.deviceId || selectedIntersection.device_id}
+                    intersectionId={selectedIntersection.id || selectedIntersection.intersection_id}
+                    onConfigSaved={(config) => { console.log('Config saved:', config); }}
                   />
                 </motion.div>
               </>
@@ -380,51 +331,33 @@ export default function IoTConfigPage() {
           </div>
         </div>
 
-        {/* How It Works */}
+        {/* How It Works — hidden on mobile to reduce scroll */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-slate-200"
+          className="hidden lg:block bg-white rounded-xl p-6 shadow-sm border border-slate-200"
         >
           <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">lightbulb</span>
             Cara Kerja
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="font-bold text-blue-600">1</span>
+            {[
+              { step: "1", title: "Atur Konfigurasi", desc: "Tentukan batas kendaraan dan durasi lampu untuk setiap kondisi lalu lintas" },
+              { step: "2", title: "Simpan ke Database", desc: "Konfigurasi disimpan ke DynamoDB dan dikirim ke perangkat melalui Mosquitto MQTT" },
+              { step: "3", title: "ESP32 Terima Data", desc: "ESP32 menerima konfigurasi via MQTT/API dan menerapkan aturan baru" },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="flex gap-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="font-bold text-blue-600">{step}</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 mb-1">{title}</h4>
+                  <p className="text-sm text-slate-600">{desc}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-1">Atur Konfigurasi</h4>
-                <p className="text-sm text-slate-600">
-                  Tentukan batas kendaraan dan durasi lampu untuk setiap kondisi lalu lintas
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="font-bold text-blue-600">2</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-1">Simpan ke Database</h4>
-                <p className="text-sm text-slate-600">
-                  Konfigurasi disimpan ke DynamoDB dan dikirim ke perangkat melalui Mosquitto MQTT
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="font-bold text-blue-600">3</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-1">ESP32 Terima Data</h4>
-                <p className="text-sm text-slate-600">
-                  ESP32 menerima konfigurasi via MQTT/API dan menerapkan aturan baru
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </motion.div>
       </div>
