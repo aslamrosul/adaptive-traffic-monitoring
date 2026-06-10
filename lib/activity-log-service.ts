@@ -11,10 +11,12 @@ export type ActivityType =
   | "auth.logout"
   | "profile.view"
   | "profile.update"
+  | "profile.export"
   | "profile.avatar.upload"
   | "profile.avatar.delete"
   | "profile.password.change"
   | "profile.settings.update"
+  | "public.profile.view"
   | "dashboard.view"
   | "analytics.view"
   | "iot.config.update"
@@ -63,6 +65,10 @@ const ACTIVITY_STYLE: Record<
     icon: "edit",
     color: "text-blue-600 bg-blue-100",
   },
+  "profile.export": {
+    icon: "download",
+    color: "text-orange-600 bg-orange-100",
+  },
   "profile.avatar.upload": {
     icon: "photo_camera",
     color: "text-purple-600 bg-purple-100",
@@ -77,7 +83,11 @@ const ACTIVITY_STYLE: Record<
   },
   "profile.settings.update": {
     icon: "settings",
-    color: "text-slate-600 bg-slate-100",
+    color: "text-cyan-600 bg-cyan-100",
+  },
+  "public.profile.view": {
+    icon: "visibility",
+    color: "text-indigo-600 bg-indigo-100",
   },
   "dashboard.view": {
     icon: "dashboard",
@@ -129,48 +139,8 @@ const ACTIVITY_STYLE: Record<
   },
 };
 
-export function timeAgo(dateInput?: string | Date | null) {
-  if (!dateInput) {
-    return "-";
-  }
-
-  const date =
-    dateInput instanceof Date
-      ? dateInput
-      : new Date(dateInput);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const diffMs = Date.now() - date.getTime();
-  const diffMin = Math.max(1, Math.floor(diffMs / 60_000));
-
-  if (diffMin < 60) {
-    return `${diffMin} menit yang lalu`;
-  }
-
-  const diffHour = Math.floor(diffMin / 60);
-
-  if (diffHour < 24) {
-    return `${diffHour} jam yang lalu`;
-  }
-
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffDay < 30) {
-    return `${diffDay} hari yang lalu`;
-  }
-
-  const diffMonth = Math.floor(diffDay / 30);
-
-  return `${diffMonth} bulan yang lalu`;
-}
-
 function safeMetadata(metadata?: Record<string, any>) {
-  if (!metadata) {
-    return {};
-  }
+  if (!metadata) return {};
 
   const blockedKeys = new Set([
     "password",
@@ -190,11 +160,39 @@ function safeMetadata(metadata?: Record<string, any>) {
   );
 }
 
+export function timeAgo(dateInput?: string | Date | null) {
+  if (!dateInput) return "-";
+
+  const date =
+    dateInput instanceof Date
+      ? dateInput
+      : new Date(dateInput);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.max(1, Math.floor(diffMs / 60_000));
+
+  if (diffMin < 60) return `${diffMin} menit yang lalu`;
+
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour} jam yang lalu`;
+
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 30) return `${diffDay} hari yang lalu`;
+
+  const diffMonth = Math.floor(diffDay / 30);
+  return `${diffMonth} bulan yang lalu`;
+}
+
 export async function createActivityLog(
   input: CreateActivityLogInput,
 ) {
   const now = new Date().toISOString();
-  const style = ACTIVITY_STYLE[input.type] || ACTIVITY_STYLE["system.action"];
+
+  const style =
+    ACTIVITY_STYLE[input.type] ||
+    ACTIVITY_STYLE["system.action"];
 
   const item = {
     user_id: input.userId,
@@ -254,10 +252,55 @@ export async function listUserActivities(options: {
 
     time: timeAgo(item.created_at),
     createdAt: item.created_at,
+    timestamp: item.created_at,
 
     icon: item.icon || "history",
     color: item.color || "text-slate-600 bg-slate-100",
 
     metadata: item.metadata || {},
   }));
+}
+
+export async function getUserActivityStats(options: {
+  userId: string;
+}) {
+  const result = await dynamo.send(
+    new QueryCommand({
+      TableName: awsTables.userActivities,
+      KeyConditionExpression: "user_id = :userId",
+      ExpressionAttributeValues: {
+        ":userId": options.userId,
+      },
+      ScanIndexForward: false,
+      Limit: 500,
+    }),
+  );
+
+  const items = result.Items || [];
+
+  const byType: Record<string, number> = {};
+
+  for (const item of items as any[]) {
+    const type = String(item.type || "system.action");
+    byType[type] = (byType[type] || 0) + 1;
+  }
+
+  return {
+    totalActivities: items.length,
+
+    totalLogin: byType["auth.login"] || 0,
+    dashboardViews: byType["dashboard.view"] || 0,
+    analyticsViews: byType["analytics.view"] || 0,
+    profileUpdates: byType["profile.update"] || 0,
+    profileExports: byType["profile.export"] || 0,
+    settingsUpdates: byType["profile.settings.update"] || 0,
+    avatarUploads: byType["profile.avatar.upload"] || 0,
+    passwordChanges: byType["profile.password.change"] || 0,
+    iotConfigUpdates: byType["iot.config.update"] || 0,
+    reportExports:
+      (byType["report.export"] || 0) +
+      (byType["profile.export"] || 0),
+
+    byType,
+  };
 }

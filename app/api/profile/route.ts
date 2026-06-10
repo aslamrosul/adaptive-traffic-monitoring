@@ -3,7 +3,10 @@ import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createActivityLog } from "@/lib/activity-log-service";
+import {
+  createActivityLog,
+  getUserActivityStats,
+} from "@/lib/activity-log-service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +26,7 @@ function toNumber(value: any, fallback = 0) {
   return parsed;
 }
 
-function buildProfileData(user: any) {
+async function buildProfileData(user: any) {
   const name = user.name || "User";
   const role = user.role || "operator";
 
@@ -33,12 +36,41 @@ function buildProfileData(user: any) {
   const activeHours = toNumber(user.activeHours, 0);
   const totalLogin = toNumber(user.totalLogin, 0);
 
+  const activityStats = user.id
+    ? await getUserActivityStats({
+        userId: String(user.id),
+      }).catch(() => ({
+        totalActivities: 0,
+        totalLogin: 0,
+        dashboardViews: 0,
+        analyticsViews: 0,
+        profileUpdates: 0,
+        profileExports: 0,
+        settingsUpdates: 0,
+        avatarUploads: 0,
+        passwordChanges: 0,
+        iotConfigUpdates: 0,
+        reportExports: 0,
+        byType: {},
+      }))
+    : {
+        totalActivities: 0,
+        totalLogin: 0,
+        dashboardViews: 0,
+        analyticsViews: 0,
+        profileUpdates: 0,
+        profileExports: 0,
+        settingsUpdates: 0,
+        avatarUploads: 0,
+        passwordChanges: 0,
+        iotConfigUpdates: 0,
+        reportExports: 0,
+        byType: {},
+      };
+
   const performance = user.performance || null;
 
-  const skills =
-    Array.isArray(user.skills) && user.skills.length > 0
-      ? user.skills
-      : [];
+  const skills = Array.isArray(user.skills) ? user.skills : [];
 
   const profileSettings =
     user.profileSettings ||
@@ -91,31 +123,31 @@ function buildProfileData(user: any) {
       new Date().toISOString(),
 
     accountType:
-      role === "admin"
-        ? "Premium"
-        : "Standard",
+      role === "admin" ? "Premium" : "Standard",
 
     stats: {
-      totalLogin,
+      totalLogin: Math.max(totalLogin, activityStats.totalLogin),
       incidentsHandled,
       reportsCreated,
       activeHours,
+      totalActivities: activityStats.totalActivities,
     },
 
     performance,
-
     skills,
-
     settings: profileSettings,
 
     achievements: buildAchievements({
       role,
-      totalLogin,
+      totalLogin: Math.max(totalLogin, activityStats.totalLogin),
       reportsCreated,
       incidentsHandled,
       activeHours,
       provider: user.provider,
       status: user.status,
+      skills,
+      profileSettings,
+      activityStats,
     }),
   };
 }
@@ -128,7 +160,29 @@ function buildAchievements(input: {
   activeHours: number;
   provider?: string;
   status?: string;
+  skills: string[];
+  profileSettings: {
+    publicProfile?: boolean;
+    showEmail?: boolean;
+    showActivity?: boolean;
+  };
+  activityStats: {
+    totalActivities: number;
+    dashboardViews: number;
+    analyticsViews: number;
+    profileUpdates: number;
+    profileExports: number;
+    settingsUpdates: number;
+    avatarUploads: number;
+    passwordChanges: number;
+    iotConfigUpdates: number;
+    reportExports: number;
+  };
 }) {
+  const profileComplete =
+    Boolean(input.skills.length > 0) &&
+    input.activityStats.profileUpdates > 0;
+
   return [
     {
       id: "verified-operator",
@@ -141,34 +195,64 @@ function buildAchievements(input: {
     {
       id: "realtime-monitoring",
       title: "Realtime Monitoring",
-      description: "Dapat memantau status persimpangan secara realtime",
+      description: "Pernah membuka dashboard monitoring realtime",
       icon: "sensors",
       color: "bg-green-100 text-green-600",
-      earned: true,
+      earned: input.activityStats.dashboardViews > 0,
     },
     {
       id: "iot-controller",
       title: "IoT Controller",
-      description: "Memiliki akses konfigurasi perangkat IoT",
+      description: "Pernah mengubah konfigurasi perangkat IoT",
       icon: "memory",
       color: "bg-purple-100 text-purple-600",
-      earned: input.role === "admin" || input.role === "operator",
+      earned:
+        input.role === "admin" ||
+        input.activityStats.iotConfigUpdates > 0,
+    },
+    {
+      id: "profile-complete",
+      title: "Profile Complete",
+      description: "Profil, bio, dan keahlian sudah dilengkapi",
+      icon: "assignment_ind",
+      color: "bg-cyan-100 text-cyan-600",
+      earned: profileComplete,
+    },
+    {
+      id: "active-user",
+      title: "Active User",
+      description: "Memiliki minimal 5 aktivitas di sistem",
+      icon: "bolt",
+      color: "bg-orange-100 text-orange-600",
+      earned: input.activityStats.totalActivities >= 5,
     },
     {
       id: "report-maker",
       title: "Report Maker",
-      description: "Membuat minimal 10 laporan sistem",
+      description: "Pernah mengekspor data atau membuat laporan",
       icon: "description",
-      color: "bg-orange-100 text-orange-600",
-      earned: input.reportsCreated >= 10,
+      color: "bg-yellow-100 text-yellow-600",
+      earned:
+        input.reportsCreated >= 1 ||
+        input.activityStats.reportExports > 0,
     },
     {
-      id: "active-operator",
-      title: "Active Operator",
-      description: "Aktif menggunakan sistem minimal 10 jam",
-      icon: "timer",
-      color: "bg-cyan-100 text-cyan-600",
-      earned: input.activeHours >= 10,
+      id: "security-aware",
+      title: "Security Aware",
+      description: "Pernah memperbarui password atau pengaturan privasi",
+      icon: "admin_panel_settings",
+      color: "bg-red-100 text-red-600",
+      earned:
+        input.activityStats.passwordChanges > 0 ||
+        input.activityStats.settingsUpdates > 0,
+    },
+    {
+      id: "data-analyst",
+      title: "Data Analyst",
+      description: "Pernah membuka halaman analitik sistem",
+      icon: "analytics",
+      color: "bg-indigo-100 text-indigo-600",
+      earned: input.activityStats.analyticsViews > 0,
     },
   ];
 }
@@ -228,7 +312,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: buildProfileData(user),
+      data: await buildProfileData(user),
     });
   } catch (error: any) {
     console.error("Profile fetch error:", error);
@@ -283,7 +367,7 @@ export async function PUT(request: NextRequest) {
 
       skills: Array.isArray(body.skills)
         ? body.skills
-        : currentUser.skills,
+        : currentUser.skills || [],
 
       performance:
         body.performance ??
@@ -293,7 +377,12 @@ export async function PUT(request: NextRequest) {
         body.settings ??
         body.profileSettings ??
         currentUser.profileSettings ??
-        currentUser.settings?.profile,
+        currentUser.settings?.profile ??
+        {
+          publicProfile: true,
+          showEmail: false,
+          showActivity: true,
+        },
 
       updatedAt: new Date().toISOString(),
     };
@@ -334,7 +423,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      data: buildProfileData(updatedUser),
+      data: await buildProfileData(updatedUser),
     });
   } catch (error: any) {
     console.error("Profile update error:", error);

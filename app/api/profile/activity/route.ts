@@ -112,24 +112,22 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    if (!body.type || !body.action) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Type and action are required",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
+    const activityType =
+      typeof body.type === "string" && body.type.trim()
+        ? body.type.trim()
+        : "system.action";
+
+    const action =
+      typeof body.action === "string" && body.action.trim()
+        ? body.action.trim()
+        : "Aktivitas pengguna";
 
     await createActivityLog({
       userId: String(user.id),
       email: String(user.email),
-      name: String(user.name),
-      type: body.type,
-      action: body.action,
+      name: String(user.name || ""),
+      type: activityType as any,
+      action,
       description: body.description || "",
       metadata: body.metadata || {},
     });
