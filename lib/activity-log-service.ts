@@ -291,16 +291,29 @@ export async function listUserActivities(options: {
     }));
 }
 
+function getActivityDate(item: any): Date | null {
+    const raw =
+        item.created_at ||
+        item.timestamp ||
+        item.createdAt;
+
+    if (!raw) {
+        return null;
+    }
+
+    const date = new Date(raw);
+
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
 function calculateActiveMinutesFromActivities(items: any[]) {
     const timestamps = items
-        .map((item) =>
-            new Date(
-                item.created_at ||
-                    item.timestamp ||
-                    item.createdAt,
-            ),
-        )
-        .filter((date) => !Number.isNaN(date.getTime()))
+        .map(getActivityDate)
+        .filter((date): date is Date => Boolean(date))
         .sort((a, b) => a.getTime() - b.getTime());
 
     if (timestamps.length <= 1) {
@@ -318,16 +331,103 @@ function calculateActiveMinutesFromActivities(items: any[]) {
         );
 
         if (diffMinutes <= 0) {
+            // Supaya saat testing cepat dalam hitungan detik tetap mulai terbaca.
+            activeMinutes += 1;
             continue;
         }
 
-        // Kalau jeda terlalu lama, jangan dihitung full.
-        // Contoh buka dashboard jam 08:00 lalu login lagi jam 13:00,
-        // itu bukan berarti aktif 5 jam.
+        // Maksimal 30 menit per jeda agar login pagi dan sore
+        // tidak dianggap aktif seharian.
         activeMinutes += Math.min(diffMinutes, 30);
     }
 
     return activeMinutes;
+}
+
+function calculateAverageResponseMinutes(items: any[]) {
+    const timestamps = items
+        .map(getActivityDate)
+        .filter((date): date is Date => Boolean(date))
+        .sort((a, b) => a.getTime() - b.getTime());
+
+    if (timestamps.length <= 1) {
+        return null;
+    }
+
+    const gaps: number[] = [];
+
+    for (let index = 1; index < timestamps.length; index++) {
+        const previous = timestamps[index - 1];
+        const current = timestamps[index];
+
+        const diffMinutes = Math.floor(
+            (current.getTime() - previous.getTime()) / 60_000,
+        );
+
+        if (diffMinutes <= 0) {
+            gaps.push(1);
+            continue;
+        }
+
+        // Abaikan gap terlalu panjang sebagai idle session.
+        gaps.push(Math.min(diffMinutes, 30));
+    }
+
+    if (gaps.length === 0) {
+        return null;
+    }
+
+    return (
+        Math.round(
+            (gaps.reduce((sum, value) => sum + value, 0) / gaps.length) * 10,
+        ) / 10
+    );
+}
+
+function scoreResponseTime(avgMinutes: number | null) {
+    if (avgMinutes === null) {
+        return null;
+    }
+
+    // 1 menit ≈ 100, 30 menit ≈ 40.
+    const score = 100 - avgMinutes * 2;
+
+    return Math.min(
+        100,
+        Math.max(40, Math.round(score)),
+    );
+}
+
+function isFailedActivity(item: any) {
+    const type = String(item.type || "").toLowerCase();
+    const action = String(item.action || "").toLowerCase();
+
+    if (
+        type.includes("fail") ||
+        type.includes("failed") ||
+        type.includes("error") ||
+        action.includes("gagal") ||
+        action.includes("error")
+    ) {
+        return true;
+    }
+
+    if (item.metadata?.success === false) {
+        return true;
+    }
+
+    return false;
+}
+
+function calculateAccuracy(items: any[]) {
+    if (items.length === 0) {
+        return null;
+    }
+
+    const failedCount = items.filter(isFailedActivity).length;
+    const successCount = items.length - failedCount;
+
+    return Math.round((successCount / items.length) * 100);
 }
 
 export async function getUserActivityStats(options: {
@@ -351,13 +451,9 @@ export async function getUserActivityStats(options: {
 
     for (const item of items as any[]) {
         const type = String(item.type || "system.action");
+
         byType[type] = (byType[type] || 0) + 1;
     }
-
-    const activeMinutes =
-        calculateActiveMinutesFromActivities(items);
-    const activeHours =
-        Math.round((activeMinutes / 60) * 10) / 10;
 
     const totalActivities = items.length;
 
@@ -366,14 +462,13 @@ export async function getUserActivityStats(options: {
     const analyticsViews = byType["analytics.view"] || 0;
     const profileUpdates = byType["profile.update"] || 0;
     const profileExports = byType["profile.export"] || 0;
+
     const settingsUpdates =
         (byType["profile.settings.update"] || 0) +
         (byType["settings.update"] || 0);
 
-    const avatarUploads =
-        byType["profile.avatar.upload"] || 0;
-    const passwordChanges =
-        byType["profile.password.change"] || 0;
+    const avatarUploads = byType["profile.avatar.upload"] || 0;
+    const passwordChanges = byType["profile.password.change"] || 0;
     const iotConfigUpdates = byType["iot.config.update"] || 0;
 
     const reportExports =
@@ -395,27 +490,39 @@ export async function getUserActivityStats(options: {
         reportsCreated,
     ].reduce((sum, value) => sum + value, 0);
 
-    const hasEnoughPerformanceData =
-        totalActivities >= 5 && activeMinutes > 0;
+    const activeMinutes =
+        calculateActiveMinutesFromActivities(items);
 
-    const efficiency = hasEnoughPerformanceData
-        ? Math.min(
-              100,
-              Math.max(
-                  1,
-                  Math.round(
-                      (meaningfulActivities /
-                          Math.max(activeHours, 1)) *
-                          20,
+    const activeHours =
+        Math.round((activeMinutes / 60) * 10) / 10;
+
+    const averageResponseMinutes =
+        calculateAverageResponseMinutes(items);
+
+    const responseTime =
+        scoreResponseTime(averageResponseMinutes);
+
+    const accuracy =
+        calculateAccuracy(items);
+
+    const efficiency =
+        totalActivities > 0
+            ? Math.min(
+                  100,
+                  Math.max(
+                      1,
+                      Math.round(
+                          (meaningfulActivities / Math.max(activeHours, 1)) * 20,
+                      ),
                   ),
-              ),
-          )
-        : null;
+              )
+            : null;
 
     const performance = {
-        responseTime: null,
-        accuracy: null,
+        responseTime,
+        accuracy,
         efficiency,
+        averageResponseMinutes,
     };
 
     return {

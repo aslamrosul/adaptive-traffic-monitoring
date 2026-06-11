@@ -82,12 +82,13 @@ async function buildProfileData(user: any) {
   );
 
   const performance =
-    user.performance ||
     activityStats.performance ||
+    user.performance ||
     {
       responseTime: null,
       accuracy: null,
       efficiency: null,
+      averageResponseMinutes: null,
     };
 
   const skills = Array.isArray(user.skills) ? user.skills : [];

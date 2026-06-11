@@ -949,21 +949,23 @@ export default function ProfileContent() {
                         value: profile.performance?.responseTime,
                         color: "bg-green-500",
                         description:
-                          "Rata-rata waktu respons terhadap laporan/notifikasi",
+                          profile.performance?.averageResponseMinutes
+                            ? `Rata-rata jeda aktivitas ${profile.performance.averageResponseMinutes} menit`
+                            : "Kecepatan respons berdasarkan jeda aktivitas pengguna",
                       },
                       {
                         label: "Accuracy",
                         value: profile.performance?.accuracy,
                         color: "bg-blue-500",
                         description:
-                          "Persentase tindakan valid berdasarkan laporan",
+                          "Rasio aktivitas berhasil berdasarkan activity log",
                       },
                       {
                         label: "Efficiency",
                         value: profile.performance?.efficiency,
                         color: "bg-purple-500",
                         description:
-                          "Efisiensi aktivitas berdasarkan jam aktif",
+                          "Efisiensi aktivitas berdasarkan jam aktif pengguna",
                       },
                     ].filter(
                       (item) =>
@@ -984,8 +986,7 @@ export default function ProfileContent() {
                           </p>
 
                           <p className="mt-1 text-sm text-slate-500">
-                            Performa akan muncul otomatis setelah aktivitas
-                            pengguna cukup.
+                            Performa akan muncul otomatis setelah aktivitas pengguna tercatat.
                           </p>
                         </div>
                       );
