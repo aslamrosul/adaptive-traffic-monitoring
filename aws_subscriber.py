@@ -4,9 +4,14 @@ import time
 import uuid
 import urllib.request
 import urllib.parse
+import smtplib
+
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 import boto3
 import paho.mqtt.client as mqtt
@@ -20,7 +25,7 @@ MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USER = os.getenv("MQTT_USER", "")
 MQTT_PASS = os.getenv("MQTT_PASS", "")
-MQTT_TOPIC = os.getenv("MQTT_TOPIC", "traffic/data")
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "traffic/+/data")
 
 AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")
 
@@ -39,7 +44,14 @@ WEAK_WIFI_RSSI = int(os.getenv("WEAK_WIFI_RSSI", "-75"))
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
+
 _notification_cache: Dict[str, float] = {}
+
 _user_cache: Dict[str, Any] = {
     "expired_at": 0,
     "users": [],
@@ -262,7 +274,7 @@ def get_active_users() -> List[Dict[str, Any]]:
 
         while True:
             params: Dict[str, Any] = {
-                "ProjectionExpression": "id, #status, appSettings",
+                "ProjectionExpression": "id, email, #status, appSettings",
                 "ExpressionAttributeNames": {
                     "#status": "status",
                 },
@@ -289,6 +301,7 @@ def get_active_users() -> List[Dict[str, Any]]:
             users = [
                 {
                     "id": "user-001",
+                    "email": "",
                     "appSettings": {},
                 }
             ]
@@ -304,6 +317,7 @@ def get_active_users() -> List[Dict[str, Any]]:
         return [
             {
                 "id": "user-001",
+                "email": "",
                 "appSettings": {},
             }
         ]
@@ -316,6 +330,7 @@ def get_notification_target_users() -> List[Dict[str, Any]]:
     return [
         {
             "id": DEFAULT_NOTIFICATION_USER_ID.strip() or "user-001",
+            "email": "",
             "appSettings": {},
         }
     ]
@@ -364,7 +379,6 @@ def send_telegram_message(
 
 def should_send_telegram(user: Dict[str, Any]) -> bool:
     app_settings = user.get("appSettings") or {}
-
     return bool(app_settings.get("telegramNotification", False))
 
 
@@ -399,7 +413,6 @@ def build_telegram_alert_text(
 ) -> str:
     intersection_id = document.get("intersection_id", "-")
     device_id = document.get("device_id", "-")
-
     lane_text = lane or "-"
 
     return (
@@ -413,6 +426,70 @@ def build_telegram_alert_text(
         f"Jalur: {lane_text}\n"
         f"Waktu UTC: {utc_now_iso()}"
     )
+
+
+def should_send_email(user: Dict[str, Any]) -> bool:
+    app_settings = user.get("appSettings") or {}
+    return bool(app_settings.get("emailNotification", False))
+
+
+def send_email_message(to_email: str, subject: str, html: str) -> bool:
+    if not SMTP_HOST or not SMTP_USER or not SMTP_PASS or not SMTP_FROM:
+        print("Email skipped: SMTP not configured")
+        return False
+
+    if not to_email:
+        print("Email skipped: user email empty")
+        return False
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = SMTP_FROM
+        msg["To"] = to_email
+
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_FROM, [to_email], msg.as_string())
+
+        return True
+
+    except Exception as exc:
+        print("Email send error:", exc)
+        return False
+
+
+def build_email_alert_html(
+    title: str,
+    message: str,
+    severity: str,
+    category: str,
+    document: Dict[str, Any],
+    lane: Optional[str] = None,
+) -> str:
+    intersection_id = document.get("intersection_id", "-")
+    device_id = document.get("device_id", "-")
+
+    return f"""
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
+      <h2>🚦 Aerial Command Alert</h2>
+      <h3>{title}</h3>
+      <p>{message}</p>
+
+      <hr />
+
+      <p><b>Severity:</b> {severity.upper()}</p>
+      <p><b>Kategori:</b> {category}</p>
+      <p><b>Persimpangan:</b> {intersection_id}</p>
+      <p><b>Device:</b> {device_id}</p>
+      <p><b>Jalur:</b> {lane or "-"}</p>
+      <p><b>Waktu UTC:</b> {utc_now_iso()}</p>
+    </div>
+    """
+
 
 def save_notification(
     document: Dict[str, Any],
@@ -483,6 +560,28 @@ def save_notification(
                 print(f"  user_id={user_id}")
             else:
                 print("Telegram alert skipped/failed:")
+                print(f"  user_id={user_id}")
+
+        if should_send_email(user):
+            email_sent = send_email_message(
+                to_email=str(user.get("email") or ""),
+                subject=f"[Aerial Command] {title}",
+                html=build_email_alert_html(
+                    title=title,
+                    message=message,
+                    severity=severity,
+                    category=category,
+                    document=document,
+                    lane=lane,
+                ),
+            )
+
+            if email_sent:
+                print("Email alert sent:")
+                print(f"  user_id={user_id}")
+                print(f"  email={user.get('email')}")
+            else:
+                print("Email alert skipped/failed:")
                 print(f"  user_id={user_id}")
 
 
@@ -616,8 +715,19 @@ def save_to_s3(document: Dict[str, Any]) -> Optional[str]:
     return key
 
 
-def process_payload(payload_text: str) -> None:
+def extract_device_id_from_topic(topic: str) -> Optional[str]:
+    parts = topic.split("/")
+
+    if len(parts) >= 3 and parts[0] == "traffic" and parts[2] == "data":
+        return parts[1]
+
+    return None
+
+
+def process_payload(payload_text: str, topic: str = "") -> None:
     print("\nMQTT message received:")
+    if topic:
+        print(f"MQTT topic: {topic}")
     print(payload_text)
 
     try:
@@ -629,6 +739,12 @@ def process_payload(payload_text: str) -> None:
     if not isinstance(payload, dict):
         print("Payload bukan JSON object.")
         return
+
+    device_id_from_topic = extract_device_id_from_topic(topic)
+
+    if device_id_from_topic:
+        payload["device_id"] = payload.get("device_id") or device_id_from_topic
+        payload["device"] = payload.get("device") or device_id_from_topic
 
     try:
         document = build_document(payload)
@@ -675,7 +791,7 @@ def on_disconnect(client, userdata, disconnect_flags, reason_code, properties=No
 def on_message(client, userdata, msg):
     try:
         payload_text = msg.payload.decode("utf-8", errors="replace")
-        process_payload(payload_text)
+        process_payload(payload_text, msg.topic)
     except Exception as exc:
         print("ERROR while processing MQTT message:", exc)
 
@@ -686,6 +802,8 @@ def main():
     print("MQTT -> DynamoDB TrafficTelemetry")
     print("MQTT -> DynamoDB DeviceStatus")
     print("MQTT -> DynamoDB Notifications")
+    print("MQTT -> Telegram Alert")
+    print("MQTT -> Email Alert")
     print("MQTT -> S3 Data Lake")
     print("=======================================")
     print(f"MQTT_HOST={MQTT_HOST}")
@@ -699,6 +817,11 @@ def main():
     print(f"DEFAULT_NOTIFICATION_USER_ID={DEFAULT_NOTIFICATION_USER_ID}")
     print(f"TELEGRAM_BOT_TOKEN={'set' if TELEGRAM_BOT_TOKEN else 'empty'}")
     print(f"TELEGRAM_CHAT_ID={'set' if TELEGRAM_CHAT_ID else 'empty'}")
+    print(f"SMTP_HOST={SMTP_HOST or 'empty'}")
+    print(f"SMTP_PORT={SMTP_PORT}")
+    print(f"SMTP_USER={'set' if SMTP_USER else 'empty'}")
+    print(f"SMTP_PASS={'set' if SMTP_PASS else 'empty'}")
+    print(f"SMTP_FROM={SMTP_FROM or 'empty'}")
     print(f"S3_BUCKET={S3_BUCKET}")
     print(f"S3_BASE_PREFIX={S3_BASE_PREFIX}")
     print("=======================================")
@@ -717,6 +840,7 @@ def main():
             print("Connecting to MQTT broker...")
             client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
             client.loop_forever()
+
         except KeyboardInterrupt:
             print("Stopped by user")
             try:
@@ -724,6 +848,7 @@ def main():
             except Exception:
                 pass
             break
+
         except Exception as exc:
             print("MQTT connection error:", exc)
             print("Retrying in 5 seconds...")

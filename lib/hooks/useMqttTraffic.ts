@@ -519,7 +519,7 @@ export function useMqttTraffic() {
 
   const topicData =
     process.env.NEXT_PUBLIC_MQTT_TOPIC_DATA ??
-    "traffic/data";
+    "traffic/+/data";
 
   const createPendingValue = useCallback(
     <T,>(value: T): PendingValue<T> => ({
@@ -868,7 +868,15 @@ export function useMqttTraffic() {
     });
 
     client.on("message", (topic, payload) => {
-      if (!mounted || topic !== topicData) {
+      if (!mounted) {
+        return;
+      }
+
+      const isTrafficDataTopic =
+        topic === topicData ||
+        /^traffic\/[^/]+\/data$/.test(topic);
+
+      if (!isTrafficDataTopic) {
         return;
       }
 
@@ -876,10 +884,16 @@ export function useMqttTraffic() {
         const text = payload.toString();
         const raw = JSON.parse(text);
 
-        console.log(
-          "MQTT telemetry diterima:",
-          raw,
-        );
+        const topicParts = topic.split("/");
+        const deviceIdFromTopic =
+          topicParts.length >= 3 ? topicParts[1] : undefined;
+
+        if (deviceIdFromTopic && !raw.device_id && !raw.deviceId) {
+          raw.device_id = deviceIdFromTopic;
+          raw.device = deviceIdFromTopic;
+        }
+
+        console.log("MQTT telemetry diterima:", topic, raw);
 
         const normalized =
           normalizeMqttTraffic(raw);

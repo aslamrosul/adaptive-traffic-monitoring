@@ -1,214 +1,167 @@
-import { NextResponse } from 'next/server';
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { GetCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// GET: List all devices from Azure IoT Hub
+function normalizeDevice(item: any) {
+  const lastSeen =
+    item.last_seen ||
+    item.lastSeen ||
+    item.updated_at ||
+    item.updatedAt ||
+    null;
+
+  const lastSeenTime = lastSeen
+    ? new Date(lastSeen).getTime()
+    : 0;
+
+  const isOnline =
+    lastSeenTime > 0 &&
+    Date.now() - lastSeenTime < 2 * 60 * 1000;
+
+  const deviceId =
+    item.device_id ||
+    item.deviceId ||
+    item.device ||
+    "";
+
+  const intersectionId =
+    item.intersection_id ||
+    item.intersectionId ||
+    null;
+
+  return {
+    device_id: deviceId,
+    deviceId,
+
+    intersection_id: intersectionId,
+    intersectionId,
+
+    status: isOnline ? "online" : "offline",
+    connectionState: isOnline ? "Connected" : "Disconnected",
+
+    last_seen: lastSeen,
+    lastSeen,
+    lastActivityTime: lastSeen,
+
+    wifi_rssi: item.wifi_rssi ?? null,
+    wifiRssi: item.wifi_rssi ?? null,
+
+    uptime_s: item.uptime_s ?? null,
+    uptimeS: item.uptime_s ?? null,
+
+    auto_mode: item.auto_mode ?? false,
+    autoMode: item.auto_mode ?? false,
+
+    adaptive_mode: item.adaptive_mode ?? false,
+    adaptiveMode: item.adaptive_mode ?? false,
+
+    dummy_mode: item.dummy_mode ?? false,
+    sensor_mode: item.sensor_mode ?? false,
+  };
+}
+
 export async function GET(request: Request) {
   try {
-    // Check for connection string
-    const connectionString = process.env.IOT_HUB_CONNECTION_STRING;
+    const { searchParams } = new URL(request.url);
+    const deviceId = searchParams.get("deviceId");
 
-    if (!connectionString) {
-      console.warn('⚠️ IOT_HUB_CONNECTION_STRING not configured');
-      
-      // Return empty list with helpful message
+    if (deviceId) {
+      const result = await dynamo.send(
+        new GetCommand({
+          TableName: awsTables.deviceStatus,
+          Key: {
+            device_id: deviceId,
+          },
+        }),
+      );
+
+      if (!result.Item) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Device tidak ditemukan",
+          },
+          { status: 404 },
+        );
+      }
+
+      const device = normalizeDevice(result.Item);
+
       return NextResponse.json({
         success: true,
-        count: 0,
-        activeCount: 0,
-        devices: [],
-        activeDevices: [],
-        message: 'IoT Hub connection string not configured. Please add IOT_HUB_CONNECTION_STRING to .env.local',
+        data: device,
+        device,
       });
     }
 
-    // Dynamically import azure-iothub (only when connection string exists)
-    const { Registry } = await import('azure-iothub');
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.deviceStatus,
+        Limit: 500,
+      }),
+    );
 
-    // Create IoT Hub registry client
-    const registry = Registry.fromConnectionString(connectionString);
+    const devices = (result.Items || [])
+      .map(normalizeDevice)
+      .filter((device: any) => Boolean(device.device_id))
+      .sort((a: any, b: any) =>
+        String(a.device_id).localeCompare(String(b.device_id)),
+      );
 
-    // Get all devices
-    const devices = await new Promise<any[]>((resolve, reject) => {
-      registry.list((err, deviceList) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(deviceList || []);
-        }
-      });
-    });
-
-    // Format device list
-    const formattedDevices = devices.map((device) => ({
-      deviceId: device.deviceId,
-      status: device.status, // 'enabled' or 'disabled'
-      connectionState: device.connectionState, // 'Connected' or 'Disconnected'
-      lastActivityTime: device.lastActivityTime,
-      cloudToDeviceMessageCount: device.cloudToDeviceMessageCount,
-      authentication: {
-        type: device.authentication?.type || 'sas',
-      },
-    }));
-
-    // Filter only enabled devices for dropdown
-    const activeDevices = formattedDevices.filter(
-      (d) => d.status === 'enabled'
+    const activeDevices = devices.filter(
+      (device: any) => device.status === "online",
     );
 
     return NextResponse.json({
       success: true,
-      count: formattedDevices.length,
+
+      count: devices.length,
       activeCount: activeDevices.length,
-      devices: formattedDevices,
-      activeDevices: activeDevices,
+
+      stats: {
+        total: devices.length,
+        online: activeDevices.length,
+        offline: devices.filter((d: any) => d.status === "offline").length,
+      },
+
+      data: devices,
+      devices,
+      activeDevices,
+      source: "aws-dynamodb-device-status",
     });
   } catch (error: any) {
-    console.error('Error fetching IoT Hub devices:', error);
+    console.error("Error fetching AWS MQTT devices:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch devices from IoT Hub',
+        error: error.message || "Gagal memuat device dari DynamoDB",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-// POST: Create new device in Azure IoT Hub
-export async function POST(request: Request) {
-  try {
-    const { deviceId } = await request.json();
-
-    if (!deviceId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'deviceId is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    const connectionString = process.env.IOT_HUB_CONNECTION_STRING;
-
-    if (!connectionString) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'IoT Hub connection string not configured',
-        },
-        { status: 500 }
-      );
-    }
-
-    const { Registry } = await import('azure-iothub');
-    const registry = Registry.fromConnectionString(connectionString);
-
-    // Create device with symmetric key authentication
-    const device = {
-      deviceId: deviceId,
-      status: 'enabled',
-      authentication: {
-        symmetricKey: {
-          primaryKey: null, // Auto-generate
-          secondaryKey: null, // Auto-generate
-        },
-      },
-    };
-
-    const createdDevice = await new Promise<any>((resolve, reject) => {
-      registry.create(device, (err, deviceInfo) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(deviceInfo);
-        }
-      });
-    });
-
-    // Generate connection string for ESP32
-    const iotHubName = process.env.AZURE_IOT_HUB_NAME || 'your-iot-hub';
-    const deviceConnectionString = `HostName=${iotHubName}.azure-devices.net;DeviceId=${deviceId};SharedAccessKey=${createdDevice.authentication.symmetricKey.primaryKey}`;
-
-    return NextResponse.json({
-      success: true,
-      message: 'Device created successfully in IoT Hub',
-      device: {
-        deviceId: createdDevice.deviceId,
-        status: createdDevice.status,
-        connectionState: createdDevice.connectionState,
-        primaryKey: createdDevice.authentication.symmetricKey.primaryKey,
-        secondaryKey: createdDevice.authentication.symmetricKey.secondaryKey,
-        connectionString: deviceConnectionString,
-      },
-    });
-  } catch (error: any) {
-    console.error('Error creating device:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to create device in IoT Hub',
-      },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "Device dibuat dari ESP32 ketika publish MQTT pertama kali. Upload firmware ESP32 dengan DEVICE_ID baru, lalu device akan muncul otomatis di DeviceStatus.",
+    },
+    { status: 400 },
+  );
 }
 
-// DELETE: Remove device from Azure IoT Hub
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const deviceId = searchParams.get('deviceId');
-
-    if (!deviceId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'deviceId is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    const connectionString = process.env.IOT_HUB_CONNECTION_STRING;
-
-    if (!connectionString) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'IoT Hub connection string not configured',
-        },
-        { status: 500 }
-      );
-    }
-
-    const { Registry } = await import('azure-iothub');
-    const registry = Registry.fromConnectionString(connectionString);
-
-    // Delete device
-    await new Promise<void>((resolve, reject) => {
-      registry.delete(deviceId, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: `Device ${deviceId} deleted successfully from IoT Hub`,
-    });
-  } catch (error: any) {
-    console.error('Error deleting device:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to delete device from IoT Hub',
-      },
-      { status: 500 }
-    );
-  }
+export async function DELETE() {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "Hapus device langsung dari tabel DeviceStatus/IoTConfigs jika benar-benar diperlukan.",
+    },
+    { status: 400 },
+  );
 }

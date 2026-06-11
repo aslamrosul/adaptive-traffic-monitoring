@@ -60,18 +60,37 @@ const char *wifiPassword = "88888889";
 // MQTT TOPICS
 // ============================================================
 
-#define TOPIC_TRAFFIC_DATA "traffic/data"
+String topicTrafficData()
+{
+  return "traffic/" + String(DEVICE_ID) + "/data";
+}
 
-#define TOPIC_NORTH_LIGHT_SET "traffic/light/north/set"
-#define TOPIC_SOUTH_LIGHT_SET "traffic/light/south/set"
-#define TOPIC_EAST_LIGHT_SET "traffic/light/east/set"
+String topicConfigSet()
+{
+  return "traffic/" + String(DEVICE_ID) + "/config/set";
+}
 
+String topicNorthLightSet()
+{
+  return "traffic/" + String(DEVICE_ID) + "/light/north/set";
+}
+
+String topicSouthLightSet()
+{
+  return "traffic/" + String(DEVICE_ID) + "/light/south/set";
+}
+
+String topicEastLightSet()
+{
+  return "traffic/" + String(DEVICE_ID) + "/light/east/set";
+}
+
+// Legacy topics tidak disubscribe lagi, tetapi handler lama tetap dibiarkan
+// agar aman kalau suatu saat pesan lama masih masuk dari broker/tool test.
 #define TOPIC_GREEN_TIME_SET "traffic/config/green_time/set"
 #define TOPIC_YELLOW_TIME_SET "traffic/config/yellow_time/set"
-
 #define TOPIC_AUTO_MODE_SET "traffic/config/auto_mode/set"
 #define TOPIC_ADAPTIVE_MODE_SET "traffic/config/adaptive_mode/set"
-
 #define TOPIC_LEVEL0_GREEN_SET "traffic/config/level0_green/set"
 #define TOPIC_LEVEL1_GREEN_SET "traffic/config/level1_green/set"
 #define TOPIC_LEVEL2_GREEN_SET "traffic/config/level2_green/set"
@@ -227,6 +246,12 @@ bool connectWiFi();
 
 void reconnectMQTT();
 void subscribeAllTopics();
+
+String topicTrafficData();
+String topicConfigSet();
+String topicNorthLightSet();
+String topicSouthLightSet();
+String topicEastLightSet();
 
 void messageReceived(
   char *topic,
@@ -531,21 +556,13 @@ void reconnectMQTT()
 
 void subscribeAllTopics()
 {
-  client.subscribe(TOPIC_NORTH_LIGHT_SET);
-  client.subscribe(TOPIC_SOUTH_LIGHT_SET);
-  client.subscribe(TOPIC_EAST_LIGHT_SET);
+  client.subscribe(topicConfigSet().c_str());
 
-  client.subscribe(TOPIC_GREEN_TIME_SET);
-  client.subscribe(TOPIC_YELLOW_TIME_SET);
+  client.subscribe(topicNorthLightSet().c_str());
+  client.subscribe(topicSouthLightSet().c_str());
+  client.subscribe(topicEastLightSet().c_str());
 
-  client.subscribe(TOPIC_AUTO_MODE_SET);
-  client.subscribe(TOPIC_ADAPTIVE_MODE_SET);
-
-  client.subscribe(TOPIC_LEVEL0_GREEN_SET);
-  client.subscribe(TOPIC_LEVEL1_GREEN_SET);
-  client.subscribe(TOPIC_LEVEL2_GREEN_SET);
-
-  Serial.println("Subscribed all MQTT topics.");
+  Serial.println("Subscribed device-specific MQTT topics.");
 }
 
 // ============================================================
@@ -1241,7 +1258,7 @@ void sendTelemetry()
     serializeJson(doc, payload);
 
   bool published = client.publish(
-    TOPIC_TRAFFIC_DATA,
+    topicTrafficData().c_str(),
     reinterpret_cast<uint8_t *>(payload),
     payloadSize,
     false
@@ -1269,7 +1286,7 @@ void messageReceived(
   unsigned int length
 )
 {
-  String message = "";
+  String rawMessage = "";
 
   for (
     unsigned int index = 0;
@@ -1277,10 +1294,12 @@ void messageReceived(
     index++
   )
   {
-    message += (char)payload[index];
+    rawMessage += (char)payload[index];
   }
 
-  message.trim();
+  rawMessage.trim();
+
+  String message = rawMessage;
   message.toLowerCase();
 
   String topicString = String(topic);
@@ -1291,6 +1310,82 @@ void messageReceived(
 
   Serial.print("MQTT Payload: ");
   Serial.println(message);
+
+  if (topicString == topicConfigSet())
+  {
+    StaticJsonDocument<512> configDoc;
+
+    DeserializationError error = deserializeJson(configDoc, rawMessage);
+
+    if (error)
+    {
+      Serial.print("Config JSON parse failed: ");
+      Serial.println(error.c_str());
+      return;
+    }
+
+    int greenSeconds =
+      configDoc["green_time_s"] |
+      (int)(greenTimeMs / 1000);
+
+    int yellowSeconds =
+      configDoc["yellow_time_s"] |
+      (int)(yellowTimeMs / 1000);
+
+    int level0Seconds =
+      configDoc["density_level_0_green_s"] |
+      (int)(densityLevel0GreenMs / 1000);
+
+    int level1Seconds =
+      configDoc["density_level_1_green_s"] |
+      (int)(densityLevel1GreenMs / 1000);
+
+    int level2Seconds =
+      configDoc["density_level_2_green_s"] |
+      (int)(densityLevel2GreenMs / 1000);
+
+    if (greenSeconds >= 1 && greenSeconds <= 120)
+    {
+      greenTimeMs = greenSeconds * 1000UL;
+    }
+
+    if (yellowSeconds >= 1 && yellowSeconds <= 30)
+    {
+      yellowTimeMs = yellowSeconds * 1000UL;
+    }
+
+    if (level0Seconds >= 1 && level0Seconds <= 120)
+    {
+      densityLevel0GreenMs = level0Seconds * 1000UL;
+    }
+
+    if (level1Seconds >= 1 && level1Seconds <= 120)
+    {
+      densityLevel1GreenMs = level1Seconds * 1000UL;
+    }
+
+    if (level2Seconds >= 1 && level2Seconds <= 120)
+    {
+      densityLevel2GreenMs = level2Seconds * 1000UL;
+    }
+
+    if (configDoc.containsKey("auto_mode"))
+    {
+      autoMode = configDoc["auto_mode"].as<bool>();
+    }
+
+    if (configDoc.containsKey("adaptive_mode"))
+    {
+      adaptiveMode = configDoc["adaptive_mode"].as<bool>();
+    }
+
+    resetTrafficCycle();
+    markTelemetryDirty();
+    sendTelemetry();
+
+    Serial.println("Device config updated from JSON.");
+    return;
+  }
 
   if (topicString == TOPIC_GREEN_TIME_SET)
   {
@@ -1396,7 +1491,7 @@ void messageReceived(
     }
   }
   else if (
-    topicString == TOPIC_NORTH_LIGHT_SET
+    topicString == topicNorthLightSet()
   )
   {
     if (!autoMode)
@@ -1415,7 +1510,7 @@ void messageReceived(
     }
   }
   else if (
-    topicString == TOPIC_SOUTH_LIGHT_SET
+    topicString == topicSouthLightSet()
   )
   {
     if (!autoMode)
@@ -1434,7 +1529,7 @@ void messageReceived(
     }
   }
   else if (
-    topicString == TOPIC_EAST_LIGHT_SET
+    topicString == topicEastLightSet()
   )
   {
     if (!autoMode)

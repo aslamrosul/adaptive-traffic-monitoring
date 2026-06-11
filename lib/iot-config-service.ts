@@ -204,46 +204,23 @@ export async function listIoTConfigs(): Promise<IoTConfigRecord[]> {
 }
 
 export async function publishIoTConfig(config: IoTConfigRecord) {
+  const deviceId = config.deviceId || config.device_id;
+
   return publishMqttMessages([
     {
-      topic: "traffic/config/green_time/set",
-      payload: config.greenTime,
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/yellow_time/set",
-      payload: config.yellowTime,
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/level0_green/set",
-      payload: config.densityLevel0Green,
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/level1_green/set",
-      payload: config.densityLevel1Green,
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/level2_green/set",
-      payload: config.densityLevel2Green,
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/auto_mode/set",
-      payload: config.autoMode ? "on" : "off",
-      qos: 1,
-      retain: true,
-    },
-    {
-      topic: "traffic/config/adaptive_mode/set",
-      payload: config.adaptiveMode ? "on" : "off",
+      topic: `traffic/${deviceId}/config/set`,
+      payload: {
+        device_id: deviceId,
+        intersection_id: config.intersectionId || config.intersection_id,
+        green_time_s: config.greenTime,
+        yellow_time_s: config.yellowTime,
+        density_level_0_green_s: config.densityLevel0Green,
+        density_level_1_green_s: config.densityLevel1Green,
+        density_level_2_green_s: config.densityLevel2Green,
+        auto_mode: config.autoMode,
+        adaptive_mode: config.adaptiveMode,
+        updated_at: new Date().toISOString(),
+      },
       qos: 1,
       retain: true,
     },
@@ -339,7 +316,7 @@ export async function saveIoTConfig(input: any) {
       publishResult: {
         success: false,
         successCount: 0,
-        failedCount: 7,
+        failedCount: 1,
         results: [],
       },
     };
