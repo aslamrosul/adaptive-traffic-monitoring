@@ -17,7 +17,7 @@ import type {
 
 import { useIntersections } from "@/lib/hooks/useIntersections";
 import { useMqttTraffic } from "@/lib/hooks/useMqttTraffic";
-import { formatWib } from "@/lib/timezone";
+
 import { useEffect, useMemo, useState } from "react";
 import { useAppSettings } from "@/lib/hooks/useAppSettings";
 import {
@@ -49,6 +49,7 @@ export default function DashboardPage() {
     connectionState,
     isConnected,
     latestData,
+    latestByDevice,
     error,
     publishMqtt,
     reconnect,
@@ -129,6 +130,35 @@ export default function DashboardPage() {
 
     return intersection?.name ?? selectedIntersection;
   }, [intersections, selectedIntersection]);
+
+  const selectedIntersectionData = useMemo(() => {
+    if (selectedIntersection === "all") {
+      return null;
+    }
+
+    return intersections.find(
+      (item: any) =>
+        item.id === selectedIntersection ||
+        item.intersection_id === selectedIntersection,
+    );
+  }, [intersections, selectedIntersection]);
+
+  const selectedDeviceId =
+    selectedIntersectionData?.deviceId ||
+    selectedIntersectionData?.device_id ||
+    null;
+
+  const realtimeData = useMemo(() => {
+    if (selectedIntersection === "all") {
+      return latestData;
+    }
+
+    if (selectedDeviceId && latestByDevice[selectedDeviceId]) {
+      return latestByDevice[selectedDeviceId];
+    }
+
+    return latestData;
+  }, [selectedIntersection, selectedDeviceId, latestData, latestByDevice]);
 
   return (
     <div className="flex min-h-screen bg-surface overflow-hidden">
@@ -238,7 +268,7 @@ export default function DashboardPage() {
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
               {/* LEFT COLUMN */}
               <div className="space-y-4 lg:space-y-6 xl:col-span-8">
-                <TrafficRoadSimulation data={latestData} />
+                <TrafficRoadSimulation data={realtimeData} />
 
                 <TrafficTrendChart
                   timeRange={timeRange}
@@ -262,7 +292,7 @@ export default function DashboardPage() {
               {/* RIGHT COLUMN - Desktop Only */}
               <aside className="hidden xl:block xl:col-span-4 space-y-4 lg:space-y-6">
                 <TrafficControlPanel
-                  data={latestData}
+                  data={realtimeData}
                   publishMqtt={publishMqtt}
                 />
 
@@ -327,7 +357,7 @@ export default function DashboardPage() {
                   {/* Content */}
                   <div className="p-4 space-y-4">
                     <TrafficControlPanel
-                      data={latestData}
+                      data={realtimeData}
                       publishMqtt={publishMqtt}
                     />
 

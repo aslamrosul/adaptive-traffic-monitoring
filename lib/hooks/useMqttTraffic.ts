@@ -492,6 +492,9 @@ export function useMqttTraffic() {
   const [latestData, setLatestData] =
     useState<TrafficUpdate | null>(null);
 
+  const [latestByDevice, setLatestByDevice] =
+    useState<Record<string, TrafficUpdate>>({});
+
   const [error, setError] =
     useState<string | null>(null);
 
@@ -947,6 +950,12 @@ export function useMqttTraffic() {
         );
 
         setLatestData(withPending);
+        
+        setLatestByDevice((current) => ({
+          ...current,
+          [withPending.deviceId]: withPending,
+        }));
+        
         setError(null);
       } catch (parseError) {
         const message =
@@ -986,6 +995,7 @@ export function useMqttTraffic() {
     connectionState,
     isConnected,
     latestData,
+    latestByDevice,
     error,
     publishMqtt,
     reconnect,
