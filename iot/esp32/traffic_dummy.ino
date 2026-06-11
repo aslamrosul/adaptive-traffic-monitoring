@@ -1,15 +1,13 @@
 /*
  * ============================================================
  * ESP32 SMART TRAFFIC MONITORING SYSTEM
- * DUMMY TRAFFIC MODE - MQTT AWS EC2
+ * DUMMY SENSOR MODE - MQTT AWS EC2
  * ============================================================
  *
- * Dummy simulation:
- * - Tidak membutuhkan sensor IR maupun HC-SR04
- * - Kendaraan virtual datang secara acak pada setiap jalur
- * - Kendaraan hanya keluar dan dihitung saat lampu jalur hijau
- * - Antrean bertambah saat merah dan berkurang saat hijau
- * - LED fisik merah/kuning/hijau tetap dapat digunakan
+ * Sensor:
+ * - IR obstacle sensor untuk mendeteksi dan menghitung kendaraan
+ * - HC-SR04 untuk membantu menentukan tingkat kepadatan
+ * - LED fisik merah/kuning/hijau untuk tiap jalur
  *
  * Mode:
  * - Auto Mode ON  : lampu bergantian otomatis
@@ -46,13 +44,13 @@
 // ============================================================
 
 const char *ssid = "Gozzy";
-const char *wifiPassword = "88888888";
+const char *wifiPassword = "88888889";
 
 // ============================================================
 // MQTT CONFIG
 // ============================================================
 
-#define MQTT_SERVER "13.211.191.195"
+#define MQTT_SERVER "3.25.72.124"
 #define MQTT_PORT 1883
 
 #define MQTT_USER "jti"
@@ -159,31 +157,7 @@ int northQueueEstimateCm = 0;
 int southQueueEstimateCm = 0;
 int eastQueueEstimateCm = 0;
 
-// ============================================================
-// DUMMY TRAFFIC SIMULATION STATE
-// ============================================================
-
-const bool DUMMY_MODE = true;
-
-// Jumlah kendaraan yang sedang mengantre pada masing-masing jalur.
-int northQueueVehicles = 0;
-int southQueueVehicles = 0;
-int eastQueueVehicles = 0;
-
-// Simulasi diperbarui satu kali per detik.
-const unsigned long DUMMY_SIMULATION_INTERVAL_MS = 1000;
-unsigned long lastDummySimulationAt = 0;
-
-// Batas antrean agar simulasi tidak tumbuh tanpa batas.
-const int DUMMY_MAX_QUEUE_VEHICLES = 12;
-
-// Peluang kendaraan baru datang setiap detik, dalam persen.
-const int NORTH_ARRIVAL_CHANCE = 38;
-const int SOUTH_ARRIVAL_CHANCE = 32;
-const int EAST_ARRIVAL_CHANCE = 45;
-
-// IR previous state untuk vehicle counting.
-// Dipertahankan agar kode mudah dikembalikan ke mode sensor asli.
+// IR previous state untuk vehicle counting
 bool lastNorthVehicleDetected = false;
 bool lastSouthVehicleDetected = false;
 bool lastEastVehicleDetected = false;
@@ -217,6 +191,23 @@ unsigned long densityLevel2GreenMs = 30000;
 
 bool autoMode = true;
 bool adaptiveMode = true;
+
+// ============================================================
+// DUMMY SENSOR MODE
+// ============================================================
+//
+// true  = data IR/HC-SR04 dibuat simulasi otomatis.
+// false = baca sensor asli dari pin IR dan HC-SR04.
+#define USE_DUMMY_SENSOR true
+
+// Pola kepadatan dummy berubah setiap 4 detik.
+const unsigned long DUMMY_PATTERN_INTERVAL_MS = 4000;
+
+// Count kendaraan dummy bertambah setiap 2.5 detik ketika lane terdeteksi padat.
+const unsigned long DUMMY_COUNT_INTERVAL_MS = 2500;
+
+unsigned long lastDummyCountAt = 0;
+
 
 // ============================================================
 // AUTOMATIC CYCLE STATE
@@ -279,22 +270,7 @@ int calculateQueueEstimateCm(
 );
 
 void readRealSensorData();
-void readDummyTrafficData();
-
-int densityFromQueueVehicles(
-  int queueVehicles
-);
-
-int simulatedDistanceFromDensity(
-  int densityLevel
-);
-
-int processDummyLane(
-  const String &light,
-  int arrivalChance,
-  int &queueVehicles
-);
-
+void readDummySensorData();
 bool updateVehicleCount();
 void markTelemetryDirty();
 
@@ -335,14 +311,11 @@ void setup()
   Serial.begin(115200);
   delay(1000);
 
-  // Seed random berbeda setiap ESP32 menyala.
-  randomSeed(esp_random());
-
   Serial.println();
   Serial.println("=======================================");
   Serial.println("ESP32 SMART TRAFFIC MONITORING SYSTEM");
-  Serial.println("DUMMY TRAFFIC MODE - MQTT AWS EC2");
-  Serial.println("VIRTUAL VEHICLES + MQTT + PHYSICAL LED");
+  Serial.println("DUMMY SENSOR MODE - MQTT AWS EC2");
+  Serial.println("DUMMY SENSOR + MQTT + OPTIONAL PHYSICAL LED");
   Serial.println("=======================================");
 
   Serial.print("Intersection ID: ");
@@ -368,14 +341,14 @@ void setup()
 
   reconnectMQTT();
 
-  readDummyTrafficData();
+  readRealSensorData();
 
   resetTrafficCycle();
   cycleTrafficLights();
 
   sendTelemetry();
 
-  Serial.println("Dummy Traffic Simulation Ready!");
+  Serial.println("Dummy Sensor System Ready!");
 }
 
 // ============================================================
@@ -408,7 +381,7 @@ void loop()
     SENSOR_READ_INTERVAL_MS
   )
   {
-    readDummyTrafficData();
+    readRealSensorData();
     lastSensorReadAt = now;
   }
 
@@ -688,223 +661,17 @@ int calculateQueueEstimateCm(
 }
 
 // ============================================================
-// DUMMY TRAFFIC SIMULATION
-// ============================================================
-
-int densityFromQueueVehicles(
-  int queueVehicles
-)
-{
-  if (queueVehicles <= 0)
-  {
-    return 0;
-  }
-
-  if (queueVehicles <= 3)
-  {
-    return 1;
-  }
-
-  return 2;
-}
-
-int simulatedDistanceFromDensity(
-  int densityLevel
-)
-{
-  if (densityLevel == 0)
-  {
-    return 0;
-  }
-
-  if (densityLevel == 1)
-  {
-    return 5;
-  }
-
-  return 3;
-}
-
-/*
- * Mengembalikan jumlah kendaraan yang berhasil melewati lampu.
- *
- * - Kendaraan baru dapat datang secara acak pada semua kondisi lampu.
- * - Saat lampu hijau, 1 kendaraan pasti keluar jika antrean tersedia.
- * - Kadang-kadang 2 kendaraan keluar untuk membuat simulasi lebih alami.
- */
-int processDummyLane(
-  const String &light,
-  int arrivalChance,
-  int &queueVehicles
-)
-{
-  int arrivingVehicles = 0;
-
-  if (random(100) < arrivalChance)
-  {
-    arrivingVehicles = 1;
-
-    // Sesekali dua kendaraan datang hampir bersamaan.
-    if (random(100) < 15)
-    {
-      arrivingVehicles++;
-    }
-  }
-
-  queueVehicles += arrivingVehicles;
-
-  if (queueVehicles > DUMMY_MAX_QUEUE_VEHICLES)
-  {
-    queueVehicles = DUMMY_MAX_QUEUE_VEHICLES;
-  }
-
-  int passedVehicles = 0;
-
-  if (light == "green" && queueVehicles > 0)
-  {
-    passedVehicles = 1;
-
-    // Peluang arus lebih lancar ketika lampu hijau.
-    if (queueVehicles >= 2 && random(100) < 35)
-    {
-      passedVehicles = 2;
-    }
-
-    queueVehicles -= passedVehicles;
-
-    if (queueVehicles < 0)
-    {
-      queueVehicles = 0;
-    }
-  }
-
-  return passedVehicles;
-}
-
-void readDummyTrafficData()
-{
-  unsigned long now = millis();
-
-  if (
-    lastDummySimulationAt != 0 &&
-    now - lastDummySimulationAt < DUMMY_SIMULATION_INTERVAL_MS
-  )
-  {
-    return;
-  }
-
-  lastDummySimulationAt = now;
-
-  int previousNorthQueueVehicles = northQueueVehicles;
-  int previousSouthQueueVehicles = southQueueVehicles;
-  int previousEastQueueVehicles = eastQueueVehicles;
-
-  int previousNorthDensity = northDensityLevel;
-  int previousSouthDensity = southDensityLevel;
-  int previousEastDensity = eastDensityLevel;
-
-  int northPassed = processDummyLane(
-    northLight,
-    NORTH_ARRIVAL_CHANCE,
-    northQueueVehicles
-  );
-
-  int southPassed = processDummyLane(
-    southLight,
-    SOUTH_ARRIVAL_CHANCE,
-    southQueueVehicles
-  );
-
-  int eastPassed = processDummyLane(
-    eastLight,
-    EAST_ARRIVAL_CHANCE,
-    eastQueueVehicles
-  );
-
-  // Vehicle count mencatat kendaraan yang benar-benar melewati lampu hijau.
-  northCount += northPassed;
-  southCount += southPassed;
-  eastCount += eastPassed;
-
-  northDensityLevel = densityFromQueueVehicles(northQueueVehicles);
-  southDensityLevel = densityFromQueueVehicles(southQueueVehicles);
-  eastDensityLevel = densityFromQueueVehicles(eastQueueVehicles);
-
-  northVehicleDetected = northQueueVehicles > 0;
-  southVehicleDetected = southQueueVehicles > 0;
-  eastVehicleDetected = eastQueueVehicles > 0;
-
-  northQueueDetected = northDensityLevel == 2;
-  southQueueDetected = southDensityLevel == 2;
-  eastQueueDetected = eastDensityLevel == 2;
-
-  northQueueEstimateCm = calculateQueueEstimateCm(northDensityLevel);
-  southQueueEstimateCm = calculateQueueEstimateCm(southDensityLevel);
-  eastQueueEstimateCm = calculateQueueEstimateCm(eastDensityLevel);
-
-  northDistanceCm = simulatedDistanceFromDensity(northDensityLevel);
-  southDistanceCm = simulatedDistanceFromDensity(southDensityLevel);
-  eastDistanceCm = simulatedDistanceFromDensity(eastDensityLevel);
-
-  bool changed =
-    previousNorthQueueVehicles != northQueueVehicles ||
-    previousSouthQueueVehicles != southQueueVehicles ||
-    previousEastQueueVehicles != eastQueueVehicles ||
-    previousNorthDensity != northDensityLevel ||
-    previousSouthDensity != southDensityLevel ||
-    previousEastDensity != eastDensityLevel ||
-    northPassed > 0 ||
-    southPassed > 0 ||
-    eastPassed > 0;
-
-  if (changed)
-  {
-    markTelemetryDirty();
-  }
-
-  Serial.println();
-  Serial.println("Dummy traffic updated:");
-
-  Serial.print("North | Light: ");
-  Serial.print(northLight);
-  Serial.print(" | Queue: ");
-  Serial.print(northQueueVehicles);
-  Serial.print(" | Passed: +");
-  Serial.print(northPassed);
-  Serial.print(" | Density: ");
-  Serial.print(northDensityLevel);
-  Serial.print(" | Total Count: ");
-  Serial.println(northCount);
-
-  Serial.print("South | Light: ");
-  Serial.print(southLight);
-  Serial.print(" | Queue: ");
-  Serial.print(southQueueVehicles);
-  Serial.print(" | Passed: +");
-  Serial.print(southPassed);
-  Serial.print(" | Density: ");
-  Serial.print(southDensityLevel);
-  Serial.print(" | Total Count: ");
-  Serial.println(southCount);
-
-  Serial.print("East  | Light: ");
-  Serial.print(eastLight);
-  Serial.print(" | Queue: ");
-  Serial.print(eastQueueVehicles);
-  Serial.print(" | Passed: +");
-  Serial.print(eastPassed);
-  Serial.print(" | Density: ");
-  Serial.print(eastDensityLevel);
-  Serial.print(" | Total Count: ");
-  Serial.println(eastCount);
-}
-
-// ============================================================
 // READ REAL SENSOR DATA
 // ============================================================
 
 void readRealSensorData()
 {
+  if (USE_DUMMY_SENSOR)
+  {
+    readDummySensorData();
+    return;
+  }
+
   bool previousNorthDetected = northVehicleDetected;
   bool previousSouthDetected = southVehicleDetected;
   bool previousEastDetected = eastVehicleDetected;
@@ -1025,6 +792,257 @@ void readRealSensorData()
   Serial.print(" cm | Count: ");
   Serial.println(eastCount);
 }
+
+// ============================================================
+// READ DUMMY SENSOR DATA
+// ============================================================
+//
+// Fungsi ini dipakai saat sensor fisik belum ada.
+// Data dibuat berubah-ubah otomatis agar dashboard, MQTT,
+// database, dan kontrol lampu bisa tetap dites.
+
+void readDummySensorData()
+{
+  bool previousNorthDetected = northVehicleDetected;
+  bool previousSouthDetected = southVehicleDetected;
+  bool previousEastDetected = eastVehicleDetected;
+
+  int previousNorthDensity = northDensityLevel;
+  int previousSouthDensity = southDensityLevel;
+  int previousEastDensity = eastDensityLevel;
+
+  bool previousNorthQueue = northQueueDetected;
+  bool previousSouthQueue = southQueueDetected;
+  bool previousEastQueue = eastQueueDetected;
+
+  int previousNorthCount = northCount;
+  int previousSouthCount = southCount;
+  int previousEastCount = eastCount;
+
+  unsigned long now = millis();
+
+  /*
+   * Pattern berubah tiap beberapa detik.
+   * Level 0 = kosong
+   * Level 1 = sedang
+   * Level 2 = padat / antrean
+   */
+  int pattern =
+    (now / DUMMY_PATTERN_INTERVAL_MS) % 6;
+
+  if (pattern == 0)
+  {
+    northDensityLevel = 0;
+    southDensityLevel = 1;
+    eastDensityLevel = 2;
+  }
+  else if (pattern == 1)
+  {
+    northDensityLevel = 1;
+    southDensityLevel = 0;
+    eastDensityLevel = 2;
+  }
+  else if (pattern == 2)
+  {
+    northDensityLevel = 2;
+    southDensityLevel = 1;
+    eastDensityLevel = 0;
+  }
+  else if (pattern == 3)
+  {
+    northDensityLevel = 1;
+    southDensityLevel = 2;
+    eastDensityLevel = 0;
+  }
+  else if (pattern == 4)
+  {
+    northDensityLevel = 0;
+    southDensityLevel = 2;
+    eastDensityLevel = 1;
+  }
+  else
+  {
+    northDensityLevel = 2;
+    southDensityLevel = 0;
+    eastDensityLevel = 1;
+  }
+
+  northVehicleDetected =
+    northDensityLevel > 0;
+
+  southVehicleDetected =
+    southDensityLevel > 0;
+
+  eastVehicleDetected =
+    eastDensityLevel > 0;
+
+  northQueueDetected =
+    northDensityLevel == 2;
+
+  southQueueDetected =
+    southDensityLevel == 2;
+
+  eastQueueDetected =
+    eastDensityLevel == 2;
+
+  /*
+   * Jarak dummy:
+   * 0 cm = tidak ada objek
+   * 8 cm = objek sedang / level 1
+   * 3 cm = objek dekat / level 2
+   */
+  northDistanceCm =
+    northDensityLevel == 0
+      ? 0
+      : (
+          northDensityLevel == 1
+            ? 8
+            : 3
+        );
+
+  southDistanceCm =
+    southDensityLevel == 0
+      ? 0
+      : (
+          southDensityLevel == 1
+            ? 8
+            : 3
+        );
+
+  eastDistanceCm =
+    eastDensityLevel == 0
+      ? 0
+      : (
+          eastDensityLevel == 1
+            ? 8
+            : 3
+        );
+
+  northQueueEstimateCm =
+    calculateQueueEstimateCm(
+      northDensityLevel
+    );
+
+  southQueueEstimateCm =
+    calculateQueueEstimateCm(
+      southDensityLevel
+    );
+
+  eastQueueEstimateCm =
+    calculateQueueEstimateCm(
+      eastDensityLevel
+    );
+
+  /*
+   * Count dummy dibuat naik otomatis.
+   * Level 1 bertambah 1 kendaraan.
+   * Level 2 bertambah 2 kendaraan agar terlihat lebih padat.
+   */
+  if (
+    now - lastDummyCountAt >=
+    DUMMY_COUNT_INTERVAL_MS
+  )
+  {
+    if (northVehicleDetected)
+    {
+      northCount +=
+        northDensityLevel == 2
+          ? 2
+          : 1;
+    }
+
+    if (southVehicleDetected)
+    {
+      southCount +=
+        southDensityLevel == 2
+          ? 2
+          : 1;
+    }
+
+    if (eastVehicleDetected)
+    {
+      eastCount +=
+        eastDensityLevel == 2
+          ? 2
+          : 1;
+    }
+
+    lastDummyCountAt = now;
+  }
+
+  bool vehicleCountChanged =
+    previousNorthCount != northCount ||
+    previousSouthCount != southCount ||
+    previousEastCount != eastCount;
+
+  bool sensorStateChanged =
+    previousNorthDetected != northVehicleDetected ||
+    previousSouthDetected != southVehicleDetected ||
+    previousEastDetected != eastVehicleDetected ||
+    previousNorthDensity != northDensityLevel ||
+    previousSouthDensity != southDensityLevel ||
+    previousEastDensity != eastDensityLevel ||
+    previousNorthQueue != northQueueDetected ||
+    previousSouthQueue != southQueueDetected ||
+    previousEastQueue != eastQueueDetected;
+
+  if (
+    vehicleCountChanged ||
+    sensorStateChanged
+  )
+  {
+    markTelemetryDirty();
+  }
+
+  Serial.println();
+  Serial.println("Dummy sensor data updated:");
+
+  Serial.print("North | Dummy IR: ");
+  Serial.print(
+    northVehicleDetected
+      ? "DETECTED"
+      : "CLEAR"
+  );
+  Serial.print(" | Dummy Distance: ");
+  Serial.print(northDistanceCm);
+  Serial.print(" cm | Density: ");
+  Serial.print(northDensityLevel);
+  Serial.print(" | Queue Estimate: ");
+  Serial.print(northQueueEstimateCm);
+  Serial.print(" cm | Count: ");
+  Serial.println(northCount);
+
+  Serial.print("South | Dummy IR: ");
+  Serial.print(
+    southVehicleDetected
+      ? "DETECTED"
+      : "CLEAR"
+  );
+  Serial.print(" | Dummy Distance: ");
+  Serial.print(southDistanceCm);
+  Serial.print(" cm | Density: ");
+  Serial.print(southDensityLevel);
+  Serial.print(" | Queue Estimate: ");
+  Serial.print(southQueueEstimateCm);
+  Serial.print(" cm | Count: ");
+  Serial.println(southCount);
+
+  Serial.print("East  | Dummy IR: ");
+  Serial.print(
+    eastVehicleDetected
+      ? "DETECTED"
+      : "CLEAR"
+  );
+  Serial.print(" | Dummy Distance: ");
+  Serial.print(eastDistanceCm);
+  Serial.print(" cm | Density: ");
+  Serial.print(eastDensityLevel);
+  Serial.print(" | Queue Estimate: ");
+  Serial.print(eastQueueEstimateCm);
+  Serial.print(" cm | Count: ");
+  Serial.println(eastCount);
+}
+
 
 bool updateVehicleCount()
 {
@@ -1411,9 +1429,6 @@ void sendTelemetry()
   doc["north_queue_estimate_cm"] =
     northQueueEstimateCm;
 
-  doc["north_queue_vehicles"] =
-    northQueueVehicles;
-
   doc["north_light"] =
     northLight;
 
@@ -1438,9 +1453,6 @@ void sendTelemetry()
 
   doc["south_queue_estimate_cm"] =
     southQueueEstimateCm;
-
-  doc["south_queue_vehicles"] =
-    southQueueVehicles;
 
   doc["south_light"] =
     southLight;
@@ -1467,9 +1479,6 @@ void sendTelemetry()
   doc["east_queue_estimate_cm"] =
     eastQueueEstimateCm;
 
-  doc["east_queue_vehicles"] =
-    eastQueueVehicles;
-
   doc["east_light"] =
     eastLight;
 
@@ -1477,8 +1486,8 @@ void sendTelemetry()
     getGreenDurationForLane("east") /
     1000;
 
-  doc["dummy_mode"] = true;
-  doc["sensor_mode"] = false;
+  doc["dummy_mode"] = USE_DUMMY_SENSOR;
+  doc["sensor_mode"] = !USE_DUMMY_SENSOR;
 
   doc["wifi_rssi"] = WiFi.RSSI();
   doc["uptime_s"] = millis() / 1000;
