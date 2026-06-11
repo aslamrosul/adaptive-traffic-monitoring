@@ -131,6 +131,7 @@ interface ProfileData {
     responseTime: number;
     accuracy: number;
     efficiency: number;
+    averageResponseMinutes?: number | null;
   } | null;
   skills: string[];
   settings: {

@@ -22,6 +22,7 @@ export interface UserProfile {
     responseTime: number;
     accuracy: number;
     efficiency: number;
+    averageResponseMinutes?: number | null;
   };
   settings: {
     publicProfile: boolean;
