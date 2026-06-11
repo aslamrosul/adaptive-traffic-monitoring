@@ -529,6 +529,24 @@ export function useMqttTraffic() {
     [],
   );
 
+  const getDeviceScopedLightCommand = useCallback((topic: string) => {
+    const parts = topic.split("/");
+    
+    if (
+      parts.length === 5 &&
+      parts[0] === "traffic" &&
+      parts[2] === "light" &&
+      parts[4] === "set"
+    ) {
+      return {
+        deviceId: parts[1],
+        lane: parts[3] as LaneName,
+      };
+    }
+    
+    return null;
+  }, []);
+
   const applyOptimisticUpdate = useCallback(
     (
       topic: string,
@@ -551,6 +569,30 @@ export function useMqttTraffic() {
           west: { ...previous.west },
           timestamp: new Date().toISOString(),
         };
+
+        // Check for device-scoped light command first
+        const scopedLightCommand = getDeviceScopedLightCommand(topic);
+        
+        if (scopedLightCommand) {
+          const light = toLight(payload);
+          
+          if (scopedLightCommand.lane === "north") {
+            next.north.light = light;
+            pendingCommandsRef.current.northLight = createPendingValue(light);
+          }
+          
+          if (scopedLightCommand.lane === "south") {
+            next.south.light = light;
+            pendingCommandsRef.current.southLight = createPendingValue(light);
+          }
+          
+          if (scopedLightCommand.lane === "east") {
+            next.east.light = light;
+            pendingCommandsRef.current.eastLight = createPendingValue(light);
+          }
+          
+          return next;
+        }
 
         if (
           topic ===
@@ -650,6 +692,7 @@ export function useMqttTraffic() {
             createPendingValue(value);
         }
 
+        // Legacy global light topics (backward compatibility)
         if (
           topic === "traffic/light/north/set"
         ) {
@@ -686,7 +729,7 @@ export function useMqttTraffic() {
         return next;
       });
     },
-    [createPendingValue],
+    [createPendingValue, getDeviceScopedLightCommand],
   );
 
   const publishMqtt = useCallback(

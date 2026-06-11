@@ -246,11 +246,19 @@ export default function TrafficControlPanel({
       return;
     }
 
+    if (!deviceId) {
+      showMessage(
+        "Device ID belum tersedia, tidak dapat mengirim perintah lampu.",
+      );
+      return;
+    }
+
     /** Lampu manual bersifat sementara sehingga belum disimpan ke IoTConfigs.
      * Nantinya sebaiknya dipindahkan ke API server khusus command.
+     * Menggunakan topic device-specific: traffic/{deviceId}/light/{lane}/set
      */
     const success = publishMqtt(
-      `traffic/light/${lane}/set`,
+      `traffic/${deviceId}/light/${lane}/set`,
       color,
     );
 
