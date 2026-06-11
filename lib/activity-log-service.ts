@@ -291,6 +291,45 @@ export async function listUserActivities(options: {
     }));
 }
 
+function calculateActiveMinutesFromActivities(items: any[]) {
+    const timestamps = items
+        .map((item) =>
+            new Date(
+                item.created_at ||
+                    item.timestamp ||
+                    item.createdAt,
+            ),
+        )
+        .filter((date) => !Number.isNaN(date.getTime()))
+        .sort((a, b) => a.getTime() - b.getTime());
+
+    if (timestamps.length <= 1) {
+        return 0;
+    }
+
+    let activeMinutes = 0;
+
+    for (let index = 1; index < timestamps.length; index++) {
+        const previous = timestamps[index - 1];
+        const current = timestamps[index];
+
+        const diffMinutes = Math.floor(
+            (current.getTime() - previous.getTime()) / 60_000,
+        );
+
+        if (diffMinutes <= 0) {
+            continue;
+        }
+
+        // Kalau jeda terlalu lama, jangan dihitung full.
+        // Contoh buka dashboard jam 08:00 lalu login lagi jam 13:00,
+        // itu bukan berarti aktif 5 jam.
+        activeMinutes += Math.min(diffMinutes, 30);
+    }
+
+    return activeMinutes;
+}
+
 export async function getUserActivityStats(options: {
     userId: string;
 }) {
@@ -315,21 +354,89 @@ export async function getUserActivityStats(options: {
         byType[type] = (byType[type] || 0) + 1;
     }
 
-    return {
-        totalActivities: items.length,
+    const activeMinutes =
+        calculateActiveMinutesFromActivities(items);
+    const activeHours =
+        Math.round((activeMinutes / 60) * 10) / 10;
 
-        totalLogin: byType["auth.login"] || 0,
-        dashboardViews: byType["dashboard.view"] || 0,
-        analyticsViews: byType["analytics.view"] || 0,
-        profileUpdates: byType["profile.update"] || 0,
-        profileExports: byType["profile.export"] || 0,
-        settingsUpdates: byType["profile.settings.update"] || 0,
-        avatarUploads: byType["profile.avatar.upload"] || 0,
-        passwordChanges: byType["profile.password.change"] || 0,
-        iotConfigUpdates: byType["iot.config.update"] || 0,
-        reportExports:
-            (byType["report.export"] || 0) +
-            (byType["profile.export"] || 0),
+    const totalActivities = items.length;
+
+    const totalLogin = byType["auth.login"] || 0;
+    const dashboardViews = byType["dashboard.view"] || 0;
+    const analyticsViews = byType["analytics.view"] || 0;
+    const profileUpdates = byType["profile.update"] || 0;
+    const profileExports = byType["profile.export"] || 0;
+    const settingsUpdates =
+        (byType["profile.settings.update"] || 0) +
+        (byType["settings.update"] || 0);
+
+    const avatarUploads =
+        byType["profile.avatar.upload"] || 0;
+    const passwordChanges =
+        byType["profile.password.change"] || 0;
+    const iotConfigUpdates = byType["iot.config.update"] || 0;
+
+    const reportExports =
+        (byType["report.export"] || 0) +
+        (byType["profile.export"] || 0);
+
+    const reportsCreated = byType["report.create"] || 0;
+
+    const meaningfulActivities = [
+        dashboardViews,
+        analyticsViews,
+        profileUpdates,
+        profileExports,
+        settingsUpdates,
+        avatarUploads,
+        passwordChanges,
+        iotConfigUpdates,
+        reportExports,
+        reportsCreated,
+    ].reduce((sum, value) => sum + value, 0);
+
+    const hasEnoughPerformanceData =
+        totalActivities >= 5 && activeMinutes > 0;
+
+    const efficiency = hasEnoughPerformanceData
+        ? Math.min(
+              100,
+              Math.max(
+                  1,
+                  Math.round(
+                      (meaningfulActivities /
+                          Math.max(activeHours, 1)) *
+                          20,
+                  ),
+              ),
+          )
+        : null;
+
+    const performance = {
+        responseTime: null,
+        accuracy: null,
+        efficiency,
+    };
+
+    return {
+        totalActivities,
+
+        totalLogin,
+        dashboardViews,
+        analyticsViews,
+        profileUpdates,
+        profileExports,
+        settingsUpdates,
+        avatarUploads,
+        passwordChanges,
+        iotConfigUpdates,
+        reportExports,
+        reportsCreated,
+
+        activeMinutes,
+        activeHours,
+
+        performance,
 
         byType,
     };

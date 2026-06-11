@@ -258,6 +258,20 @@ export default function PenggunaPage() {
                                 <motion.button
                                   whileHover={{ scale: 1.1 }}
                                   whileTap={{ scale: 0.9 }}
+                                  onClick={() =>
+                                    window.open(
+                                      `/profile/public/${user.id}`,
+                                      "_blank",
+                                      "noopener,noreferrer",
+                                    )
+                                  }
+                                  className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-blue-600 transition-all"
+                                >
+                                  <span className="material-symbols-outlined text-lg">person</span>
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
                                   onClick={() => handleEdit(user)}
                                   className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all"
                                 >
@@ -398,6 +412,20 @@ export default function PenggunaPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() =>
+                                  window.open(
+                                    `/profile/public/${user.id}`,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                  )
+                                }
+                                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-blue-600 transition-all"
+                              >
+                                <span className="material-symbols-outlined text-base">person</span>
+                              </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}

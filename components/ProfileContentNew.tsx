@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { useProfileStore } from "@/lib/store";
+import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
 
 type ProfileTab = "overview" | "activity" | "achievements" | "settings";
 
@@ -69,6 +70,12 @@ function getActivityStyle(type?: string) {
 }
 
 export default function ProfileContent() {
+  useActivityLogger({
+    type: "profile.view",
+    action: "Membuka halaman profil",
+    description: "Pengguna membuka halaman profil pribadi",
+  });
+
   const {
     profile,
     isLoading,
@@ -927,78 +934,101 @@ export default function ProfileContent() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
+                  className="bg-white rounded-xl border border-slate-200 p-4 lg:p-6 shadow-sm"
                 >
-                  <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
+                  <h3 className="text-lg lg:text-xl font-bold text-slate-900 mb-5 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">
                       trending_up
                     </span>
-                    <span className="truncate">Performa</span>
+                    Performa
                   </h3>
-                  <div className="space-y-3 lg:space-y-4">
-                    {(() => {
-                      if (!profile.performance) {
-                        return (
-                          <p className="text-sm text-slate-500">
-                            Data performa belum tersedia.
+                  {(() => {
+                    const performanceItems = [
+                      {
+                        label: "Response Time",
+                        value: profile.performance?.responseTime,
+                        color: "bg-green-500",
+                        description:
+                          "Rata-rata waktu respons terhadap laporan/notifikasi",
+                      },
+                      {
+                        label: "Accuracy",
+                        value: profile.performance?.accuracy,
+                        color: "bg-blue-500",
+                        description:
+                          "Persentase tindakan valid berdasarkan laporan",
+                      },
+                      {
+                        label: "Efficiency",
+                        value: profile.performance?.efficiency,
+                        color: "bg-purple-500",
+                        description:
+                          "Efisiensi aktivitas berdasarkan jam aktif",
+                      },
+                    ].filter(
+                      (item) =>
+                        item.value !== null &&
+                        item.value !== undefined &&
+                        Number.isFinite(Number(item.value)),
+                    );
+
+                    if (performanceItems.length === 0) {
+                      return (
+                        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                          <span className="material-symbols-outlined text-4xl text-slate-300">
+                            monitoring
+                          </span>
+
+                          <p className="mt-2 font-bold text-slate-700">
+                            Data performa belum tersedia
                           </p>
-                        );
-                      }
 
-                      const performanceItems = [
-                        {
-                          label: "Response Time",
-                          value: profile.performance.responseTime,
-                          color: "bg-green-500",
-                        },
-                        {
-                          label: "Accuracy",
-                          value: profile.performance.accuracy,
-                          color: "bg-blue-500",
-                        },
-                        {
-                          label: "Efficiency",
-                          value: profile.performance.efficiency,
-                          color: "bg-purple-500",
-                        },
-                      ].filter(
-                        (item) =>
-                          item.value !== null && item.value !== undefined,
-                      );
-
-                      if (performanceItems.length === 0) {
-                        return (
-                          <p className="text-sm text-slate-500">
-                            Data performa belum tersedia.
+                          <p className="mt-1 text-sm text-slate-500">
+                            Performa akan muncul otomatis setelah aktivitas
+                            pengguna cukup.
                           </p>
-                        );
-                      }
-
-                      return performanceItems.map((metric, idx) => (
-                        <div key={idx} className="overflow-x-hidden">
-                          <div className="flex justify-between mb-1.5 lg:mb-2 gap-2">
-                            <span className="text-xs lg:text-sm font-semibold text-slate-700 truncate">
-                              {metric.label}
-                            </span>
-                            <span className="text-xs lg:text-sm font-bold text-slate-900 flex-shrink-0">
-                              {metric.value}%
-                            </span>
-                          </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${metric.value}%` }}
-                              transition={{
-                                delay: 0.3 + idx * 0.1,
-                                duration: 0.8,
-                              }}
-                              className={`h-full ${metric.color}`}
-                            />
-                          </div>
                         </div>
-                      ));
-                    })()}
-                  </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-5">
+                        {performanceItems.map((item) => (
+                          <div key={item.label}>
+                            <div className="mb-2 flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-semibold text-slate-900">
+                                  {item.label}
+                                </p>
+
+                                <p className="text-xs text-slate-500">
+                                  {item.description}
+                                </p>
+                              </div>
+
+                              <span className="font-black text-slate-900">
+                                {Number(item.value).toFixed(0)}%
+                              </span>
+                            </div>
+
+                            <div className="h-2 rounded-full bg-slate-100">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${Math.min(
+                                    100,
+                                    Math.max(0, Number(item.value)),
+                                  )}%`,
+                                }}
+                                transition={{ delay: 0.3, duration: 0.8 }}
+                                className={`h-2 rounded-full ${item.color}`}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </motion.div>
               </div>
 

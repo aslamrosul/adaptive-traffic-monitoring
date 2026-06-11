@@ -24,9 +24,16 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
+import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
 
 export default function DashboardPage() {
   const { timezone } = useAppSettings();
+
+  useActivityLogger({
+    type: "dashboard.view",
+    action: "Membuka dashboard monitoring",
+    description: "Pengguna membuka halaman dashboard realtime",
+  });
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
   const [selectedIntersection, setSelectedIntersection] =

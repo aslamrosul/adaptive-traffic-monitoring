@@ -21,6 +21,7 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -103,6 +104,12 @@ function calculateDateRange(
 }
 
 export default function AnalitikPage() {
+  useActivityLogger({
+    type: "analytics.view",
+    action: "Membuka halaman analitik",
+    description: "Pengguna membuka dashboard analitik lalu lintas",
+  });
+
   const [selectedIntersection, setSelectedIntersection] =
     useState<string>("all");
 

@@ -33,7 +33,7 @@ async function buildProfileData(user: any) {
   const reportsCreated = toNumber(user.reportsCreated, 0);
   const reportsCompleted = toNumber(user.reportsCompleted, 0);
   const incidentsHandled = toNumber(user.incidentsHandled, reportsCompleted);
-  const activeHours = toNumber(user.activeHours, 0);
+  const storedActiveHours = toNumber(user.activeHours, 0);
   const totalLogin = toNumber(user.totalLogin, 0);
 
   const activityStats = user.id
@@ -51,6 +51,10 @@ async function buildProfileData(user: any) {
         passwordChanges: 0,
         iotConfigUpdates: 0,
         reportExports: 0,
+        reportsCreated: 0,
+        activeMinutes: 0,
+        activeHours: 0,
+        performance: null,
         byType: {},
       }))
     : {
@@ -65,10 +69,26 @@ async function buildProfileData(user: any) {
         passwordChanges: 0,
         iotConfigUpdates: 0,
         reportExports: 0,
+        reportsCreated: 0,
+        activeMinutes: 0,
+        activeHours: 0,
+        performance: null,
         byType: {},
       };
 
-  const performance = user.performance || null;
+  const activeHours = Math.max(
+    storedActiveHours,
+    Number(activityStats.activeHours || 0),
+  );
+
+  const performance =
+    user.performance ||
+    activityStats.performance ||
+    {
+      responseTime: null,
+      accuracy: null,
+      efficiency: null,
+    };
 
   const skills = Array.isArray(user.skills) ? user.skills : [];
 
