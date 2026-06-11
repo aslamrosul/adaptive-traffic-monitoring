@@ -136,11 +136,18 @@ export default function DashboardPage() {
       return null;
     }
 
-    return intersections.find(
+    const found = intersections.find(
       (item: any) =>
         item.id === selectedIntersection ||
         item.intersection_id === selectedIntersection,
     );
+
+    console.log("🔍 selectedIntersectionData:", {
+      selectedIntersection,
+      found: found ? { id: found.id, name: found.name, deviceId: found.deviceId || found.device_id } : null,
+    });
+
+    return found;
   }, [intersections, selectedIntersection]);
 
   const selectedDeviceId =
@@ -148,15 +155,27 @@ export default function DashboardPage() {
     selectedIntersectionData?.device_id ||
     null;
 
+  console.log("🎯 selectedDeviceId:", selectedDeviceId);
+
   const realtimeData = useMemo(() => {
+    console.log("🔄 Memperbarui realtimeData:", {
+      selectedIntersection,
+      selectedDeviceId,
+      latestDataDevice: latestData?.deviceId,
+      availableDevices: Object.keys(latestByDevice),
+    });
+
     if (selectedIntersection === "all") {
+      console.log("📍 Mode: Semua Persimpangan, menggunakan latestData");
       return latestData;
     }
 
     if (selectedDeviceId && latestByDevice[selectedDeviceId]) {
+      console.log(`📍 Mode: Device spesifik (${selectedDeviceId}), data ditemukan`);
       return latestByDevice[selectedDeviceId];
     }
 
+    console.log("📍 Mode: Fallback ke latestData (device tidak ditemukan)");
     return latestData;
   }, [selectedIntersection, selectedDeviceId, latestData, latestByDevice]);
 
@@ -217,10 +236,10 @@ export default function DashboardPage() {
                     </div>
 
                     <p className="mt-1 text-xs text-slate-700">
-                      Device: {latestData?.deviceId || "-"} · Persimpangan:{" "}
-                      {latestData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
-                      {latestData?.timestamp
-                        ? `${formatWithTimezone(latestData.timestamp, timezone)} ${getTimezoneLabel(timezone)}`
+                      Device: {realtimeData?.deviceId || "-"} · Persimpangan:{" "}
+                      {realtimeData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
+                      {realtimeData?.timestamp
+                        ? `${formatWithTimezone(realtimeData.timestamp, timezone)} ${getTimezoneLabel(timezone)}`
                         : lastUpdate
                         ? `${formatWithTimezone(lastUpdate.toISOString(), timezone)} ${getTimezoneLabel(timezone)}`
                         : "-"}

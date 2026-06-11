@@ -923,6 +923,7 @@ export function useMqttTraffic() {
         /^traffic\/[^/]+\/data$/.test(topic);
 
       if (!isTrafficDataTopic) {
+        console.log("❌ Topic tidak cocok:", topic);
         return;
       }
 
@@ -939,7 +940,7 @@ export function useMqttTraffic() {
           raw.device = deviceIdFromTopic;
         }
 
-        console.log("MQTT telemetry diterima:", topic, raw);
+        console.log("✅ MQTT telemetry diterima:", topic, raw);
 
         const normalized =
           normalizeMqttTraffic(raw);
@@ -949,12 +950,24 @@ export function useMqttTraffic() {
           pendingCommandsRef.current,
         );
 
+        console.log("📦 Data normalized:", {
+          deviceId: withPending.deviceId,
+          intersectionId: withPending.intersectionId,
+          timestamp: withPending.timestamp,
+        });
+
         setLatestData(withPending);
         
-        setLatestByDevice((current) => ({
-          ...current,
-          [withPending.deviceId]: withPending,
-        }));
+        setLatestByDevice((current) => {
+          const updated = {
+            ...current,
+            [withPending.deviceId]: withPending,
+          };
+          
+          console.log("🗂️ latestByDevice updated:", Object.keys(updated));
+          
+          return updated;
+        });
         
         setError(null);
       } catch (parseError) {
