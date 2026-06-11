@@ -27,6 +27,8 @@ export type ActivityType =
     | "user.update"
     | "user.delete"
     | "notification.view"
+    | "settings.view"
+    | "settings.update"
     | "report.export"
     | "report.create"
     | "report.update"
@@ -132,6 +134,14 @@ const ACTIVITY_STYLE: Record<
     "notification.view": {
         icon: "notifications",
         color: "text-purple-600 bg-purple-100",
+    },
+    "settings.view": {
+        icon: "settings",
+        color: "text-slate-600 bg-slate-100",
+    },
+    "settings.update": {
+        icon: "settings",
+        color: "text-cyan-600 bg-cyan-100",
     },
     "report.export": {
         icon: "download",
