@@ -16,15 +16,20 @@ import type {
 } from "@/lib/hooks/useDashboardWithFilter";
 
 import { useIntersections } from "@/lib/hooks/useIntersections";
-import { useMqttTraffic } from "@/lib/hooks/useMqttTraffic";
+import {
+  normalizeMqttTraffic,
+  type TrafficUpdate,
+  useMqttTraffic,
+} from "@/lib/hooks/useMqttTraffic";
 
-import { useEffect, useMemo, useState } from "react";
 import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
 import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
-import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
+
+import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardPage() {
   const { timezone } = useAppSettings();
@@ -34,6 +39,7 @@ export default function DashboardPage() {
     action: "Membuka dashboard monitoring",
     description: "Pengguna membuka halaman dashboard realtime",
   });
+
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
   const [selectedIntersection, setSelectedIntersection] =
@@ -42,6 +48,13 @@ export default function DashboardPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
+
+  /**
+   * Ini fallback data dari API DynamoDB untuk persimpangan yang dipilih.
+   * Dipakai ketika data realtime MQTT per-device belum masuk ke latestByDevice.
+   */
+  const [selectedLatestFromApi, setSelectedLatestFromApi] =
+    useState<TrafficUpdate | null>(null);
 
   const { intersections } = useIntersections();
 
@@ -72,19 +85,20 @@ export default function DashboardPage() {
     }
   }, [latestData]);
 
-  // Close control panel on escape key
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isControlPanelOpen) {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isControlPanelOpen) {
         setIsControlPanelOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
   }, [isControlPanelOpen]);
 
-  // Prevent body scroll when panel is open
   useEffect(() => {
     if (isControlPanelOpen) {
       document.body.style.overflow = "hidden";
@@ -136,18 +150,13 @@ export default function DashboardPage() {
       return null;
     }
 
-    const found = intersections.find(
-      (item: any) =>
-        item.id === selectedIntersection ||
-        item.intersection_id === selectedIntersection,
+    return (
+      intersections.find(
+        (item: any) =>
+          item.id === selectedIntersection ||
+          item.intersection_id === selectedIntersection,
+      ) ?? null
     );
-
-    console.log("🔍 selectedIntersectionData:", {
-      selectedIntersection,
-      found: found ? { id: found.id, name: found.name, deviceId: found.deviceId || found.device_id } : null,
-    });
-
-    return found;
   }, [intersections, selectedIntersection]);
 
   const selectedDeviceId =
@@ -155,32 +164,122 @@ export default function DashboardPage() {
     selectedIntersectionData?.device_id ||
     null;
 
-  console.log("🎯 selectedDeviceId:", selectedDeviceId);
+  /**
+   * Ambil latest data dari API berdasarkan intersection yang dipilih.
+   * Ini mencegah UI fallback ke latestData global milik device lain.
+   */
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadSelectedLatest() {
+      if (selectedIntersection === "all") {
+        setSelectedLatestFromApi(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/traffic/latest?intersectionId=${encodeURIComponent(
+            selectedIntersection,
+          )}&limit=1`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        const json = await response.json();
+
+        if (
+          !cancelled &&
+          response.ok &&
+          json.success &&
+          Array.isArray(json.data) &&
+          json.data.length > 0
+        ) {
+          setSelectedLatestFromApi(normalizeMqttTraffic(json.data[0]));
+          return;
+        }
+
+        if (!cancelled) {
+          setSelectedLatestFromApi(null);
+        }
+      } catch (fetchError) {
+        console.error(
+          "Gagal mengambil latest traffic persimpangan:",
+          fetchError,
+        );
+
+        if (!cancelled) {
+          setSelectedLatestFromApi(null);
+        }
+      }
+    }
+
+    loadSelectedLatest();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIntersection]);
+
+  /**
+   * Data final untuk Road Simulation dan TrafficControlPanel.
+   *
+   * Aturan:
+   * - Semua Persimpangan  -> latestData global.
+   * - Persimpangan khusus -> latestByDevice[deviceId].
+   * - Kalau MQTT belum ada -> selectedLatestFromApi.
+   * - Jangan fallback ke latestData global saat pilih persimpangan khusus.
+   */
   const realtimeData = useMemo(() => {
-    console.log("🔄 Memperbarui realtimeData:", {
-      selectedIntersection,
-      selectedDeviceId,
-      latestDataDevice: latestData?.deviceId,
-      availableDevices: Object.keys(latestByDevice),
-    });
-
     if (selectedIntersection === "all") {
-      console.log("📍 Mode: Semua Persimpangan, menggunakan latestData");
       return latestData;
     }
 
     if (selectedDeviceId && latestByDevice[selectedDeviceId]) {
-      console.log(`📍 Mode: Device spesifik (${selectedDeviceId}), data ditemukan`);
       return latestByDevice[selectedDeviceId];
     }
 
-    console.log("📍 Mode: Fallback ke latestData (device tidak ditemukan)");
-    return latestData;
-  }, [selectedIntersection, selectedDeviceId, latestData, latestByDevice]);
+    if (selectedLatestFromApi) {
+      return selectedLatestFromApi;
+    }
+
+    return null;
+  }, [
+    selectedIntersection,
+    selectedDeviceId,
+    latestByDevice,
+    latestData,
+    selectedLatestFromApi,
+  ]);
+
+  const formattedLastUpdate = useMemo(() => {
+    if (realtimeData?.timestamp) {
+      return `${formatWithTimezone(realtimeData.timestamp, timezone)} ${getTimezoneLabel(
+        timezone,
+      )}`;
+    }
+
+    if (lastUpdate) {
+      return `${formatWithTimezone(lastUpdate.toISOString(), timezone)} ${getTimezoneLabel(
+        timezone,
+      )}`;
+    }
+
+    return "-";
+  }, [lastUpdate, realtimeData?.timestamp, timezone]);
+
+  const filterIntersections = useMemo(
+    () =>
+      intersections.map((item: any) => ({
+        id: item.id ?? item.intersection_id,
+        name: item.name,
+      })),
+    [intersections],
+  );
 
   return (
-    <div className="flex min-h-screen bg-surface overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden bg-surface">
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={handleToggleSidebar}
@@ -202,7 +301,6 @@ export default function DashboardPage() {
           ].join(" ")}
         >
           <div className="mx-auto max-w-[1920px] space-y-4 p-3 lg:space-y-6 lg:p-6">
-            {/* MQTT STATUS */}
             <section
               className={[
                 "rounded-xl border p-4",
@@ -237,13 +335,16 @@ export default function DashboardPage() {
 
                     <p className="mt-1 text-xs text-slate-700">
                       Device: {realtimeData?.deviceId || "-"} · Persimpangan:{" "}
-                      {realtimeData?.intersectionId || "-"} · Terakhir diperbarui:{" "}
-                      {realtimeData?.timestamp
-                        ? `${formatWithTimezone(realtimeData.timestamp, timezone)} ${getTimezoneLabel(timezone)}`
-                        : lastUpdate
-                        ? `${formatWithTimezone(lastUpdate.toISOString(), timezone)} ${getTimezoneLabel(timezone)}`
-                        : "-"}
+                      {realtimeData?.intersectionId || "-"} · Terakhir
+                      diperbarui: {formattedLastUpdate}
                     </p>
+
+                    {selectedIntersection !== "all" && !realtimeData && (
+                      <p className="mt-1 text-xs font-medium text-amber-700">
+                        Belum ada data telemetry untuk persimpangan yang
+                        dipilih.
+                      </p>
+                    )}
 
                     {error && (
                       <p className="mt-1 text-xs font-medium text-red-700">
@@ -265,27 +366,20 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* FILTER */}
             <DashboardTimeFilter
               onFilterChange={handleFilterChange}
               currentRange={timeRange}
               onIntersectionChange={handleIntersectionChange}
               selectedIntersection={selectedIntersection}
-              intersections={intersections.map((item: any) => ({
-                id: item.id ?? item.intersection_id,
-                name: item.name,
-              }))}
+              intersections={filterIntersections}
             />
 
-            {/* STATISTICS */}
             <DashboardStats
               timeRange={timeRange}
               customDates={customDates}
             />
 
-            {/* MAIN DASHBOARD GRID */}
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
-              {/* LEFT COLUMN */}
               <div className="space-y-4 lg:space-y-6 xl:col-span-8">
                 <TrafficRoadSimulation data={realtimeData} />
 
@@ -294,22 +388,10 @@ export default function DashboardPage() {
                   customDates={customDates}
                 />
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
-                  <div className="mb-4">
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Semua Persimpangan
-                    </h2>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Daftar persimpangan yang terhubung ke sistem
-                    </p>
-                  </div>
-
-                  <IntersectionGrid />
-                </div>
+                <IntersectionGrid />
               </div>
 
-              {/* RIGHT COLUMN - Desktop Only */}
-              <aside className="hidden xl:block xl:col-span-4 space-y-4 lg:space-y-6">
+              <aside className="space-y-4 lg:space-y-6 xl:col-span-4">
                 <TrafficControlPanel
                   data={realtimeData}
                   publishMqtt={publishMqtt}
@@ -322,88 +404,37 @@ export default function DashboardPage() {
                     </p>
 
                     <h2 className="text-lg font-bold text-slate-900">
-                      {selectedIntersection === "all" 
-                        ? "Pilih Persimpangan" 
-                        : selectedIntersectionName}
+                      {selectedIntersectionName}
                     </h2>
                   </div>
 
-                  <LaneStatusPanel
-                    intersectionId={selectedIntersection}
-                  />
+                  <LaneStatusPanel intersectionId={selectedIntersection} />
                 </div>
               </aside>
             </section>
-
-            {/* FLOATING ACTION BUTTON - Mobile Only */}
-            <button
-              type="button"
-              onClick={() => setIsControlPanelOpen(true)}
-              className="xl:hidden fixed bottom-6 right-6 z-[100] w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all ring-4 ring-white"
-              aria-label="Buka panel kontrol"
-            >
-              <span className="material-symbols-outlined text-2xl">tune</span>
-            </button>
-
-            {/* MOBILE SLIDE PANEL */}
-            {isControlPanelOpen && (
-              <>
-                {/* Backdrop */}
-                <div
-                  className="xl:hidden fixed inset-0 bg-black/50 z-[110] backdrop-blur-sm"
-                  onClick={() => setIsControlPanelOpen(false)}
-                />
-
-                {/* Slide Panel */}
-                <div className="xl:hidden fixed inset-y-0 right-0 z-[120] w-full sm:w-96 bg-surface shadow-2xl overflow-y-auto animate-slide-in-right">
-                  {/* Header */}
-                  <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10">
-                    <h3 className="text-lg font-bold text-slate-900">
-                      Kontrol Traffic
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setIsControlPanelOpen(false)}
-                      className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
-                      aria-label="Tutup panel"
-                    >
-                      <span className="material-symbols-outlined text-slate-700">
-                        close
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4 space-y-4">
-                    <TrafficControlPanel
-                      data={realtimeData}
-                      publishMqtt={publishMqtt}
-                    />
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
-                      <div className="mb-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Status jalur
-                        </p>
-
-                        <h2 className="text-lg font-bold text-slate-900">
-                          {selectedIntersection === "all" 
-                            ? "Pilih Persimpangan" 
-                            : selectedIntersectionName}
-                        </h2>
-                      </div>
-
-                      <LaneStatusPanel
-                        intersectionId={selectedIntersection}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </main>
       </div>
+
+      {isControlPanelOpen && (
+        <button
+          type="button"
+          aria-label="Tutup panel kontrol"
+          onClick={() => setIsControlPanelOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+
+      <button
+        type="button"
+        onClick={() => setIsControlPanelOpen((current) => !current)}
+        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-2xl lg:hidden"
+        aria-label="Buka panel kontrol"
+      >
+        <span className="material-symbols-outlined">
+          tune
+        </span>
+      </button>
     </div>
   );
 }

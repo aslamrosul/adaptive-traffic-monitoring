@@ -179,14 +179,14 @@ function normalizeNestedLane(
 ): LaneData {
   const queueLevel = toQueueLevel(
     rawLane?.queueLevel ??
-      rawLane?.queue_level ??
-      rawLane?.densityLevel ??
-      rawLane?.density_level,
+    rawLane?.queue_level ??
+    rawLane?.densityLevel ??
+    rawLane?.density_level,
   );
 
   const vehicleDetected = toBool(
     rawLane?.vehicleDetected ??
-      rawLane?.vehicle_detected,
+    rawLane?.vehicle_detected,
     queueLevel >= 1,
   );
 
@@ -195,7 +195,7 @@ function normalizeNestedLane(
 
     vehicleCount: toNumber(
       rawLane?.vehicleCount ??
-        rawLane?.vehicle_count,
+      rawLane?.vehicle_count,
       0,
     ),
 
@@ -208,15 +208,15 @@ function normalizeNestedLane(
 
     queueDetected: toBool(
       rawLane?.queueDetected ??
-        rawLane?.queue_detected,
+      rawLane?.queue_detected,
       queueLevel >= 2,
     ),
 
     queueLength: toNumber(
       rawLane?.queueLength ??
-        rawLane?.queue_length ??
-        rawLane?.queueEstimateCm ??
-        rawLane?.queue_estimate_cm,
+      rawLane?.queue_length ??
+      rawLane?.queueEstimateCm ??
+      rawLane?.queue_estimate_cm,
       0,
     ),
 
@@ -224,9 +224,9 @@ function normalizeNestedLane(
 
     greenDuration: toNumber(
       rawLane?.greenDuration ??
-        rawLane?.green_duration ??
-        rawLane?.greenDurationS ??
-        rawLane?.green_duration_s,
+      rawLane?.green_duration ??
+      rawLane?.greenDurationS ??
+      rawLane?.green_duration_s,
       0,
     ),
   };
@@ -343,19 +343,19 @@ export function normalizeMqttTraffic(
 
     densityLevel0GreenS: toNumber(
       raw?.density_level_0_green_s ??
-        raw?.densityLevel0GreenS,
+      raw?.densityLevel0GreenS,
       10,
     ),
 
     densityLevel1GreenS: toNumber(
       raw?.density_level_1_green_s ??
-        raw?.densityLevel1GreenS,
+      raw?.densityLevel1GreenS,
       20,
     ),
 
     densityLevel2GreenS: toNumber(
       raw?.density_level_2_green_s ??
-        raw?.densityLevel2GreenS,
+      raw?.densityLevel2GreenS,
       30,
     ),
 
@@ -477,7 +477,7 @@ function applyPendingCommands(
 
 export function useMqttTraffic() {
   const { timezone } = useAppSettings();
-  
+
   const clientRef = useRef<MqttClient | null>(null);
 
   const pendingCommandsRef =
@@ -508,8 +508,8 @@ export function useMqttTraffic() {
   const port =
     process.env.NEXT_PUBLIC_MQTT_PORT ??
     "8089";
-  const protocol = 
-    process.env.NEXT_PUBLIC_MQTT_PROTOCOL 
+  const protocol =
+    process.env.NEXT_PUBLIC_MQTT_PROTOCOL
     ?? "wss";
 
   const username =
@@ -534,7 +534,7 @@ export function useMqttTraffic() {
 
   const getDeviceScopedLightCommand = useCallback((topic: string) => {
     const parts = topic.split("/");
-    
+
     if (
       parts.length === 5 &&
       parts[0] === "traffic" &&
@@ -546,7 +546,7 @@ export function useMqttTraffic() {
         lane: parts[3] as LaneName,
       };
     }
-    
+
     return null;
   }, []);
 
@@ -575,25 +575,25 @@ export function useMqttTraffic() {
 
         // Check for device-scoped light command first
         const scopedLightCommand = getDeviceScopedLightCommand(topic);
-        
+
         if (scopedLightCommand) {
           const light = toLight(payload);
-          
+
           if (scopedLightCommand.lane === "north") {
             next.north.light = light;
             pendingCommandsRef.current.northLight = createPendingValue(light);
           }
-          
+
           if (scopedLightCommand.lane === "south") {
             next.south.light = light;
             pendingCommandsRef.current.southLight = createPendingValue(light);
           }
-          
+
           if (scopedLightCommand.lane === "east") {
             next.east.light = light;
             pendingCommandsRef.current.eastLight = createPendingValue(light);
           }
-          
+
           return next;
         }
 
@@ -814,11 +814,14 @@ export function useMqttTraffic() {
           Array.isArray(json.data) &&
           json.data.length > 0
         ) {
-          const normalized = normalizeMqttTraffic(
-            json.data[0],
-          );
+          const normalized = normalizeMqttTraffic(json.data[0]);
 
           setLatestData(normalized);
+
+          setLatestByDevice((current) => ({
+            ...current,
+            [normalized.deviceId]: normalized,
+          }));
         }
       } catch (loadError) {
         console.warn(
@@ -957,18 +960,18 @@ export function useMqttTraffic() {
         });
 
         setLatestData(withPending);
-        
+
         setLatestByDevice((current) => {
           const updated = {
             ...current,
             [withPending.deviceId]: withPending,
           };
-          
+
           console.log("🗂️ latestByDevice updated:", Object.keys(updated));
-          
+
           return updated;
         });
-        
+
         setError(null);
       } catch (parseError) {
         const message =
