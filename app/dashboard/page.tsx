@@ -41,6 +41,7 @@ export default function DashboardPage() {
 
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
 
   const { intersections } = useIntersections();
 
@@ -69,6 +70,31 @@ export default function DashboardPage() {
       setLastUpdate(new Date());
     }
   }, [latestData]);
+
+  // Close control panel on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isControlPanelOpen) {
+        setIsControlPanelOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isControlPanelOpen]);
+
+  // Prevent body scroll when panel is open
+  useEffect(() => {
+    if (isControlPanelOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isControlPanelOpen]);
 
   const handleToggleSidebar = (open: boolean) => {
     setIsSidebarOpen(open);
@@ -219,11 +245,22 @@ export default function DashboardPage() {
                   customDates={customDates}
                 />
 
-                <IntersectionGrid />
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                  <div className="mb-4">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Semua Persimpangan
+                    </h2>
+                    <p className="text-xs text-slate-600 mt-1">
+                      Daftar persimpangan yang terhubung ke sistem
+                    </p>
+                  </div>
+
+                  <IntersectionGrid />
+                </div>
               </div>
 
-              {/* RIGHT COLUMN */}
-              <aside className="space-y-4 lg:space-y-6 xl:col-span-4">
+              {/* RIGHT COLUMN - Desktop Only */}
+              <aside className="hidden xl:block xl:col-span-4 space-y-4 lg:space-y-6">
                 <TrafficControlPanel
                   data={latestData}
                   publishMqtt={publishMqtt}
@@ -236,7 +273,9 @@ export default function DashboardPage() {
                     </p>
 
                     <h2 className="text-lg font-bold text-slate-900">
-                      {selectedIntersectionName}
+                      {selectedIntersection === "all" 
+                        ? "Pilih Persimpangan" 
+                        : selectedIntersectionName}
                     </h2>
                   </div>
 
@@ -246,6 +285,73 @@ export default function DashboardPage() {
                 </div>
               </aside>
             </section>
+
+            {/* FLOATING ACTION BUTTON - Mobile Only */}
+            <button
+              type="button"
+              onClick={() => setIsControlPanelOpen(true)}
+              className="xl:hidden fixed bottom-6 right-6 z-[100] w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all ring-4 ring-white"
+              aria-label="Buka panel kontrol"
+            >
+              <span className="material-symbols-outlined text-2xl">tune</span>
+            </button>
+
+            {/* MOBILE SLIDE PANEL */}
+            {isControlPanelOpen && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="xl:hidden fixed inset-0 bg-black/50 z-[110] backdrop-blur-sm"
+                  onClick={() => setIsControlPanelOpen(false)}
+                />
+
+                {/* Slide Panel */}
+                <div className="xl:hidden fixed inset-y-0 right-0 z-[120] w-full sm:w-96 bg-surface shadow-2xl overflow-y-auto animate-slide-in-right">
+                  {/* Header */}
+                  <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Kontrol Traffic
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsControlPanelOpen(false)}
+                      className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
+                      aria-label="Tutup panel"
+                    >
+                      <span className="material-symbols-outlined text-slate-700">
+                        close
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 space-y-4">
+                    <TrafficControlPanel
+                      data={latestData}
+                      publishMqtt={publishMqtt}
+                    />
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Status jalur
+                        </p>
+
+                        <h2 className="text-lg font-bold text-slate-900">
+                          {selectedIntersection === "all" 
+                            ? "Pilih Persimpangan" 
+                            : selectedIntersectionName}
+                        </h2>
+                      </div>
+
+                      <LaneStatusPanel
+                        intersectionId={selectedIntersection}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>

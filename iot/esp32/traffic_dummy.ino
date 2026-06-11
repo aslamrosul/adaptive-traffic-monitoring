@@ -50,7 +50,7 @@ const char *wifiPassword = "88888889";
 // MQTT CONFIG
 // ============================================================
 
-#define MQTT_SERVER "13.211.191.195"
+#define MQTT_SERVER "3.25.72.124"
 #define MQTT_PORT 1883
 
 #define MQTT_USER "jti"
