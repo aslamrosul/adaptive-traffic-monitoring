@@ -160,12 +160,7 @@ function getWibHour(timestamp?: string): number {
 }
 
 function getValidTimestamp(item: any): string {
-  return (
-    item.timestamp ||
-    item.processedAt ||
-    item.received_at_utc ||
-    ""
-  );
+  return item.timestamp || item.processedAt || item.received_at_utc || "";
 }
 
 function flattenTrafficData(items: any[]): FlattenedLaneData[] {
@@ -182,8 +177,7 @@ function flattenTrafficData(items: any[]): FlattenedLaneData[] {
         processedAt: item.processedAt || item.received_at_utc,
         intersectionId:
           item.intersectionId || item.intersection_id || "",
-        deviceId:
-          item.deviceId || item.device_id || item.device || "",
+        deviceId: item.deviceId || item.device_id || item.device || "",
         lane,
         vehicleCount: Number(laneData.vehicleCount || 0),
         queueLevel: Number(laneData.queueLevel || 0),
@@ -239,7 +233,7 @@ export default function TrafficTrendChart({
 
       try {
         const params = new URLSearchParams({
-          limit: "500",
+          limit: "1000",
           startDate: range.startDate,
           endDate: range.endDate,
         });
@@ -293,14 +287,14 @@ export default function TrafficTrendChart({
         const hourlyMap = new Map<
           number,
           {
-            vehicles: number[];
+            vehicleMaxByKey: Map<string, number>;
             queueLevels: number[];
           }
         >();
 
         for (let hour = 0; hour < 24; hour++) {
           hourlyMap.set(hour, {
-            vehicles: [],
+            vehicleMaxByKey: new Map<string, number>(),
             queueLevels: [],
           });
         }
@@ -311,12 +305,18 @@ export default function TrafficTrendChart({
 
           if (!bucket) continue;
 
-          bucket.vehicles.push(Number(item.vehicleCount || 0));
+          const key = `${item.intersectionId}_${item.deviceId}_${item.lane}`;
+          const vehicleCount = Number(item.vehicleCount || 0);
+          const previous = bucket.vehicleMaxByKey.get(key) ?? 0;
+
+          if (vehicleCount > previous) {
+            bucket.vehicleMaxByKey.set(key, vehicleCount);
+          }
+
           bucket.queueLevels.push(Number(item.queueLevel || 0));
         }
 
         const chartRows: HourlyData[] = [];
-
         const currentWibHour = getWibHour(new Date().toISOString());
 
         const hoursToShow =
@@ -334,11 +334,11 @@ export default function TrafficTrendChart({
 
           const data = hourlyMap.get(hour);
 
-          const avgVehicles =
-            data && data.vehicles.length > 0
-              ? Math.round(
-                  data.vehicles.reduce((sum, value) => sum + value, 0) /
-                    data.vehicles.length,
+          const totalVehicles =
+            data && data.vehicleMaxByKey.size > 0
+              ? Array.from(data.vehicleMaxByKey.values()).reduce(
+                  (sum, value) => sum + value,
+                  0,
                 )
               : 0;
 
@@ -356,7 +356,7 @@ export default function TrafficTrendChart({
 
           chartRows.push({
             hour: `${String(hour).padStart(2, "0")}:00`,
-            vehicleCount: avgVehicles,
+            vehicleCount: totalVehicles,
             queueLevel: avgQueueLevel,
           });
         }
@@ -669,8 +669,8 @@ export default function TrafficTrendChart({
             <div className="h-0.5 w-8 rounded bg-blue-500" />
 
             <span className="text-slate-600">
-              <span className="font-bold">Vehicle Count:</span> Rata-rata
-              kendaraan per jam
+              <span className="font-bold">Vehicle Count:</span> Total
+              kendaraan berdasarkan counter tertinggi per jalur.
             </span>
           </div>
 
@@ -679,7 +679,7 @@ export default function TrafficTrendChart({
 
             <span className="text-slate-600">
               <span className="font-bold">Queue Level:</span> 0=Lancar,
-              1=Sedang, 2=Padat
+              1=Sedang, 2=Padat.
             </span>
           </div>
         </div>

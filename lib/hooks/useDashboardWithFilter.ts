@@ -121,10 +121,32 @@ function getLatestSnapshots(items: any[]) {
   return Array.from(map.values());
 }
 
-function calculateVehicleTotalFromLatest(items: any[]) {
-  return items.reduce((sum, item) => {
-    return sum + Number(item.vehicleCount || 0);
-  }, 0);
+function calculateVehicleTotalFromMaxCounter(items: any[]) {
+  const maxByLane = new Map<string, number>();
+
+  for (const item of items) {
+    const intersectionId =
+      item.intersectionId || item.intersection_id || "unknown";
+
+    const deviceId =
+      item.deviceId || item.device_id || item.device || "unknown";
+
+    for (const lane of ACTIVE_LANES) {
+      const value = Number(item?.[lane]?.vehicleCount || 0);
+
+      const key = `${intersectionId}_${deviceId}_${lane}`;
+      const previous = maxByLane.get(key) ?? 0;
+
+      if (value > previous) {
+        maxByLane.set(key, value);
+      }
+    }
+  }
+
+  return Array.from(maxByLane.values()).reduce(
+    (sum, value) => sum + value,
+    0,
+  );
 }
 
 function calculateAverageGreenDuration(items: any[]) {
@@ -255,12 +277,16 @@ function buildTrafficTrend(
   traffic: any[],
   timeRange: TimeRange,
 ): TrafficTrendData[] {
-  const hourlyData: Record<number, { count: number; total: number }> = {};
+  const hourlyData: Record<
+    number,
+    {
+      vehicleMaxByKey: Map<string, number>;
+    }
+  > = {};
 
   for (let hour = 0; hour < 24; hour++) {
     hourlyData[hour] = {
-      count: 0,
-      total: 0,
+      vehicleMaxByKey: new Map<string, number>(),
     };
   }
 
@@ -269,8 +295,21 @@ function buildTrafficTrend(
       item.timestamp || item.processedAt || item.received_at_utc,
     );
 
-    hourlyData[hour].count++;
-    hourlyData[hour].total += Number(item.vehicleCount || 0);
+    const intersectionId =
+      item.intersectionId || item.intersection_id || "unknown";
+
+    const deviceId =
+      item.deviceId || item.device_id || item.device || "unknown";
+
+    for (const lane of ACTIVE_LANES) {
+      const value = Number(item?.[lane]?.vehicleCount || 0);
+      const key = `${intersectionId}_${deviceId}_${lane}`;
+      const previous = hourlyData[hour].vehicleMaxByKey.get(key) ?? 0;
+
+      if (value > previous) {
+        hourlyData[hour].vehicleMaxByKey.set(key, value);
+      }
+    }
   }
 
   const trendData: TrafficTrendData[] = [];
@@ -283,14 +322,13 @@ function buildTrafficTrend(
     const hour =
       timeRange === "today" ? (currentHour - i + 24) % 24 : 23 - i;
 
-    const avgVehicles =
-      hourlyData[hour].count > 0
-        ? Math.round(hourlyData[hour].total / hourlyData[hour].count)
-        : 0;
+    const vehicles = Array.from(
+      hourlyData[hour].vehicleMaxByKey.values(),
+    ).reduce((sum, value) => sum + value, 0);
 
     trendData.push({
       time: `${String(hour).padStart(2, "0")}:00`,
-      vehicles: avgVehicles,
+      vehicles,
       hour,
       height: 0,
     });
@@ -378,7 +416,7 @@ export function useDashboardWithFilter(
           safeFetchJson("/api/intersections"),
 
           safeFetchJson(
-            `/api/traffic/realtime?limit=500&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
+            `/api/traffic/realtime?limit=1000&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
           ),
 
           safeFetchJson(
@@ -444,7 +482,7 @@ export function useDashboardWithFilter(
         );
 
         const realtimeVehicleTotal =
-          calculateVehicleTotalFromLatest(latestSnapshots);
+          calculateVehicleTotalFromMaxCounter(traffic);
 
         const analyticsVehicleTotal = periodAnalytics.reduce(
           (sum: number, item: any) =>
