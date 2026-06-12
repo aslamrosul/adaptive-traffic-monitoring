@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
   Filler,
   Legend,
   LinearScale,
@@ -36,12 +36,6 @@ type TimeRange =
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
-interface HourlyData {
-  hour: string;
-  vehicleCount: number;
-  queueLevel: number;
-}
-
 interface TrafficTrendChartProps {
   timeRange?: TimeRange;
   customDates?: {
@@ -49,6 +43,12 @@ interface TrafficTrendChartProps {
     endDate?: string;
   };
   intersectionId?: string;
+}
+
+interface HourlyData {
+  hour: string;
+  vehicleCount: number;
+  queueLevel: number;
 }
 
 interface FlattenedLaneData {
@@ -74,7 +74,7 @@ function getWibDateValue(date = new Date()): string {
 }
 
 function addDaysToDateValue(dateValue: string, days: number): string {
-  const date = new Date(`${dateValue}T12:00:00+07:00`);
+  const date = new Date(`${dateValue}T12:00:00.000+07:00`);
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 }
@@ -160,7 +160,12 @@ function getWibHour(timestamp?: string): number {
 }
 
 function getValidTimestamp(item: any): string {
-  return item.timestamp || item.processedAt || item.received_at_utc || "";
+  return (
+    item.timestamp ||
+    item.processedAt ||
+    item.received_at_utc ||
+    ""
+  );
 }
 
 function flattenTrafficData(items: any[]): FlattenedLaneData[] {
@@ -177,7 +182,8 @@ function flattenTrafficData(items: any[]): FlattenedLaneData[] {
         processedAt: item.processedAt || item.received_at_utc,
         intersectionId:
           item.intersectionId || item.intersection_id || "",
-        deviceId: item.deviceId || item.device_id || item.device || "",
+        deviceId:
+          item.deviceId || item.device_id || item.device || "",
         lane,
         vehicleCount: Number(laneData.vehicleCount || 0),
         queueLevel: Number(laneData.queueLevel || 0),
@@ -198,6 +204,7 @@ function formatRangeSubtitle(
   if (timeRange === "7days") return "7 hari terakhir";
   if (timeRange === "30days") return "30 hari terakhir";
   if (timeRange === "custom") return `${startDate} sampai ${endDate}`;
+
   return "Periode terpilih";
 }
 
@@ -212,159 +219,178 @@ export default function TrafficTrendChart({
   const [selectedLane, setSelectedLane] = useState<LaneFilter>("all");
 
   const hasLoadedRef = useRef(false);
-  const isFetchingRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   const range = useMemo(
     () => getDateRange(timeRange, customDates),
     [timeRange, customDates?.startDate, customDates?.endDate],
   );
 
-  const fetchChartData = async (showRefreshIndicator = false) => {
-    if (isFetchingRef.current) return;
+  const fetchChartData = useCallback(
+    async (showRefreshIndicator = false) => {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
 
-    isFetchingRef.current = true;
-
-    if (!hasLoadedRef.current) {
-      setIsInitialLoading(true);
-    } else if (showRefreshIndicator) {
-      setIsRefreshing(true);
-    }
-
-    try {
-      const params = new URLSearchParams({
-        limit: "5000",
-        startDate: range.startDate,
-        endDate: range.endDate,
-      });
-
-      if (intersectionId && intersectionId !== "all") {
-        params.set("intersectionId", intersectionId);
+      if (!hasLoadedRef.current) {
+        setIsInitialLoading(true);
+      } else if (showRefreshIndicator) {
+        setIsRefreshing(true);
       }
 
-      const response = await fetch(
-        `/api/traffic/realtime?${params.toString()}`,
-        {
-          cache: "no-store",
-        },
-      );
+      try {
+        const params = new URLSearchParams({
+          limit: "1000",
+          startDate: range.startDate,
+          endDate: range.endDate,
+        });
 
-      const result = await response.json();
-
-      if (
-        !response.ok ||
-        !result.success ||
-        !Array.isArray(result.data) ||
-        result.data.length === 0
-      ) {
-        setHourlyData([]);
-        return;
-      }
-
-      const flattenedData = flattenTrafficData(result.data);
-
-      const laneFilteredData =
-        selectedLane === "all"
-          ? flattenedData
-          : flattenedData.filter((item) => item.lane === selectedLane);
-
-      const rangeData = laneFilteredData.filter((item) => {
-        const timestamp = getValidTimestamp(item);
-
-        if (!timestamp) return false;
-
-        const date = new Date(timestamp);
-
-        if (Number.isNaN(date.getTime())) return false;
-
-        return date >= range.start && date <= range.end;
-      });
-
-      const hourlyMap = new Map<
-        number,
-        {
-          vehicles: number[];
-          queueLevels: number[];
+        if (intersectionId && intersectionId !== "all") {
+          params.set("intersectionId", intersectionId);
         }
-      >();
 
-      for (let hour = 0; hour < 24; hour++) {
-        hourlyMap.set(hour, {
-          vehicles: [],
-          queueLevels: [],
+        const response = await fetch(
+          `/api/traffic/realtime?${params.toString()}`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        const result = await response.json();
+
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        if (
+          !response.ok ||
+          !result.success ||
+          !Array.isArray(result.data) ||
+          result.data.length === 0
+        ) {
+          setHourlyData([]);
+          return;
+        }
+
+        const flattenedData = flattenTrafficData(result.data);
+
+        const laneFilteredData =
+          selectedLane === "all"
+            ? flattenedData
+            : flattenedData.filter((item) => item.lane === selectedLane);
+
+        const rangeData = laneFilteredData.filter((item) => {
+          const timestamp = getValidTimestamp(item);
+
+          if (!timestamp) return false;
+
+          const date = new Date(timestamp);
+
+          if (Number.isNaN(date.getTime())) return false;
+
+          return date >= range.start && date <= range.end;
         });
-      }
 
-      for (const item of rangeData) {
-        const hour = getWibHour(item.timestamp || item.processedAt);
-        const bucket = hourlyMap.get(hour);
+        const hourlyMap = new Map<
+          number,
+          {
+            vehicles: number[];
+            queueLevels: number[];
+          }
+        >();
 
-        if (!bucket) continue;
+        for (let hour = 0; hour < 24; hour++) {
+          hourlyMap.set(hour, {
+            vehicles: [],
+            queueLevels: [],
+          });
+        }
 
-        bucket.vehicles.push(Number(item.vehicleCount || 0));
-        bucket.queueLevels.push(Number(item.queueLevel || 0));
-      }
+        for (const item of rangeData) {
+          const hour = getWibHour(item.timestamp || item.processedAt);
+          const bucket = hourlyMap.get(hour);
 
-      const chartRows: HourlyData[] = [];
+          if (!bucket) continue;
 
-      const currentWibHour = getWibHour(new Date().toISOString());
+          bucket.vehicles.push(Number(item.vehicleCount || 0));
+          bucket.queueLevels.push(Number(item.queueLevel || 0));
+        }
 
-      const hoursToShow =
-        timeRange === "today"
-          ? 12
-          : timeRange === "yesterday"
-            ? 24
-            : 24;
+        const chartRows: HourlyData[] = [];
 
-      for (let i = hoursToShow - 1; i >= 0; i--) {
-        const hour =
+        const currentWibHour = getWibHour(new Date().toISOString());
+
+        const hoursToShow =
           timeRange === "today"
-            ? (currentWibHour - i + 24) % 24
-            : 23 - i;
+            ? 12
+            : timeRange === "yesterday"
+              ? 24
+              : 24;
 
-        if (hour < 0) continue;
+        for (let i = hoursToShow - 1; i >= 0; i--) {
+          const hour =
+            timeRange === "today"
+              ? (currentWibHour - i + 24) % 24
+              : 23 - i;
 
-        const data = hourlyMap.get(hour);
+          const data = hourlyMap.get(hour);
 
-        const avgVehicles =
-          data && data.vehicles.length > 0
-            ? Math.round(
-                data.vehicles.reduce((sum, value) => sum + value, 0) /
-                  data.vehicles.length,
-              )
-            : 0;
+          const avgVehicles =
+            data && data.vehicles.length > 0
+              ? Math.round(
+                  data.vehicles.reduce((sum, value) => sum + value, 0) /
+                    data.vehicles.length,
+                )
+              : 0;
 
-        const avgQueueLevel =
-          data && data.queueLevels.length > 0
-            ? Math.round(
-                (data.queueLevels.reduce(
-                  (sum, value) => sum + value,
-                  0,
-                ) /
-                  data.queueLevels.length) *
-                  10,
-              ) / 10
-            : 0;
+          const avgQueueLevel =
+            data && data.queueLevels.length > 0
+              ? Math.round(
+                  (data.queueLevels.reduce(
+                    (sum, value) => sum + value,
+                    0,
+                  ) /
+                    data.queueLevels.length) *
+                    10,
+                ) / 10
+              : 0;
 
-        chartRows.push({
-          hour: `${String(hour).padStart(2, "0")}:00`,
-          vehicleCount: avgVehicles,
-          queueLevel: avgQueueLevel,
-        });
+          chartRows.push({
+            hour: `${String(hour).padStart(2, "0")}:00`,
+            vehicleCount: avgVehicles,
+            queueLevel: avgQueueLevel,
+          });
+        }
+
+        setHourlyData(chartRows);
+      } catch (error) {
+        if (requestId === requestIdRef.current) {
+          console.error("Error fetching traffic trend chart:", error);
+          setHourlyData([]);
+        }
+      } finally {
+        if (requestId === requestIdRef.current) {
+          hasLoadedRef.current = true;
+          setIsInitialLoading(false);
+          setIsRefreshing(false);
+        }
       }
-
-      setHourlyData(chartRows);
-    } catch (error) {
-      console.error("Error fetching traffic trend chart:", error);
-      setHourlyData([]);
-    } finally {
-      hasLoadedRef.current = true;
-      isFetchingRef.current = false;
-      setIsInitialLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+    },
+    [
+      range.startDate,
+      range.endDate,
+      range.start,
+      range.end,
+      intersectionId,
+      selectedLane,
+      timeRange,
+    ],
+  );
 
   useEffect(() => {
+    hasLoadedRef.current = false;
+    setIsInitialLoading(true);
+    setHourlyData([]);
+
     void fetchChartData(false);
 
     const interval = window.setInterval(() => {
@@ -372,15 +398,10 @@ export default function TrafficTrendChart({
     }, 30000);
 
     return () => {
+      requestIdRef.current += 1;
       window.clearInterval(interval);
     };
-  }, [
-    timeRange,
-    customDates?.startDate,
-    customDates?.endDate,
-    selectedLane,
-    intersectionId,
-  ]);
+  }, [fetchChartData]);
 
   const maxVehicleValue = Math.max(
     ...hourlyData.map((item) => item.vehicleCount),

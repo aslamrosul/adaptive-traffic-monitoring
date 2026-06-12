@@ -1,103 +1,177 @@
-import { containers } from '@/lib/azure-cosmos';
-import { NextResponse } from 'next/server';
+import { awsTables, dynamo } from "@/lib/aws-dynamodb";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// GET: Fetch events
+function toTimestamp(item: any) {
+  return (
+    item.timestamp ||
+    item.createdAt ||
+    item.created_at ||
+    item.received_at_utc ||
+    item.updatedAt ||
+    new Date().toISOString()
+  );
+}
+
+function normalizeEvent(item: any) {
+  const timestamp = toTimestamp(item);
+
+  return {
+    id:
+      item.id ||
+      item.event_id ||
+      item.notification_id ||
+      `${item.device_id || "event"}_${timestamp}`,
+
+    type:
+      item.type ||
+      item.category ||
+      item.notificationType ||
+      "info",
+
+    priority:
+      item.priority ||
+      item.severity ||
+      (item.level === 2 ? "critical" : "normal"),
+
+    title:
+      item.title ||
+      item.subject ||
+      "Notifikasi Sistem",
+
+    description:
+      item.description ||
+      item.message ||
+      item.body ||
+      "",
+
+    timestamp,
+
+    intersectionId:
+      item.intersectionId ||
+      item.intersection_id ||
+      "all",
+
+    deviceId:
+      item.deviceId ||
+      item.device_id ||
+      item.device ||
+      "",
+
+    status:
+      item.status ||
+      item.state ||
+      "open",
+  };
+}
+
+function getWibRange(startDate?: string | null, endDate?: string | null) {
+  if (!startDate && !endDate) {
+    return null;
+  }
+
+  const start = new Date(
+    `${startDate || endDate}T00:00:00.000+07:00`,
+  ).getTime();
+
+  const end = new Date(
+    `${endDate || startDate}T23:59:59.999+07:00`,
+  ).getTime();
+
+  return {
+    start,
+    end,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const intersectionId = searchParams.get('intersectionId');
-    const status = searchParams.get('status');
-    const priority = searchParams.get('priority');
-    const limit = parseInt(searchParams.get('limit') || '50');
 
-    let query = 'SELECT * FROM c WHERE 1=1';
-    const parameters: any[] = [];
+    const status = searchParams.get("status");
+    const intersectionId = searchParams.get("intersectionId");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const limit = Number(searchParams.get("limit") || "50");
 
-    if (intersectionId) {
-      query += ' AND c.intersectionId = @intersectionId';
-      parameters.push({ name: '@intersectionId', value: intersectionId });
-    }
-
-    if (status) {
-      query += ' AND c.status = @status';
-      parameters.push({ name: '@status', value: status });
-    }
-
-    if (priority) {
-      query += ' AND c.priority = @priority';
-      parameters.push({ name: '@priority', value: priority });
-    }
-
-    query += ` ORDER BY c.timestamp DESC OFFSET 0 LIMIT ${limit}`;
-
-    const { resources } = await containers.events.items
-      .query({ query, parameters })
-      .fetchAll();
-
-    return NextResponse.json({
-      success: true,
-      count: resources.length,
-      data: resources,
-    });
-  } catch (error: any) {
-    console.error('Error fetching events:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Failed to fetch events',
-      },
-      { status: 500 }
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.notifications,
+        Limit: Math.min(Math.max(limit * 5, 50), 500),
+      }),
     );
-  }
-}
 
-// POST: Create new event
-export async function POST(request: Request) {
-  try {
-    const data = await request.json();
+    const range = getWibRange(startDate, endDate);
 
-    if (!data.intersectionId || !data.type || !data.title) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields: intersectionId, type, title',
-        },
-        { status: 400 }
-      );
-    }
+    const events = (result.Items || [])
+      .map(normalizeEvent)
+      .filter((event: any) => {
+        if (
+          status &&
+          status !== "all" &&
+          String(event.status).toLowerCase() !== status.toLowerCase()
+        ) {
+          return false;
+        }
 
-    const item = {
-      id: `evt_${Date.now()}`,
-      intersectionId: data.intersectionId,
-      type: data.type,
-      priority: data.priority || 'medium',
-      status: data.status || 'open',
-      title: data.title,
-      description: data.description || '',
-      timestamp: new Date().toISOString(),
-      reportedBy: data.reportedBy || null,
-      metadata: data.metadata || {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+        if (
+          intersectionId &&
+          intersectionId !== "all" &&
+          event.intersectionId !== intersectionId
+        ) {
+          return false;
+        }
 
-    const { resource } = await containers.events.items.create(item);
+        if (range) {
+          const time = new Date(event.timestamp).getTime();
+
+          if (!Number.isFinite(time)) {
+            return false;
+          }
+
+          if (time < range.start || time > range.end) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.timestamp).getTime() -
+          new Date(a.timestamp).getTime(),
+      )
+      .slice(0, limit);
 
     return NextResponse.json({
       success: true,
-      message: 'Event created successfully',
-      data: resource,
+      count: events.length,
+      data: events,
+      source: "aws-dynamodb-notifications",
     });
   } catch (error: any) {
-    console.error('Error creating event:', error);
+    if (
+      error.name === "ResourceNotFoundException" ||
+      String(error.message || "").includes("Cannot do operations on a non-existent table")
+    ) {
+      return NextResponse.json({
+        success: true,
+        count: 0,
+        data: [],
+        message: "Tabel Notifications belum tersedia",
+      });
+    }
+
+    console.error("Error fetching events from AWS:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to create event',
+        error: error.message || "Gagal mengambil events",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

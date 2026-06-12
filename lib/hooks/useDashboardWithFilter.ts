@@ -56,7 +56,7 @@ function getWibDateValue(date = new Date()): string {
 }
 
 function addDaysToDateValue(dateValue: string, days: number): string {
-  const date = new Date(`${dateValue}T12:00:00+07:00`);
+  const date = new Date(`${dateValue}T12:00:00.000+07:00`);
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 }
@@ -218,8 +218,8 @@ function getRangeByFilter(
 }
 
 function getPreviousRange(startDate: string, endDate: string) {
-  const start = new Date(`${startDate}T12:00:00+07:00`);
-  const end = new Date(`${endDate}T12:00:00+07:00`);
+  const start = new Date(`${startDate}T12:00:00.000+07:00`);
+  const end = new Date(`${endDate}T12:00:00.000+07:00`);
 
   const diffDays =
     Math.max(
@@ -274,7 +274,6 @@ function buildTrafficTrend(
   }
 
   const trendData: TrafficTrendData[] = [];
-
   const hoursToShow =
     timeRange === "today" ? 7 : timeRange === "yesterday" ? 24 : 24;
 
@@ -283,8 +282,6 @@ function buildTrafficTrend(
   for (let i = hoursToShow - 1; i >= 0; i--) {
     const hour =
       timeRange === "today" ? (currentHour - i + 24) % 24 : 23 - i;
-
-    if (hour < 0) continue;
 
     const avgVehicles =
       hourlyData[hour].count > 0
@@ -377,7 +374,6 @@ export function useDashboardWithFilter(
           trafficData,
           analyticsData,
           previousAnalyticsData,
-          eventsData,
         ] = await Promise.all([
           safeFetchJson("/api/intersections"),
 
@@ -391,10 +387,6 @@ export function useDashboardWithFilter(
 
           safeFetchJson(
             `/api/analytics/daily?limit=90&startDate=${previousRange.start}&endDate=${previousRange.end}${intersectionQuery}`,
-          ),
-
-          safeFetchJson(
-            `/api/events?status=open&limit=50&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
           ),
         ]);
 
@@ -411,8 +403,6 @@ export function useDashboardWithFilter(
         const previousAnalytics = previousAnalyticsData.success
           ? previousAnalyticsData.data || []
           : [];
-
-        const events = eventsData.success ? eventsData.data || [] : [];
 
         const traffic = filterTrafficByWibRange(
           rawTraffic,
@@ -469,9 +459,9 @@ export function useDashboardWithFilter(
         );
 
         const totalVehicles =
-          analyticsVehicleTotal > 0
-            ? analyticsVehicleTotal
-            : realtimeVehicleTotal;
+          realtimeVehicleTotal > 0
+            ? realtimeVehicleTotal
+            : analyticsVehicleTotal;
 
         const totalVehiclesToday = totalVehicles;
 
@@ -504,9 +494,9 @@ export function useDashboardWithFilter(
           calculateAverageGreenDuration(latestSnapshots);
 
         const avgWaitTime =
-          analyticsAvgWaitTime > 0
-            ? analyticsAvgWaitTime
-            : realtimeAvgWaitTime;
+          realtimeAvgWaitTime > 0
+            ? realtimeAvgWaitTime
+            : analyticsAvgWaitTime;
 
         const changeWaitTime =
           previousAvgWaitTime > 0
@@ -527,9 +517,9 @@ export function useDashboardWithFilter(
           calculateCongestionIndex(latestSnapshots);
 
         const avgCongestion =
-          analyticsCongestion > 0
-            ? analyticsCongestion
-            : realtimeCongestion;
+          realtimeCongestion > 0
+            ? realtimeCongestion
+            : analyticsCongestion;
 
         const flowScore = calculateFlowScore(
           iotPercentage,
@@ -537,30 +527,6 @@ export function useDashboardWithFilter(
         );
 
         const trendData = buildTrafficTrend(traffic, timeRange);
-
-        const processedEvents = events.map((event: any) => {
-          const eventTime = new Date(event.timestamp || 0).getTime();
-          const diffMinutes = (Date.now() - eventTime) / (1000 * 60);
-
-          return {
-            id: String(event.id || event.event_id || crypto.randomUUID()),
-            type: String(event.type || "info"),
-            priority: String(event.priority || "normal"),
-            title: String(event.title || "Event"),
-            description: String(event.description || ""),
-            timestamp:
-              event.timestamp ||
-              event.createdAt ||
-              new Date().toISOString(),
-            intersectionId:
-              event.intersectionId || event.intersection_id || "all",
-            status: String(event.status || "open"),
-            live:
-              Number.isFinite(diffMinutes) &&
-              diffMinutes < 5 &&
-              event.priority === "critical",
-          };
-        });
 
         setStats({
           totalVehicles,
@@ -575,7 +541,7 @@ export function useDashboardWithFilter(
         });
 
         setTrafficTrend(trendData);
-        setRecentEvents(processedEvents);
+        setRecentEvents([]);
         setLastUpdated(new Date());
         setIsLoading(false);
         setIsInitialLoad(false);
