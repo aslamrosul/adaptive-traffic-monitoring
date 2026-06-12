@@ -144,6 +144,10 @@ export default function TrafficControlPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId]);
 
+  useEffect(() => {
+    setMessage(null);
+  }, [deviceId]);
+
   const saveConfigPatch = async (
     patch: Record<string, unknown>,
     successMessage: string,

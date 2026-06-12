@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-export type TimeRange = "today" | "yesterday" | "7days" | "30days" | "custom";
+export type TimeRange =
+  | "today"
+  | "yesterday"
+  | "7days"
+  | "30days"
+  | "custom";
 
 export interface DateRange {
   startDate: string;
@@ -38,7 +43,278 @@ export interface DashboardEvent {
   live?: boolean;
 }
 
-export function useDashboardWithFilter(timeRange: TimeRange = "today", customDates?: DateRange) {
+const APP_TIMEZONE = "Asia/Jakarta";
+const ACTIVE_LANES = ["north", "south", "east"] as const;
+
+function getWibDateValue(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function addDaysToDateValue(dateValue: string, days: number): string {
+  const date = new Date(`${dateValue}T12:00:00+07:00`);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function getWibHour(timestamp?: string): number {
+  if (!timestamp) return 0;
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) return 0;
+
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIMEZONE,
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const hour = Number(
+    parts.find((part) => part.type === "hour")?.value ?? 0,
+  );
+
+  return hour === 24 ? 0 : hour;
+}
+
+function getTimestampMs(item: any): number {
+  const timestamp =
+    item.timestamp || item.processedAt || item.received_at_utc || 0;
+
+  const time = new Date(timestamp).getTime();
+
+  return Number.isFinite(time) ? time : 0;
+}
+
+function getTrafficDateMsRange(startDate: string, endDate: string) {
+  return {
+    startMs: new Date(`${startDate}T00:00:00.000+07:00`).getTime(),
+    endMs: new Date(`${endDate}T23:59:59.999+07:00`).getTime(),
+  };
+}
+
+function getLatestSnapshots(items: any[]) {
+  const sorted = [...items].sort(
+    (a, b) => getTimestampMs(b) - getTimestampMs(a),
+  );
+
+  const map = new Map<string, any>();
+
+  for (const item of sorted) {
+    const key =
+      item.intersectionId ||
+      item.intersection_id ||
+      item.deviceId ||
+      item.device_id ||
+      item.device ||
+      item.id;
+
+    if (key && !map.has(key)) {
+      map.set(key, item);
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+function calculateVehicleTotalFromLatest(items: any[]) {
+  return items.reduce((sum, item) => {
+    return sum + Number(item.vehicleCount || 0);
+  }, 0);
+}
+
+function calculateAverageGreenDuration(items: any[]) {
+  const values: number[] = [];
+
+  for (const item of items) {
+    for (const lane of ACTIVE_LANES) {
+      const value = Number(item?.[lane]?.greenDuration || 0);
+
+      if (value > 0) {
+        values.push(value);
+      }
+    }
+  }
+
+  if (values.length === 0) return 0;
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function calculateCongestionIndex(items: any[]) {
+  const values: number[] = [];
+
+  for (const item of items) {
+    for (const lane of ACTIVE_LANES) {
+      values.push(Number(item?.[lane]?.queueLevel || 0));
+    }
+  }
+
+  if (values.length === 0) return 0;
+
+  const avgQueueLevel =
+    values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  return Math.round((avgQueueLevel / 2) * 100);
+}
+
+function calculateFlowScore(iotPercentage: number, congestionIndex: number) {
+  if (iotPercentage <= 0) return "-";
+  if (congestionIndex <= 20) return "A";
+  if (congestionIndex <= 40) return "B";
+  if (congestionIndex <= 60) return "C";
+  if (congestionIndex <= 80) return "D";
+  return "E";
+}
+
+function getRangeByFilter(
+  timeRange: TimeRange,
+  customDates?: DateRange,
+) {
+  const today = getWibDateValue();
+
+  if (
+    timeRange === "custom" &&
+    customDates?.startDate &&
+    customDates?.endDate
+  ) {
+    return {
+      start: customDates.startDate,
+      end: customDates.endDate,
+    };
+  }
+
+  if (timeRange === "yesterday") {
+    const yesterday = addDaysToDateValue(today, -1);
+
+    return {
+      start: yesterday,
+      end: yesterday,
+    };
+  }
+
+  if (timeRange === "7days") {
+    return {
+      start: addDaysToDateValue(today, -7),
+      end: today,
+    };
+  }
+
+  if (timeRange === "30days") {
+    return {
+      start: addDaysToDateValue(today, -30),
+      end: today,
+    };
+  }
+
+  return {
+    start: today,
+    end: today,
+  };
+}
+
+function getPreviousRange(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T12:00:00+07:00`);
+  const end = new Date(`${endDate}T12:00:00+07:00`);
+
+  const diffDays =
+    Math.max(
+      1,
+      Math.round(
+        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000),
+      ) + 1,
+    );
+
+  const previousEnd = addDaysToDateValue(startDate, -1);
+  const previousStart = addDaysToDateValue(previousEnd, -(diffDays - 1));
+
+  return {
+    start: previousStart,
+    end: previousEnd,
+  };
+}
+
+function filterTrafficByWibRange(
+  items: any[],
+  startDate: string,
+  endDate: string,
+) {
+  const { startMs, endMs } = getTrafficDateMsRange(startDate, endDate);
+
+  return items.filter((item) => {
+    const time = getTimestampMs(item);
+    return time >= startMs && time <= endMs;
+  });
+}
+
+function buildTrafficTrend(
+  traffic: any[],
+  timeRange: TimeRange,
+): TrafficTrendData[] {
+  const hourlyData: Record<number, { count: number; total: number }> = {};
+
+  for (let hour = 0; hour < 24; hour++) {
+    hourlyData[hour] = {
+      count: 0,
+      total: 0,
+    };
+  }
+
+  for (const item of traffic) {
+    const hour = getWibHour(
+      item.timestamp || item.processedAt || item.received_at_utc,
+    );
+
+    hourlyData[hour].count++;
+    hourlyData[hour].total += Number(item.vehicleCount || 0);
+  }
+
+  const trendData: TrafficTrendData[] = [];
+
+  const hoursToShow =
+    timeRange === "today" ? 7 : timeRange === "yesterday" ? 24 : 24;
+
+  const currentHour = getWibHour(new Date().toISOString());
+
+  for (let i = hoursToShow - 1; i >= 0; i--) {
+    const hour =
+      timeRange === "today" ? (currentHour - i + 24) % 24 : 23 - i;
+
+    if (hour < 0) continue;
+
+    const avgVehicles =
+      hourlyData[hour].count > 0
+        ? Math.round(hourlyData[hour].total / hourlyData[hour].count)
+        : 0;
+
+    trendData.push({
+      time: `${String(hour).padStart(2, "0")}:00`,
+      vehicles: avgVehicles,
+      hour,
+      height: 0,
+    });
+  }
+
+  const maxVehicles = Math.max(
+    ...trendData.map((item) => item.vehicles),
+    1,
+  );
+
+  return trendData.map((item) => ({
+    ...item,
+    height: Math.round((item.vehicles / maxVehicles) * 100),
+  }));
+}
+
+export function useDashboardWithFilter(
+  timeRange: TimeRange = "today",
+  customDates?: DateRange,
+  intersectionId: string = "all",
+) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trafficTrend, setTrafficTrend] = useState<TrafficTrendData[]>([]);
   const [recentEvents, setRecentEvents] = useState<DashboardEvent[]>([]);
@@ -47,278 +323,300 @@ export function useDashboardWithFilter(timeRange: TimeRange = "today", customDat
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Calculate date range based on filter
-  const getDateRange = (): { start: string; end: string } => {
-    const today = new Date();
-    let end = today.toISOString().split('T')[0];
-    let start = end;
-
-    switch (timeRange) {
-      case "today":
-        start = end;
-        break;
-      case "yesterday":
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        start = yesterday.toISOString().split('T')[0];
-        end = start;
-        break;
-      case "7days":
-        const week = new Date(today);
-        week.setDate(week.getDate() - 7);
-        start = week.toISOString().split('T')[0];
-        break;
-      case "30days":
-        const month = new Date(today);
-        month.setDate(month.getDate() - 30);
-        start = month.toISOString().split('T')[0];
-        break;
-      case "custom":
-        if (customDates) {
-          start = customDates.startDate;
-          return { start, end: customDates.endDate };
-        }
-        break;
-    }
-
-    return { start, end };
-  };
-
-  const fetchDashboardData = async (isBackgroundRefresh = false) => {
-    // Only show loading screen on initial load, not on background refresh
-    if (!isBackgroundRefresh) {
-      setIsLoading(true);
-    }
-    setError(null);
-
+  const safeFetchJson = useCallback(async (url: string) => {
     try {
-      const dateRange = getDateRange();
-      
-      // Fetch data dari multiple endpoints secara parallel dengan date filter
-      const [intersectionsRes, trafficRes, analyticsRes, eventsRes] = await Promise.all([
-        fetch('/api/intersections'),
-        fetch(`/api/traffic/realtime?limit=500&startDate=${dateRange.start}&endDate=${dateRange.end}`),
-        fetch(`/api/analytics/daily?limit=90&startDate=${dateRange.start}&endDate=${dateRange.end}`),
-        fetch(`/api/events?status=open&limit=50&startDate=${dateRange.start}&endDate=${dateRange.end}`),
-      ]);
-
-      const intersectionsData = await intersectionsRes.json();
-      const trafficData = await trafficRes.json();
-      const analyticsData = await analyticsRes.json();
-      const eventsData = await eventsRes.json();
-
-      // Calculate stats dari data real
-      const intersections = intersectionsData.success ? intersectionsData.data : [];
-      const traffic = trafficData.success ? trafficData.data : [];
-      const analytics = analyticsData.success ? analyticsData.data : [];
-      const events = eventsData.success ? eventsData.data : [];
-
-      // Filter traffic data by date range
-      const filteredTraffic = traffic.filter((t: any) => {
-        const tDate = new Date(t.timestamp).toISOString().split('T')[0];
-        return tDate >= dateRange.start && tDate <= dateRange.end;
+      const response = await fetch(url, {
+        cache: "no-store",
       });
 
-      // Hitung device stats
-      const activeDevices = intersections.filter((i: any) => 
-        i.status?.toLowerCase() === 'active'
-      ).length;
-      const totalDevices = intersections.length;
-      const iotPercentage = totalDevices > 0 ? (activeDevices / totalDevices) * 100 : 0;
+      const json = await response.json().catch(() => ({
+        success: false,
+        data: [],
+      }));
 
-      // Hitung total kendaraan dari traffic data dalam range
-      const totalVehicles = filteredTraffic.reduce((sum: number, t: any) => sum + (t.vehicleCount || 0), 0);
-      
-      // Hitung total kendaraan untuk periode yang dipilih
-      const periodAnalytics = analytics.filter((a: any) => 
-        a.date >= dateRange.start && a.date <= dateRange.end
-      );
-      
-      const totalVehiclesToday = periodAnalytics.reduce((sum: number, a: any) => 
-        sum + (a.summary?.totalVehicles || 0), 0) || totalVehicles;
-
-      // Hitung comparison (untuk today dan yesterday)
-      let changeVsYesterday = 0;
-      if (timeRange === "today") {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayDate = yesterday.toISOString().split('T')[0];
-        const yesterdayAnalytics = analytics.find((a: any) => a.date === yesterdayDate);
-        const totalVehiclesYesterday = yesterdayAnalytics?.summary?.totalVehicles || totalVehiclesToday;
-        changeVsYesterday = totalVehiclesYesterday > 0 
-          ? ((totalVehiclesToday - totalVehiclesYesterday) / totalVehiclesYesterday) * 100 
-          : 0;
-      }
-
-      // Hitung avg wait time dari analytics dalam range
-      const avgWaitTime = periodAnalytics.length > 0
-        ? periodAnalytics.reduce((sum: number, a: any) => sum + (a.summary?.averageWaitTime || 0), 0) / periodAnalytics.length
-        : 45;
-
-      // Hitung change wait time (untuk today)
-      let changeWaitTime = 0;
-      if (timeRange === "today") {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayDate = yesterday.toISOString().split('T')[0];
-        const yesterdayAnalytics = analytics.find((a: any) => a.date === yesterdayDate);
-        const avgWaitTimeYesterday = yesterdayAnalytics?.summary?.averageWaitTime || avgWaitTime;
-        changeWaitTime = avgWaitTime - avgWaitTimeYesterday;
-      }
-
-      // Hitung flow score berdasarkan IoT percentage dan congestion
-      const avgCongestion = periodAnalytics.length > 0
-        ? periodAnalytics.reduce((sum: number, a: any) => sum + (a.summary?.averageCongestionIndex || 0), 0) / periodAnalytics.length
-        : 50;
-      
-      let flowScore = 'C';
-      if (iotPercentage > 90 && avgCongestion < 40) flowScore = 'A';
-      else if (iotPercentage > 80 && avgCongestion < 60) flowScore = 'B+';
-      else if (iotPercentage > 70 && avgCongestion < 70) flowScore = 'B';
-
-      // Hitung traffic trend - berbeda untuk setiap time range
-      const trendData: TrafficTrendData[] = [];
-      
-      if (timeRange === "today" || timeRange === "yesterday") {
-        // Hourly data untuk hari ini/kemarin
-        const hourlyData: { [key: number]: { count: number; total: number } } = {};
-        
-        for (let i = 0; i < 24; i++) {
-          hourlyData[i] = { count: 0, total: 0 };
-        }
-
-        filteredTraffic.forEach((t: any) => {
-          const hour = new Date(t.timestamp).getHours();
-          hourlyData[hour].count++;
-          hourlyData[hour].total += t.vehicleCount || 0;
-        });
-
-        // Show last 7 hours for today, all 24 hours for yesterday
-        const hoursToShow = timeRange === "today" ? 7 : 24;
-        const currentHour = new Date().getHours();
-        
-        for (let i = hoursToShow - 1; i >= 0; i--) {
-          const hour = timeRange === "today" ? (currentHour - i + 24) % 24 : (24 - hoursToShow + i);
-          const avgVehicles = hourlyData[hour].count > 0 
-            ? Math.round(hourlyData[hour].total / hourlyData[hour].count)
-            : 0;
-          
-          trendData.push({
-            time: `${hour.toString().padStart(2, '0')}:00`,
-            vehicles: avgVehicles,
-            hour,
-            height: 0,
-          });
-        }
-      } else {
-        // Daily data untuk 7 days / 30 days / custom
-        const dailyData: { [key: string]: { count: number; total: number } } = {};
-        
-        // Initialize dates in range
-        const startDate = new Date(dateRange.start);
-        const endDate = new Date(dateRange.end);
-        
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0];
-          dailyData[dateStr] = { count: 0, total: 0 };
-        }
-
-        // Aggregate traffic data by date
-        filteredTraffic.forEach((t: any) => {
-          const dateStr = new Date(t.timestamp).toISOString().split('T')[0];
-          if (dailyData[dateStr]) {
-            dailyData[dateStr].count++;
-            dailyData[dateStr].total += t.vehicleCount || 0;
-          }
-        });
-
-        // Create trend data - show max 7 data points
-        const dates = Object.keys(dailyData).sort();
-        const step = Math.ceil(dates.length / 7);
-        
-        dates.forEach((date, idx) => {
-          if (idx % step === 0 || idx === dates.length - 1) {
-            const avgVehicles = dailyData[date].count > 0 
-              ? Math.round(dailyData[date].total / dailyData[date].count)
-              : 0;
-            
-            const dateObj = new Date(date);
-            const label = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-            
-            trendData.push({
-              time: label,
-              vehicles: avgVehicles,
-              hour: idx,
-              height: 0,
-            });
-          }
-        });
-      }
-
-      // Calculate heights for chart (0-100 scale)
-      const maxVehicles = Math.max(...trendData.map(d => d.vehicles), 1);
-      trendData.forEach(d => {
-        d.height = Math.round((d.vehicles / maxVehicles) * 100);
-      });
-
-      // Process events - mark as live if within last 5 minutes
-      const processedEvents = events.map((e: any) => {
-        const eventTime = new Date(e.timestamp).getTime();
-        const now = Date.now();
-        const diffMinutes = (now - eventTime) / (1000 * 60);
-        
+      if (!response.ok || json.success === false) {
         return {
-          ...e,
-          live: diffMinutes < 5 && e.priority === 'critical',
+          success: false,
+          data: [],
+          error: json.error || response.statusText,
         };
-      });
+      }
 
-      // Set all data
-      setStats({
-        totalVehicles,
-        totalVehiclesToday,
-        activeDevices,
-        totalDevices,
-        avgWaitTime: Math.round(avgWaitTime),
-        flowScore,
-        iotPercentage: Math.round(iotPercentage * 10) / 10,
-        changeVsYesterday: Math.round(changeVsYesterday * 10) / 10,
-        changeWaitTime: Math.round(changeWaitTime),
-      });
-
-      setTrafficTrend(trendData);
-      setRecentEvents(processedEvents);
-      setLastUpdated(new Date());
-      setIsLoading(false);
-      setIsInitialLoad(false);
-    } catch (err: any) {
-      console.error('Error fetching dashboard data:', err);
-      setError(err.message || 'Failed to fetch dashboard data');
-      setIsLoading(false);
-      setIsInitialLoad(false);
+      return json;
+    } catch (fetchError: any) {
+      return {
+        success: false,
+        data: [],
+        error: fetchError.message || "Request failed",
+      };
     }
-  };
+  }, []);
+
+  const fetchDashboardData = useCallback(
+    async (isBackgroundRefresh = false) => {
+      if (!isBackgroundRefresh) {
+        setIsLoading(true);
+      }
+
+      setError(null);
+
+      try {
+        const dateRange = getRangeByFilter(timeRange, customDates);
+        const previousRange = getPreviousRange(
+          dateRange.start,
+          dateRange.end,
+        );
+
+        const intersectionQuery =
+          intersectionId && intersectionId !== "all"
+            ? `&intersectionId=${encodeURIComponent(intersectionId)}`
+            : "";
+
+        const [
+          intersectionsData,
+          trafficData,
+          analyticsData,
+          previousAnalyticsData,
+          eventsData,
+        ] = await Promise.all([
+          safeFetchJson("/api/intersections"),
+
+          safeFetchJson(
+            `/api/traffic/realtime?limit=500&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
+          ),
+
+          safeFetchJson(
+            `/api/analytics/daily?limit=90&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
+          ),
+
+          safeFetchJson(
+            `/api/analytics/daily?limit=90&startDate=${previousRange.start}&endDate=${previousRange.end}${intersectionQuery}`,
+          ),
+
+          safeFetchJson(
+            `/api/events?status=open&limit=50&startDate=${dateRange.start}&endDate=${dateRange.end}${intersectionQuery}`,
+          ),
+        ]);
+
+        const intersections = intersectionsData.success
+          ? intersectionsData.data || []
+          : [];
+
+        const rawTraffic = trafficData.success ? trafficData.data || [] : [];
+
+        const analytics = analyticsData.success
+          ? analyticsData.data || []
+          : [];
+
+        const previousAnalytics = previousAnalyticsData.success
+          ? previousAnalyticsData.data || []
+          : [];
+
+        const events = eventsData.success ? eventsData.data || [] : [];
+
+        const traffic = filterTrafficByWibRange(
+          rawTraffic,
+          dateRange.start,
+          dateRange.end,
+        );
+
+        const latestSnapshots = getLatestSnapshots(traffic);
+
+        const scopedIntersections =
+          intersectionId && intersectionId !== "all"
+            ? intersections.filter(
+                (item: any) =>
+                  item.id === intersectionId ||
+                  item.intersection_id === intersectionId ||
+                  item.intersectionId === intersectionId,
+              )
+            : intersections;
+
+        const activeDevices = scopedIntersections.filter(
+          (item: any) =>
+            String(item.status || "active").toLowerCase() === "active",
+        ).length;
+
+        const totalDevices = scopedIntersections.length;
+
+        const iotPercentage =
+          totalDevices > 0 ? (activeDevices / totalDevices) * 100 : 0;
+
+        const periodAnalytics = analytics.filter(
+          (item: any) =>
+            item.date >= dateRange.start && item.date <= dateRange.end,
+        );
+
+        const previousPeriodAnalytics = previousAnalytics.filter(
+          (item: any) =>
+            item.date >= previousRange.start &&
+            item.date <= previousRange.end,
+        );
+
+        const realtimeVehicleTotal =
+          calculateVehicleTotalFromLatest(latestSnapshots);
+
+        const analyticsVehicleTotal = periodAnalytics.reduce(
+          (sum: number, item: any) =>
+            sum + Number(item.summary?.totalVehicles || 0),
+          0,
+        );
+
+        const previousVehicleTotal = previousPeriodAnalytics.reduce(
+          (sum: number, item: any) =>
+            sum + Number(item.summary?.totalVehicles || 0),
+          0,
+        );
+
+        const totalVehicles =
+          analyticsVehicleTotal > 0
+            ? analyticsVehicleTotal
+            : realtimeVehicleTotal;
+
+        const totalVehiclesToday = totalVehicles;
+
+        const changeVsYesterday =
+          previousVehicleTotal > 0
+            ? ((totalVehiclesToday - previousVehicleTotal) /
+                previousVehicleTotal) *
+              100
+            : 0;
+
+        const analyticsAvgWaitTime =
+          periodAnalytics.length > 0
+            ? periodAnalytics.reduce(
+                (sum: number, item: any) =>
+                  sum + Number(item.summary?.averageWaitTime || 0),
+                0,
+              ) / periodAnalytics.length
+            : 0;
+
+        const previousAvgWaitTime =
+          previousPeriodAnalytics.length > 0
+            ? previousPeriodAnalytics.reduce(
+                (sum: number, item: any) =>
+                  sum + Number(item.summary?.averageWaitTime || 0),
+                0,
+              ) / previousPeriodAnalytics.length
+            : 0;
+
+        const realtimeAvgWaitTime =
+          calculateAverageGreenDuration(latestSnapshots);
+
+        const avgWaitTime =
+          analyticsAvgWaitTime > 0
+            ? analyticsAvgWaitTime
+            : realtimeAvgWaitTime;
+
+        const changeWaitTime =
+          previousAvgWaitTime > 0
+            ? avgWaitTime - previousAvgWaitTime
+            : 0;
+
+        const analyticsCongestion =
+          periodAnalytics.length > 0
+            ? periodAnalytics.reduce(
+                (sum: number, item: any) =>
+                  sum +
+                  Number(item.summary?.averageCongestionIndex || 0),
+                0,
+              ) / periodAnalytics.length
+            : 0;
+
+        const realtimeCongestion =
+          calculateCongestionIndex(latestSnapshots);
+
+        const avgCongestion =
+          analyticsCongestion > 0
+            ? analyticsCongestion
+            : realtimeCongestion;
+
+        const flowScore = calculateFlowScore(
+          iotPercentage,
+          avgCongestion,
+        );
+
+        const trendData = buildTrafficTrend(traffic, timeRange);
+
+        const processedEvents = events.map((event: any) => {
+          const eventTime = new Date(event.timestamp || 0).getTime();
+          const diffMinutes = (Date.now() - eventTime) / (1000 * 60);
+
+          return {
+            id: String(event.id || event.event_id || crypto.randomUUID()),
+            type: String(event.type || "info"),
+            priority: String(event.priority || "normal"),
+            title: String(event.title || "Event"),
+            description: String(event.description || ""),
+            timestamp:
+              event.timestamp ||
+              event.createdAt ||
+              new Date().toISOString(),
+            intersectionId:
+              event.intersectionId || event.intersection_id || "all",
+            status: String(event.status || "open"),
+            live:
+              Number.isFinite(diffMinutes) &&
+              diffMinutes < 5 &&
+              event.priority === "critical",
+          };
+        });
+
+        setStats({
+          totalVehicles,
+          totalVehiclesToday,
+          activeDevices,
+          totalDevices,
+          avgWaitTime: Math.round(avgWaitTime),
+          flowScore,
+          iotPercentage: Math.round(iotPercentage * 10) / 10,
+          changeVsYesterday: Math.round(changeVsYesterday * 10) / 10,
+          changeWaitTime: Math.round(changeWaitTime),
+        });
+
+        setTrafficTrend(trendData);
+        setRecentEvents(processedEvents);
+        setLastUpdated(new Date());
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      } catch (fetchError: any) {
+        console.error("Error fetching dashboard data:", fetchError);
+
+        setError(fetchError.message || "Failed to fetch dashboard data");
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      }
+    },
+    [
+      timeRange,
+      customDates?.startDate,
+      customDates?.endDate,
+      intersectionId,
+      safeFetchJson,
+    ],
+  );
 
   useEffect(() => {
-    // Reset initial load state when filter changes
     setIsInitialLoad(true);
-    fetchDashboardData(false);
+    void fetchDashboardData(false);
 
-    // Auto-refresh every 30 seconds only for "today" filter
     if (timeRange === "today") {
-      const interval = setInterval(() => {
-        fetchDashboardData(true); // Background refresh
+      const interval = window.setInterval(() => {
+        void fetchDashboardData(true);
       }, 30000);
 
-      return () => clearInterval(interval);
+      return () => window.clearInterval(interval);
     }
-  }, [timeRange, customDates?.startDate, customDates?.endDate]);
+
+    return undefined;
+  }, [fetchDashboardData, timeRange]);
 
   return {
     stats,
     trafficTrend,
     recentEvents,
     isLoading,
+    isInitialLoad,
     error,
     lastUpdated,
     refresh: fetchDashboardData,

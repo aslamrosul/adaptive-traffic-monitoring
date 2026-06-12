@@ -31,6 +31,22 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
+function pickNewestTraffic(
+  a?: TrafficUpdate | null,
+  b?: TrafficUpdate | null,
+): TrafficUpdate | null {
+  if (!a) return b ?? null;
+  if (!b) return a;
+
+  const ta = new Date(a.timestamp).getTime();
+  const tb = new Date(b.timestamp).getTime();
+
+  if (Number.isNaN(ta)) return b;
+  if (Number.isNaN(tb)) return a;
+
+  return tb > ta ? b : a;
+}
+
 export default function DashboardPage() {
   const { timezone } = useAppSettings();
 
@@ -172,37 +188,50 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function loadSelectedLatest() {
-      if (selectedIntersection === "all") {
-        setSelectedLatestFromApi(null);
-        return;
-      }
-
       try {
-        const response = await fetch(
-          `/api/traffic/latest?intersectionId=${encodeURIComponent(
-            selectedIntersection,
-          )}&limit=1`,
-          {
-            cache: "no-store",
-          },
-        );
+        const endpoint =
+          selectedIntersection === "all"
+            ? "/api/traffic/latest?limit=1"
+            : `/api/traffic/latest?intersectionId=${encodeURIComponent(
+                selectedIntersection,
+              )}&limit=1`;
+
+        const response = await fetch(endpoint, {
+          cache: "no-store",
+        });
 
         const json = await response.json();
 
         if (
-          !cancelled &&
-          response.ok &&
-          json.success &&
-          Array.isArray(json.data) &&
-          json.data.length > 0
+          cancelled ||
+          !response.ok ||
+          !json.success ||
+          !Array.isArray(json.data) ||
+          json.data.length === 0
         ) {
-          setSelectedLatestFromApi(normalizeMqttTraffic(json.data[0]));
+          if (!cancelled) {
+            setSelectedLatestFromApi(null);
+          }
+
           return;
         }
 
-        if (!cancelled) {
-          setSelectedLatestFromApi(null);
+        const normalized = normalizeMqttTraffic(json.data[0]);
+
+        // Jangan sampai data simpang lain masuk saat sedang pilih simpang tertentu
+        if (
+          selectedIntersection !== "all" &&
+          normalized.intersectionId !== selectedIntersection
+        ) {
+          if (!cancelled) {
+            setSelectedLatestFromApi(null);
+          }
+
+          return;
         }
+
+        setSelectedLatestFromApi(normalized);
+        setLastUpdate(new Date());
       } catch (fetchError) {
         console.error(
           "Gagal mengambil latest traffic persimpangan:",
@@ -217,8 +246,12 @@ export default function DashboardPage() {
 
     loadSelectedLatest();
 
+    // Polling fallback, karena MQTT WebSocket kamu kadang connected tapi tidak menerima telemetry
+    const intervalId = window.setInterval(loadSelectedLatest, 2000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, [selectedIntersection]);
 
@@ -233,18 +266,15 @@ export default function DashboardPage() {
    */
   const realtimeData = useMemo(() => {
     if (selectedIntersection === "all") {
-      return latestData;
+      return pickNewestTraffic(latestData, selectedLatestFromApi);
     }
 
-    if (selectedDeviceId && latestByDevice[selectedDeviceId]) {
-      return latestByDevice[selectedDeviceId];
-    }
+    const mqttDeviceData =
+      selectedDeviceId && latestByDevice[selectedDeviceId]
+        ? latestByDevice[selectedDeviceId]
+        : null;
 
-    if (selectedLatestFromApi) {
-      return selectedLatestFromApi;
-    }
-
-    return null;
+    return pickNewestTraffic(mqttDeviceData, selectedLatestFromApi);
   }, [
     selectedIntersection,
     selectedDeviceId,
@@ -377,15 +407,20 @@ export default function DashboardPage() {
             <DashboardStats
               timeRange={timeRange}
               customDates={customDates}
+              intersectionId={selectedIntersection}
             />
 
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
               <div className="space-y-4 lg:space-y-6 xl:col-span-8">
-                <TrafficRoadSimulation data={realtimeData} />
+                <TrafficRoadSimulation
+                  key={realtimeData?.deviceId || selectedIntersection}
+                  data={realtimeData}
+                />
 
                 <TrafficTrendChart
                   timeRange={timeRange}
                   customDates={customDates}
+                  intersectionId={selectedIntersection}
                 />
 
                 <IntersectionGrid />
@@ -393,6 +428,7 @@ export default function DashboardPage() {
 
               <aside className="space-y-4 lg:space-y-6 xl:col-span-4">
                 <TrafficControlPanel
+                  key={realtimeData?.deviceId || selectedIntersection}
                   data={realtimeData}
                   publishMqtt={publishMqtt}
                 />

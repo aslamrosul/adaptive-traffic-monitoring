@@ -7,11 +7,21 @@ import { useRouter } from "next/navigation";
 interface DashboardStatsProps {
   timeRange: TimeRange;
   customDates?: DateRange;
+  intersectionId?: string;
 }
 
-export default function DashboardStats({ timeRange, customDates }: DashboardStatsProps) {
+export default function DashboardStats({
+  timeRange,
+  customDates,
+  intersectionId = "all",
+}: DashboardStatsProps) {
   const router = useRouter();
-  const { stats, isLoading } = useDashboardWithFilter(timeRange, customDates);
+
+  const { stats, isLoading } = useDashboardWithFilter(
+    timeRange,
+    customDates,
+    intersectionId,
+  );
 
   // Only show skeleton on initial load when stats is null
   if (isLoading && !stats) {

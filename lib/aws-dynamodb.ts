@@ -50,20 +50,46 @@ export async function getLatestTrafficByIntersection(
 }
 
 export async function getRecentTraffic(limit = 100) {
-  const result = await dynamo.send(
-    new ScanCommand({
-      TableName: awsTables.traffic,
-      Limit: limit,
-    })
+  const items: any[] = [];
+  let exclusiveStartKey: Record<string, any> | undefined;
+
+  const maxScanItems = Math.min(
+    Math.max(limit * 50, 1000),
+    10000,
   );
 
-  const items = result.Items || [];
+  do {
+    const remaining = maxScanItems - items.length;
 
-  return items.sort((a: any, b: any) => {
-    const ta = new Date(a.timestamp || a.received_at_utc || 0).getTime();
-    const tb = new Date(b.timestamp || b.received_at_utc || 0).getTime();
-    return tb - ta;
-  });
+    if (remaining <= 0) {
+      break;
+    }
+
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.traffic,
+        ExclusiveStartKey: exclusiveStartKey,
+        Limit: Math.min(remaining, 1000),
+      }),
+    );
+
+    items.push(...(result.Items || []));
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey && items.length < maxScanItems);
+
+  return items
+    .sort((a: any, b: any) => {
+      const ta = new Date(
+        a.timestamp || a.received_at_utc || 0,
+      ).getTime();
+
+      const tb = new Date(
+        b.timestamp || b.received_at_utc || 0,
+      ).getTime();
+
+      return tb - ta;
+    })
+    .slice(0, limit);
 }
 
 export async function scanTable(tableName: string, limit = 100) {
