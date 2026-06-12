@@ -51,7 +51,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black text-blue-800 tracking-tighter font-headline mb-2">
-              Aerial Command
+              ASTRAEA
             </h1>
             <p className="text-slate-600 text-sm">
               Sistem Pantauan Lalu Lintas

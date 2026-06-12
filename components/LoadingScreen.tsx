@@ -40,7 +40,7 @@ export default function LoadingScreen() {
         <div className="relative">
           <Image
             src="/logo.png"
-            alt="Aerial Command"
+            alt="ASTRAEA"
             width={230}
             height={230}
             className="object-contain"
@@ -73,7 +73,7 @@ export default function LoadingScreen() {
         className="text-center"
       >
         <h1 className="text-4xl md:text-5xl font-black text-blue-800 tracking-tighter font-headline mb-3">
-          Aerial Command
+          ASTRAEA
         </h1>
         <p className="text-base md:text-lg text-slate-500 font-medium">
           Sistem Pantauan Lalu Lintas

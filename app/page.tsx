@@ -42,7 +42,7 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 mb-6 md:mb-8 leading-relaxed">
-                  Aerial Command memanfaatkan kekuatan IoT dan AI untuk mengoptimalkan durasi lampu lalu lintas secara otomatis berdasarkan kepadatan kendaraan aktual, mengurangi kemacetan hingga 40%.
+                  ASTRAEA memanfaatkan kekuatan IoT dan AI untuk mengoptimalkan durasi lampu lalu lintas secara otomatis berdasarkan kepadatan kendaraan aktual, mengurangi kemacetan hingga 40%.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -212,7 +212,7 @@ export default function LandingPage() {
                   Misi Kami Merevolusi Mobilitas Perkotaan
                 </h3>
                 <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed mb-4 md:mb-6">
-                  Aerial Command adalah sistem manajemen lalu lintas cerdas yang mengintegrasikan kecerdasan buatan dengan armada drone otonom. Kami percaya bahwa teknologi dapat menyelesaikan tantangan transportasi modern yang semakin kompleks.
+                  ASTRAEA adalah sistem manajemen lalu lintas cerdas yang mengintegrasikan kecerdasan buatan dengan armada drone otonom. Kami percaya bahwa teknologi dapat menyelesaikan tantangan transportasi modern yang semakin kompleks.
                 </p>
                 <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed">
                   Platform kami dirancang untuk membantu pemerintah kota dan otoritas transportasi dalam memantau, menganalisis, dan mengoptimalkan arus lalu lintas secara real-time, menciptakan jalan raya yang lebih aman dan efisien bagi semua orang.
@@ -250,7 +250,7 @@ export default function LandingPage() {
                 Tim Kami
               </h2>
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 md:mb-4">
-                Para Inovator di Balik Aerial Command
+                Para Inovator di Balik ASTRAEA
               </h3>
               <p className="text-sm sm:text-base md:text-lg text-slate-600">
                 Dedikasi kami untuk menciptakan solusi teknologi yang berdampak nyata bagi masyarakat.

@@ -10,7 +10,7 @@ export default function TeamHero() {
       className="mb-12"
     >
       <p className="text-primary font-headline font-extrabold tracking-widest text-xs uppercase mb-2">
-        The Aerial Command Squad
+        The ASTRAEA Squad
       </p>
       <h1 className="text-4xl md:text-5xl font-black text-on-surface tracking-tight mb-4 max-w-2xl leading-tight">
         Membangun Masa Depan Mobilitas Cerdas.

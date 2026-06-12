@@ -1136,7 +1136,7 @@ function TroubleshootingSection() {
           <ul className="text-xs space-y-1 text-slate-600">
             <li>• Pastikan SSID dan password benar</li>
             <li>• ESP32 hanya support WiFi 2.4 GHz (bukan 5 GHz)</li>
-            <li>• Jarak ESP32 ke router < 10 meter</li>
+            <li>• Jarak ESP32 ke router &lt; 10 meter</li>
             <li>• Reset ESP32: tekan tombol EN</li>
           </ul>
         </div>

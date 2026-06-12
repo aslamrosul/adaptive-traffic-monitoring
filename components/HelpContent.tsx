@@ -109,14 +109,14 @@ export default function HelpContent() {
 
   const handleChatSupport = () => {
     window.open(
-      "https://wa.me/6285601534193?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20Aerial%20Command",
+      "https://wa.me/6285601534193?text=Halo%20admin%2C%20saya%20butuh%20bantuan%20terkait%20ASTRAEA",
       "_blank",
     );
   };
 
   const handleEmailSupport = () => {
     window.location.href =
-      "mailto:support@aerialcommand.id?subject=Bantuan%20Aerial%20Command";
+      "mailto:support@astraea.id?subject=Bantuan%20ASTRAEA";
   };
 
   return (

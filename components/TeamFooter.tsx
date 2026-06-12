@@ -16,7 +16,7 @@ export default function TeamFooter() {
         </h2>
         <p className="text-secondary">
           Tim kami bekerja dengan standar keamanan tertinggi dan protokol data privasi
-          untuk memastikan sistem Aerial Command aman bagi seluruh warga.
+          untuk memastikan sistem ASTRAEA aman bagi seluruh warga.
         </p>
       </div>
       <div className="flex gap-4">

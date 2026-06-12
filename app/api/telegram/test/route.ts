@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const text = `🚦 Aerial Command Test\n\nTelegram notification berhasil aktif untuk ${
+    const text = `🚦 ASTRAEA Test\n\nTelegram notification berhasil aktif untuk ${
       session.user.name || session.user.email || "user"
     }.`;
 

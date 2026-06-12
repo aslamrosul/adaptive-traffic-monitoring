@@ -67,7 +67,7 @@ interface ProfileStore {
 const defaultProfile: UserProfile = {
   id: 'user-001',
   name: 'Admin Pusat',
-  email: 'admin@aerialcommand.id',
+  email: 'admin@astraea.id',
   phone: '+62 812-3456-7890',
   position: 'Operator Senior',
   department: 'Traffic Control Center',
@@ -239,7 +239,7 @@ export const useProfileStore = create<ProfileStore>()(
       resetProfile: () => set({ profile: defaultProfile, error: null }),
     }),
     {
-      name: 'aerial-command-profile',
+      name: 'astraea-profile',
       partialize: (state) => ({ profile: state.profile }),
     }
   )

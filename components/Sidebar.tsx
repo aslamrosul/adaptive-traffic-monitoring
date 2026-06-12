@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
             >
               <div className="min-w-0">
                 <h1 className="text-sm font-black text-white tracking-tighter font-headline truncate hover:text-blue-200 transition-colors cursor-pointer">
-                  Aerial Command
+                  ASTRAEA
                 </h1>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>

@@ -416,7 +416,7 @@ def build_telegram_alert_text(
     lane_text = lane or "-"
 
     return (
-        f"🚦 <b>Aerial Command Alert</b>\n\n"
+        f"🚦 <b>ASTRAEA Alert</b>\n\n"
         f"<b>{title}</b>\n"
         f"{message}\n\n"
         f"Severity: <b>{severity.upper()}</b>\n"
@@ -475,7 +475,7 @@ def build_email_alert_html(
 
     return f"""
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
-      <h2>🚦 Aerial Command Alert</h2>
+      <h2>🚦 ASTRAEA Alert</h2>
       <h3>{title}</h3>
       <p>{message}</p>
 
@@ -565,7 +565,7 @@ def save_notification(
         if should_send_email(user):
             email_sent = send_email_message(
                 to_email=str(user.get("email") or ""),
-                subject=f"[Aerial Command] {title}",
+                subject=f"[ASTRAEA] {title}",
                 html=build_email_alert_html(
                     title=title,
                     message=message,

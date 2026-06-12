@@ -159,19 +159,19 @@ export default function Header({
           </button>
         </div>
 
-        {/* Logo + Aerial Command - Replace Title */}
+        {/* Logo + ASTRAEA - Replace Title */}
         <Link href="/dashboard" className="flex items-center gap-1 md:gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
           <div className="w-7 md:w-8 h-7 md:h-8 relative flex-shrink-0">
             <Image
               src="/logo.png"
-              alt="Aerial Command Logo"
+              alt="ASTRAEA Logo"
               fill
               sizes="32px"
               className="object-contain"
             />
           </div>
           <h2 className="font-headline font-extrabold text-sm md:text-lg tracking-tight text-white drop-shadow-md">
-            Aerial Command
+            ASTRAEA
           </h2>
         </Link>
         

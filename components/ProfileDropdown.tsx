@@ -154,7 +154,7 @@ export default function ProfileDropdown() {
             {/* Footer */}
             <div className="p-3 bg-slate-50 border-t border-slate-200">
               <p className="text-[10px] text-slate-400 text-center">
-                Aerial Command v2.4.0
+                ASTRAEA v2.4.0
               </p>
             </div>
           </motion.div>

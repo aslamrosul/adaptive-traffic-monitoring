@@ -9,10 +9,10 @@ export default function LandingFooter() {
             <span className="material-symbols-outlined text-blue-600" style={{ fontVariationSettings: "'FILL' 1" }}>
               traffic
             </span>
-            Aerial Command
+            ASTRAEA
           </Link>
           <p className="text-xs text-slate-500">
-            © 2024 Aerial Command. Sistem Manajemen Lalu Lintas Cerdas.
+            © 2024 ASTRAEA. Sistem Manajemen Lalu Lintas Cerdas.
           </p>
         </div>
         

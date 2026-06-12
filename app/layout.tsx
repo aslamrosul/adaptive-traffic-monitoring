@@ -17,7 +17,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Aerial Command - Sistem Pantauan Lalu Lintas",
+  title: "ASTRAEA - Sistem Pantauan Lalu Lintas",
   description: "Adaptive Traffic Light Monitoring System",
 };
 

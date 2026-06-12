@@ -123,8 +123,8 @@ export default function LandingNav() {
       <div className="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 lg:px-12 max-w-7xl mx-auto w-full">
         {/* Brand */}
         <Link href="/" className="text-sm md:text-lg lg:text-2xl font-bold tracking-tighter text-slate-900 flex items-center gap-1 md:gap-2 flex-shrink-0">
-          <Image src="/logo.png" alt="Aerial Command" width={28} height={28} className="flex-shrink-0 md:w-9 md:h-9" />
-          <span>Aerial Command</span>
+          <Image src="/logo.png" alt="ASTRAEA" width={28} height={28} className="flex-shrink-0 md:w-9 md:h-9" />
+          <span>ASTRAEA</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -255,7 +255,7 @@ export default function LandingNav() {
                       {/* Footer */}
                       <div className="p-2 lg:p-3 bg-slate-50 border-t border-slate-200">
                         <p className="text-[9px] lg:text-[10px] text-slate-400 text-center">
-                          Aerial Command v2.4.0
+                          ASTRAEA v2.4.0
                         </p>
                       </div>
                     </motion.div>

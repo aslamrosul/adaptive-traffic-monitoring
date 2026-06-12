@@ -18,9 +18,9 @@ export async function POST() {
 
     await sendEmailNotification({
       to: session.user.email,
-      subject: "Test Email Aerial Command",
+      subject: "Test Email ASTRAEA",
       html: `
-        <h2>🚦 Aerial Command</h2>
+        <h2>🚦 ASTRAEA</h2>
         <p>Email notification berhasil aktif.</p>
         <p>Jika muncul alert kemacetan atau perangkat bermasalah, sistem bisa mengirim email ke akun ini.</p>
       `,
