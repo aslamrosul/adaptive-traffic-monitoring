@@ -239,7 +239,7 @@ export default function TrafficTrendChart({
 
       try {
         const params = new URLSearchParams({
-          limit: "1000",
+          limit: "500",
           startDate: range.startDate,
           endDate: range.endDate,
         });
