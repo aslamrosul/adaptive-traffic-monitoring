@@ -12,6 +12,8 @@ const menuItems = [
   { icon: "analytics", label: "Analist", href: "/Analist" },
   { icon: "settings_remote", label: "Remote IoT", href: "/iot-config" },
   { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
+  { icon: "menu_book", label: "Panduan Sistem", href: "/panduan" },
+  { icon: "article", label: "Panduan Lengkap", href: "/panduan-lengkap" },
 ];
 
 interface SidebarProps {
