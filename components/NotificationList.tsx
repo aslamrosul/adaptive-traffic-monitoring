@@ -83,7 +83,7 @@ export default function NotificationList() {
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-slate-600">Memuat notifikasi...</p>
+          <p className="text-slate-600">{t('notifications.loading') || 'Memuat notifikasi...'}</p>
         </div>
       </div>
     );
@@ -94,11 +94,11 @@ export default function NotificationList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Notifikasi
+            {t('notifications.title') || 'Notifikasi'}
           </h1>
 
           <p className="mt-1 text-sm text-slate-500">
-            {unreadCount} notifikasi belum dibaca
+            {unreadCount} {t('notifications.unreadNotifications') || 'notifikasi belum dibaca'}
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function NotificationList() {
           disabled={unreadCount === 0}
           className="rounded-lg px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Tandai Semua Dibaca
+          {t('notifications.markAllAsRead') || 'Tandai Semua Dibaca'}
         </button>
       </div>
 
@@ -122,7 +122,7 @@ export default function NotificationList() {
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
-          Semua ({notifications.length})
+          {t('notifications.all') || 'Semua'} ({notifications.length})
         </button>
 
         <button
@@ -134,7 +134,7 @@ export default function NotificationList() {
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
-          Belum Dibaca ({unreadCount})
+          {t('notifications.unread') || 'Belum Dibaca'} ({unreadCount})
         </button>
       </div>
 
@@ -145,7 +145,7 @@ export default function NotificationList() {
               notifications_off
             </span>
 
-            <p className="text-slate-500">Tidak ada notifikasi</p>
+            <p className="text-slate-500">{t('notifications.noNotifications') || 'Tidak ada notifikasi'}</p>
           </div>
         ) : (
           filteredNotifs.map((notif, idx) => (
@@ -205,7 +205,7 @@ export default function NotificationList() {
 
                     {notif.actionUrl && (
                       <span className="flex items-center gap-1 text-xs font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                        Lihat Detail
+                        {t('notifications.viewDetail') || 'Lihat Detail'}
                         <span className="material-symbols-outlined text-sm">
                           arrow_forward
                         </span>

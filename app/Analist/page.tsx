@@ -521,16 +521,15 @@ export default function AnalitikPage() {
         >
           <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 lg:mb-1 lg:text-xs">
-              Traffic & Queue Analytics
+              {t('analytics.subtitle') || 'Traffic & Queue Analytics'}
             </p>
 
             <h1 className="text-lg font-black text-slate-900 lg:text-3xl">
-              Dashboard Analitik Lalu Lintas
+              {t('analytics.pageTitle') || 'Dashboard Analitik Lalu Lintas'}
             </h1>
 
             <p className="mt-0.5 hidden text-sm text-slate-500 lg:block">
-              Analisis volume kendaraan, antrean, dan efektivitas
-              lampu dari DynamoDB tanpa data dummy.
+              {t('analytics.pageDescription') || 'Analisis volume kendaraan, antrean, dan efektivitas lampu dari DynamoDB tanpa data dummy.'}
             </p>
           </div>
 
@@ -542,8 +541,8 @@ export default function AnalitikPage() {
             <span className="material-symbols-outlined text-base lg:text-lg">
               download
             </span>
-            <span className="hidden sm:inline">Ekspor Ringkasan</span>
-            <span className="sm:hidden">Ekspor</span>
+            <span className="hidden sm:inline">{t('analytics.exportSummary') || 'Ekspor Ringkasan'}</span>
+            <span className="sm:hidden">{t('common.export') || 'Ekspor'}</span>
           </button>
         </motion.section>
 
@@ -559,7 +558,7 @@ export default function AnalitikPage() {
         >
           <div>
             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:mb-2 lg:text-xs">
-              Persimpangan
+              {t('intersections.title') || 'Persimpangan'}
             </label>
 
             <select
@@ -588,7 +587,7 @@ export default function AnalitikPage() {
 
           <div>
             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:mb-2 lg:text-xs">
-              Jalur
+              {t('traffic.lane') || 'Jalur'}
             </label>
 
             <select
@@ -610,7 +609,7 @@ export default function AnalitikPage() {
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           <KpiCard
-            title="Total Kendaraan"
+            title={t('dashboard.totalVehicles') || 'Total Kendaraan'}
             value={
               loadingVehicleSummary
                 ? "..."
@@ -618,33 +617,33 @@ export default function AnalitikPage() {
                     "id-ID",
                   )
             }
-            subtitle="Kendaraan baru terdeteksi"
+            subtitle={t('analytics.newVehiclesDetected') || 'Kendaraan baru terdeteksi'}
             icon="directions_car"
             variant="blue"
           />
 
           <KpiCard
-            title="Volume Tertinggi"
+            title={t('analytics.peakVolume') || 'Volume Tertinggi'}
             value={loadingVehicleSummary ? "..." : peakLabel}
             subtitle={`${
               vehicleSummary.peak?.count || 0
-            } kendaraan`}
+            } ${t('charts.vehicles') || 'kendaraan'}`}
             icon="trending_up"
             variant="indigo"
           />
 
           <KpiCard
-            title="Rata-rata Antrean"
+            title={t('analytics.averageQueue') || 'Rata-rata Antrean'}
             value={averageQueueLevel.toFixed(2)}
-            subtitle={`${dominantCondition} · Level 0–2`}
+            subtitle={`${dominantCondition} · ${t('analytics.levelRange') || 'Level 0–2'}`}
             icon="traffic"
             variant="amber"
           />
 
           <KpiCard
-            title="Perangkat Online"
+            title={t('analytics.devicesOnline') || 'Perangkat Online'}
             value={`${deviceStats.online}/${deviceStats.total}`}
-            subtitle={`${deviceStats.offline} perangkat offline`}
+            subtitle={`${deviceStats.offline} ${t('analytics.devicesOffline') || 'perangkat offline'}`}
             icon="sensors"
             variant="emerald"
           />
@@ -716,19 +715,15 @@ export default function AnalitikPage() {
 
             <div>
               <h3 className="font-bold text-slate-900">
-                Tentang Analitik
+                {t('analytics.aboutAnalytics') || 'Tentang Analitik'}
               </h3>
 
               <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                Volume kendaraan dihitung berdasarkan kenaikan counter
-                kendaraan, bukan dengan menjumlahkan seluruh telemetry.
-                Level 0 berarti lancar, Level 1 berarti antrean sedang,
-                dan Level 2 berarti antrean padat. Seluruh tanggal dan
-                pengelompokan jam menggunakan WIB.
+                {t('analytics.aboutDescription') || 'Volume kendaraan dihitung berdasarkan kenaikan counter kendaraan, bukan dengan menjumlahkan seluruh telemetry. Level 0 berarti lancar, Level 1 berarti antrean sedang, dan Level 2 berarti antrean padat. Seluruh tanggal dan pengelompokan jam menggunakan WIB.'}
               </p>
 
               <p className="mt-2 text-xs font-semibold text-slate-500">
-                Sampel antrean pada periode ini:{" "}
+                {t('analytics.sampleCount') || 'Sampel antrean pada periode ini'}:{" "}
                 {totalSamples.toLocaleString("id-ID")}
               </p>
             </div>
@@ -752,6 +747,8 @@ function KpiCard({
   icon: string;
   variant: "blue" | "indigo" | "amber" | "emerald";
 }) {
+  const t = useT();
+  
   const styles = {
     blue: "from-blue-600 to-blue-700 shadow-blue-600/20",
     indigo:

@@ -178,11 +178,11 @@ function OverviewSection() {
         <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
           <div className="space-y-4">
             {[
-              { num: "1", title: "IoT Layer (ESP32)", desc: "Sensor IR dan Ultrasonic untuk deteksi kendaraan", color: "blue" },
-              { num: "2", title: "MQTT Broker (Mosquitto)", desc: "Komunikasi real-time antara device dan server", color: "indigo" },
-              { num: "3", title: "Python Subscriber", desc: "Processing data dan simpan ke DynamoDB", color: "purple" },
-              { num: "4", title: "AWS DynamoDB", desc: "Penyimpanan telemetry, status device, dan notifikasi", color: "pink" },
-              { num: "5", title: "Next.js Dashboard", desc: "Web interface untuk monitoring dan kontrol", color: "teal" },
+              { num: "1", title: t('guide.overview.arch.iotLayer') || "IoT Layer (ESP32)", desc: t('guide.overview.arch.iotLayerDesc') || "Sensor IR dan Ultrasonic untuk deteksi kendaraan", color: "blue" },
+              { num: "2", title: t('guide.overview.arch.mqttBroker') || "MQTT Broker (Mosquitto)", desc: t('guide.overview.arch.mqttBrokerDesc') || "Komunikasi real-time antara device dan server", color: "indigo" },
+              { num: "3", title: t('guide.overview.arch.pythonSubscriber') || "Python Subscriber", desc: t('guide.overview.arch.pythonSubscriberDesc') || "Processing data dan simpan ke DynamoDB", color: "purple" },
+              { num: "4", title: t('guide.overview.arch.dynamodb') || "AWS DynamoDB", desc: t('guide.overview.arch.dynamodbDesc') || "Penyimpanan telemetry, status device, dan notifikasi", color: "pink" },
+              { num: "5", title: t('guide.overview.arch.nextjsDashboard') || "Next.js Dashboard", desc: t('guide.overview.arch.nextjsDashboardDesc') || "Web interface untuk monitoring dan kontrol", color: "teal" },
             ].map((item) => (
               <div key={item.num} className="flex items-center gap-4">
                 <div className={`w-10 h-10 bg-${item.color}-600 rounded-lg flex items-center justify-center flex-shrink-0`}>
@@ -221,24 +221,24 @@ function RequirementsSection() {
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">computer</span>
-            Dashboard (Frontend)
+            {t('guide.requirements.frontend')}
           </h3>
           <ul className="space-y-2 text-sm text-slate-700">
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span><strong>Node.js</strong> 20+</span>
+              <span><strong>{t('guide.requirements.nodejs')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span><strong>RAM</strong> Min. 4 GB</span>
+              <span><strong>{t('guide.requirements.ram')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span><strong>Browser</strong> Modern (Chrome/Firefox)</span>
+              <span><strong>{t('guide.requirements.browser')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span><strong>Internet</strong> Stabil</span>
+              <span><strong>{t('guide.requirements.internet')}</strong></span>
             </li>
           </ul>
         </div>
@@ -246,24 +246,24 @@ function RequirementsSection() {
         <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-purple-600">code</span>
-            Backend (Python)
+            {t('guide.requirements.backend')}
           </h3>
           <ul className="space-y-2 text-sm text-slate-700">
             <li className="flex items-start gap-2">
               <span className="text-purple-600 mt-1">•</span>
-              <span><strong>Python</strong> 3.10+</span>
+              <span><strong>{t('guide.requirements.python')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-purple-600 mt-1">•</span>
-              <span><strong>boto3</strong> AWS SDK</span>
+              <span><strong>{t('guide.requirements.boto3')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-purple-600 mt-1">•</span>
-              <span><strong>paho-mqtt</strong> Client</span>
+              <span><strong>{t('guide.requirements.pahoMqtt')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-purple-600 mt-1">•</span>
-              <span><strong>AWS Account</strong> + DynamoDB</span>
+              <span><strong>{t('guide.requirements.awsAccount')}</strong></span>
             </li>
           </ul>
         </div>
@@ -271,24 +271,24 @@ function RequirementsSection() {
         <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-orange-600">memory</span>
-            Hardware (ESP32)
+            {t('guide.requirements.hardware')}
           </h3>
           <ul className="space-y-2 text-sm text-slate-700">
             <li className="flex items-start gap-2">
               <span className="text-orange-600 mt-1">•</span>
-              <span><strong>ESP32 DevKit</strong></span>
+              <span><strong>{t('guide.requirements.esp32DevKit')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-orange-600 mt-1">•</span>
-              <span><strong>Sensor IR</strong> (3 unit)</span>
+              <span><strong>{t('guide.requirements.sensorIR')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-orange-600 mt-1">•</span>
-              <span><strong>HC-SR04</strong> (3 unit)</span>
+              <span><strong>{t('guide.requirements.hcsr04')}</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-orange-600 mt-1">•</span>
-              <span><strong>LED RGB</strong> atau Traffic Light</span>
+              <span><strong>{t('guide.requirements.ledRgb')}</strong></span>
             </li>
           </ul>
         </div>
@@ -326,11 +326,11 @@ function InstallationSection() {
 
       <div className="space-y-4">
         <div className="border-l-4 border-blue-500 pl-4 py-2">
-          <h3 className="font-bold text-slate-900 mb-2">A. Setup Dashboard (Next.js)</h3>
+          <h3 className="font-bold text-slate-900 mb-2">{t('guide.installation.setupDashboard')}</h3>
           
           <div className="space-y-3">
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">1. Clone Repository</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.cloneRepo')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto">
                 git clone &lt;repository-url&gt;<br/>
                 cd adaptive-traffic-monitoring
@@ -338,41 +338,41 @@ function InstallationSection() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">2. Install Dependencies</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.installDeps')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs">npm install</pre>
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">3. Konfigurasi Environment</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.configEnv')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto">
                 cp .env.local.example .env.local<br/>
-                # Edit .env.local dengan kredensial Anda
+                # {t('guide.installation.configEnvDesc')}
               </pre>
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">4. Jalankan Development</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.runDev')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs">
                 npm run dev<br/>
-                # Buka http://localhost:3000
+                # {t('guide.installation.runDevDesc')}
               </pre>
             </div>
           </div>
         </div>
 
         <div className="border-l-4 border-purple-500 pl-4 py-2">
-          <h3 className="font-bold text-slate-900 mb-2">B. Setup Python Subscriber</h3>
+          <h3 className="font-bold text-slate-900 mb-2">{t('guide.installation.setupPython')}</h3>
           
           <div className="space-y-3">
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">1. Install Dependencies</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.installPythonDeps')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs">
                 pip install boto3 paho-mqtt python-dotenv
               </pre>
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">2. Konfigurasi .env</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.configDotEnv')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto">
                 MQTT_HOST=3.25.72.124<br/>
                 MQTT_PORT=1883<br/>
@@ -382,7 +382,7 @@ function InstallationSection() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-1">3. Jalankan Subscriber</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.runSubscriber')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs">
                 python aws_subscriber.py
               </pre>
@@ -391,12 +391,12 @@ function InstallationSection() {
         </div>
 
         <div className="border-l-4 border-orange-500 pl-4 py-2">
-          <h3 className="font-bold text-slate-900 mb-2">C. Setup ESP32 Device</h3>
+          <h3 className="font-bold text-slate-900 mb-2">{t('guide.installation.setupESP32')}</h3>
           <p className="text-sm text-slate-600 mb-2">
-            1. Install Arduino IDE atau PlatformIO<br/>
-            2. Upload code dari <code className="bg-slate-200 px-1 py-0.5 rounded text-xs">iot/esp32/traffic_mqtt.ino</code><br/>
-            3. Edit WiFi SSID dan password<br/>
-            4. Upload ke ESP32
+            {t('guide.installation.setupESP32Step1')}<br/>
+            {t('guide.installation.setupESP32Step2')} <code className="bg-slate-200 px-1 py-0.5 rounded text-xs">iot/esp32/traffic_mqtt.ino</code><br/>
+            {t('guide.installation.setupESP32Step3')}<br/>
+            {t('guide.installation.setupESP32Step4')}
           </p>
         </div>
       </div>
@@ -433,57 +433,57 @@ function DashboardSection() {
         <div className="p-4 border border-slate-200 rounded-lg">
           <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">sensors</span>
-            Status Koneksi MQTT
+            {t('guide.dashboardGuide.mqttStatus')}
           </h3>
-          <p className="text-sm text-slate-700 mb-2">Banner di atas dashboard menampilkan:</p>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.dashboardGuide.mqttStatusDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong className="text-green-600">CONNECTED</strong> - Sistem terhubung ke broker</li>
-            <li>• <strong className="text-red-600">DISCONNECTED</strong> - Koneksi terputus</li>
-            <li>• Device ID dan Persimpangan aktif</li>
-            <li>• Timestamp update terakhir</li>
+            <li>• <strong className="text-green-600">CONNECTED</strong> - {t('guide.dashboardGuide.mqttConnected')}</li>
+            <li>• <strong className="text-red-600">DISCONNECTED</strong> - {t('guide.dashboardGuide.mqttDisconnected')}</li>
+            <li>• {t('guide.dashboardGuide.mqttDeviceId')}</li>
+            <li>• {t('guide.dashboardGuide.mqttTimestamp')}</li>
           </ul>
         </div>
 
         <div className="p-4 border border-slate-200 rounded-lg">
           <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-purple-600">filter_alt</span>
-            Filter Waktu
+            {t('guide.dashboardGuide.timeFilter')}
           </h3>
-          <p className="text-sm text-slate-700 mb-2">Pilih rentang data:</p>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.dashboardGuide.timeFilterDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>Today</strong> - Data hari ini</li>
-            <li>• <strong>Yesterday</strong> - Data kemarin</li>
-            <li>• <strong>7 Days</strong> - 7 hari terakhir</li>
-            <li>• <strong>30 Days</strong> - 30 hari terakhir</li>
-            <li>• <strong>Custom</strong> - Pilih tanggal manual</li>
+            <li>• <strong>Today</strong> - {t('guide.dashboardGuide.today')}</li>
+            <li>• <strong>Yesterday</strong> - {t('guide.dashboardGuide.yesterday')}</li>
+            <li>• <strong>7 Days</strong> - {t('guide.dashboardGuide.sevenDays')}</li>
+            <li>• <strong>30 Days</strong> - {t('guide.dashboardGuide.thirtyDays')}</li>
+            <li>• <strong>Custom</strong> - {t('guide.dashboardGuide.custom')}</li>
           </ul>
         </div>
 
         <div className="p-4 border border-slate-200 rounded-lg">
           <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-orange-600">swap_horiz</span>
-            Traffic Road Simulation
+            {t('guide.dashboardGuide.roadSimulation')}
           </h3>
-          <p className="text-sm text-slate-700 mb-2">Visualisasi persimpangan real-time:</p>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.dashboardGuide.roadSimulationDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• 3 Jalur: Utara, Selatan, Timur</li>
-            <li>• Warna lampu update otomatis</li>
-            <li>• Vehicle count per jalur</li>
-            <li>• Queue Level: 0 (Lancar), 1 (Sedang), 2 (Padat)</li>
+            <li>• {t('guide.dashboardGuide.threeLanes')}</li>
+            <li>• {t('guide.dashboardGuide.lightsUpdate')}</li>
+            <li>• {t('guide.dashboardGuide.vehicleCountPerLane')}</li>
+            <li>• {t('guide.dashboardGuide.queueLevels')}</li>
           </ul>
         </div>
 
         <div className="p-4 border border-slate-200 rounded-lg">
           <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-indigo-600">tune</span>
-            Traffic Control Panel
+            {t('guide.dashboardGuide.controlPanel')}
           </h3>
-          <p className="text-sm text-slate-700 mb-2">Panel kontrol di sidebar kanan:</p>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.dashboardGuide.controlPanelDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>Auto Mode</strong> ON/OFF</li>
-            <li>• <strong>Adaptive Mode</strong> ON/OFF</li>
-            <li>• <strong>Green/Yellow Time</strong> konfigurasi</li>
-            <li>• <strong>Manual Control</strong> ubah lampu manual</li>
+            <li>• <strong>{t('guide.dashboardGuide.autoModeToggle')}</strong></li>
+            <li>• <strong>{t('guide.dashboardGuide.adaptiveModeToggle')}</strong></li>
+            <li>• <strong>{t('guide.dashboardGuide.greenYellowTime')}</strong></li>
+            <li>• <strong>{t('guide.dashboardGuide.manualControlLights')}</strong></li>
           </ul>
         </div>
       </div>
@@ -491,28 +491,28 @@ function DashboardSection() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
           <span className="material-symbols-outlined text-blue-600">help</span>
-          Cara Menggunakan Manual Control
+          {t('guide.dashboardGuide.manualControl')}
         </h3>
         <ol className="space-y-2 text-sm text-slate-700">
           <li className="flex gap-2">
             <span className="font-bold text-blue-600">1.</span>
-            <span>Matikan <strong>Auto Mode</strong> di Traffic Control Panel</span>
+            <span>{t('guide.dashboardGuide.manualControlStep1')}</span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold text-blue-600">2.</span>
-            <span>Pilih jalur yang ingin diubah (North/South/East)</span>
+            <span>{t('guide.dashboardGuide.manualControlStep2')}</span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold text-blue-600">3.</span>
-            <span>Pilih warna lampu (Red/Yellow/Green)</span>
+            <span>{t('guide.dashboardGuide.manualControlStep3')}</span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold text-blue-600">4.</span>
-            <span>Klik tombol <strong>"Terapkan"</strong></span>
+            <span>{t('guide.dashboardGuide.manualControlStep4')}</span>
           </li>
         </ol>
         <p className="mt-3 text-xs text-slate-600 bg-amber-100 border border-amber-300 rounded p-2">
-          ⚠️ <strong>Catatan:</strong> Manual control hanya berfungsi jika Auto Mode dalam keadaan OFF!
+          ⚠️ <strong>{t('common.note')}:</strong> {t('guide.dashboardGuide.manualControlNote')}
         </p>
       </div>
     </div>

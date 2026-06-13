@@ -10,6 +10,64 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// Translation helper
+function getTranslation(lang: string = 'id') {
+  const translations: Record<string, any> = {
+    id: {
+      verifiedOperator: "Verified Operator",
+      verifiedOperatorDesc: "Akun operator sudah aktif dan terverifikasi",
+      realtimeMonitoring: "Realtime Monitoring",
+      realtimeMonitoringDesc: "Pernah membuka dashboard monitoring realtime",
+      iotController: "IoT Controller",
+      iotControllerDesc: "Pernah mengubah konfigurasi perangkat IoT",
+      profileComplete: "Profile Complete",
+      profileCompleteDesc: "Profil, bio, dan keahlian sudah dilengkapi",
+      activeUser: "Active User",
+      activeUserDesc: "Memiliki minimal 5 aktivitas di sistem",
+      reportMaker: "Report Maker",
+      reportMakerDesc: "Pernah mengekspor data atau membuat laporan",
+      securityAware: "Security Aware",
+      securityAwareDesc: "Pernah memperbarui password atau pengaturan privasi",
+      dataAnalyst: "Data Analyst",
+      dataAnalystDesc: "Pernah membuka halaman analitik sistem",
+      administrator: "Administrator",
+      operator: "Operator",
+      systemAdministration: "System Administration",
+      trafficControlCenter: "Traffic Control Center",
+      operatorBio: "Operator sistem monitoring lalu lintas.",
+      premium: "Premium",
+      standard: "Standard",
+    },
+    en: {
+      verifiedOperator: "Verified Operator",
+      verifiedOperatorDesc: "Operator account is active and verified",
+      realtimeMonitoring: "Realtime Monitoring",
+      realtimeMonitoringDesc: "Has opened realtime monitoring dashboard",
+      iotController: "IoT Controller",
+      iotControllerDesc: "Has changed IoT device configuration",
+      profileComplete: "Profile Complete",
+      profileCompleteDesc: "Profile, bio, and skills are completed",
+      activeUser: "Active User",
+      activeUserDesc: "Has at least 5 activities in the system",
+      reportMaker: "Report Maker",
+      reportMakerDesc: "Has exported data or created reports",
+      securityAware: "Security Aware",
+      securityAwareDesc: "Has updated password or privacy settings",
+      dataAnalyst: "Data Analyst",
+      dataAnalystDesc: "Has opened analytics page",
+      administrator: "Administrator",
+      operator: "Operator",
+      systemAdministration: "System Administration",
+      trafficControlCenter: "Traffic Control Center",
+      operatorBio: "Traffic monitoring system operator.",
+      premium: "Premium",
+      standard: "Standard",
+    },
+  };
+
+  return translations[lang] || translations.id;
+}
+
 function defaultAvatar(name: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name || "User",
@@ -26,7 +84,8 @@ function toNumber(value: any, fallback = 0) {
   return parsed;
 }
 
-async function buildProfileData(user: any) {
+async function buildProfileData(user: any, lang: string = 'id') {
+  const t = getTranslation(lang);
   const name = user.name || "User";
   const role = user.role || "operator";
 
@@ -110,17 +169,17 @@ async function buildProfileData(user: any) {
     phone: user.phone || "",
     position:
       user.position ||
-      (role === "admin" ? "Administrator" : "Operator"),
+      (role === "admin" ? t.administrator : t.operator),
 
     department:
       user.department ||
       (role === "admin"
-        ? "System Administration"
-        : "Traffic Control Center"),
+        ? t.systemAdministration
+        : t.trafficControlCenter),
 
     bio:
       user.bio ||
-      "Operator sistem monitoring lalu lintas.",
+      t.operatorBio,
 
     avatar:
       user.avatar ||
@@ -144,7 +203,7 @@ async function buildProfileData(user: any) {
       new Date().toISOString(),
 
     accountType:
-      role === "admin" ? "Premium" : "Standard",
+      role === "admin" ? t.premium : t.standard,
 
     stats: {
       totalLogin: Math.max(totalLogin, activityStats.totalLogin),
@@ -169,6 +228,7 @@ async function buildProfileData(user: any) {
       skills,
       profileSettings,
       activityStats,
+      lang,
     }),
   };
 }
@@ -199,7 +259,9 @@ function buildAchievements(input: {
     iotConfigUpdates: number;
     reportExports: number;
   };
+  lang?: string;
 }) {
+  const t = getTranslation(input.lang);
   const profileComplete =
     Boolean(input.skills.length > 0) &&
     input.activityStats.profileUpdates > 0;
@@ -207,24 +269,24 @@ function buildAchievements(input: {
   return [
     {
       id: "verified-operator",
-      title: "Verified Operator",
-      description: "Akun operator sudah aktif dan terverifikasi",
+      title: t.verifiedOperator,
+      description: t.verifiedOperatorDesc,
       icon: "verified_user",
       color: "bg-blue-100 text-blue-600",
       earned: input.status === "active",
     },
     {
       id: "realtime-monitoring",
-      title: "Realtime Monitoring",
-      description: "Pernah membuka dashboard monitoring realtime",
+      title: t.realtimeMonitoring,
+      description: t.realtimeMonitoringDesc,
       icon: "sensors",
       color: "bg-green-100 text-green-600",
       earned: input.activityStats.dashboardViews > 0,
     },
     {
       id: "iot-controller",
-      title: "IoT Controller",
-      description: "Pernah mengubah konfigurasi perangkat IoT",
+      title: t.iotController,
+      description: t.iotControllerDesc,
       icon: "memory",
       color: "bg-purple-100 text-purple-600",
       earned:
@@ -233,24 +295,24 @@ function buildAchievements(input: {
     },
     {
       id: "profile-complete",
-      title: "Profile Complete",
-      description: "Profil, bio, dan keahlian sudah dilengkapi",
+      title: t.profileComplete,
+      description: t.profileCompleteDesc,
       icon: "assignment_ind",
       color: "bg-cyan-100 text-cyan-600",
       earned: profileComplete,
     },
     {
       id: "active-user",
-      title: "Active User",
-      description: "Memiliki minimal 5 aktivitas di sistem",
+      title: t.activeUser,
+      description: t.activeUserDesc,
       icon: "bolt",
       color: "bg-orange-100 text-orange-600",
       earned: input.activityStats.totalActivities >= 5,
     },
     {
       id: "report-maker",
-      title: "Report Maker",
-      description: "Pernah mengekspor data atau membuat laporan",
+      title: t.reportMaker,
+      description: t.reportMakerDesc,
       icon: "description",
       color: "bg-yellow-100 text-yellow-600",
       earned:
@@ -259,8 +321,8 @@ function buildAchievements(input: {
     },
     {
       id: "security-aware",
-      title: "Security Aware",
-      description: "Pernah memperbarui password atau pengaturan privasi",
+      title: t.securityAware,
+      description: t.securityAwareDesc,
       icon: "admin_panel_settings",
       color: "bg-red-100 text-red-600",
       earned:
@@ -269,8 +331,8 @@ function buildAchievements(input: {
     },
     {
       id: "data-analyst",
-      title: "Data Analyst",
-      description: "Pernah membuka halaman analitik sistem",
+      title: t.dataAnalyst,
+      description: t.dataAnalystDesc,
       icon: "analytics",
       color: "bg-indigo-100 text-indigo-600",
       earned: input.activityStats.analyticsViews > 0,
@@ -293,8 +355,11 @@ async function getCurrentUserByEmail(email: string) {
   return result.Item || null;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const lang = searchParams.get('lang') || 'id';
+    
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
@@ -333,7 +398,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: await buildProfileData(user),
+      data: await buildProfileData(user, lang),
     });
   } catch (error: any) {
     console.error("Profile fetch error:", error);
@@ -350,6 +415,9 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const lang = searchParams.get('lang') || 'id';
+    
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
@@ -444,7 +512,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      data: await buildProfileData(updatedUser),
+      data: await buildProfileData(updatedUser, lang),
     });
   } catch (error: any) {
     console.error("Profile update error:", error);
