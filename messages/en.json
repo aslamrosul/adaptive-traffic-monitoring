@@ -54,6 +54,7 @@
     "show": "Show",
     "hide": "Hide",
     "or": "Or",
+    "of": "of",
     "chat": "Chat with Support",
     "email": "Email Support"
   },
@@ -331,7 +332,23 @@
     "sessionTimeout": "Session Timeout",
     "apiKeys": "API Keys",
     "savedSuccessfully": "Settings saved successfully",
-    "saveFailed": "Failed to save settings"
+    "saveFailed": "Failed to save settings",
+    "autoMode": "Auto Mode",
+    "autoModeDesc": "System will control traffic lights automatically.",
+    "timezoneNote": "Timezone Note",
+    "timezoneDesc": "Data is stored in UTC in the database. Timezone only affects dashboard display.",
+    "browserNotifications": "Browser Notifications",
+    "browserNotificationsDesc": "Show alerts in browser when queue is congested or device is offline.",
+    "browserNotificationsEnabled": "Browser notifications enabled",
+    "browserNotificationsDenied": "Browser notification permission denied",
+    "emailNotificationsDesc": "Send important alert summary to account email.",
+    "telegramNotificationsDesc": "Send important alerts to Telegram bot.",
+    "sensorInterval": "Data Collection Interval (seconds)",
+    "currentInterval": "Current",
+    "iotConfigNote": "Light timing and adaptive mode settings are still configured through the IoT Config page to sync with ESP32.",
+    "secureLogin": "Secure Login",
+    "secureLoginDesc": "Account uses NextAuth. Local password is bcrypt encrypted, while Google account uses OAuth.",
+    "passwordNote": "Note: this feature only applies to email/password accounts. Google accounts do not have local passwords."
   },
   "profile": {
     "title": "Profile",
@@ -746,5 +763,137 @@
     "ourTeam": "Our Team",
     "teamTitle": "The Innovators Behind ASTRAEA",
     "teamSubtitle": "Our dedication to creating technology solutions with real impact for society."
+  },
+  "guide": {
+    "tableOfContents": "Table of Contents",
+    "sections": {
+      "overview": "System Overview",
+      "requirements": "System Requirements",
+      "installation": "Installation & Setup",
+      "dashboard": "Dashboard Monitoring",
+      "persimpangan": "Intersection Management",
+      "analytics": "Traffic Analytics",
+      "iotConfig": "IoT Configuration",
+      "users": "User Management",
+      "notifications": "Notifications & Alerts",
+      "esp32": "ESP32 Device Setup",
+      "mqtt": "MQTT Configuration",
+      "troubleshooting": "Troubleshooting"
+    },
+    "overview": {
+      "title": "System Overview",
+      "subtitle": "Introduction to Adaptive Traffic Monitoring System",
+      "whatIs": "What is this System?",
+      "whatIsDesc": "Adaptive Traffic Monitoring System is an integrated IoT solution designed to monitor and manage traffic in real-time using ESP32 sensors, cloud analytics, and modern web dashboard.",
+      "mainFeatures": "Main Features",
+      "architecture": "System Architecture",
+      "features": {
+        "realtimeMonitoring": "Real-time Monitoring",
+        "realtimeDesc": "Monitor traffic flow directly via MQTT WebSocket",
+        "advancedAnalytics": "Advanced Analytics",
+        "advancedDesc": "Data visualization with interactive charts and statistics",
+        "remoteConfig": "Remote Configuration",
+        "remoteDesc": "Configure traffic light duration from dashboard",
+        "autoNotif": "Automatic Notifications",
+        "autoNotifDesc": "Alerts via Telegram and Email for traffic conditions"
+      }
+    },
+    "requirements": {
+      "title": "System Requirements",
+      "subtitle": "Required Hardware and Software",
+      "importantNote": "Important Note",
+      "importantNoteDesc": "For production deployment, ensure AWS account has sufficient credits (estimated $10-20/month). MQTT Broker runs on AWS EC2 (3.25.72.124). Complete documentation available in PANDUAN_PENGGUNAAN.md"
+    },
+    "installation": {
+      "title": "Installation & Setup",
+      "subtitle": "Step-by-step installation guide",
+      "totalTime": "Total Setup Time",
+      "totalTimeDesc": "Dashboard: 15 minutes • Python: 10 minutes • ESP32: 20 minutes • Total: ±45 minutes"
+    },
+    "dashboardGuide": {
+      "title": "Using Dashboard",
+      "subtitle": "Dashboard navigation and features guide",
+      "mqttStatus": "MQTT Connection Status",
+      "mqttStatusDesc": "Banner above dashboard displays:",
+      "timeFilter": "Time Filter",
+      "roadSimulation": "Traffic Road Simulation",
+      "controlPanel": "Traffic Control Panel",
+      "manualControl": "How to Use Manual Control",
+      "manualControlNote": "Manual control only works when Auto Mode is OFF!"
+    },
+    "intersectionManagement": {
+      "title": "Intersection Management",
+      "subtitle": "CRUD operations for intersections",
+      "addNew": "Adding New Intersection",
+      "edit": "Edit Intersection",
+      "delete": "Delete Intersection",
+      "deleteWarning": "Deletion is permanent and cannot be undone!",
+      "viewDetail": "View Intersection Details"
+    },
+    "analyticsGuide": {
+      "title": "Traffic Analytics",
+      "subtitle": "In-depth data visualization and analysis",
+      "effectivenessScore": "How to Read Effectiveness Score",
+      "veryEffective": "Very Effective",
+      "fairlyEffective": "Fairly Effective",
+      "lessEffective": "Less Effective",
+      "exportData": "Export Analytics Data",
+      "exportDesc": "Click \"Export Summary\" button at top right to download data to CSV. File can be opened with Excel or Google Sheets."
+    },
+    "iotConfigGuide": {
+      "title": "IoT Device Configuration",
+      "subtitle": "Remote configuration for ESP32",
+      "greenTime": "Green Time (Seconds)",
+      "yellowTime": "Yellow Time (Seconds)",
+      "adaptiveConfig": "Adaptive Mode Configuration",
+      "operatingMode": "Operating Mode",
+      "optimalTips": "Optimal Configuration Tips",
+      "peakHours": "Peak Hours",
+      "offPeak": "Off-Peak Hours",
+      "saveConfig": "How to Save Configuration"
+    },
+    "userManagement": {
+      "title": "User Management",
+      "subtitle": "Role-based access control",
+      "centralAdmin": "Central Admin",
+      "fieldOperator": "Field Operator",
+      "addNewUser": "Adding New User",
+      "editUser": "Edit User",
+      "deleteUser": "Delete User",
+      "deleteNote": "Cannot delete your own account!"
+    },
+    "notificationsGuide": {
+      "title": "Notifications & Alerts",
+      "subtitle": "Setup Telegram & Email notifications",
+      "setupTelegram": "Setup Telegram",
+      "setupEmail": "Setup Email (Gmail)",
+      "cooldownPeriod": "Cooldown Period",
+      "cooldownDesc": "To prevent spam, notifications have a 5-minute cooldown. This means the same alert will not be sent again within 5 minutes."
+    },
+    "esp32Setup": {
+      "title": "ESP32 Hardware Setup",
+      "subtitle": "Wiring and uploading code to ESP32",
+      "pinConfiguration": "Pin Configuration",
+      "uploadCode": "Upload Code to ESP32",
+      "verifyConnection": "Verify Connection"
+    },
+    "mqttConfig": {
+      "title": "MQTT & Database Configuration",
+      "subtitle": "MQTT Broker and AWS DynamoDB",
+      "mqttBroker": "MQTT Broker (Mosquitto)",
+      "mqttTopics": "MQTT Topics",
+      "dynamodbTables": "AWS DynamoDB Tables"
+    },
+    "troubleshootingGuide": {
+      "title": "Troubleshooting",
+      "subtitle": "Common problem solutions",
+      "mqttDisconnected": "Dashboard: MQTT Disconnected",
+      "wifiIssue": "ESP32: WiFi connection failed",
+      "awsError": "Python Subscriber: AWS Error",
+      "noData": "Data not showing in Dashboard",
+      "sensorIssue": "Sensor not working",
+      "needHelp": "Need More Help?",
+      "contactSupport": "If the issue persists, contact technical support:"
+    }
   }
 }

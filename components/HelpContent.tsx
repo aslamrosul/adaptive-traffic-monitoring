@@ -14,6 +14,14 @@ export default function HelpContent() {
   const [isLoadingFaqs, setIsLoadingFaqs] = useState(true);
   const [isLoadingGuides, setIsLoadingGuides] = useState(true);
 
+  // Get current language from localStorage or default to 'id'
+  const getCurrentLanguage = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('language') || 'id';
+    }
+    return 'id';
+  };
+
   useEffect(() => {
     fetchFaqs();
     fetchGuides();
@@ -22,8 +30,9 @@ export default function HelpContent() {
   const fetchFaqs = async () => {
     try {
       setIsLoadingFaqs(true);
+      const lang = getCurrentLanguage();
 
-      const response = await fetch("/api/help/faqs", {
+      const response = await fetch(`/api/help/faqs?lang=${lang}`, {
         cache: "no-store",
       });
 
@@ -45,8 +54,9 @@ export default function HelpContent() {
   const fetchGuides = async () => {
     try {
       setIsLoadingGuides(true);
+      const lang = getCurrentLanguage();
 
-      const response = await fetch("/api/help/guides", {
+      const response = await fetch(`/api/help/guides?lang=${lang}`, {
         cache: "no-store",
       });
 

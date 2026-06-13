@@ -121,7 +121,7 @@ export default function PersimpanganPage() {
   };
 
   return (
-    <DashboardLayout title="Daftar Persimpangan">
+    <DashboardLayout title={t('intersections.title')}>
       <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
@@ -131,14 +131,14 @@ export default function PersimpanganPage() {
             className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg card-hover"
           >
             <p className="text-[9px] font-bold text-blue-100 uppercase tracking-widest mb-1">
-              Total Persimpangan
+              {t('dashboard.totalIntersections')}
             </p>
             <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
               {isLoading ? '...' : intersections.length}
             </p>
             <div className="flex items-center gap-1 text-blue-100 text-[10px] font-bold">
               <span className="material-symbols-outlined text-xs">location_on</span>
-              <span>Terdaftar di sistem</span>
+              <span>{t('common.active')}</span>
             </div>
           </motion.div>
 
@@ -149,14 +149,14 @@ export default function PersimpanganPage() {
             className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-xl shadow-lg card-hover"
           >
             <p className="text-[9px] font-bold text-green-100 uppercase tracking-widest mb-1">
-              Status Aktif
+              {t('intersections.active')}
             </p>
             <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
               {isLoading ? '...' : intersections.filter((i: any) => i.status === 'active').length}
             </p>
             <div className="flex items-center gap-1 text-green-100 text-[10px] font-bold">
               <span className="material-symbols-outlined text-xs">check_circle</span>
-              <span>Beroperasi normal</span>
+              <span>{t('common.active')}</span>
             </div>
           </motion.div>
 
@@ -167,14 +167,14 @@ export default function PersimpanganPage() {
             className="bg-gradient-to-br from-orange-500 to-amber-600 p-4 rounded-xl shadow-lg card-hover"
           >
             <p className="text-[9px] font-bold text-orange-100 uppercase tracking-widest mb-1">
-              Maintenance
+              {t('intersections.maintenance')}
             </p>
             <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
               {isLoading ? '...' : intersections.filter((i: any) => i.status === 'maintenance').length}
             </p>
             <div className="flex items-center gap-1 text-orange-100 text-[10px] font-bold">
               <span className="material-symbols-outlined text-xs">build</span>
-              <span>Dalam perbaikan</span>
+              <span>{t('intersections.maintenance')}</span>
             </div>
           </motion.div>
 
@@ -185,14 +185,14 @@ export default function PersimpanganPage() {
             className="bg-gradient-to-br from-red-500 to-rose-600 p-4 rounded-xl shadow-lg card-hover"
           >
             <p className="text-[9px] font-bold text-red-100 uppercase tracking-widest mb-1">
-              Tidak Aktif
+              {t('intersections.inactive')}
             </p>
             <p className="text-3xl font-headline font-extrabold text-white mb-0.5">
               {isLoading ? '...' : intersections.filter((i: any) => i.status === 'inactive').length}
             </p>
             <div className="flex items-center gap-1 text-red-100 text-[10px] font-bold">
               <span className="material-symbols-outlined text-xs">error</span>
-              <span>Perlu perhatian</span>
+              <span>{t('intersections.inactive')}</span>
             </div>
           </motion.div>
         </div>
@@ -208,7 +208,7 @@ export default function PersimpanganPage() {
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Cari nama, alamat, intersection ID, atau device ID..."
+                placeholder={t('intersections.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               />
             </div>
@@ -218,15 +218,15 @@ export default function PersimpanganPage() {
               onChange={(event) => setStatusFilter(event.target.value)}
               className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             >
-              <option value="all">Semua Status</option>
-              <option value="active">Aktif</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="inactive">Tidak Aktif</option>
+              <option value="all">{t('common.all')} {t('intersections.status')}</option>
+              <option value="active">{t('intersections.active')}</option>
+              <option value="maintenance">{t('intersections.maintenance')}</option>
+              <option value="inactive">{t('intersections.inactive')}</option>
             </select>
           </div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-headline font-bold text-slate-900 text-base lg:text-lg">
-              Semua Persimpangan
+              {t('intersections.allIntersections')}
             </h3>
             <button
               onClick={() => setIsModalOpen(true)}
@@ -235,8 +235,8 @@ export default function PersimpanganPage() {
               <span className="material-symbols-outlined text-base group-hover:rotate-90 transition-transform duration-300">
                 add_circle
               </span>
-              <span className="hidden sm:inline">Tambah Persimpangan</span>
-              <span className="sm:hidden">Tambah</span>
+              <span className="hidden sm:inline">{t('intersections.add')}</span>
+              <span className="sm:hidden">{t('common.add')}</span>
             </button>
           </div>
 
@@ -253,14 +253,14 @@ export default function PersimpanganPage() {
           ) : isError ? (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 lg:p-6 text-center">
               <span className="material-symbols-outlined text-red-500 text-4xl mb-2">error</span>
-              <p className="text-red-700 font-bold">Gagal memuat data persimpangan</p>
-              <p className="text-red-600 text-sm mt-1">Silakan coba lagi nanti</p>
+              <p className="text-red-700 font-bold">{t('errors.loadData')}</p>
+              <p className="text-red-600 text-sm mt-1">{t('errors.tryAgain')}</p>
             </div>
           ) : filteredIntersections.length === 0 ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 lg:p-12 text-center">
               <span className="material-symbols-outlined text-slate-400 text-5xl mb-4">inbox</span>
-              <p className="text-slate-600 font-bold">Belum ada persimpangan</p>
-              <p className="text-slate-500 text-sm mt-1">Tambahkan persimpangan pertama Anda</p>
+              <p className="text-slate-600 font-bold">{t('intersections.noIntersections')}</p>
+              <p className="text-slate-500 text-sm mt-1">{t('intersections.add')}</p>
             </div>
           ) : (
             <>
@@ -291,11 +291,11 @@ export default function PersimpanganPage() {
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Device ID</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{t('intersections.deviceId')}</p>
                         <p className="text-sm font-bold text-slate-900">{intersection.deviceId || '-'}</p>
                       </div>
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Jalur</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{t('intersections.lanes')}</p>
                         <p className="text-sm font-bold text-slate-900">{intersection.lanes?.count || 4}</p>
                       </div>
                     </div>
@@ -303,7 +303,7 @@ export default function PersimpanganPage() {
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <span className="material-symbols-outlined text-sm">update</span>
-                        <span>Update: {new Date(intersection.updatedAt).toLocaleDateString('id-ID')}</span>
+                        <span>{t('intersections.updated')}: {new Date(intersection.updatedAt).toLocaleDateString('id-ID')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -312,7 +312,7 @@ export default function PersimpanganPage() {
                             handleEdit(intersection);
                           }}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <span className="material-symbols-outlined text-base">edit</span>
                         </button>
@@ -322,7 +322,7 @@ export default function PersimpanganPage() {
                             handleDeleteClick(intersection.id);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Hapus"
+                          title={t('common.delete')}
                         >
                           <span className="material-symbols-outlined text-base">delete</span>
                         </button>
@@ -333,7 +333,7 @@ export default function PersimpanganPage() {
                           }}
                           className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
                         >
-                          Detail
+                          {t('dashboard.viewDetails')}
                           <span className="material-symbols-outlined text-sm">arrow_forward</span>
                         </button>
                       </div>
@@ -366,13 +366,13 @@ export default function PersimpanganPage() {
                     {/* Content */}
                     <span className="relative z-10 flex items-center gap-2">
                       <span className="material-symbols-outlined text-xl animate-bounce">visibility</span>
-                      <span>Lihat Semua Persimpangan</span>
+                      <span>{t('intersections.viewAll')}</span>
                     </span>
 
                     {/* Badge */}
                     <span className="relative z-10 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-extrabold flex items-center gap-1">
                       <span className="material-symbols-outlined text-base">add</span>
-                      {intersections.length - INITIAL_DISPLAY_COUNT} lagi
+                      {intersections.length - INITIAL_DISPLAY_COUNT} {t('common.more')}
                     </span>
 
                     {/* Arrow Icon */}
@@ -382,7 +382,7 @@ export default function PersimpanganPage() {
                   </button>
 
                   <p className="text-xs text-slate-500 font-medium">
-                    Menampilkan {INITIAL_DISPLAY_COUNT} dari {intersections.length} persimpangan
+                    {t('common.show')} {INITIAL_DISPLAY_COUNT} {t('common.of') || 'dari'} {intersections.length} {t('intersections.title').toLowerCase()}
                   </p>
                 </motion.div>
               )}
@@ -407,12 +407,12 @@ export default function PersimpanganPage() {
                     <span className="material-symbols-outlined text-xl group-hover:-translate-y-1 transition-transform duration-300">
                       expand_less
                     </span>
-                    <span>Tampilkan Lebih Sedikit</span>
+                    <span>{t('common.less')}</span>
                     <span className="material-symbols-outlined text-xl">arrow_upward</span>
                   </button>
 
                   <p className="text-xs text-slate-500 font-medium">
-                    Menampilkan semua {intersections.length} persimpangan
+                    {t('common.show')} {t('common.all').toLowerCase()} {intersections.length} {t('intersections.title').toLowerCase()}
                   </p>
                 </motion.div>
               )}
@@ -454,13 +454,13 @@ export default function PersimpanganPage() {
                 <span className="material-symbols-outlined text-red-600 text-2xl">warning</span>
               </div>
               <div>
-                <h3 className="font-bold text-lg text-slate-900">Hapus Persimpangan?</h3>
-                <p className="text-sm text-slate-600">Tindakan ini tidak dapat dibatalkan</p>
+                <h3 className="font-bold text-lg text-slate-900">{t('intersections.delete')}?</h3>
+                <p className="text-sm text-slate-600">{t('intersections.deleteConfirm')}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              Apakah Anda yakin ingin menghapus persimpangan ini? Semua data terkait akan dihapus secara permanen.
+              {t('intersections.deleteConfirm')}
             </p>
 
             <div className="flex gap-3">
@@ -469,7 +469,7 @@ export default function PersimpanganPage() {
                 disabled={isDeleting}
                 className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors disabled:opacity-50"
               >
-                Batal
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDeleteConfirm}
@@ -479,12 +479,12 @@ export default function PersimpanganPage() {
                 {isDeleting ? (
                   <>
                     <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                    Menghapus...
+                    {t('common.delete')}...
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined">delete</span>
-                    Hapus
+                    {t('common.delete')}
                   </>
                 )}
               </button>

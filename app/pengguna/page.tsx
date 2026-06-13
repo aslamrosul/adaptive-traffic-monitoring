@@ -55,10 +55,10 @@ export default function PenggunaPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Pengguna berhasil ditambahkan");
+        toast.success(t('users.addSuccess'));
         fetchUsers(); // Refresh list
       } else {
-        toast.error(result.error || "Gagal menambahkan pengguna");
+        toast.error(result.error || t('users.addSuccess').replace('berhasil ditambahkan', 'gagal ditambahkan'));
       }
     } catch (error) {
       console.error("Error adding user:", error);
@@ -84,10 +84,10 @@ export default function PenggunaPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Pengguna berhasil diperbarui");
+        toast.success(t('users.editSuccess'));
         fetchUsers(); // Refresh list
       } else {
-        toast.error(result.error || "Gagal memperbarui pengguna");
+        toast.error(result.error || t('users.editSuccess').replace('berhasil diperbarui', 'gagal diperbarui'));
       }
     } catch (error) {
       console.error("Error updating user:", error);
@@ -96,14 +96,14 @@ export default function PenggunaPage() {
   };
 
   const handleDelete = (userId: string) => {
-    toast((t) => (
+    toast((toastObj) => (
       <div className="flex flex-col gap-3">
-        <p className="font-semibold">Hapus pengguna ini?</p>
+        <p className="font-semibold">{t('users.deleteConfirm')}</p>
         <div className="flex gap-2">
           <button
             onClick={async () => {
-              toast.dismiss(t.id);
-              const loadingToast = toast.loading("Menghapus pengguna...");
+              toast.dismiss(toastObj.id);
+              const loadingToast = toast.loading(t('common.delete') + '...');
               
               try {
                 const response = await fetch(`/api/users/${userId}`, {
@@ -114,10 +114,10 @@ export default function PenggunaPage() {
                 toast.dismiss(loadingToast);
 
                 if (result.success) {
-                  toast.success("Pengguna berhasil dihapus");
+                  toast.success(t('users.deleteSuccess'));
                   fetchUsers(); // Refresh list
                 } else {
-                  toast.error(result.error || "Gagal menghapus pengguna");
+                  toast.error(result.error || t('users.deleteSuccess').replace('berhasil dihapus', 'gagal dihapus'));
                 }
               } catch (error) {
                 console.error("Error deleting user:", error);
@@ -130,10 +130,10 @@ export default function PenggunaPage() {
             Hapus
           </button>
           <button
-            onClick={() => toast.dismiss(t.id)}
+            onClick={() => toast.dismiss(toastObj.id)}
             className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 transition-colors"
           >
-            Batal
+            {t('common.cancel')}
           </button>
         </div>
       </div>
@@ -175,10 +175,10 @@ export default function PenggunaPage() {
           >
             <div>
               <h3 className="text-base lg:text-2xl font-headline font-extrabold text-on-surface tracking-tight">
-                Manajemen Pengguna
+                {t('users.title')}
               </h3>
               <p className="text-slate-500 mt-0.5 text-xs lg:text-sm">
-                Kelola hak akses, perbarui peran, dan pantau aktivitas operator sistem.
+                {t('users.list')}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -220,14 +220,14 @@ export default function PenggunaPage() {
                     <div className="px-4 py-8 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-slate-500 text-xs">Memuat data...</p>
+                        <p className="text-slate-500 text-xs">{t('common.loading')}</p>
                       </div>
                     </div>
                   ) : currentUsers.length === 0 ? (
                     <div className="px-4 py-8 text-center">
                       <span className="material-symbols-outlined text-4xl text-slate-300 mb-1">person_off</span>
                       <p className="text-slate-500 text-xs">
-                        {searchQuery ? "Tidak ada pengguna yang cocok" : "Belum ada pengguna"}
+                        {searchQuery ? t('users.noUsers') : t('users.noUsers')}
                       </p>
                     </div>
                   ) : (
@@ -309,7 +309,7 @@ export default function PenggunaPage() {
                                     user.status === "active" ? "text-slate-700" : "text-slate-400"
                                   }`}
                                 >
-                                  {user.status === "active" ? "Aktif" : "Offline"}
+                                  {user.status === "active" ? t('users.active') : t('users.inactive')}
                                 </span>
                               </div>
                             </div>
@@ -326,16 +326,16 @@ export default function PenggunaPage() {
                     <thead>
                       <tr className="bg-surface-container-low/50">
                         <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Pengguna
+                          {t('users.name')}
                         </th>
                         <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Jabatan / Role
+                          {t('users.role')}
                         </th>
                         <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Status
+                          {t('users.status')}
                         </th>
                         <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
-                          Aksi
+                          {t('common.edit')}
                         </th>
                       </tr>
                     </thead>
@@ -345,7 +345,7 @@ export default function PenggunaPage() {
                           <td colSpan={4} className="px-4 py-8 text-center">
                             <div className="flex flex-col items-center gap-2">
                               <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                              <p className="text-slate-500 text-xs">Memuat data...</p>
+                              <p className="text-slate-500 text-xs">{t('common.loading')}</p>
                             </div>
                           </td>
                         </tr>
@@ -354,7 +354,7 @@ export default function PenggunaPage() {
                           <td colSpan={4} className="px-4 py-8 text-center">
                             <span className="material-symbols-outlined text-4xl text-slate-300 mb-1">person_off</span>
                             <p className="text-slate-500 text-xs">
-                              {searchQuery ? "Tidak ada pengguna yang cocok" : "Belum ada pengguna"}
+                              {searchQuery ? t('users.noUsers') : t('users.noUsers')}
                             </p>
                           </td>
                         </tr>
@@ -407,7 +407,7 @@ export default function PenggunaPage() {
                                   user.status === "active" ? "text-slate-700" : "text-slate-400"
                                 }`}
                               >
-                                {user.status === "active" ? "Aktif" : "Offline"}
+                                {user.status === "active" ? t('users.active') : t('users.inactive')}
                               </span>
                             </div>
                           </td>
@@ -462,7 +462,7 @@ export default function PenggunaPage() {
                 >
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p className="text-xs text-slate-500 text-center sm:text-left">
-                      Menampilkan <span className="font-semibold text-slate-700">{startIndex + 1}</span> - <span className="font-semibold text-slate-700">{Math.min(endIndex, filteredUsers.length)}</span> dari <span className="font-semibold text-slate-700">{filteredUsers.length}</span> pengguna
+                      {t('common.show')} <span className="font-semibold text-slate-700">{startIndex + 1}</span> - <span className="font-semibold text-slate-700">{Math.min(endIndex, filteredUsers.length)}</span> {t('common.of') || 'dari'} <span className="font-semibold text-slate-700">{filteredUsers.length}</span> {t('users.title').toLowerCase()}
                     </p>
                     
                     <div className="flex items-center gap-1 lg:gap-2">
@@ -554,7 +554,7 @@ export default function PenggunaPage() {
               className="space-y-3 lg:space-y-6"
             >
               <div className="bg-surface-container-lowest p-3 lg:p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">Informasi Peran</h4>
+                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">{t('users.role')}</h4>
                 <div className="space-y-3 lg:space-y-4">
                   <div className="p-3 lg:p-4 bg-primary-fixed/30 rounded-xl">
                     <div className="flex items-center gap-1.5 lg:gap-2 mb-1">
@@ -562,11 +562,11 @@ export default function PenggunaPage() {
                         verified_user
                       </span>
                       <span className="text-[10px] lg:text-xs font-extrabold text-on-primary-fixed-variant">
-                        Admin Pusat
+                        {t('modals.centralAdmin')}
                       </span>
                     </div>
                     <p className="text-[10px] lg:text-[11px] text-slate-600 leading-relaxed">
-                      Akses penuh ke semua fitur, manajemen sistem, dan pengaturan API eksternal.
+                      {t('users.admin')}
                     </p>
                   </div>
                   <div className="p-3 lg:p-4 bg-secondary-container/30 rounded-xl">
@@ -575,32 +575,31 @@ export default function PenggunaPage() {
                         monitor_heart
                       </span>
                       <span className="text-[10px] lg:text-xs font-extrabold text-on-secondary-container">
-                        Operator Lapangan
+                        {t('modals.fieldOperator')}
                       </span>
                     </div>
                     <p className="text-[10px] lg:text-[11px] text-slate-600 leading-relaxed">
-                      Memantau arus lalu lintas secara real-time dan mengelola laporan insiden
-                      lokal.
+                      {t('users.operator')}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-surface-container-lowest p-3 lg:p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">Statistik</h4>
+                <h4 className="text-xs lg:text-sm font-bold text-slate-900 mb-3 lg:mb-4">{t('dashboard.statistics')}</h4>
                 <div className="space-y-2 lg:space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] lg:text-xs text-slate-500">Total Pengguna</span>
+                    <span className="text-[10px] lg:text-xs text-slate-500">{t('users.title')}</span>
                     <span className="text-base lg:text-lg font-bold text-slate-900">{users.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] lg:text-xs text-slate-500">Aktif</span>
+                    <span className="text-[10px] lg:text-xs text-slate-500">{t('users.active')}</span>
                     <span className="text-base lg:text-lg font-bold text-emerald-600">
                       {users.filter((u) => u.status === "active").length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] lg:text-xs text-slate-500">Offline</span>
+                    <span className="text-[10px] lg:text-xs text-slate-500">{t('users.inactive')}</span>
                     <span className="text-base lg:text-lg font-bold text-slate-400">
                       {users.filter((u) => u.status !== "active").length}
                     </span>

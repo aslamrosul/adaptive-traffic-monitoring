@@ -60,7 +60,7 @@ export default function IoTConfigPage() {
   });
 
   return (
-    <DashboardLayout title="Remote Configuration IoT">
+    <DashboardLayout title={t('navigation.iotConfig')}>
       <div className="p-3 lg:p-6 space-y-3 max-w-[1920px] mx-auto">
         {/* Info Banner — collapsible on mobile */}
         <motion.div
@@ -72,7 +72,7 @@ export default function IoTConfigPage() {
           <div className="flex items-center gap-2 p-2.5 lg:hidden">
             <span className="material-symbols-outlined text-white text-base shrink-0">info</span>
             <p className="text-white text-xs font-semibold flex-1 truncate">
-              Remote Config Smart Traffic Light
+              {t('iot.config')} {t('common.appName')}
             </p>
             <div className="flex gap-1 shrink-0">
               {["Real-time", "MQTT", "Auto Sync"].map((tag) => (
@@ -119,7 +119,7 @@ export default function IoTConfigPage() {
             <div className="bg-white rounded-lg p-3 lg:p-4 shadow-sm border border-slate-200">
               <h3 className="font-bold text-slate-900 mb-2 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined text-blue-600 text-base">devices</span>
-                Pilih Perangkat IoT
+                {t('iot.devices')}
               </h3>
               {isLoading ? (
                 <div className="flex items-center justify-center py-6">
@@ -128,7 +128,7 @@ export default function IoTConfigPage() {
               ) : intersections.length === 0 ? (
                 <div className="text-center py-6 text-slate-500">
                   <span className="material-symbols-outlined text-4xl mb-2">device_hub</span>
-                  <p className="text-sm">Belum ada perangkat IoT terdaftar</p>
+                  <p className="text-sm">{t('iot.devices')} {t('common.none').toLowerCase()}</p>
                 </div>
               ) : (
                 <div>
@@ -145,10 +145,10 @@ export default function IoTConfigPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-slate-900 truncate text-xs">
-                              {selectedIntersection?.name || 'Pilih Persimpangan'}
+                              {selectedIntersection?.name || t('common.select')}
                             </p>
                             <p className="text-[10px] text-slate-500 truncate">
-                              {selectedIntersection?.deviceId || 'Tidak ada device dipilih'}
+                              {selectedIntersection?.deviceId || t('iot.deviceId')}
                             </p>
                           </div>
                         </div>
@@ -170,7 +170,7 @@ export default function IoTConfigPage() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari perangkat..."
+                                placeholder={t('common.search') + '...'}
                                 className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </div>
@@ -178,7 +178,7 @@ export default function IoTConfigPage() {
                           <div className="max-h-56 overflow-y-auto">
                             {filteredIntersections.length === 0 ? (
                               <div className="p-6 text-center text-slate-500">
-                                <p className="text-xs">Tidak ada hasil untuk "{searchQuery}"</p>
+                                <p className="text-xs">{t('search.noDataFound')} "{searchQuery}"</p>
                               </div>
                             ) : (
                               filteredIntersections.map((intersection) => {
@@ -210,7 +210,7 @@ export default function IoTConfigPage() {
                             )}
                           </div>
                           <div className="p-2 bg-slate-50 border-t border-slate-200">
-                            <p className="text-[10px] text-slate-500 text-center">{filteredIntersections.length} dari {intersections.length} perangkat</p>
+                            <p className="text-[10px] text-slate-500 text-center">{filteredIntersections.length} {t('common.of')} {intersections.length} {t('iot.devices').toLowerCase()}</p>
                           </div>
                         </motion.div>
                       )}
@@ -225,7 +225,7 @@ export default function IoTConfigPage() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari perangkat..."
+                        placeholder={t('common.search') + '...'}
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       />
                     </div>
@@ -233,7 +233,7 @@ export default function IoTConfigPage() {
                       {filteredIntersections.length === 0 ? (
                         <div className="p-8 text-center text-slate-500">
                           <span className="material-symbols-outlined text-3xl mb-2">search_off</span>
-                          <p className="text-sm">Tidak ada hasil untuk "{searchQuery}"</p>
+                          <p className="text-sm">{t('search.noDataFound')} "{searchQuery}"</p>
                         </div>
                       ) : (
                         filteredIntersections.map((intersection) => {
@@ -262,7 +262,7 @@ export default function IoTConfigPage() {
                       )}
                     </div>
                     <div className="pt-3 border-t border-slate-200">
-                      <p className="text-xs text-slate-500 text-center">{filteredIntersections.length} dari {intersections.length} perangkat</p>
+                      <p className="text-xs text-slate-500 text-center">{filteredIntersections.length} {t('common.of')} {intersections.length} {t('iot.devices').toLowerCase()}</p>
                     </div>
                   </div>
                 </div>
@@ -299,7 +299,7 @@ export default function IoTConfigPage() {
                       </span>
                       <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1 ${selectedIntersection.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${selectedIntersection.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                        {selectedIntersection.status === 'active' ? 'Online' : 'Offline'}
+                        {selectedIntersection.status === 'active' ? t('common.online') : t('common.offline')}
                       </span>
                     </div>
                   </div>
@@ -326,8 +326,8 @@ export default function IoTConfigPage() {
                 className="bg-white rounded-xl p-12 shadow-sm border border-slate-200 text-center"
               >
                 <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">settings_remote</span>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Pilih Perangkat IoT</h3>
-                <p className="text-slate-500">Pilih perangkat dari daftar di sebelah kiri untuk mengatur konfigurasi</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{t('iot.devices')}</h3>
+                <p className="text-slate-500">{t('common.select')} {t('iot.devices').toLowerCase()}</p>
               </motion.div>
             )}
           </div>
@@ -342,7 +342,7 @@ export default function IoTConfigPage() {
         >
           <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">lightbulb</span>
-            Cara Kerja
+            {t('help.title')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[

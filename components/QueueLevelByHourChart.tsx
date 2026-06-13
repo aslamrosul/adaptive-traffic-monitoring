@@ -35,22 +35,22 @@ interface HourlyData {
 
 const LANES: Array<{
   id: TrafficLane;
-  name: string;
+  nameKey: string;
   stroke: string;
 }> = [
   {
     id: "north",
-    name: "Jalur Utara",
+    nameKey: "traffic.northLane",
     stroke: "#2563eb",
   },
   {
     id: "south",
-    name: "Jalur Selatan",
+    nameKey: "traffic.southLane",
     stroke: "#10b981",
   },
   {
     id: "east",
-    name: "Jalur Timur",
+    nameKey: "traffic.eastLane",
     stroke: "#f59e0b",
   },
 ];
@@ -159,11 +159,11 @@ export default function QueueLevelByHourChart({
 
   const displayedLanes = useMemo(() => {
     if (lane === "all") {
-      return LANES;
+      return LANES.map(l => ({ ...l, name: t(l.nameKey) }));
     }
 
-    return LANES.filter((item) => item.id === lane);
-  }, [lane]);
+    return LANES.filter((item) => item.id === lane).map(l => ({ ...l, name: t(l.nameKey) }));
+  }, [lane, t]);
 
   const peakInformation = useMemo(() => {
     let peakHour = "-";
@@ -228,22 +228,21 @@ export default function QueueLevelByHourChart({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">
-            Level Antrian Per Jam
+            {t('charts.queueByHourTitle')}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Rata-rata level antrean berdasarkan jam WIB pada{" "}
-            {periodLabel}.
+            {t('charts.queueByHourSubtitle')} {periodLabel}.
           </p>
 
           <p className="mt-1 text-[10px] font-semibold text-slate-400">
-            {totalSamples.toLocaleString("id-ID")} sampel jalur
+            {totalSamples.toLocaleString("id-ID")} {t('charts.samples')}
           </p>
         </div>
 
         <div className="rounded-xl bg-blue-50 px-4 py-2 text-right">
           <p className="text-[10px] font-bold uppercase tracking-wide text-blue-500">
-            Jam Puncak
+            {t('analytics.peakHourAnalysis')}
           </p>
 
           <p className="text-lg font-black text-blue-800">
@@ -251,7 +250,7 @@ export default function QueueLevelByHourChart({
           </p>
 
           <p className="text-[10px] text-blue-600">
-            Level {peakInformation.value.toFixed(2)}
+            {t('charts.level')} {peakInformation.value.toFixed(2)}
           </p>
 
           <p className="text-[9px] text-blue-500">
@@ -278,9 +277,9 @@ export default function QueueLevelByHourChart({
       </div>
 
       {isLoading ? (
-        <ChartLoading />
+        <ChartLoading t={t} />
       ) : totalSamples === 0 ? (
-        <ChartEmpty />
+        <ChartEmpty t={t} />
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
@@ -317,11 +316,11 @@ export default function QueueLevelByHourChart({
             <Tooltip
               formatter={(value: any, name: any) => {
                 if (value === null || value === undefined) {
-                  return ["Tidak ada sampel", name];
+                  return [t('charts.noDataAvailable'), name];
                 }
 
                 return [
-                  `Level ${Number(value).toFixed(2)}`,
+                  `${t('charts.level')} ${Number(value).toFixed(2)}`,
                   name,
                 ];
               }}
@@ -357,21 +356,21 @@ export default function QueueLevelByHourChart({
   );
 }
 
-function ChartLoading() {
+function ChartLoading({ t }: { t: any }) {
   return (
     <div className="flex h-[300px] items-center justify-center">
       <div className="text-center">
         <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
 
         <p className="text-sm text-slate-500">
-          Memuat level antrian...
+          {t('charts.loadingData')}
         </p>
       </div>
     </div>
   );
 }
 
-function ChartEmpty() {
+function ChartEmpty({ t }: { t: any }) {
   return (
     <div className="flex h-[300px] flex-col items-center justify-center text-center">
       <span className="material-symbols-outlined text-5xl text-slate-300">
@@ -379,7 +378,7 @@ function ChartEmpty() {
       </span>
 
       <p className="mt-3 text-sm font-semibold text-slate-500">
-        Belum ada data antrean pada periode ini.
+        {t('charts.noDataPeriod')}
       </p>
     </div>
   );

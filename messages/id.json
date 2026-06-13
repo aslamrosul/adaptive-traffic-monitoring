@@ -54,6 +54,7 @@
     "show": "Tampilkan",
     "hide": "Sembunyikan",
     "or": "Atau",
+    "of": "dari",
     "chat": "Chat dengan Support",
     "email": "Email Support"
   },
@@ -331,7 +332,23 @@
     "sessionTimeout": "Timeout Sesi",
     "apiKeys": "Kunci API",
     "savedSuccessfully": "Pengaturan berhasil disimpan",
-    "saveFailed": "Gagal menyimpan pengaturan"
+    "saveFailed": "Gagal menyimpan pengaturan",
+    "autoMode": "Mode Otomatis",
+    "autoModeDesc": "Sistem akan mengatur lampu lalu lintas secara otomatis.",
+    "timezoneNote": "Catatan Zona Waktu",
+    "timezoneDesc": "Data tetap disimpan UTC di database. Zona waktu hanya memengaruhi tampilan dashboard.",
+    "browserNotifications": "Notifikasi Browser",
+    "browserNotificationsDesc": "Menampilkan alert di browser saat ada antrean padat atau perangkat offline.",
+    "browserNotificationsEnabled": "Notifikasi browser diaktifkan",
+    "browserNotificationsDenied": "Izin notifikasi browser ditolak",
+    "emailNotificationsDesc": "Kirim ringkasan alert penting ke email akun.",
+    "telegramNotificationsDesc": "Kirim alert penting ke bot Telegram.",
+    "sensorInterval": "Interval Pengambilan Data (detik)",
+    "currentInterval": "Saat ini",
+    "iotConfigNote": "Pengaturan waktu lampu dan mode adaptif tetap diatur melalui halaman IoT Config agar tersinkron ke ESP32.",
+    "secureLogin": "Login Aman",
+    "secureLoginDesc": "Akun menggunakan NextAuth. Password lokal terenkripsi bcrypt, sedangkan akun Google memakai OAuth.",
+    "passwordNote": "Catatan: fitur ini hanya berlaku untuk akun email/password. Akun Google tidak memiliki password lokal."
   },
   "profile": {
     "title": "Profil",
@@ -746,5 +763,137 @@
     "ourTeam": "Tim Kami",
     "teamTitle": "Para Inovator di Balik ASTRAEA",
     "teamSubtitle": "Dedikasi kami untuk menciptakan solusi teknologi yang berdampak nyata bagi masyarakat."
+  },
+  "guide": {
+    "tableOfContents": "Daftar Isi",
+    "sections": {
+      "overview": "Ringkasan Sistem",
+      "requirements": "Kebutuhan Sistem",
+      "installation": "Instalasi & Setup",
+      "dashboard": "Dashboard Monitoring",
+      "persimpangan": "Manajemen Persimpangan",
+      "analytics": "Analitik Lalu Lintas",
+      "iotConfig": "Konfigurasi IoT",
+      "users": "Manajemen Pengguna",
+      "notifications": "Notifikasi & Alert",
+      "esp32": "Setup ESP32 Device",
+      "mqtt": "Konfigurasi MQTT",
+      "troubleshooting": "Troubleshooting"
+    },
+    "overview": {
+      "title": "Ringkasan Sistem",
+      "subtitle": "Pengenalan Adaptive Traffic Monitoring System",
+      "whatIs": "Apa itu Sistem Ini?",
+      "whatIsDesc": "Adaptive Traffic Monitoring System adalah solusi IoT terintegrasi yang dirancang untuk memantau dan mengelola lalu lintas secara real-time menggunakan sensor ESP32, analitik cloud, dan dashboard web modern.",
+      "mainFeatures": "Fitur Utama",
+      "architecture": "Arsitektur Sistem",
+      "features": {
+        "realtimeMonitoring": "Monitoring Real-time",
+        "realtimeDesc": "Pantau arus lalu lintas secara langsung via MQTT WebSocket",
+        "advancedAnalytics": "Analitik Lanjutan",
+        "advancedDesc": "Visualisasi data dengan chart interaktif dan statistik",
+        "remoteConfig": "Remote Configuration",
+        "remoteDesc": "Atur durasi lampu lalu lintas dari dashboard",
+        "autoNotif": "Notifikasi Otomatis",
+        "autoNotifDesc": "Alert via Telegram dan Email untuk kondisi lalu lintas"
+      }
+    },
+    "requirements": {
+      "title": "Kebutuhan Sistem",
+      "subtitle": "Hardware dan Software yang diperlukan",
+      "importantNote": "Catatan Penting",
+      "importantNoteDesc": "Untuk deployment production, pastikan AWS account memiliki kredit cukup (estimasi $10-20/bulan). MQTT Broker berjalan di AWS EC2 (3.25.72.124). Dokumentasi lengkap tersedia di PANDUAN_PENGGUNAAN.md"
+    },
+    "installation": {
+      "title": "Instalasi & Setup",
+      "subtitle": "Panduan instalasi step-by-step",
+      "totalTime": "Total Waktu Setup",
+      "totalTimeDesc": "Dashboard: 15 menit • Python: 10 menit • ESP32: 20 menit • Total: ±45 menit"
+    },
+    "dashboardGuide": {
+      "title": "Penggunaan Dashboard",
+      "subtitle": "Panduan navigasi dan fitur dashboard",
+      "mqttStatus": "Status Koneksi MQTT",
+      "mqttStatusDesc": "Banner di atas dashboard menampilkan:",
+      "timeFilter": "Filter Waktu",
+      "roadSimulation": "Traffic Road Simulation",
+      "controlPanel": "Traffic Control Panel",
+      "manualControl": "Cara Menggunakan Manual Control",
+      "manualControlNote": "Manual control hanya berfungsi jika Auto Mode dalam keadaan OFF!"
+    },
+    "intersectionManagement": {
+      "title": "Manajemen Persimpangan",
+      "subtitle": "CRUD operations untuk persimpangan",
+      "addNew": "Menambah Persimpangan Baru",
+      "edit": "Edit Persimpangan",
+      "delete": "Hapus Persimpangan",
+      "deleteWarning": "Penghapusan bersifat permanen dan tidak dapat dikembalikan!",
+      "viewDetail": "Lihat Detail Persimpangan"
+    },
+    "analyticsGuide": {
+      "title": "Analitik Lalu Lintas",
+      "subtitle": "Visualisasi dan analisis data mendalam",
+      "effectivenessScore": "Cara Membaca Skor Efektivitas",
+      "veryEffective": "Sangat Efektif",
+      "fairlyEffective": "Cukup Efektif",
+      "lessEffective": "Kurang Efektif",
+      "exportData": "Ekspor Data Analitik",
+      "exportDesc": "Klik tombol \"Ekspor Ringkasan\" di kanan atas untuk download data ke CSV. File dapat dibuka dengan Excel atau Google Sheets."
+    },
+    "iotConfigGuide": {
+      "title": "Konfigurasi IoT Device",
+      "subtitle": "Remote configuration untuk ESP32",
+      "greenTime": "Green Time (Detik)",
+      "yellowTime": "Yellow Time (Detik)",
+      "adaptiveConfig": "Adaptive Mode Configuration",
+      "operatingMode": "Mode Operasi",
+      "optimalTips": "Tips Konfigurasi Optimal",
+      "peakHours": "Jam Sibuk (Peak Hours)",
+      "offPeak": "Jam Sepi (Off-Peak)",
+      "saveConfig": "Cara Menyimpan Konfigurasi"
+    },
+    "userManagement": {
+      "title": "Manajemen Pengguna",
+      "subtitle": "Role-based access control",
+      "centralAdmin": "Admin Pusat",
+      "fieldOperator": "Operator Lapangan",
+      "addNewUser": "Menambah Pengguna Baru",
+      "editUser": "Edit Pengguna",
+      "deleteUser": "Hapus Pengguna",
+      "deleteNote": "Tidak bisa hapus akun sendiri!"
+    },
+    "notificationsGuide": {
+      "title": "Notifikasi & Alert",
+      "subtitle": "Setup Telegram & Email notifications",
+      "setupTelegram": "Setup Telegram",
+      "setupEmail": "Setup Email (Gmail)",
+      "cooldownPeriod": "Cooldown Period",
+      "cooldownDesc": "Untuk mencegah spam, notifikasi memiliki cooldown 5 menit. Artinya alert yang sama tidak akan dikirim lagi dalam 5 menit."
+    },
+    "esp32Setup": {
+      "title": "Setup ESP32 Hardware",
+      "subtitle": "Wiring dan upload code ke ESP32",
+      "pinConfiguration": "Pin Configuration",
+      "uploadCode": "Upload Code ke ESP32",
+      "verifyConnection": "Verifikasi Koneksi"
+    },
+    "mqttConfig": {
+      "title": "Konfigurasi MQTT & Database",
+      "subtitle": "MQTT Broker dan AWS DynamoDB",
+      "mqttBroker": "MQTT Broker (Mosquitto)",
+      "mqttTopics": "MQTT Topics",
+      "dynamodbTables": "AWS DynamoDB Tables"
+    },
+    "troubleshootingGuide": {
+      "title": "Troubleshooting",
+      "subtitle": "Solusi masalah umum",
+      "mqttDisconnected": "Dashboard: MQTT Disconnected",
+      "wifiIssue": "ESP32: WiFi gagal connect",
+      "awsError": "Python Subscriber: AWS Error",
+      "noData": "Data tidak muncul di Dashboard",
+      "sensorIssue": "Sensor tidak berfungsi",
+      "needHelp": "Butuh Bantuan Lebih Lanjut?",
+      "contactSupport": "Jika masalah masih berlanjut, hubungi technical support:"
+    }
   }
 }

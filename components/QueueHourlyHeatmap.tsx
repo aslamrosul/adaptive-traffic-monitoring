@@ -46,20 +46,21 @@ const LANES: TrafficLane[] = [
 
 function getConditionLabel(
   average: number | null,
+  t: any,
 ): string {
   if (average === null) {
-    return "Tidak ada data";
+    return t('charts.noDataAvailable');
   }
 
   if (average < 0.5) {
-    return "Lancar";
+    return t('traffic.smooth');
   }
 
   if (average < 1.5) {
-    return "Sedang";
+    return t('traffic.moderate');
   }
 
-  return "Padat";
+  return t('traffic.congested');
 }
 
 function getBlockStyle(
@@ -314,26 +315,25 @@ export default function QueueHourlyHeatmap({
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">
-            Ringkasan Per Jam
+            {t('charts.queueByHourTitle')}
           </p>
 
           <h3 className="mt-1 text-lg font-bold text-slate-900 lg:text-xl">
-            Laporan Antrean Per Jam
+            {t('charts.queueByHourTitle')}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500 lg:text-sm">
-            Intensitas rata-rata level antrean berdasarkan jam WIB pada{" "}
-            {periodLabel}.
+            {t('charts.queueByHourSubtitle')} {periodLabel}.
           </p>
 
           <p className="mt-1 text-[10px] font-semibold text-slate-400">
-            {totalSamples.toLocaleString("id-ID")} sampel jalur
+            {totalSamples.toLocaleString("id-ID")} {t('charts.samples')}
           </p>
         </div>
 
         <div className="rounded-xl bg-indigo-50 px-4 py-3 text-right">
           <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-500">
-            Jam Antrean Tertinggi
+            {t('analytics.queueByHour')}
           </p>
 
           <p className="text-xl font-black text-indigo-800">
@@ -342,18 +342,18 @@ export default function QueueHourlyHeatmap({
 
           <p className="text-[10px] font-semibold text-indigo-600">
             {peak
-              ? `Level ${peak.average.toFixed(2)} · ${peak.peakLane}`
-              : "Belum ada data"}
+              ? `${t('charts.level')} ${peak.average.toFixed(2)} · ${peak.peakLane}`
+              : t('charts.noDataAvailable')}
           </p>
         </div>
       </div>
 
       {isLoading ? (
-        <HeatmapLoading />
+        <HeatmapLoading t={t} />
       ) : error ? (
-        <HeatmapError message={error} />
+        <HeatmapError message={error} t={t} />
       ) : totalSamples === 0 ? (
-        <HeatmapEmpty />
+        <HeatmapEmpty t={t} />
       ) : (
         <>
           <div
@@ -371,13 +371,14 @@ export default function QueueHourlyHeatmap({
               const tooltip = [
                 `${item.hour} WIB`,
                 item.average === null
-                  ? "Tidak ada sampel"
-                  : `Rata-rata Level ${item.average.toFixed(2)}`,
-                `Kondisi: ${getConditionLabel(
+                  ? t('charts.noDataAvailable')
+                  : `${t('charts.level')} ${item.average.toFixed(2)}`,
+                `${t('traffic.direction')}: ${getConditionLabel(
                   item.average,
+                  t,
                 )}`,
-                `Sampel: ${item.sampleCount}`,
-                `Jalur tertinggi: ${item.peakLane}`,
+                `${t('charts.samples')}: ${item.sampleCount}`,
+                `${t('analytics.peakHourAnalysis')}: ${item.peakLane}`,
               ].join("\n");
 
               return (
@@ -400,7 +401,7 @@ export default function QueueHourlyHeatmap({
                 >
                   {isPeak && (
                     <span className="absolute -right-1 -top-2 rounded-full bg-orange-500 px-2 py-0.5 text-[8px] font-black uppercase text-white shadow">
-                      Puncak
+                      {t('analytics.peakHourAnalysis')}
                     </span>
                   )}
 
@@ -432,7 +433,7 @@ export default function QueueHourlyHeatmap({
 
           <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
             <span className="text-[10px] font-semibold text-slate-400">
-              Lancar
+              {t('traffic.smooth')}
             </span>
 
             <div className="flex gap-1">
@@ -452,7 +453,7 @@ export default function QueueHourlyHeatmap({
             </div>
 
             <span className="text-[10px] font-semibold text-slate-400">
-              Padat
+              {t('traffic.congested')}
             </span>
           </div>
         </>
@@ -461,14 +462,14 @@ export default function QueueHourlyHeatmap({
   );
 }
 
-function HeatmapLoading() {
+function HeatmapLoading({ t }: { t: any }) {
   return (
     <div className="flex min-h-64 items-center justify-center">
       <div className="text-center">
         <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
 
         <p className="text-sm text-slate-500">
-          Memuat laporan antrean per jam...
+          {t('charts.loadingData')}
         </p>
       </div>
     </div>
@@ -477,8 +478,10 @@ function HeatmapLoading() {
 
 function HeatmapError({
   message,
+  t,
 }: {
   message: string;
+  t: any;
 }) {
   return (
     <div className="flex min-h-64 items-center justify-center rounded-xl border border-red-200 bg-red-50 p-6 text-center">
@@ -488,7 +491,7 @@ function HeatmapError({
         </span>
 
         <p className="mt-2 font-bold text-red-700">
-          Data gagal dimuat
+          {t('errors.loadData')}
         </p>
 
         <p className="mt-1 text-sm text-red-600">
@@ -499,7 +502,7 @@ function HeatmapError({
   );
 }
 
-function HeatmapEmpty() {
+function HeatmapEmpty({ t }: { t: any }) {
   return (
     <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
       <div>
@@ -508,11 +511,11 @@ function HeatmapEmpty() {
         </span>
 
         <p className="mt-2 font-bold text-slate-700">
-          Belum ada data antrean
+          {t('charts.noDataAvailable')}
         </p>
 
         <p className="mt-1 text-sm text-slate-500">
-          Tidak ditemukan telemetry pada periode dan filter yang dipilih.
+          {t('charts.noTelemetryFound')}
         </p>
       </div>
     </div>

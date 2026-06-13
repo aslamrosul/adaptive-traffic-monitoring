@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Static guides data
-const guides = [
+// Static guides data with multi-language support
+const guidesData: Record<string, any[]> = {
+  id: [
   {
     id: 'guide_001',
     title: 'Panduan Memulai',
@@ -240,6 +241,245 @@ const guides = [
   },
 ];
 
+const guidesEn = [
+  {
+    id: 'guide_001',
+    title: 'Getting Started Guide',
+    description: 'Learn the basics of using Adaptive Traffic Monitoring',
+    icon: 'rocket_launch',
+    color: 'bg-blue-100 text-blue-600',
+    category: 'getting-started',
+    duration: '10 minutes',
+    difficulty: 'Beginner',
+    steps: [
+      {
+        title: 'Login to System',
+        description: 'Use credentials provided by admin',
+        content:
+          'Open the application and enter your email and password. If this is your first login, you will be asked to change the default password.',
+      },
+      {
+        title: 'Familiarize Dashboard',
+        description: 'Understand main dashboard components',
+        content:
+          'Dashboard displays real-time statistics, intersection status, and latest alerts. Use sidebar to navigate to other pages.',
+      },
+      {
+        title: 'Monitor Intersections',
+        description: 'View intersection status and data',
+        content:
+          'Click on intersection card to view complete details including vehicle volume, light status, and sensor data.',
+      },
+      {
+        title: 'Create Reports',
+        description: 'Document incidents or issues',
+        content:
+          'Use Reports page to create documentation of incidents, technical issues, or important observations.',
+      },
+    ],
+    relatedGuides: ['guide_002', 'guide_003'],
+    tags: ['beginner', 'basic', 'tutorial'],
+    views: 2450,
+    lastUpdated: '2024-01-15',
+  },
+  {
+    id: 'guide_002',
+    title: 'Video Tutorials',
+    description: 'Watch complete guide videos',
+    icon: 'play_circle',
+    color: 'bg-purple-100 text-purple-600',
+    category: 'video',
+    duration: '25 minutes',
+    difficulty: 'All Levels',
+    videos: [
+      {
+        title: 'System Introduction',
+        url: 'https://example.com/video1',
+        duration: '5:30',
+        thumbnail: '/thumbnails/intro.jpg',
+      },
+      {
+        title: 'Real-time Monitoring',
+        url: 'https://example.com/video2',
+        duration: '8:45',
+        thumbnail: '/thumbnails/monitoring.jpg',
+      },
+      {
+        title: 'Creating Reports',
+        url: 'https://example.com/video3',
+        duration: '6:20',
+        thumbnail: '/thumbnails/reports.jpg',
+      },
+      {
+        title: 'Analytics and Insights',
+        url: 'https://example.com/video4',
+        duration: '10:15',
+        thumbnail: '/thumbnails/analytics.jpg',
+      },
+    ],
+    relatedGuides: ['guide_001', 'guide_004'],
+    tags: ['video', 'tutorial', 'visual'],
+    views: 1890,
+    lastUpdated: '2024-01-20',
+  },
+  {
+    id: 'guide_003',
+    title: 'API Documentation',
+    description: 'Complete documentation for developers',
+    icon: 'code',
+    color: 'bg-green-100 text-green-600',
+    category: 'developer',
+    duration: '30 minutes',
+    difficulty: 'Advanced',
+    sections: [
+      {
+        title: 'Authentication',
+        description: 'How to authenticate with API',
+        endpoints: [
+          {
+            method: 'POST',
+            path: '/api/auth/login',
+            description: 'Login and get access token',
+          },
+          {
+            method: 'POST',
+            path: '/api/auth/refresh',
+            description: 'Refresh access token',
+          },
+        ],
+      },
+      {
+        title: 'Intersections',
+        description: 'Endpoints for intersection data',
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/intersections',
+            description: 'List all intersections',
+          },
+          {
+            method: 'GET',
+            path: '/api/intersections/[id]',
+            description: 'Intersection details',
+          },
+          {
+            method: 'POST',
+            path: '/api/intersections',
+            description: 'Add new intersection',
+          },
+        ],
+      },
+      {
+        title: 'Traffic Data',
+        description: 'Endpoints for traffic data',
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/traffic/realtime',
+            description: 'Real-time data',
+          },
+          {
+            method: 'GET',
+            path: '/api/analytics/daily',
+            description: 'Daily analytics',
+          },
+        ],
+      },
+    ],
+    relatedGuides: ['guide_004'],
+    tags: ['api', 'developer', 'technical'],
+    views: 1250,
+    lastUpdated: '2024-01-18',
+  },
+  {
+    id: 'guide_004',
+    title: 'Contact Support',
+    description: 'Our team is ready to help 24/7',
+    icon: 'support_agent',
+    color: 'bg-orange-100 text-orange-600',
+    category: 'support',
+    duration: '5 minutes',
+    difficulty: 'All Levels',
+    contacts: [
+      {
+        type: 'Email',
+        value: 'support@traffic-monitoring.com',
+        icon: 'email',
+        responseTime: '< 2 hours',
+      },
+      {
+        type: 'Phone',
+        value: '+62 21 1234 5678',
+        icon: 'phone',
+        responseTime: 'Immediate',
+      },
+      {
+        type: 'Live Chat',
+        value: 'Chat with support team',
+        icon: 'chat',
+        responseTime: '< 5 minutes',
+      },
+      {
+        type: 'WhatsApp',
+        value: '+62 812 3456 7890',
+        icon: 'chat',
+        responseTime: '< 15 minutes',
+      },
+    ],
+    supportHours: {
+      weekdays: '24/7',
+      weekends: '24/7',
+      holidays: '24/7',
+    },
+    relatedGuides: ['guide_001'],
+    tags: ['support', 'help', 'contact'],
+    views: 3120,
+    lastUpdated: '2024-01-10',
+  },
+  {
+    id: 'guide_005',
+    title: 'IoT Sensor Configuration',
+    description: 'Setup and configure ESP32 sensors',
+    icon: 'sensors',
+    color: 'bg-cyan-100 text-cyan-600',
+    category: 'iot',
+    duration: '45 minutes',
+    difficulty: 'Advanced',
+    steps: [
+      {
+        title: 'Hardware Preparation',
+        description: 'Required components',
+        content:
+          'ESP32 DevKit, HC-SR04 ultrasonic sensor, jumper wires, breadboard, and 5V power supply.',
+      },
+      {
+        title: 'Install Arduino IDE',
+        description: 'Setup development environment',
+        content:
+          'Download and install Arduino IDE. Add ESP32 board manager and install required libraries.',
+      },
+      {
+        title: 'Upload Firmware',
+        description: 'Flash code to ESP32',
+        content:
+          'Open traffic_sensor.ino file, adjust WiFi credentials and Azure IoT Hub connection string, then upload to ESP32.',
+      },
+      {
+        title: 'Testing & Calibration',
+        description: 'Verify sensor works',
+        content:
+          'Monitor serial output to ensure sensor sends data to cloud. Perform calibration if needed.',
+      },
+    ],
+    relatedGuides: ['guide_003'],
+    tags: ['iot', 'esp32', 'sensor', 'hardware'],
+    views: 680,
+    lastUpdated: '2024-01-22',
+  },
+];
+
+guidesData.en = guidesEn;
+
 // GET: Fetch all guides or specific guide
 export async function GET(request: Request) {
   try {
@@ -247,6 +487,9 @@ export async function GET(request: Request) {
     const id = searchParams.get('id');
     const category = searchParams.get('category');
     const search = searchParams.get('search')?.toLowerCase();
+    const lang = searchParams.get('lang') || 'id';
+
+    const guides = guidesData[lang] || guidesData.id;
 
     // Get specific guide by ID
     if (id) {

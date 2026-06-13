@@ -509,7 +509,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-xs">
                       edit
                     </span>
-                    <span>Edit Profil</span>
+                    <span className="truncate">{t('profile.edit')}</span>
                   </button>
                 )}
               </div>
@@ -532,7 +532,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-sm">
                       edit
                     </span>
-                    <span>Edit Profil</span>
+                    <span>{t('profile.edit')}</span>
                   </button>
                 )}
               </div>
@@ -646,7 +646,7 @@ export default function ProfileContent() {
                 className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 overflow-x-hidden"
               >
                 <h3 className="text-sm font-bold text-slate-900 mb-2 truncate">
-                  Quick Actions
+                  {t('profile.quickActions') || 'Quick Actions'}
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -711,7 +711,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                       info
                     </span>
-                    <span className="truncate">Tentang</span>
+                    <span className="truncate">{t('profile.bio') || 'Tentang'}</span>
                   </h3>
                   {isEditing ? (
                     <textarea
@@ -721,7 +721,7 @@ export default function ProfileContent() {
                       }
                       rows={4}
                       className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm lg:text-base"
-                      placeholder="Ceritakan tentang diri Anda..."
+                      placeholder={t('profile.bio') + '...'}
                     />
                   ) : (
                     <p className="text-slate-600 leading-relaxed text-sm lg:text-base break-words">
@@ -741,12 +741,12 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                       badge
                     </span>
-                    <span className="truncate">Informasi Personal</span>
+                    <span className="truncate">{t('profile.personalInfo')}</span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Nama Lengkap
+                        {t('profile.fullName')}
                       </label>
                       {isEditing ? (
                         <input
@@ -765,7 +765,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Email
+                        {t('profile.email')}
                       </label>
                       {isEditing ? (
                         <input
@@ -784,7 +784,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Telepon
+                        {t('profile.phone')}
                       </label>
                       {isEditing ? (
                         <input
@@ -803,7 +803,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Posisi
+                        {t('users.role') || 'Posisi'}
                       </label>
                       {isEditing ? (
                         <input
@@ -847,7 +847,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Bergabung Sejak
+                        {t('users.created') || 'Bergabung Sejak'}
                       </label>
                       <p className="text-slate-900 font-medium text-sm lg:text-base truncate">
                         {new Date(profile.memberSince).toLocaleDateString(
@@ -893,7 +893,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                       psychology
                     </span>
-                    <span className="truncate">Keahlian</span>
+                    <span className="truncate">{t('profile.skills') || 'Keahlian'}</span>
                   </h3>
                   {isEditing ? (
                     <div className="space-y-2">
@@ -943,7 +943,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary">
                       trending_up
                     </span>
-                    Performa
+                    {t('profile.performance') || 'Performa'}
                   </h3>
                   {(() => {
                     const performanceItems = [
@@ -1046,7 +1046,7 @@ export default function ProfileContent() {
                   className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
                 >
                   <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">
-                    Quick Actions
+                    {t('profile.quickActions') || 'Quick Actions'}
                   </h3>
                   <div className="space-y-1.5 lg:space-y-2">
                     <button
@@ -1104,12 +1104,12 @@ export default function ProfileContent() {
                   className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
                 >
                   <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">
-                    Account Info
+                    {t('profile.accountInfo') || 'Account Info'}
                   </h3>
                   <div className="space-y-2 lg:space-y-3">
                     <div className="flex items-center justify-between gap-2 overflow-hidden">
                       <span className="text-xs lg:text-sm text-slate-600 truncate">
-                        Account Type
+                        {t('profile.accountType')}
                       </span>
                       <span className="px-2 lg:px-3 py-0.5 lg:py-1 bg-yellow-100 text-yellow-700 rounded-full text-[10px] lg:text-xs font-bold flex-shrink-0">
                         {profile.accountType}
@@ -1146,7 +1146,7 @@ export default function ProfileContent() {
                 className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 overflow-x-hidden"
               >
                 <h3 className="text-sm font-bold text-slate-900 mb-2 truncate">
-                  Account Info
+                  {t('profile.accountInfo') || 'Account Info'}
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2 overflow-hidden">
@@ -1192,7 +1192,7 @@ export default function ProfileContent() {
               <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                 history
               </span>
-              <span className="truncate">Aktivitas Terbaru</span>
+              <span className="truncate">{t('profile.recentActivity')}</span>
             </h3>
             <div className="space-y-3 lg:space-y-4">
               {activityLog.length === 0 ? (
@@ -1253,7 +1253,7 @@ export default function ProfileContent() {
               <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                 emoji_events
               </span>
-              <span className="truncate">Pencapaian</span>
+              <span className="truncate">{t('profile.achievements')}</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
               {achievements.map((achievement: any, idx: number) => (
@@ -1313,16 +1313,16 @@ export default function ProfileContent() {
               <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                 settings
               </span>
-              <span className="truncate">Pengaturan Privasi</span>
+              <span className="truncate">{t('profile.privacySettings') || 'Pengaturan Privasi'}</span>
             </h3>
             <div className="space-y-3 lg:space-y-4">
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    Profil Publik
+                    {t('profile.publicProfile') || 'Profil Publik'}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    Izinkan orang lain melihat profil Anda
+                    {t('profile.publicProfileDesc') || 'Izinkan orang lain melihat profil Anda'}
                   </p>
                 </div>
                 <button
@@ -1344,10 +1344,10 @@ export default function ProfileContent() {
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    Tampilkan Email
+                    {t('profile.showEmail') || 'Tampilkan Email'}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    Email akan terlihat di profil publik
+                    {t('profile.showEmailDesc') || 'Email akan terlihat di profil publik'}
                   </p>
                 </div>
                 <button
@@ -1367,10 +1367,10 @@ export default function ProfileContent() {
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    Tampilkan Aktivitas
+                    {t('profile.showActivity') || 'Tampilkan Aktivitas'}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    Aktivitas akan terlihat di profil publik
+                    {t('profile.showActivityDesc') || 'Aktivitas akan terlihat di profil publik'}
                   </p>
                 </div>
                 <button

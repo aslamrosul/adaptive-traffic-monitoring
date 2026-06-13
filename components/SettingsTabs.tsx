@@ -9,10 +9,10 @@ import { useT } from "@/lib/useT";
 import { useTranslation } from "@/providers/TranslationProvider";
 
 const tabs = [
-  { id: "general", label: "Umum", icon: "settings" },
-  { id: "notifications", label: "Notifikasi", icon: "notifications" },
-  { id: "iot", label: "IoT & Sensor", icon: "sensors" },
-  { id: "security", label: "Keamanan", icon: "shield" },
+  { id: "general", labelKey: "settings.general", icon: "settings" },
+  { id: "notifications", labelKey: "settings.notifications", icon: "notifications" },
+  { id: "iot", labelKey: "iot.title", icon: "sensors" },
+  { id: "security", labelKey: "settings.security", icon: "shield" },
 ];
 
 export default function SettingsTabs() {
@@ -91,9 +91,9 @@ export default function SettingsTabs() {
         confirmPassword: "",
       });
 
-      toast.success("Password berhasil diubah");
+      toast.success(t('profile.passwordChanged'));
     } catch (error: any) {
-      toast.error(error.message || "Gagal mengubah password");
+      toast.error(error.message || t('profile.passwordChangeFailed'));
     }
   };
 
@@ -162,9 +162,9 @@ export default function SettingsTabs() {
         throw new Error(result.error || "Gagal menyimpan pengaturan");
       }
 
-      toast.success("Pengaturan berhasil disimpan");
+      toast.success(t('success.updated'));
     } catch (error: any) {
-      toast.error(error.message || "Gagal menyimpan pengaturan");
+      toast.error(error.message || t('errors.general'));
     } finally {
       setIsSaving(false);
     }
@@ -175,10 +175,10 @@ export default function SettingsTabs() {
 
     if (granted) {
       updateSetting("browserNotification", true);
-      toast.success("Notifikasi browser diaktifkan");
+      toast.success(t('settings.browserNotificationsEnabled') || "Notifikasi browser diaktifkan");
     } else {
       updateSetting("browserNotification", false);
-      toast.error("Izin notifikasi browser ditolak");
+      toast.error(t('settings.browserNotificationsDenied') || "Izin notifikasi browser ditolak");
     }
   };
 
@@ -206,7 +206,7 @@ export default function SettingsTabs() {
             <span className="material-symbols-outlined text-base lg:text-lg">
               {tab.icon}
             </span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="hidden sm:inline">{t(tab.labelKey)}</span>
           </button>
         ))}
       </div>
@@ -220,29 +220,29 @@ export default function SettingsTabs() {
         {activeTab === "general" && (
           <div className="space-y-4 lg:space-y-6">
             <h3 className="text-base font-bold text-slate-900 lg:text-lg">
-              Pengaturan Umum
+              {t('settings.general')}
             </h3>
 
             <SwitchRow
-              title="Mode Otomatis"
-              description="Sistem akan mengatur lampu lalu lintas secara otomatis."
+              title={t('settings.autoMode') || "Mode Otomatis"}
+              description={t('settings.autoModeDesc') || "Sistem akan mengatur lampu lalu lintas secara otomatis."}
               checked={settings.autoMode}
               onChange={() => updateSetting("autoMode", !settings.autoMode)}
             />
 
             <SelectRow
-              title="Bahasa Sistem"
+              title={t('settings.language')}
               value={locale}
               onChange={(value) => {
                 setLocale(value);
                 updateSetting("language", value);
-                toast.success("Bahasa berhasil diubah");
+                toast.success(t('success.updated'));
               }}
               options={LANGUAGE_OPTIONS}
             />
 
             <SelectRow
-              title="Zona Waktu"
+              title={t('settings.timezone')}
               value={settings.timezone}
               onChange={(value) => updateSetting("timezone", value)}
               options={TIMEZONE_OPTIONS}
@@ -250,8 +250,8 @@ export default function SettingsTabs() {
 
             <InfoBox
               icon="schedule"
-              title="Catatan zona waktu"
-              description="Data tetap disimpan UTC di database. Zona waktu hanya memengaruhi tampilan dashboard."
+              title={t('settings.timezoneNote') || "Catatan zona waktu"}
+              description={t('settings.timezoneDesc') || "Data tetap disimpan UTC di database. Zona waktu hanya memengaruhi tampilan dashboard."}
             />
           </div>
         )}
@@ -259,12 +259,12 @@ export default function SettingsTabs() {
         {activeTab === "notifications" && (
           <div className="space-y-4 lg:space-y-6">
             <h3 className="text-base font-bold text-slate-900 lg:text-lg">
-              Pengaturan Notifikasi
+              {t('settings.notifications')}
             </h3>
 
             <SwitchRow
-              title="Notifikasi Browser"
-              description="Menampilkan alert di browser saat ada antrean padat atau perangkat offline."
+              title={t('settings.browserNotifications') || "Notifikasi Browser"}
+              description={t('settings.browserNotificationsDesc') || "Menampilkan alert di browser saat ada antrean padat atau perangkat offline."}
               checked={settings.browserNotification}
               onChange={() => {
                 if (!settings.browserNotification) {
@@ -276,8 +276,8 @@ export default function SettingsTabs() {
             />
 
             <SwitchRow
-              title="Email Notifikasi"
-              description="Kirim ringkasan alert penting ke email akun."
+              title={t('settings.emailNotifications')}
+              description={t('settings.emailNotificationsDesc') || "Kirim ringkasan alert penting ke email akun."}
               checked={settings.emailNotification}
               onChange={() =>
                 updateSetting("emailNotification", !settings.emailNotification)
@@ -300,8 +300,8 @@ export default function SettingsTabs() {
             )}
 
             <SwitchRow
-              title="Telegram Bot"
-              description="Kirim alert penting ke bot Telegram."
+              title={t('settings.telegramNotifications')}
+              description={t('settings.telegramNotificationsDesc') || "Kirim alert penting ke bot Telegram."}
               checked={settings.telegramNotification}
               onChange={() =>
                 updateSetting(
@@ -396,12 +396,12 @@ export default function SettingsTabs() {
         {activeTab === "iot" && (
           <div className="space-y-4 lg:space-y-6">
             <h3 className="text-base font-bold text-slate-900 lg:text-lg">
-              Pengaturan IoT & Sensor
+              {t('iot.title')}
             </h3>
 
             <div className="rounded-lg bg-slate-50 p-4">
               <label className="mb-2 block font-semibold text-slate-900">
-                Interval Pengambilan Data (detik)
+                {t('settings.sensorInterval') || "Interval Pengambilan Data (detik)"}
               </label>
 
               <input
@@ -416,14 +416,14 @@ export default function SettingsTabs() {
               />
 
               <p className="mt-1 text-xs text-slate-500">
-                Saat ini: {settings.sensorInterval} detik
+                {t('settings.currentInterval') || "Saat ini"}: {settings.sensorInterval} {t('time.seconds')}
               </p>
             </div>
 
             <InfoBox
               icon="sensors"
-              title="Konfigurasi IoT utama"
-              description="Pengaturan waktu lampu dan mode adaptif tetap diatur melalui halaman IoT Config agar tersinkron ke ESP32."
+              title={t('iot.config')}
+              description={t('settings.iotConfigNote') || "Pengaturan waktu lampu dan mode adaptif tetap diatur melalui halaman IoT Config agar tersinkron ke ESP32."}
             />
           </div>
         )}
@@ -431,18 +431,18 @@ export default function SettingsTabs() {
         {activeTab === "security" && (
           <div className="space-y-4">
             <h3 className="text-base font-bold text-slate-900 lg:text-lg">
-              Keamanan
+              {t('settings.security')}
             </h3>
 
             <InfoBox
               icon="verified_user"
-              title="Login aman"
-              description="Akun menggunakan NextAuth. Password lokal terenkripsi bcrypt, sedangkan akun Google memakai OAuth."
+              title={t('settings.secureLogin') || "Login aman"}
+              description={t('settings.secureLoginDesc') || "Akun menggunakan NextAuth. Password lokal terenkripsi bcrypt, sedangkan akun Google memakai OAuth."}
               color="green"
             />
 
             <div className="rounded-lg bg-slate-50 p-4">
-              <h4 className="mb-3 font-bold text-slate-900">Ubah Password</h4>
+              <h4 className="mb-3 font-bold text-slate-900">{t('profile.changePassword')}</h4>
 
               <div className="space-y-3">
                 <input
@@ -454,7 +454,7 @@ export default function SettingsTabs() {
                       oldPassword: e.target.value,
                     }))
                   }
-                  placeholder="Password lama"
+                  placeholder={t('profile.currentPassword')}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
                 />
 
@@ -467,7 +467,7 @@ export default function SettingsTabs() {
                       newPassword: e.target.value,
                     }))
                   }
-                  placeholder="Password baru"
+                  placeholder={t('profile.newPassword')}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
                 />
 
@@ -480,7 +480,7 @@ export default function SettingsTabs() {
                       confirmPassword: e.target.value,
                     }))
                   }
-                  placeholder="Konfirmasi password baru"
+                  placeholder={t('profile.confirmPassword')}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm"
                 />
 
@@ -489,13 +489,12 @@ export default function SettingsTabs() {
                   onClick={handleChangePassword}
                   className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                 >
-                  Simpan Password Baru
+                  {t('common.save')} {t('profile.newPassword')}
                 </button>
               </div>
 
               <p className="mt-3 text-xs text-slate-500">
-                Catatan: fitur ini hanya berlaku untuk akun email/password. Akun
-                Google tidak memiliki password lokal.
+                {t('settings.passwordNote') || "Catatan: fitur ini hanya berlaku untuk akun email/password. Akun Google tidak memiliki password lokal."}
               </p>
             </div>
           </div>
@@ -507,7 +506,7 @@ export default function SettingsTabs() {
             onClick={fetchSettings}
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto lg:px-6 lg:text-base"
           >
-            Reset
+            {t('common.reset')}
           </button>
 
           <button
@@ -516,7 +515,7 @@ export default function SettingsTabs() {
             disabled={isSaving}
             className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto lg:px-6 lg:text-base"
           >
-            {isSaving ? "Menyimpan..." : "Simpan Pengaturan"}
+            {isSaving ? t('common.saving') : t('settings.save')}
           </button>
         </div>
       </motion.div>

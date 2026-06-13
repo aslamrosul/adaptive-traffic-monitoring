@@ -9,6 +9,21 @@ export default function PanduanPage() {
   const t = useT();
   const [activeSection, setActiveSection] = useState("overview");
 
+  const sections = [
+    { id: "overview", icon: "visibility" },
+    { id: "requirements", icon: "checklist" },
+    { id: "installation", icon: "download" },
+    { id: "dashboard", icon: "dashboard" },
+    { id: "persimpangan", icon: "location_on" },
+    { id: "analytics", icon: "analytics" },
+    { id: "iot-config", icon: "settings_remote" },
+    { id: "users", icon: "people" },
+    { id: "notifications", icon: "notifications" },
+    { id: "esp32", icon: "memory" },
+    { id: "mqtt", icon: "cloud" },
+    { id: "troubleshooting", icon: "build" },
+  ];
+
   return (
     <DashboardLayout title={t('navigation.guide')}>
       <div className="p-3 lg:p-6 max-w-[1920px] mx-auto">
@@ -42,22 +57,9 @@ export default function PanduanPage() {
             className="lg:col-span-1"
           >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-20">
-              <h3 className="font-bold text-slate-900 mb-4 text-sm">Daftar Isi</h3>
+              <h3 className="font-bold text-slate-900 mb-4 text-sm">{t('guide.tableOfContents') || 'Daftar Isi'}</h3>
               <nav className="space-y-1">
-                {[
-                  { id: "overview", label: "Ringkasan Sistem", icon: "visibility" },
-                  { id: "requirements", label: "Kebutuhan Sistem", icon: "checklist" },
-                  { id: "installation", label: "Instalasi & Setup", icon: "download" },
-                  { id: "dashboard", label: "Dashboard Monitoring", icon: "dashboard" },
-                  { id: "persimpangan", label: "Manajemen Persimpangan", icon: "location_on" },
-                  { id: "analytics", label: "Analitik Lalu Lintas", icon: "analytics" },
-                  { id: "iot-config", label: "Konfigurasi IoT", icon: "settings_remote" },
-                  { id: "users", label: "Manajemen Pengguna", icon: "people" },
-                  { id: "notifications", label: "Notifikasi & Alert", icon: "notifications" },
-                  { id: "esp32", label: "Setup ESP32 Device", icon: "memory" },
-                  { id: "mqtt", label: "Konfigurasi MQTT", icon: "cloud" },
-                  { id: "troubleshooting", label: "Troubleshooting", icon: "build" },
-                ].map((item) => (
+                {sections.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
@@ -68,7 +70,7 @@ export default function PanduanPage() {
                     }`}
                   >
                     <span className="material-symbols-outlined text-lg">{item.icon}</span>
-                    <span className="text-left flex-1">{item.label}</span>
+                    <span className="text-left flex-1">{t(`guide.sections.${item.id}`) || item.id}</span>
                   </button>
                 ))}
               </nav>
@@ -130,6 +132,8 @@ function PanduanSections({ activeSection }: { activeSection: string }) {
 }
 
 function OverviewSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3 mb-4">
@@ -137,32 +141,32 @@ function OverviewSection() {
           <span className="material-symbols-outlined text-blue-600 text-2xl">visibility</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Ringkasan Sistem</h2>
-          <p className="text-sm text-slate-500">Pengenalan Adaptive Traffic Monitoring System</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.overview.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.overview.subtitle')}</p>
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-3">Apa itu Sistem Ini?</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-3">{t('guide.overview.whatIs')}</h3>
         <p className="text-slate-700 leading-relaxed">
-          <strong>Adaptive Traffic Monitoring System</strong> adalah solusi IoT terintegrasi yang dirancang untuk memantau dan mengelola lalu lintas secara real-time menggunakan sensor ESP32, analitik cloud, dan dashboard web modern.
+          <strong>Adaptive Traffic Monitoring System</strong> {t('guide.overview.whatIsDesc')}
         </p>
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-3">Fitur Utama</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-3">{t('guide.overview.mainFeatures')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { icon: "sensors", title: "Monitoring Real-time", desc: "Pantau arus lalu lintas secara langsung via MQTT WebSocket" },
-            { icon: "analytics", title: "Analitik Lanjutan", desc: "Visualisasi data dengan chart interaktif dan statistik" },
-            { icon: "settings_remote", title: "Remote Configuration", desc: "Atur durasi lampu lalu lintas dari dashboard" },
-            { icon: "notifications", title: "Notifikasi Otomatis", desc: "Alert via Telegram dan Email untuk kondisi lalu lintas" },
+            { icon: "sensors", titleKey: "realtimeMonitoring", descKey: "realtimeDesc" },
+            { icon: "analytics", titleKey: "advancedAnalytics", descKey: "advancedDesc" },
+            { icon: "settings_remote", titleKey: "remoteConfig", descKey: "remoteDesc" },
+            { icon: "notifications", titleKey: "autoNotif", descKey: "autoNotifDesc" },
           ].map((feature, idx) => (
             <div key={idx} className="flex gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <span className="material-symbols-outlined text-blue-600 text-2xl">{feature.icon}</span>
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">{feature.title}</h4>
-                <p className="text-xs text-slate-600 mt-1">{feature.desc}</p>
+                <h4 className="font-bold text-slate-900 text-sm">{t(`guide.overview.features.${feature.titleKey}`)}</h4>
+                <p className="text-xs text-slate-600 mt-1">{t(`guide.overview.features.${feature.descKey}`)}</p>
               </div>
             </div>
           ))}
@@ -170,7 +174,7 @@ function OverviewSection() {
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-3">Arsitektur Sistem</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-3">{t('guide.overview.architecture')}</h3>
         <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
           <div className="space-y-4">
             {[
@@ -199,6 +203,8 @@ function OverviewSection() {
 
 // Placeholder sections - akan dibuat detail nanti
 function RequirementsSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -206,8 +212,8 @@ function RequirementsSection() {
           <span className="material-symbols-outlined text-green-600 text-2xl">checklist</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Kebutuhan Sistem</h2>
-          <p className="text-sm text-slate-500">Hardware dan Software yang diperlukan</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.requirements.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.requirements.subtitle')}</p>
         </div>
       </div>
 
@@ -292,10 +298,9 @@ function RequirementsSection() {
         <div className="flex gap-3">
           <span className="material-symbols-outlined text-amber-600 text-xl">info</span>
           <div className="flex-1">
-            <h4 className="font-bold text-slate-900 text-sm mb-1">Catatan Penting</h4>
+            <h4 className="font-bold text-slate-900 text-sm mb-1">{t('guide.requirements.importantNote')}</h4>
             <p className="text-xs text-slate-700 leading-relaxed">
-              Untuk deployment production, pastikan AWS account memiliki kredit cukup (estimasi $10-20/bulan).
-              MQTT Broker berjalan di AWS EC2 (3.25.72.124). Dokumentasi lengkap tersedia di <code className="px-1 py-0.5 bg-slate-200 rounded text-xs">PANDUAN_PENGGUNAAN.md</code>
+              {t('guide.requirements.importantNoteDesc')}
             </p>
           </div>
         </div>
@@ -305,6 +310,8 @@ function RequirementsSection() {
 }
 
 function InstallationSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -312,8 +319,8 @@ function InstallationSection() {
           <span className="material-symbols-outlined text-indigo-600 text-2xl">download</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Instalasi & Setup</h2>
-          <p className="text-sm text-slate-500">Panduan instalasi step-by-step</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.installation.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.installation.subtitle')}</p>
         </div>
       </div>
 
@@ -398,8 +405,8 @@ function InstallationSection() {
         <div className="flex gap-3">
           <span className="material-symbols-outlined text-green-600 text-xl">check_circle</span>
           <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-1">Total Waktu Setup</h4>
-            <p className="text-xs text-slate-700">Dashboard: 15 menit • Python: 10 menit • ESP32: 20 menit • <strong>Total: ±45 menit</strong></p>
+            <h4 className="font-bold text-slate-900 text-sm mb-1">{t('guide.installation.totalTime')}</h4>
+            <p className="text-xs text-slate-700">{t('guide.installation.totalTimeDesc')}</p>
           </div>
         </div>
       </div>
@@ -408,6 +415,8 @@ function InstallationSection() {
 }
 
 function DashboardSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -415,8 +424,8 @@ function DashboardSection() {
           <span className="material-symbols-outlined text-teal-600 text-2xl">dashboard</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Penggunaan Dashboard</h2>
-          <p className="text-sm text-slate-500">Panduan navigasi dan fitur dashboard</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.dashboardGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.dashboardGuide.subtitle')}</p>
         </div>
       </div>
 
@@ -511,6 +520,8 @@ function DashboardSection() {
 }
 
 function PersimpanganSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -518,8 +529,8 @@ function PersimpanganSection() {
           <span className="material-symbols-outlined text-emerald-600 text-2xl">location_on</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Manajemen Persimpangan</h2>
-          <p className="text-sm text-slate-500">CRUD operations untuk persimpangan</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.intersectionManagement.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.intersectionManagement.subtitle')}</p>
         </div>
       </div>
 
@@ -591,6 +602,8 @@ function PersimpanganSection() {
 }
 
 function AnalyticsSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -598,8 +611,8 @@ function AnalyticsSection() {
           <span className="material-symbols-outlined text-pink-600 text-2xl">analytics</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Analitik Lalu Lintas</h2>
-          <p className="text-sm text-slate-500">Visualisasi dan analisis data mendalam</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.analyticsGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.analyticsGuide.subtitle')}</p>
         </div>
       </div>
 
@@ -668,6 +681,8 @@ function AnalyticsSection() {
 }
 
 function IoTConfigSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -675,8 +690,8 @@ function IoTConfigSection() {
           <span className="material-symbols-outlined text-cyan-600 text-2xl">settings_remote</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Konfigurasi IoT Device</h2>
-          <p className="text-sm text-slate-500">Remote configuration untuk ESP32</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.iotConfigGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.iotConfigGuide.subtitle')}</p>
         </div>
       </div>
 
@@ -784,6 +799,8 @@ Adaptive: ON
 }
 
 function UsersSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -791,8 +808,8 @@ function UsersSection() {
           <span className="material-symbols-outlined text-violet-600 text-2xl">people</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Manajemen Pengguna</h2>
-          <p className="text-sm text-slate-500">Role-based access control</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.userManagement.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.userManagement.subtitle')}</p>
         </div>
       </div>
 
@@ -851,6 +868,8 @@ function UsersSection() {
 }
 
 function NotificationsSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -858,8 +877,8 @@ function NotificationsSection() {
           <span className="material-symbols-outlined text-amber-600 text-2xl">notifications</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Notifikasi & Alert</h2>
-          <p className="text-sm text-slate-500">Setup Telegram & Email notifications</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.notificationsGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.notificationsGuide.subtitle')}</p>
         </div>
       </div>
 
@@ -926,6 +945,8 @@ function NotificationsSection() {
 }
 
 function ESP32Section() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -933,8 +954,8 @@ function ESP32Section() {
           <span className="material-symbols-outlined text-orange-600 text-2xl">memory</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Setup ESP32 Hardware</h2>
-          <p className="text-sm text-slate-500">Wiring dan upload code ke ESP32</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.esp32Setup.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.esp32Setup.subtitle')}</p>
         </div>
       </div>
 
@@ -1021,6 +1042,8 @@ Real Sensor System Ready!
 }
 
 function MQTTSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -1028,8 +1051,8 @@ function MQTTSection() {
           <span className="material-symbols-outlined text-purple-600 text-2xl">cloud</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Konfigurasi MQTT & Database</h2>
-          <p className="text-sm text-slate-500">MQTT Broker dan AWS DynamoDB</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.mqttConfig.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.mqttConfig.subtitle')}</p>
         </div>
       </div>
 
@@ -1103,6 +1126,8 @@ function MQTTSection() {
 }
 
 function TroubleshootingSection() {
+  const t = useT();
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -1110,8 +1135,8 @@ function TroubleshootingSection() {
           <span className="material-symbols-outlined text-red-600 text-2xl">build</span>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Troubleshooting</h2>
-          <p className="text-sm text-slate-500">Solusi masalah umum</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.troubleshootingGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.troubleshootingGuide.subtitle')}</p>
         </div>
       </div>
 
