@@ -575,6 +575,16 @@
     "yesterday": "Kemarin",
     "tomorrow": "Besok"
   },
+  "timeFilter": {
+    "filterPeriod": "Filter Periode",
+    "selectDateRange": "Pilih Rentang Tanggal",
+    "startDate": "Tanggal Mulai",
+    "endDate": "Tanggal Akhir",
+    "startDateMustBeBeforeEnd": "Tanggal mulai tidak boleh lebih besar dari tanggal akhir",
+    "selectDateRangeToView": "Pilih rentang tanggal untuk melihat data historis. Maksimal 90 hari ke belakang.",
+    "filterChanged": "Filter diubah",
+    "customFilter": "Filter custom"
+  },
   "search": {
     "placeholder": "Cari simpangan, device, atau pengguna...",
     "searching": "Mencari...",

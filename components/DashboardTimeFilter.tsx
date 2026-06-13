@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useT } from "@/lib/useT";
+import { useT, useLocale } from "@/lib/useT";
 
 export type TimeRange = "today" | "yesterday" | "7days" | "30days" | "custom";
 
@@ -28,6 +28,7 @@ export default function DashboardTimeFilter({
   intersections = []
 }: DashboardTimeFilterProps) {
   const t = useT();
+  const locale = useLocale();
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -51,45 +52,47 @@ export default function DashboardTimeFilter({
       setShowCustomPicker(true);
     } else {
       onFilterChange(range);
-      toast.success(`Filter diubah: ${filters.find(f => f.id === range)?.label}`);
+      toast.success(`${t('timeFilter.filterChanged')}: ${filters.find(f => f.id === range)?.label}`);
     }
   };
 
   const handleApplyCustom = () => {
     if (new Date(startDate) > new Date(endDate)) {
-      toast.error("Tanggal mulai tidak boleh lebih besar dari tanggal akhir");
+      toast.error(t('timeFilter.startDateMustBeBeforeEnd'));
       return;
     }
 
     onFilterChange("custom", { startDate, endDate });
     setShowCustomPicker(false);
     
-    const start = new Date(startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    const end = new Date(endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    toast.success(`Filter custom: ${start} - ${end}`);
+    const localeStr = locale === 'id' ? 'id-ID' : 'en-US';
+    const start = new Date(startDate).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' });
+    const end = new Date(endDate).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' });
+    toast.success(`${t('timeFilter.customFilter')}: ${start} - ${end}`);
   };
 
   const getDateRangeText = () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    const localeStr = locale === 'id' ? 'id-ID' : 'en-US';
 
     switch (currentRange) {
       case "today":
-        return today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        return today.toLocaleDateString(localeStr, { day: 'numeric', month: 'long', year: 'numeric' });
       case "yesterday":
-        return yesterday.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        return yesterday.toLocaleDateString(localeStr, { day: 'numeric', month: 'long', year: 'numeric' });
       case "7days":
         const week = new Date(today);
         week.setDate(week.getDate() - 7);
-        return `${week.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${today.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
+        return `${week.toLocaleDateString(localeStr, { day: 'numeric', month: 'short' })} - ${today.toLocaleDateString(localeStr, { day: 'numeric', month: 'short' })}`;
       case "30days":
         const month = new Date(today);
         month.setDate(month.getDate() - 30);
-        return `${month.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${today.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
+        return `${month.toLocaleDateString(localeStr, { day: 'numeric', month: 'short' })} - ${today.toLocaleDateString(localeStr, { day: 'numeric', month: 'short' })}`;
       case "custom":
-        const start = new Date(startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-        const end = new Date(endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        const start = new Date(startDate).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' });
+        const end = new Date(endDate).toLocaleDateString(localeStr, { day: 'numeric', month: 'short' });
         return `${start} - ${end}`;
       default:
         return "";
@@ -108,7 +111,7 @@ export default function DashboardTimeFilter({
           <div className="flex-1">
             <div className="flex items-center gap-1.5 mb-0.5">
               <span className="material-symbols-outlined text-primary text-base">filter_alt</span>
-              <h3 className="font-headline font-bold text-slate-900 text-xs">Filter Periode</h3>
+              <h3 className="font-headline font-bold text-slate-900 text-xs">{t('timeFilter.filterPeriod')}</h3>
             </div>
             <p className="text-[10px] text-slate-500 flex items-center gap-1">
               <span className="material-symbols-outlined text-xs">schedule</span>
@@ -188,7 +191,7 @@ export default function DashboardTimeFilter({
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">calendar_month</span>
                   <h3 className="font-headline font-bold text-base lg:text-lg text-slate-900">
-                    Pilih Rentang Tanggal
+                    {t('timeFilter.selectDateRange')}
                   </h3>
                 </div>
                 <button
@@ -203,7 +206,7 @@ export default function DashboardTimeFilter({
                 {/* Start Date */}
                 <div>
                   <label className="block text-xs lg:text-sm font-bold text-slate-700 mb-1.5 lg:mb-2">
-                    Tanggal Mulai
+                    {t('timeFilter.startDate')}
                   </label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-2.5 lg:left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base lg:text-lg">
@@ -222,7 +225,7 @@ export default function DashboardTimeFilter({
                 {/* End Date */}
                 <div>
                   <label className="block text-xs lg:text-sm font-bold text-slate-700 mb-1.5 lg:mb-2">
-                    Tanggal Akhir
+                    {t('timeFilter.endDate')}
                   </label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-2.5 lg:left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base lg:text-lg">
@@ -245,7 +248,7 @@ export default function DashboardTimeFilter({
                     info
                   </span>
                   <p className="text-[10px] lg:text-xs text-blue-700 leading-relaxed">
-                    Pilih rentang tanggal untuk melihat data historis. Maksimal 90 hari ke belakang.
+                    {t('timeFilter.selectDateRangeToView')}
                   </p>
                 </div>
               </div>
@@ -256,13 +259,13 @@ export default function DashboardTimeFilter({
                   onClick={() => setShowCustomPicker(false)}
                   className="flex-1 px-3 lg:px-4 py-2 lg:py-3 text-slate-600 hover:bg-slate-100 rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm transition-colors"
                 >
-                  Batal
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleApplyCustom}
                   className="flex-1 px-3 lg:px-4 py-2 lg:py-3 bg-primary text-white rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm hover:brightness-110 transition-all shadow-lg shadow-primary/20"
                 >
-                  Terapkan Filter
+                  {t('common.apply')}
                 </button>
               </div>
             </motion.div>

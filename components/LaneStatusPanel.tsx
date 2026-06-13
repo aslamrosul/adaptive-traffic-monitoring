@@ -7,7 +7,7 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
-import { useT } from "@/lib/useT";
+import { useT, useLocale } from "@/lib/useT";
 
 interface LaneData {
   name: string;
@@ -25,12 +25,13 @@ interface LaneStatusPanelProps {
 
 export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPanelProps) {
   const t = useT();
+  const locale = useLocale();
   const { timezone } = useAppSettings();
   const [lanes, setLanes] = useState<LaneData[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [intersectionName, setIntersectionName] = useState<string>("Semua Persimpangan");
+  const [intersectionName, setIntersectionName] = useState<string>(t('lanes.allIntersections'));
   const [laneCount, setLaneCount] = useState<number>(4);
 
   const hasLoadedRef = useRef(false);
@@ -63,7 +64,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
           setLaneCount(intData.data.lanes?.count || 4);
         }
       } else {
-        setIntersectionName("Semua Persimpangan");
+        setIntersectionName(t('lanes.allIntersections'));
         setLaneCount(4); // Default 4 lanes for "all"
       }
 
@@ -76,18 +77,12 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
         
         // Map lanes based on available data
         const laneDirections = ['north', 'south', 'east', 'west'];
-        const laneNames: { [key: string]: string } = {
-          north: 'Utara',
-          south: 'Selatan',
-          east: 'Timur',
-          west: 'Barat'
-        };
 
         const lanesData: LaneData[] = laneDirections.slice(0, laneCount).map(direction => {
           const laneData = latestData[direction] || {};
           
           return {
-            name: laneNames[direction],
+            name: t(`traffic.${direction}`),
             direction,
             light: laneData.light || 'red',
             vehicleCount: laneData.vehicleCount || 0,
@@ -101,15 +96,9 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
       } else {
         // No data, show empty lanes
         const laneDirections = ['north', 'south', 'east', 'west'];
-        const laneNames: { [key: string]: string } = {
-          north: 'Utara',
-          south: 'Selatan',
-          east: 'Timur',
-          west: 'Barat'
-        };
 
         const emptyLanes: LaneData[] = laneDirections.slice(0, laneCount).map(direction => ({
-          name: laneNames[direction],
+          name: t(`traffic.${direction}`),
           direction,
           light: 'unknown',
           vehicleCount: 0,
@@ -159,11 +148,11 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
   const getLevelText = (level: number) => {
     switch (level) {
       case 0:
-        return 'Lancar';
+        return t('lanes.smooth');
       case 1:
-        return 'Sedang';
+        return t('lanes.moderate');
       case 2:
-        return 'Padat';
+        return t('lanes.congested');
       default:
         return 'Unknown';
     }

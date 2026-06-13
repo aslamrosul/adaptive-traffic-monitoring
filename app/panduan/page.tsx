@@ -16,7 +16,7 @@ export default function PanduanPage() {
     { id: "dashboard", icon: "dashboard" },
     { id: "persimpangan", icon: "location_on" },
     { id: "analytics", icon: "analytics" },
-    { id: "iot-config", icon: "settings_remote" },
+    { id: "iotConfig", icon: "settings_remote" },
     { id: "users", icon: "people" },
     { id: "notifications", icon: "notifications" },
     { id: "esp32", icon: "memory" },
@@ -110,7 +110,7 @@ function PanduanSections({ activeSection }: { activeSection: string }) {
   if (activeSection === "analytics") {
     return <AnalyticsSection />;
   }
-  if (activeSection === "iot-config") {
+  if (activeSection === "iotConfig") {
     return <IoTConfigSection />;
   }
   if (activeSection === "users") {
@@ -699,9 +699,9 @@ function IoTConfigSection() {
           <h3 className="font-bold text-slate-900 mb-2">⏱️ {t('guide.iotConfigGuide.greenTime')}</h3>
           <p className="text-sm text-slate-700 mb-2">{t('guide.iotConfigGuide.greenTimeDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMin')}</strong> 5 detik</li>
-            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMax')}</strong> 120 detik</li>
-            <li>• <strong>{t('guide.iotConfigGuide.greenTimeRecommended')}</strong> 10-30 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMin')}</strong> 5 {t('time.seconds')}</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMax')}</strong> 120 {t('time.seconds')}</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeRecommended')}</strong> 10-30 {t('time.seconds')}</li>
           </ul>
         </div>
 
@@ -709,9 +709,9 @@ function IoTConfigSection() {
           <h3 className="font-bold text-slate-900 mb-2">🟡 {t('guide.iotConfigGuide.yellowTime')}</h3>
           <p className="text-sm text-slate-700 mb-2">{t('guide.iotConfigGuide.yellowTimeDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMin')}</strong> 2 detik</li>
-            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMax')}</strong> 10 detik</li>
-            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeRecommended')}</strong> 3 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMin')}</strong> 2 {t('time.seconds')}</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMax')}</strong> 10 {t('time.seconds')}</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeRecommended')}</strong> 3 {t('time.seconds')}</li>
           </ul>
         </div>
       </div>
@@ -763,20 +763,20 @@ function IoTConfigSection() {
           <div>
             <div className="font-semibold text-amber-900 mb-2">{t('guide.iotConfigGuide.peakHours')}</div>
             <pre className="bg-slate-900 text-green-400 p-2 rounded text-xs">
-{t('guide.iotConfigGuide.greenTimeConfig')} 15 detik<br/>
-{t('guide.iotConfigGuide.level0Config')} 10 detik<br/>
-{t('guide.iotConfigGuide.level1Config')} 25 detik<br/>
-{t('guide.iotConfigGuide.level2Config')} 40 detik<br/>
+{t('guide.iotConfigGuide.greenTimeConfig')} 15 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level0Config')} 10 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level1Config')} 25 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level2Config')} 40 {t('time.seconds')}<br/>
 {t('guide.iotConfigGuide.adaptiveConfigValue')} ON
             </pre>
           </div>
           <div>
             <div className="font-semibold text-amber-900 mb-2">{t('guide.iotConfigGuide.offPeak')}</div>
             <pre className="bg-slate-900 text-green-400 p-2 rounded text-xs">
-{t('guide.iotConfigGuide.greenTimeConfig')} 10 detik<br/>
-{t('guide.iotConfigGuide.level0Config')} 8 detik<br/>
-{t('guide.iotConfigGuide.level1Config')} 15 detik<br/>
-{t('guide.iotConfigGuide.level2Config')} 25 detik<br/>
+{t('guide.iotConfigGuide.greenTimeConfig')} 10 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level0Config')} 8 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level1Config')} 15 {t('time.seconds')}<br/>
+{t('guide.iotConfigGuide.level2Config')} 25 {t('time.seconds')}<br/>
 {t('guide.iotConfigGuide.adaptiveConfigValue')} ON
             </pre>
           </div>
@@ -1226,10 +1226,10 @@ function TroubleshootingSection() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-blue-600">description</span>
-          Dokumentasi Lengkap
+          {t('guide.troubleshootingGuide.documentation')}
         </h3>
         <p className="text-sm text-slate-700 mb-3">
-          Untuk panduan lebih detail, silakan baca file dokumentasi lengkap:
+          {t('guide.troubleshootingGuide.documentationDesc')}
         </p>
         <div className="flex flex-wrap gap-2">
           <a href="/PANDUAN_PENGGUNAAN.md" target="_blank" className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition">

@@ -575,6 +575,16 @@
     "yesterday": "Yesterday",
     "tomorrow": "Tomorrow"
   },
+  "timeFilter": {
+    "filterPeriod": "Filter Period",
+    "selectDateRange": "Select Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "startDateMustBeBeforeEnd": "Start date must not be greater than end date",
+    "selectDateRangeToView": "Select date range to view historical data. Maximum 90 days back.",
+    "filterChanged": "Filter changed",
+    "customFilter": "Custom filter"
+  },
   "search": {
     "placeholder": "Search intersections, devices, or users...",
     "searching": "Searching...",
