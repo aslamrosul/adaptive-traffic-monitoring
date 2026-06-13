@@ -102,7 +102,7 @@ export default function ModalEditUser({
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nama Lengkap
+                    {t('modals.fullName')}
                   </label>
                   <input
                     type="text"
@@ -111,13 +111,13 @@ export default function ModalEditUser({
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                    placeholder="Masukkan nama lengkap"
+                    placeholder={t('modals.enterFullName')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email
+                    {t('auth.email')}
                   </label>
                   <input
                     type="email"
@@ -125,14 +125,14 @@ export default function ModalEditUser({
                     value={formData.email}
                     onChange={handleChange}
                     readOnly
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                    placeholder="email@example.com"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-slate-50"
+                    placeholder={t('modals.enterEmail')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nomor Telepon
+                    {t('modals.phoneNumber')}
                   </label>
                   <input
                     type="tel"
@@ -146,7 +146,7 @@ export default function ModalEditUser({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Lokasi
+                    {t('modals.location')}
                   </label>
                   <input
                     type="text"
@@ -160,7 +160,7 @@ export default function ModalEditUser({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Role / Jabatan
+                    {t('modals.roleTitle')}
                   </label>
                   <select
                     name="role"
@@ -176,7 +176,7 @@ export default function ModalEditUser({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Status
+                    {t('users.status')}
                   </label>
                   <select
                     name="status"

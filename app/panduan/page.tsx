@@ -696,101 +696,101 @@ function IoTConfigSection() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="p-4 border-2 border-blue-300 bg-blue-50 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">⏱️ Green Time (Detik)</h3>
-          <p className="text-sm text-slate-700 mb-2">Durasi default lampu hijau saat tidak adaptive.</p>
+          <h3 className="font-bold text-slate-900 mb-2">⏱️ {t('guide.iotConfigGuide.greenTime')}</h3>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.iotConfigGuide.greenTimeDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>Min:</strong> 5 detik</li>
-            <li>• <strong>Max:</strong> 120 detik</li>
-            <li>• <strong>Rekomendasi:</strong> 10-30 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMin')}</strong> 5 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeMax')}</strong> 120 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.greenTimeRecommended')}</strong> 10-30 detik</li>
           </ul>
         </div>
 
         <div className="p-4 border-2 border-yellow-300 bg-yellow-50 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">🟡 Yellow Time (Detik)</h3>
-          <p className="text-sm text-slate-700 mb-2">Durasi lampu kuning transisi.</p>
+          <h3 className="font-bold text-slate-900 mb-2">🟡 {t('guide.iotConfigGuide.yellowTime')}</h3>
+          <p className="text-sm text-slate-700 mb-2">{t('guide.iotConfigGuide.yellowTimeDesc')}</p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• <strong>Min:</strong> 2 detik</li>
-            <li>• <strong>Max:</strong> 10 detik</li>
-            <li>• <strong>Rekomendasi:</strong> 3 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMin')}</strong> 2 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeMax')}</strong> 10 detik</li>
+            <li>• <strong>{t('guide.iotConfigGuide.yellowTimeRecommended')}</strong> 3 detik</li>
           </ul>
         </div>
       </div>
 
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">🎯 Adaptive Mode Configuration</h3>
+        <h3 className="font-bold text-slate-900 mb-3">🎯 {t('guide.iotConfigGuide.adaptiveConfig')}</h3>
         <div className="grid md:grid-cols-3 gap-3">
           <div className="bg-white rounded p-3 border border-slate-200">
-            <div className="font-bold text-green-600 mb-1">Level 0 Green</div>
-            <p className="text-xs text-slate-600">Durasi saat LANCAR (tidak ada kendaraan)</p>
-            <div className="text-sm font-semibold text-slate-900 mt-2">Rekomendasi: 10 detik</div>
+            <div className="font-bold text-green-600 mb-1">{t('guide.iotConfigGuide.level0Green')}</div>
+            <p className="text-xs text-slate-600">{t('guide.iotConfigGuide.level0GreenDesc')}</p>
+            <div className="text-sm font-semibold text-slate-900 mt-2">{t('guide.iotConfigGuide.level0Recommended')}</div>
           </div>
           <div className="bg-white rounded p-3 border border-slate-200">
-            <div className="font-bold text-yellow-600 mb-1">Level 1 Green</div>
-            <p className="text-xs text-slate-600">Durasi saat SEDANG (ada kendaraan)</p>
-            <div className="text-sm font-semibold text-slate-900 mt-2">Rekomendasi: 20 detik</div>
+            <div className="font-bold text-yellow-600 mb-1">{t('guide.iotConfigGuide.level1Green')}</div>
+            <p className="text-xs text-slate-600">{t('guide.iotConfigGuide.level1GreenDesc')}</p>
+            <div className="text-sm font-semibold text-slate-900 mt-2">{t('guide.iotConfigGuide.level1Recommended')}</div>
           </div>
           <div className="bg-white rounded p-3 border border-slate-200">
-            <div className="font-bold text-red-600 mb-1">Level 2 Green</div>
-            <p className="text-xs text-slate-600">Durasi saat PADAT (antrean panjang)</p>
-            <div className="text-sm font-semibold text-slate-900 mt-2">Rekomendasi: 30-40 detik</div>
+            <div className="font-bold text-red-600 mb-1">{t('guide.iotConfigGuide.level2Green')}</div>
+            <p className="text-xs text-slate-600">{t('guide.iotConfigGuide.level2GreenDesc')}</p>
+            <div className="text-sm font-semibold text-slate-900 mt-2">{t('guide.iotConfigGuide.level2Recommended')}</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-3">
-        <h3 className="font-bold text-slate-900">🔧 Mode Operasi</h3>
+        <h3 className="font-bold text-slate-900">🔧 {t('guide.iotConfigGuide.operatingMode')}</h3>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-            <div className="font-semibold text-slate-900 mb-1">Auto Mode</div>
+            <div className="font-semibold text-slate-900 mb-1">{t('guide.iotConfigGuide.autoMode')}</div>
             <ul className="text-xs text-slate-600 space-y-1">
-              <li>• <strong>ON:</strong> Lampu bergantian otomatis</li>
-              <li>• <strong>OFF:</strong> Control manual dari dashboard</li>
+              <li>• <strong>{t('guide.iotConfigGuide.autoModeOn')}</strong> {t('guide.iotConfigGuide.autoModeOnDesc')}</li>
+              <li>• <strong>{t('guide.iotConfigGuide.autoModeOff')}</strong> {t('guide.iotConfigGuide.autoModeOffDesc')}</li>
             </ul>
           </div>
           <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="font-semibold text-slate-900 mb-1">Adaptive Mode</div>
+            <div className="font-semibold text-slate-900 mb-1">{t('guide.iotConfigGuide.adaptiveMode')}</div>
             <ul className="text-xs text-slate-600 space-y-1">
-              <li>• <strong>ON:</strong> Durasi mengikuti density level</li>
-              <li>• <strong>OFF:</strong> Durasi fixed sesuai Green Time</li>
+              <li>• <strong>{t('guide.iotConfigGuide.adaptiveModeOn')}</strong> {t('guide.iotConfigGuide.adaptiveModeOnDesc')}</li>
+              <li>• <strong>{t('guide.iotConfigGuide.adaptiveModeOff')}</strong> {t('guide.iotConfigGuide.adaptiveModeOffDesc')}</li>
             </ul>
           </div>
         </div>
       </div>
 
       <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">💡 Tips Konfigurasi Optimal</h3>
+        <h3 className="font-bold text-slate-900 mb-3">💡 {t('guide.iotConfigGuide.optimalTips')}</h3>
         <div className="grid md:grid-cols-2 gap-4 text-xs">
           <div>
-            <div className="font-semibold text-amber-900 mb-2">Jam Sibuk (Peak Hours)</div>
+            <div className="font-semibold text-amber-900 mb-2">{t('guide.iotConfigGuide.peakHours')}</div>
             <pre className="bg-slate-900 text-green-400 p-2 rounded text-xs">
-Green Time: 15 detik<br/>
-Level 0: 10 detik<br/>
-Level 1: 25 detik<br/>
-Level 2: 40 detik<br/>
-Adaptive: ON
+{t('guide.iotConfigGuide.greenTimeConfig')} 15 detik<br/>
+{t('guide.iotConfigGuide.level0Config')} 10 detik<br/>
+{t('guide.iotConfigGuide.level1Config')} 25 detik<br/>
+{t('guide.iotConfigGuide.level2Config')} 40 detik<br/>
+{t('guide.iotConfigGuide.adaptiveConfigValue')} ON
             </pre>
           </div>
           <div>
-            <div className="font-semibold text-amber-900 mb-2">Jam Sepi (Off-Peak)</div>
+            <div className="font-semibold text-amber-900 mb-2">{t('guide.iotConfigGuide.offPeak')}</div>
             <pre className="bg-slate-900 text-green-400 p-2 rounded text-xs">
-Green Time: 10 detik<br/>
-Level 0: 8 detik<br/>
-Level 1: 15 detik<br/>
-Level 2: 25 detik<br/>
-Adaptive: ON
+{t('guide.iotConfigGuide.greenTimeConfig')} 10 detik<br/>
+{t('guide.iotConfigGuide.level0Config')} 8 detik<br/>
+{t('guide.iotConfigGuide.level1Config')} 15 detik<br/>
+{t('guide.iotConfigGuide.level2Config')} 25 detik<br/>
+{t('guide.iotConfigGuide.adaptiveConfigValue')} ON
             </pre>
           </div>
         </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-2">💾 Cara Menyimpan Konfigurasi</h3>
+        <h3 className="font-bold text-slate-900 mb-2">💾 {t('guide.iotConfigGuide.saveConfig')}</h3>
         <ol className="text-sm text-slate-700 space-y-1">
-          <li>1. Atur nilai-nilai yang diinginkan</li>
-          <li>2. Klik tombol <strong>"Simpan Konfigurasi"</strong></li>
-          <li>3. Sistem akan menyimpan ke DynamoDB</li>
-          <li>4. Command dikirim ke ESP32 via MQTT topic: <code className="bg-slate-200 px-1 rounded text-xs">traffic/&lt;device_id&gt;/config/set</code></li>
-          <li>5. ESP32 menerima dan apply konfigurasi baru</li>
+          <li>1. {t('guide.iotConfigGuide.saveConfigStep1')}</li>
+          <li>2. {t('guide.iotConfigGuide.saveConfigStep2')} <strong>{t('guide.iotConfigGuide.saveConfigStep2Bold')}</strong></li>
+          <li>3. {t('guide.iotConfigGuide.saveConfigStep3')}</li>
+          <li>4. {t('guide.iotConfigGuide.saveConfigStep4')} <code className="bg-slate-200 px-1 rounded text-xs">traffic/&lt;device_id&gt;/config/set</code></li>
+          <li>5. {t('guide.iotConfigGuide.saveConfigStep5')}</li>
         </ol>
       </div>
     </div>
@@ -816,50 +816,50 @@ function UsersSection() {
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined text-blue-600">verified_user</span>
-            <h3 className="font-bold text-slate-900">Admin Pusat</h3>
+            <h3 className="font-bold text-slate-900">{t('guide.userManagement.centralAdmin')}</h3>
           </div>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>✓ Akses penuh semua fitur</li>
-            <li>✓ Manajemen pengguna (CRUD)</li>
-            <li>✓ Konfigurasi IoT device</li>
-            <li>✓ Manajemen persimpangan</li>
-            <li>✓ Ekspor data</li>
+            <li>✓ {t('guide.userManagement.centralAdminPerm1')}</li>
+            <li>✓ {t('guide.userManagement.centralAdminPerm2')}</li>
+            <li>✓ {t('guide.userManagement.centralAdminPerm3')}</li>
+            <li>✓ {t('guide.userManagement.centralAdminPerm4')}</li>
+            <li>✓ {t('guide.userManagement.centralAdminPerm5')}</li>
           </ul>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="material-symbols-outlined text-green-600">monitor_heart</span>
-            <h3 className="font-bold text-slate-900">Operator Lapangan</h3>
+            <h3 className="font-bold text-slate-900">{t('guide.userManagement.fieldOperator')}</h3>
           </div>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>✓ Lihat dashboard monitoring</li>
-            <li>✓ Lihat analitik</li>
-            <li>✓ Lihat persimpangan</li>
-            <li>✗ Tidak bisa ubah konfigurasi</li>
-            <li>✗ Tidak bisa CRUD user</li>
+            <li>✓ {t('guide.userManagement.fieldOperatorPerm1')}</li>
+            <li>✓ {t('guide.userManagement.fieldOperatorPerm2')}</li>
+            <li>✓ {t('guide.userManagement.fieldOperatorPerm3')}</li>
+            <li>✗ {t('guide.userManagement.fieldOperatorPerm4')}</li>
+            <li>✗ {t('guide.userManagement.fieldOperatorPerm5')}</li>
           </ul>
         </div>
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">➕ Menambah Pengguna Baru</h3>
+        <h3 className="font-bold text-slate-900 mb-3">➕ {t('guide.userManagement.addNewUser')}</h3>
         <ol className="text-sm space-y-1 text-slate-700">
-          <li>1. Buka menu <strong>"Pengguna"</strong></li>
-          <li>2. Klik <strong>"Tambah Pengguna"</strong></li>
-          <li>3. Isi: Nama, Email, Password, Role, Status</li>
-          <li>4. Klik <strong>"Tambah Pengguna"</strong></li>
+          <li>1. {t('guide.userManagement.addNewUserStep1')} <strong>{t('guide.userManagement.addNewUserStep1Bold')}</strong></li>
+          <li>2. {t('guide.userManagement.addNewUserStep2')} <strong>{t('guide.userManagement.addNewUserStep2Bold')}</strong></li>
+          <li>3. {t('guide.userManagement.addNewUserStep3')}</li>
+          <li>4. {t('guide.userManagement.addNewUserStep4')} <strong>{t('guide.userManagement.addNewUserStep4Bold')}</strong></li>
         </ol>
       </div>
 
       <div className="grid md:grid-cols-2 gap-3">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <h4 className="font-semibold text-slate-900 mb-2 text-sm">✏️ Edit Pengguna</h4>
-          <p className="text-xs text-slate-600">Klik ikon Edit (pensil), ubah data, lalu Simpan Perubahan.</p>
+          <h4 className="font-semibold text-slate-900 mb-2 text-sm">✏️ {t('guide.userManagement.editUser')}</h4>
+          <p className="text-xs text-slate-600">{t('guide.userManagement.editUserDesc')}</p>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <h4 className="font-semibold text-slate-900 mb-2 text-sm">🗑️ Hapus Pengguna</h4>
-          <p className="text-xs text-slate-600">Klik ikon Hapus (trash), lalu konfirmasi. ⚠️ Tidak bisa hapus akun sendiri!</p>
+          <h4 className="font-semibold text-slate-900 mb-2 text-sm">🗑️ {t('guide.userManagement.deleteUser')}</h4>
+          <p className="text-xs text-slate-600">{t('guide.userManagement.deleteUserDesc')} ⚠️ {t('guide.userManagement.deleteNote')}</p>
         </div>
       </div>
     </div>
@@ -883,60 +883,59 @@ function NotificationsSection() {
 
       <div className="grid md:grid-cols-3 gap-3">
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="font-bold text-red-700 mb-2">🚨 Critical</div>
+          <div className="font-bold text-red-700 mb-2">🚨 {t('guide.notificationsGuide.critical')}</div>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Queue Level 2 (Padat)</li>
-            <li>• Vehicle count tinggi</li>
+            <li>• {t('guide.notificationsGuide.criticalSub1')}</li>
+            <li>• {t('guide.notificationsGuide.criticalSub2')}</li>
           </ul>
         </div>
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="font-bold text-yellow-700 mb-2">⚠️ Warning</div>
+          <div className="font-bold text-yellow-700 mb-2">⚠️ {t('guide.notificationsGuide.warning')}</div>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Weak WiFi Signal</li>
-            <li>• Dummy Mode Active</li>
+            <li>• {t('guide.notificationsGuide.warningSub1')}</li>
+            <li>• {t('guide.notificationsGuide.warningSub2')}</li>
           </ul>
         </div>
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="font-bold text-blue-700 mb-2">ℹ️ Info</div>
+          <div className="font-bold text-blue-700 mb-2">ℹ️ {t('guide.notificationsGuide.info')}</div>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Device Online</li>
-            <li>• Config Updated</li>
+            <li>• {t('guide.notificationsGuide.infoSub1')}</li>
+            <li>• {t('guide.notificationsGuide.infoSub2')}</li>
           </ul>
         </div>
       </div>
 
       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">📱 Setup Telegram</h3>
+        <h3 className="font-bold text-slate-900 mb-3">📱 {t('guide.notificationsGuide.setupTelegram')}</h3>
         <ol className="text-sm space-y-2 text-slate-700">
-          <li><strong>1.</strong> Buka Telegram, cari <code className="bg-slate-200 px-1 rounded text-xs">@BotFather</code></li>
-          <li><strong>2.</strong> Kirim <code className="bg-slate-200 px-1 rounded text-xs">/newbot</code> dan ikuti instruksi</li>
-          <li><strong>3.</strong> Simpan <strong>Bot Token</strong></li>
-          <li><strong>4.</strong> Start bot Anda, lalu akses: <code className="bg-slate-200 px-1 py-0.5 rounded text-xs break-all">https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code></li>
-          <li><strong>5.</strong> Cari <strong>Chat ID</strong> dari response JSON</li>
-          <li><strong>6.</strong> Masukkan Bot Token dan Chat ID di <strong>Profile → Settings → Notifikasi</strong></li>
-          <li><strong>7.</strong> Klik <strong>"Test Telegram"</strong> dan <strong>"Simpan"</strong></li>
+          <li><strong>1.</strong> {t('guide.notificationsGuide.telegramStep1')} <code className="bg-slate-200 px-1 rounded text-xs">@BotFather</code></li>
+          <li><strong>2.</strong> {t('guide.notificationsGuide.telegramStep2')} <code className="bg-slate-200 px-1 rounded text-xs">/newbot</code> {t('guide.notificationsGuide.telegramStep2Cont')}</li>
+          <li><strong>3.</strong> {t('guide.notificationsGuide.telegramStep3')} <strong>{t('guide.notificationsGuide.telegramStep3Bold')}</strong></li>
+          <li><strong>4.</strong> {t('guide.notificationsGuide.telegramStep4')} <code className="bg-slate-200 px-1 py-0.5 rounded text-xs break-all">https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code></li>
+          <li><strong>5.</strong> {t('guide.notificationsGuide.telegramStep5')} <strong>{t('guide.notificationsGuide.telegramStep5Bold')}</strong> {t('guide.notificationsGuide.telegramStep5Cont')}</li>
+          <li><strong>6.</strong> {t('guide.notificationsGuide.telegramStep6')} <strong>{t('guide.notificationsGuide.telegramStep6Bold')}</strong></li>
+          <li><strong>7.</strong> {t('guide.notificationsGuide.telegramStep7')} <strong>{t('guide.notificationsGuide.telegramStep7Bold')}</strong> {t('guide.notificationsGuide.telegramStep7Cont')} <strong>{t('guide.notificationsGuide.telegramStep7Bold2')}</strong></li>
         </ol>
       </div>
 
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">📧 Setup Email (Gmail)</h3>
+        <h3 className="font-bold text-slate-900 mb-3">📧 {t('guide.notificationsGuide.setupEmail')}</h3>
         <ol className="text-sm space-y-2 text-slate-700">
-          <li><strong>1.</strong> Login ke Gmail</li>
-          <li><strong>2.</strong> Buka <strong>Google Account → Security</strong></li>
-          <li><strong>3.</strong> Enable <strong>2-Step Verification</strong></li>
-          <li><strong>4.</strong> Klik <strong>App passwords</strong></li>
-          <li><strong>5.</strong> Pilih <strong>Mail</strong> dan <strong>Other</strong> (Custom name)</li>
-          <li><strong>6.</strong> Google akan generate 16-character password</li>
-          <li><strong>7.</strong> Masukkan di <strong>Profile → Settings → Notifikasi</strong></li>
-          <li><strong>8.</strong> Klik <strong>"Test Email"</strong> dan <strong>"Simpan"</strong></li>
+          <li><strong>1.</strong> {t('guide.notificationsGuide.emailStep1')}</li>
+          <li><strong>2.</strong> {t('guide.notificationsGuide.emailStep2')} <strong>{t('guide.notificationsGuide.emailStep2Bold')}</strong></li>
+          <li><strong>3.</strong> {t('guide.notificationsGuide.emailStep3')} <strong>{t('guide.notificationsGuide.emailStep3Bold')}</strong></li>
+          <li><strong>4.</strong> {t('guide.notificationsGuide.emailStep4')} <strong>{t('guide.notificationsGuide.emailStep4Bold')}</strong></li>
+          <li><strong>5.</strong> {t('guide.notificationsGuide.emailStep5')} <strong>{t('guide.notificationsGuide.emailStep5Bold')}</strong> {t('guide.notificationsGuide.emailStep5Cont')} <strong>{t('guide.notificationsGuide.emailStep5Bold2')}</strong> {t('guide.notificationsGuide.emailStep5Cont2')}</li>
+          <li><strong>6.</strong> {t('guide.notificationsGuide.emailStep6')}</li>
+          <li><strong>7.</strong> {t('guide.notificationsGuide.emailStep7')} <strong>{t('guide.notificationsGuide.emailStep7Bold')}</strong></li>
+          <li><strong>8.</strong> {t('guide.notificationsGuide.emailStep8')} <strong>{t('guide.notificationsGuide.emailStep8Bold')}</strong> {t('guide.notificationsGuide.emailStep8Cont')} <strong>{t('guide.notificationsGuide.emailStep8Bold2')}</strong></li>
         </ol>
       </div>
 
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-2">⏰ Cooldown Period</h3>
+        <h3 className="font-bold text-slate-900 mb-2">⏰ {t('guide.notificationsGuide.cooldownPeriod')}</h3>
         <p className="text-sm text-slate-700">
-          Untuk mencegah spam, notifikasi memiliki cooldown <strong>5 menit</strong>. 
-          Artinya alert yang sama tidak akan dikirim lagi dalam 5 menit.
+          {t('guide.notificationsGuide.cooldownDesc')} <strong>{t('guide.notificationsGuide.cooldownDescBold')}</strong>{t('guide.notificationsGuide.cooldownDescCont')}
         </p>
       </div>
     </div>
@@ -959,57 +958,57 @@ function ESP32Section() {
       </div>
 
       <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">🔌 Pin Configuration</h3>
+        <h3 className="font-bold text-slate-900 mb-3">🔌 {t('guide.esp32Setup.pinConfiguration')}</h3>
         <div className="grid md:grid-cols-3 gap-4 text-xs">
           <div>
-            <div className="font-semibold text-orange-900 mb-2">🚥 Traffic Light (LED)</div>
+            <div className="font-semibold text-orange-900 mb-2">🚥 {t('guide.esp32Setup.trafficLight')}</div>
             <table className="w-full text-xs">
-              <tr><td className="font-semibold">North Red:</td><td>GPIO 16</td></tr>
-              <tr><td className="font-semibold">North Yellow:</td><td>GPIO 17</td></tr>
-              <tr><td className="font-semibold">North Green:</td><td>GPIO 5</td></tr>
-              <tr><td className="font-semibold">South Red:</td><td>GPIO 15</td></tr>
-              <tr><td className="font-semibold">South Yellow:</td><td>GPIO 22</td></tr>
-              <tr><td className="font-semibold">South Green:</td><td>GPIO 23</td></tr>
-              <tr><td className="font-semibold">East Red:</td><td>GPIO 18</td></tr>
-              <tr><td className="font-semibold">East Yellow:</td><td>GPIO 19</td></tr>
-              <tr><td className="font-semibold">East Green:</td><td>GPIO 21</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northRed')}</td><td>GPIO 16</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northYellow')}</td><td>GPIO 17</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northGreen')}</td><td>GPIO 5</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southRed')}</td><td>GPIO 15</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southYellow')}</td><td>GPIO 22</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southGreen')}</td><td>GPIO 23</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastRed')}</td><td>GPIO 18</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastYellow')}</td><td>GPIO 19</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastGreen')}</td><td>GPIO 21</td></tr>
             </table>
           </div>
           <div>
-            <div className="font-semibold text-orange-900 mb-2">👁️ IR Sensors</div>
+            <div className="font-semibold text-orange-900 mb-2">👁️ {t('guide.esp32Setup.irSensors')}</div>
             <table className="w-full text-xs">
-              <tr><td className="font-semibold">North IR:</td><td>GPIO 36</td></tr>
-              <tr><td className="font-semibold">South IR:</td><td>GPIO 34</td></tr>
-              <tr><td className="font-semibold">East IR:</td><td>GPIO 39</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northIR')}</td><td>GPIO 36</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southIR')}</td><td>GPIO 34</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastIR')}</td><td>GPIO 39</td></tr>
             </table>
           </div>
           <div>
-            <div className="font-semibold text-orange-900 mb-2">📏 Ultrasonic (HC-SR04)</div>
+            <div className="font-semibold text-orange-900 mb-2">📏 {t('guide.esp32Setup.ultrasonic')}</div>
             <table className="w-full text-xs">
-              <tr><td className="font-semibold">North TRIG:</td><td>GPIO 27</td></tr>
-              <tr><td className="font-semibold">North ECHO:</td><td>GPIO 14</td></tr>
-              <tr><td className="font-semibold">South TRIG:</td><td>GPIO 25</td></tr>
-              <tr><td className="font-semibold">South ECHO:</td><td>GPIO 26</td></tr>
-              <tr><td className="font-semibold">East TRIG:</td><td>GPIO 12</td></tr>
-              <tr><td className="font-semibold">East ECHO:</td><td>GPIO 13</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northTRIG')}</td><td>GPIO 27</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.northECHO')}</td><td>GPIO 14</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southTRIG')}</td><td>GPIO 25</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.southECHO')}</td><td>GPIO 26</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastTRIG')}</td><td>GPIO 12</td></tr>
+              <tr><td className="font-semibold">{t('guide.esp32Setup.eastECHO')}</td><td>GPIO 13</td></tr>
             </table>
           </div>
         </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">📝 Upload Code ke ESP32</h3>
+        <h3 className="font-bold text-slate-900 mb-3">📝 {t('guide.esp32Setup.uploadCode')}</h3>
         <ol className="text-sm space-y-2 text-slate-700">
-          <li><strong>1.</strong> Install <strong>Arduino IDE</strong> atau <strong>PlatformIO</strong></li>
-          <li><strong>2.</strong> Install library:
+          <li><strong>1.</strong> {t('guide.esp32Setup.uploadStep1')} <strong>{t('guide.esp32Setup.uploadStep1Bold')}</strong> {t('guide.esp32Setup.uploadStep1Cont')} <strong>{t('guide.esp32Setup.uploadStep1Bold2')}</strong></li>
+          <li><strong>2.</strong> {t('guide.esp32Setup.uploadStep2')}
             <ul className="ml-6 mt-1 text-xs space-y-0.5">
-              <li>• WiFi.h (built-in)</li>
-              <li>• PubSubClient.h (MQTT)</li>
-              <li>• ArduinoJson.h</li>
+              <li>• {t('guide.esp32Setup.uploadStep2Sub1')}</li>
+              <li>• {t('guide.esp32Setup.uploadStep2Sub2')}</li>
+              <li>• {t('guide.esp32Setup.uploadStep2Sub3')}</li>
             </ul>
           </li>
-          <li><strong>3.</strong> Buka file <code className="bg-slate-200 px-1 rounded text-xs">iot/esp32/traffic_mqtt.ino</code></li>
-          <li><strong>4.</strong> Edit kredensial WiFi dan MQTT:
+          <li><strong>3.</strong> {t('guide.esp32Setup.uploadStep3')} <code className="bg-slate-200 px-1 rounded text-xs">iot/esp32/traffic_mqtt.ino</code></li>
+          <li><strong>4.</strong> {t('guide.esp32Setup.uploadStep4')}
             <pre className="bg-slate-900 text-green-400 p-2 rounded text-xs mt-2">
 const char* ssid = "YOUR_WIFI_SSID";<br/>
 const char* wifiPassword = "YOUR_WIFI_PASSWORD";<br/>
@@ -1017,16 +1016,16 @@ const char* wifiPassword = "YOUR_WIFI_PASSWORD";<br/>
 #define MQTT_PASS "Azure-password123"
             </pre>
           </li>
-          <li><strong>5.</strong> Pilih board: <strong>ESP32 Dev Module</strong></li>
-          <li><strong>6.</strong> Pilih port COM yang sesuai</li>
-          <li><strong>7.</strong> Klik <strong>Upload</strong></li>
-          <li><strong>8.</strong> Buka <strong>Serial Monitor</strong> (115200 baud) untuk melihat log</li>
+          <li><strong>5.</strong> {t('guide.esp32Setup.uploadStep5')} <strong>{t('guide.esp32Setup.uploadStep5Bold')}</strong></li>
+          <li><strong>6.</strong> {t('guide.esp32Setup.uploadStep6')}</li>
+          <li><strong>7.</strong> {t('guide.esp32Setup.uploadStep7')} <strong>{t('guide.esp32Setup.uploadStep7Bold')}</strong></li>
+          <li><strong>8.</strong> {t('guide.esp32Setup.uploadStep8')} <strong>{t('guide.esp32Setup.uploadStep8Bold')}</strong> {t('guide.esp32Setup.uploadStep8Cont')}</li>
         </ol>
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-2">✅ Verifikasi Koneksi</h3>
-        <p className="text-sm text-slate-700 mb-2">Output Serial Monitor yang benar:</p>
+        <h3 className="font-bold text-slate-900 mb-2">✅ {t('guide.esp32Setup.verifyConnection')}</h3>
+        <p className="text-sm text-slate-700 mb-2">{t('guide.esp32Setup.verifyDesc')}</p>
         <pre className="bg-slate-900 text-green-400 p-3 rounded text-xs overflow-x-auto">
 WiFi Connected!<br/>
 IP Address: 192.168.x.x<br/>
@@ -1056,66 +1055,66 @@ function MQTTSection() {
       </div>
 
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">🌐 MQTT Broker (Mosquitto)</h3>
+        <h3 className="font-bold text-slate-900 mb-3">🌐 {t('guide.mqttConfig.mqttBroker')}</h3>
         <table className="w-full text-sm">
-          <tr><td className="font-semibold py-1">Host:</td><td><code className="bg-slate-200 px-2 py-1 rounded">3.25.72.124</code></td></tr>
-          <tr><td className="font-semibold py-1">Port:</td><td><code className="bg-slate-200 px-2 py-1 rounded">1883</code> (non-SSL)</td></tr>
-          <tr><td className="font-semibold py-1">Username:</td><td><code className="bg-slate-200 px-2 py-1 rounded">jti</code></td></tr>
-          <tr><td className="font-semibold py-1">Password:</td><td><code className="bg-slate-200 px-2 py-1 rounded">Azure-password123</code></td></tr>
+          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.host')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">3.25.72.124</code></td></tr>
+          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.port')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">1883</code> {t('guide.mqttConfig.portDesc')}</td></tr>
+          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.username')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">jti</code></td></tr>
+          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.password')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">Azure-password123</code></td></tr>
         </table>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">📡 MQTT Topics</h3>
+        <h3 className="font-bold text-slate-900 mb-3">📡 {t('guide.mqttConfig.mqttTopics')}</h3>
         <table className="w-full text-xs">
           <tr className="border-b border-blue-200">
-            <td className="font-semibold py-2">Topic</td>
-            <td className="font-semibold py-2">Deskripsi</td>
+            <td className="font-semibold py-2">{t('guide.mqttConfig.topic')}</td>
+            <td className="font-semibold py-2">{t('guide.mqttConfig.description')}</td>
           </tr>
           <tr className="border-b border-blue-100">
             <td className="py-2"><code className="bg-slate-200 px-1 rounded">traffic/+/data</code></td>
-            <td className="py-2">Telemetry dari semua ESP32</td>
+            <td className="py-2">{t('guide.mqttConfig.topicAllData')}</td>
           </tr>
           <tr className="border-b border-blue-100">
             <td className="py-2"><code className="bg-slate-200 px-1 rounded text-xs">traffic/&lt;device_id&gt;/data</code></td>
-            <td className="py-2">Telemetry dari device spesifik</td>
+            <td className="py-2">{t('guide.mqttConfig.topicDeviceData')}</td>
           </tr>
           <tr className="border-b border-blue-100">
             <td className="py-2"><code className="bg-slate-200 px-1 rounded text-xs">traffic/&lt;device_id&gt;/config/set</code></td>
-            <td className="py-2">Send config ke device</td>
+            <td className="py-2">{t('guide.mqttConfig.topicConfigSet')}</td>
           </tr>
           <tr className="border-b border-blue-100">
             <td className="py-2"><code className="bg-slate-200 px-1 rounded text-xs">traffic/&lt;device_id&gt;/light/&lt;lane&gt;/set</code></td>
-            <td className="py-2">Manual control lampu</td>
+            <td className="py-2">{t('guide.mqttConfig.topicLightSet')}</td>
           </tr>
         </table>
       </div>
 
       <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">🗄️ AWS DynamoDB Tables</h3>
+        <h3 className="font-bold text-slate-900 mb-3">🗄️ {t('guide.mqttConfig.dynamodbTables')}</h3>
         <div className="space-y-2 text-sm">
           <div className="flex items-start gap-2">
             <span className="font-bold text-teal-600">•</span>
             <div>
-              <code className="bg-slate-200 px-1 rounded text-xs">TrafficTelemetry</code> - Menyimpan semua data sensor real-time
+              <code className="bg-slate-200 px-1 rounded text-xs">TrafficTelemetry</code> - {t('guide.mqttConfig.trafficTelemetry')}
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-teal-600">•</span>
             <div>
-              <code className="bg-slate-200 px-1 rounded text-xs">DeviceStatus</code> - Status online/offline device
+              <code className="bg-slate-200 px-1 rounded text-xs">DeviceStatus</code> - {t('guide.mqttConfig.deviceStatus')}
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-teal-600">•</span>
             <div>
-              <code className="bg-slate-200 px-1 rounded text-xs">Notifications</code> - Notifikasi sistem
+              <code className="bg-slate-200 px-1 rounded text-xs">Notifications</code> - {t('guide.mqttConfig.notifications')}
             </div>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-bold text-teal-600">•</span>
             <div>
-              <code className="bg-slate-200 px-1 rounded text-xs">Users</code> - Data pengguna dan kredensial
+              <code className="bg-slate-200 px-1 rounded text-xs">Users</code> - {t('guide.mqttConfig.users')}
             </div>
           </div>
         </div>
@@ -1141,76 +1140,76 @@ function TroubleshootingSection() {
 
       <div className="space-y-4">
         <div className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">
-          <h3 className="font-bold text-slate-900 mb-2">❌ Dashboard: MQTT Disconnected</h3>
-          <p className="text-sm text-slate-700 mb-2"><strong>Penyebab:</strong></p>
+          <h3 className="font-bold text-slate-900 mb-2">❌ {t('guide.troubleshootingGuide.mqttDisconnected')}</h3>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.mqttDisconnectedCause')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600 mb-2">
-            <li>• MQTT Broker mati (EC2 down)</li>
-            <li>• Kredensial salah di .env.local</li>
-            <li>• Firewall block port 9001 (WebSocket)</li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedCause1')}</li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedCause2')}</li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedCause3')}</li>
           </ul>
-          <p className="text-sm text-slate-700 mb-2"><strong>Solusi:</strong></p>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.mqttDisconnectedSolution')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Cek status EC2 di AWS Console</li>
-            <li>• Pastikan <code className="bg-slate-200 px-1 rounded">MQTT_BROKER_URL=ws://3.25.72.124:9001</code></li>
-            <li>• Klik tombol "Hubungkan Ulang"</li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution1')}</li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution2')} <code className="bg-slate-200 px-1 rounded">MQTT_BROKER_URL=ws://3.25.72.124:9001</code></li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution3')}</li>
           </ul>
         </div>
 
         <div className="border-l-4 border-orange-500 bg-orange-50 p-4 rounded-r-lg">
-          <h3 className="font-bold text-slate-900 mb-2">⚠️ ESP32: WiFi gagal connect</h3>
-          <p className="text-sm text-slate-700 mb-2"><strong>Solusi:</strong></p>
+          <h3 className="font-bold text-slate-900 mb-2">⚠️ {t('guide.troubleshootingGuide.wifiIssue')}</h3>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.wifiIssueSolution')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Pastikan SSID dan password benar</li>
-            <li>• ESP32 hanya support WiFi 2.4 GHz (bukan 5 GHz)</li>
-            <li>• Jarak ESP32 ke router &lt; 10 meter</li>
-            <li>• Reset ESP32: tekan tombol EN</li>
+            <li>• {t('guide.troubleshootingGuide.wifiIssueSolution1')}</li>
+            <li>• {t('guide.troubleshootingGuide.wifiIssueSolution2')}</li>
+            <li>• {t('guide.troubleshootingGuide.wifiIssueSolution3')}</li>
+            <li>• {t('guide.troubleshootingGuide.wifiIssueSolution4')}</li>
           </ul>
         </div>
 
         <div className="border-l-4 border-yellow-500 bg-yellow-50 p-4 rounded-r-lg">
-          <h3 className="font-bold text-slate-900 mb-2">⚠️ Python Subscriber: AWS Error</h3>
-          <p className="text-sm text-slate-700 mb-2"><strong>Penyebab:</strong> Kredensial AWS salah atau tidak ada permission</p>
-          <p className="text-sm text-slate-700 mb-2"><strong>Solusi:</strong></p>
+          <h3 className="font-bold text-slate-900 mb-2">⚠️ {t('guide.troubleshootingGuide.awsError')}</h3>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.awsErrorCause')}</strong> {t('guide.troubleshootingGuide.awsErrorCauseDesc')}</p>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.awsErrorSolution')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• Cek <code className="bg-slate-200 px-1 rounded">AWS_ACCESS_KEY_ID</code> dan <code className="bg-slate-200 px-1 rounded">AWS_SECRET_ACCESS_KEY</code></li>
-            <li>• Pastikan IAM User punya permission: <code className="bg-slate-200 px-1 rounded">dynamodb:PutItem, Query, Scan</code></li>
-            <li>• Test koneksi: <code className="bg-slate-200 px-1 rounded">aws dynamodb list-tables</code></li>
+            <li>• {t('guide.troubleshootingGuide.awsErrorSolution1')} <code className="bg-slate-200 px-1 rounded">AWS_ACCESS_KEY_ID</code> {t('guide.troubleshootingGuide.awsErrorSolution1Cont')} <code className="bg-slate-200 px-1 rounded">AWS_SECRET_ACCESS_KEY</code></li>
+            <li>• {t('guide.troubleshootingGuide.awsErrorSolution2')} <code className="bg-slate-200 px-1 rounded">dynamodb:PutItem, Query, Scan</code></li>
+            <li>• {t('guide.troubleshootingGuide.awsErrorSolution3')} <code className="bg-slate-200 px-1 rounded">aws dynamodb list-tables</code></li>
           </ul>
         </div>
 
         <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
-          <h3 className="font-bold text-slate-900 mb-2">ℹ️ Data tidak muncul di Dashboard</h3>
-          <p className="text-sm text-slate-700 mb-2"><strong>Checklist:</strong></p>
+          <h3 className="font-bold text-slate-900 mb-2">ℹ️ {t('guide.troubleshootingGuide.noData')}</h3>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.noDataChecklist')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>✓ ESP32 connected ke WiFi? (cek Serial Monitor)</li>
-            <li>✓ ESP32 connected ke MQTT? (log: "MQTT connected")</li>
-            <li>✓ Python subscriber running? (<code className="bg-slate-200 px-1 rounded">python aws_subscriber.py</code>)</li>
-            <li>✓ Data masuk DynamoDB? (cek AWS Console)</li>
-            <li>✓ Dashboard connected ke MQTT? (status banner hijau)</li>
+            <li>✓ {t('guide.troubleshootingGuide.noDataCheck1')}</li>
+            <li>✓ {t('guide.troubleshootingGuide.noDataCheck2')}</li>
+            <li>✓ {t('guide.troubleshootingGuide.noDataCheck3')}<code className="bg-slate-200 px-1 rounded">python aws_subscriber.py</code>)</li>
+            <li>✓ {t('guide.troubleshootingGuide.noDataCheck4')}</li>
+            <li>✓ {t('guide.troubleshootingGuide.noDataCheck5')}</li>
           </ul>
         </div>
 
         <div className="border-l-4 border-purple-500 bg-purple-50 p-4 rounded-r-lg">
-          <h3 className="font-bold text-slate-900 mb-2">🔧 Sensor tidak berfungsi</h3>
-          <p className="text-sm text-slate-700 mb-2"><strong>IR Sensor:</strong></p>
+          <h3 className="font-bold text-slate-900 mb-2">🔧 {t('guide.troubleshootingGuide.sensorIssue')}</h3>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.irSensor')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600 mb-2">
-            <li>• Cek wiring: VCC → 5V, GND → GND, OUT → GPIO</li>
-            <li>• Test dengan tangan di depan sensor (LED harus menyala)</li>
-            <li>• Jarak deteksi 2-30 cm</li>
+            <li>• {t('guide.troubleshootingGuide.irSensor1')}</li>
+            <li>• {t('guide.troubleshootingGuide.irSensor2')}</li>
+            <li>• {t('guide.troubleshootingGuide.irSensor3')}</li>
           </ul>
-          <p className="text-sm text-slate-700 mb-2"><strong>Ultrasonic HC-SR04:</strong></p>
+          <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.ultrasonicSensor')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
-            <li>• VCC → 5V, GND → GND, TRIG → GPIO, ECHO → GPIO</li>
-            <li>• Jarak min 2cm, max 400cm</li>
-            <li>• Pastikan tidak ada obstacle di depan sensor saat test</li>
+            <li>• {t('guide.troubleshootingGuide.ultrasonicSensor1')}</li>
+            <li>• {t('guide.troubleshootingGuide.ultrasonicSensor2')}</li>
+            <li>• {t('guide.troubleshootingGuide.ultrasonicSensor3')}</li>
           </ul>
         </div>
       </div>
 
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-2">📞 Butuh Bantuan Lebih Lanjut?</h3>
+        <h3 className="font-bold text-slate-900 mb-2">📞 {t('guide.troubleshootingGuide.needHelp')}</h3>
         <p className="text-sm text-slate-700 mb-3">
-          Jika masalah masih berlanjut, hubungi technical support:
+          {t('guide.troubleshootingGuide.contactSupport')}
         </p>
         <div className="grid md:grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">

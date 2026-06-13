@@ -711,7 +711,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                       info
                     </span>
-                    <span className="truncate">{t('profile.bio') || 'Tentang'}</span>
+                    <span className="truncate">{t('profile.about')}</span>
                   </h3>
                   {isEditing ? (
                     <textarea
@@ -825,7 +825,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        Departemen
+                        {t('profile.department')}
                       </label>
                       {isEditing ? (
                         <input
@@ -847,7 +847,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="overflow-x-hidden">
                       <label className="block text-xs font-semibold text-slate-500 mb-1.5 lg:mb-2 truncate">
-                        {t('users.created') || 'Bergabung Sejak'}
+                        {t('profile.memberSince')}
                       </label>
                       <p className="text-slate-900 font-medium text-sm lg:text-base truncate">
                         {new Date(profile.memberSince).toLocaleDateString(
@@ -869,14 +869,14 @@ export default function ProfileContent() {
                         disabled={isLoading}
                         className="w-full sm:flex-1 px-4 lg:px-6 py-2 lg:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
                       >
-                        {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                        {isLoading ? t('profile.savingChanges') : t('profile.saveChanges')}
                       </button>
                       <button
                         onClick={handleCancel}
                         disabled={isLoading}
                         className="w-full sm:w-auto px-4 lg:px-6 py-2 lg:py-3 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
                       >
-                        Batal
+                        {t('common.cancel')}
                       </button>
                     </div>
                   )}
@@ -893,7 +893,7 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                       psychology
                     </span>
-                    <span className="truncate">{t('profile.skills') || 'Keahlian'}</span>
+                    <span className="truncate">{t('profile.skills')}</span>
                   </h3>
                   {isEditing ? (
                     <div className="space-y-2">
@@ -902,10 +902,10 @@ export default function ProfileContent() {
                         value={skillsInput}
                         onChange={(e) => setSkillsInput(e.target.value)}
                         className="w-full px-3 lg:px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-                        placeholder="Contoh: Traffic Management, IoT Systems, Data Analysis"
+                        placeholder={t('profile.skillsPlaceholder')}
                       />
                       <p className="text-[10px] lg:text-xs text-slate-500">
-                        Pisahkan setiap keahlian dengan koma.
+                        {t('profile.skillsSeparator')}
                       </p>
                     </div>
                   ) : (
@@ -925,7 +925,7 @@ export default function ProfileContent() {
                         ))
                       ) : (
                         <p className="text-sm text-slate-500">
-                          Belum ada keahlian yang ditambahkan.
+                          {t('profile.noSkills')}
                         </p>
                       )}
                     </div>
@@ -943,32 +943,30 @@ export default function ProfileContent() {
                     <span className="material-symbols-outlined text-primary">
                       trending_up
                     </span>
-                    {t('profile.performance') || 'Performa'}
+                    {t('profile.performance')}
                   </h3>
                   {(() => {
                     const performanceItems = [
                       {
-                        label: "Response Time",
+                        label: t('profile.responseTime'),
                         value: profile.performance?.responseTime,
                         color: "bg-green-500",
                         description:
                           profile.performance?.averageResponseMinutes
-                            ? `Rata-rata jeda aktivitas ${profile.performance.averageResponseMinutes} menit`
-                            : "Kecepatan respons berdasarkan jeda aktivitas pengguna",
+                            ? t('profile.averageResponseMinutes').replace('{minutes}', profile.performance.averageResponseMinutes.toString())
+                            : t('profile.responseTimeDesc'),
                       },
                       {
-                        label: "Accuracy",
+                        label: t('profile.accuracy'),
                         value: profile.performance?.accuracy,
                         color: "bg-blue-500",
-                        description:
-                          "Rasio aktivitas berhasil berdasarkan activity log",
+                        description: t('profile.accuracyDesc'),
                       },
                       {
-                        label: "Efficiency",
+                        label: t('profile.efficiency'),
                         value: profile.performance?.efficiency,
                         color: "bg-purple-500",
-                        description:
-                          "Efisiensi aktivitas berdasarkan jam aktif pengguna",
+                        description: t('profile.efficiencyDesc'),
                       },
                     ].filter(
                       (item) =>
@@ -985,11 +983,11 @@ export default function ProfileContent() {
                           </span>
 
                           <p className="mt-2 font-bold text-slate-700">
-                            Data performa belum tersedia
+                            {t('profile.performanceUnavailable')}
                           </p>
 
                           <p className="mt-1 text-sm text-slate-500">
-                            Performa akan muncul otomatis setelah aktivitas pengguna tercatat.
+                            {t('profile.performanceUnavailableDesc')}
                           </p>
                         </div>
                       );
@@ -1046,7 +1044,7 @@ export default function ProfileContent() {
                   className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
                 >
                   <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">
-                    {t('profile.quickActions') || 'Quick Actions'}
+                    {t('profile.quickActions')}
                   </h3>
                   <div className="space-y-1.5 lg:space-y-2">
                     <button
@@ -1104,7 +1102,7 @@ export default function ProfileContent() {
                   className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 lg:p-6 overflow-x-hidden"
                 >
                   <h3 className="text-base lg:text-lg font-bold text-slate-900 mb-3 lg:mb-4 truncate">
-                    {t('profile.accountInfo') || 'Account Info'}
+                    {t('profile.accountInfo')}
                   </h3>
                   <div className="space-y-2 lg:space-y-3">
                     <div className="flex items-center justify-between gap-2 overflow-hidden">
@@ -1117,7 +1115,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="flex items-center justify-between gap-2 overflow-hidden">
                       <span className="text-xs lg:text-sm text-slate-600 flex-shrink-0">
-                        User ID
+                        {t('profile.userId')}
                       </span>
                       <span className="text-xs lg:text-sm font-mono font-semibold text-slate-900 truncate">
                         {profile.id}
@@ -1125,7 +1123,7 @@ export default function ProfileContent() {
                     </div>
                     <div className="flex items-center justify-between gap-2 overflow-hidden">
                       <span className="text-xs lg:text-sm text-slate-600 flex-shrink-0">
-                        Last Login
+                        {t('profile.lastLogin')}
                       </span>
                       <span className="text-xs lg:text-sm font-semibold text-slate-900 truncate">
                         {new Date(profile.lastLogin).toLocaleDateString(
@@ -1146,12 +1144,12 @@ export default function ProfileContent() {
                 className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 overflow-x-hidden"
               >
                 <h3 className="text-sm font-bold text-slate-900 mb-2 truncate">
-                  {t('profile.accountInfo') || 'Account Info'}
+                  {t('profile.accountInfo')}
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2 overflow-hidden">
                     <span className="text-xs text-slate-600 truncate">
-                      Account Type
+                      {t('profile.accountType')}
                     </span>
                     <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold flex-shrink-0">
                       {profile.accountType}
@@ -1159,7 +1157,7 @@ export default function ProfileContent() {
                   </div>
                   <div className="flex items-center justify-between gap-2 overflow-hidden">
                     <span className="text-xs text-slate-600 flex-shrink-0">
-                      User ID
+                      {t('profile.userId')}
                     </span>
                     <span className="text-[10px] font-mono font-semibold text-slate-900 truncate">
                       {profile.id}
@@ -1167,7 +1165,7 @@ export default function ProfileContent() {
                   </div>
                   <div className="flex items-center justify-between gap-2 overflow-hidden">
                     <span className="text-xs text-slate-600 flex-shrink-0">
-                      Last Login
+                      {t('profile.lastLogin')}
                     </span>
                     <span className="text-xs font-semibold text-slate-900 truncate">
                       {new Date(profile.lastLogin).toLocaleDateString("id-ID", {
@@ -1201,10 +1199,10 @@ export default function ProfileContent() {
                     history
                   </span>
                   <p className="mt-2 font-bold text-slate-700">
-                    Belum ada aktivitas
+                    {t('profile.noActivityYet')}
                   </p>
                   <p className="text-sm text-slate-500">
-                    Aktivitas pengguna akan muncul setelah ada aksi di sistem.
+                    {t('profile.noActivityDesc')}
                   </p>
                 </div>
               ) : (
@@ -1313,16 +1311,16 @@ export default function ProfileContent() {
               <span className="material-symbols-outlined text-primary text-lg lg:text-xl">
                 settings
               </span>
-              <span className="truncate">{t('profile.privacySettings') || 'Pengaturan Privasi'}</span>
+              <span className="truncate">{t('profile.privacySettings')}</span>
             </h3>
             <div className="space-y-3 lg:space-y-4">
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    {t('profile.publicProfile') || 'Profil Publik'}
+                    {t('profile.publicProfile')}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    {t('profile.publicProfileDesc') || 'Izinkan orang lain melihat profil Anda'}
+                    {t('profile.publicProfileDesc')}
                   </p>
                 </div>
                 <button
@@ -1344,10 +1342,10 @@ export default function ProfileContent() {
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    {t('profile.showEmail') || 'Tampilkan Email'}
+                    {t('profile.showEmail')}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    {t('profile.showEmailDesc') || 'Email akan terlihat di profil publik'}
+                    {t('profile.showEmailDesc')}
                   </p>
                 </div>
                 <button
@@ -1367,10 +1365,10 @@ export default function ProfileContent() {
               <div className="flex items-center justify-between gap-3 p-3 lg:p-4 bg-slate-50 rounded-lg overflow-hidden">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 text-xs lg:text-sm truncate">
-                    {t('profile.showActivity') || 'Tampilkan Aktivitas'}
+                    {t('profile.showActivity')}
                   </p>
                   <p className="text-[10px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1 truncate">
-                    {t('profile.showActivityDesc') || 'Aktivitas akan terlihat di profil publik'}
+                    {t('profile.showActivityDesc')}
                   </p>
                 </div>
                 <button

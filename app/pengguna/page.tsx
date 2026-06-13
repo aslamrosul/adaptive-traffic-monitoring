@@ -127,7 +127,7 @@ export default function PenggunaPage() {
             }}
             className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
           >
-            Hapus
+            {t('common.delete')}
           </button>
           <button
             onClick={() => toast.dismiss(toastObj.id)}
@@ -188,7 +188,7 @@ export default function PenggunaPage() {
                 </span>
                 <input
                   className="w-full pl-8 lg:pl-9 pr-3 py-1.5 lg:py-2 bg-white border border-slate-200 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400"
-                  placeholder="Cari pengguna..."
+                  placeholder={t('users.searchPlaceholder') || "Cari pengguna..."}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -201,7 +201,7 @@ export default function PenggunaPage() {
                 className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg font-bold text-xs lg:text-sm shadow-lg shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-600/40 transition-all whitespace-nowrap"
               >
                 <span className="material-symbols-outlined text-sm lg:text-base">person_add</span>
-                <span>Tambah Pengguna</span>
+                <span>{t('users.add')}</span>
               </motion.button>
             </div>
           </motion.div>
@@ -392,7 +392,7 @@ export default function PenggunaPage() {
                                   : "bg-secondary-container text-on-secondary-container"
                               }`}
                             >
-                              {user.role === "admin" ? "ADMIN PUSAT" : "OPERATOR LAPANGAN"}
+                              {user.role === "admin" ? t('modals.centralAdmin').toUpperCase() : t('modals.fieldOperator').toUpperCase()}
                             </span>
                           </td>
                           <td className="px-4 py-3">
