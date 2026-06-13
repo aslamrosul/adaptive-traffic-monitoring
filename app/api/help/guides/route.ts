@@ -239,7 +239,8 @@ const guidesData: Record<string, any[]> = {
     views: 680,
     lastUpdated: '2024-01-22',
   },
-];
+]
+};
 
 const guidesEn = [
   {
@@ -513,16 +514,16 @@ export async function GET(request: Request) {
 
     // Filter by category
     if (category) {
-      filteredGuides = guides.filter((g) => g.category === category);
+      filteredGuides = guides.filter((g: any) => g.category === category);
     }
 
     // Search
     if (search) {
       filteredGuides = guides.filter(
-        (g) =>
+        (g: any) =>
           g.title.toLowerCase().includes(search) ||
           g.description.toLowerCase().includes(search) ||
-          g.tags.some((tag) => tag.includes(search))
+          g.tags.some((tag: string) => tag.includes(search))
       );
     }
 

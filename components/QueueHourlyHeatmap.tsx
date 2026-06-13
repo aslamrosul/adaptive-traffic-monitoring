@@ -419,6 +419,7 @@ export default function QueueHourlyHeatmap({
                     <p className="text-[9px] font-bold uppercase opacity-80">
                       {getConditionLabel(
                         item.average,
+                        t,
                       )}
                     </p>
                   </div>

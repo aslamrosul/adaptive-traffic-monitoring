@@ -12,7 +12,7 @@ export default function LanguageSwitcherSimple() {
   return (
     <button
       onClick={toggleLocale}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full transition-colors"
       title={locale === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
     >
       <span className="text-base">{locale === 'id' ? '🇮🇩' : '🇬🇧'}</span>

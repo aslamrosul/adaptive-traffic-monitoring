@@ -188,7 +188,8 @@ const faqsData: Record<string, any[]> = {
       },
     ],
   },
-];
+]
+};
 
 const faqsEn = [
   {
@@ -399,16 +400,16 @@ export async function GET(request: Request) {
     // Search in questions and answers
     if (search) {
       filteredFaqs = faqs
-        .map((faq) => ({
+        .map((faq: any) => ({
           ...faq,
           questions: faq.questions.filter(
-            (q) =>
+            (q: any) =>
               q.question.toLowerCase().includes(search) ||
               q.answer.toLowerCase().includes(search) ||
-              q.tags.some((tag) => tag.includes(search))
+              q.tags.some((tag: string) => tag.includes(search))
           ),
         }))
-        .filter((faq) => faq.questions.length > 0);
+        .filter((faq: any) => faq.questions.length > 0);
     }
 
     return NextResponse.json({
