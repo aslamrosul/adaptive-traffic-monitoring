@@ -392,7 +392,7 @@ export default function DashboardPage() {
                     onClick={reconnect}
                     className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
                   >
-                    Hubungkan Ulang
+                    {t("common.reconnect")}
                   </button>
                 )}
               </div>

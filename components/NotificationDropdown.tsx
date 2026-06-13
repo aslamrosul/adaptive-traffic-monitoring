@@ -216,7 +216,7 @@ export default function NotificationDropdown() {
             <div className="border-b border-slate-200 bg-slate-50 p-4">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="font-semibold text-slate-900">
-                  Notifikasi
+                  {t('notifications.title')}
                 </h3>
 
                 {unreadCount > 0 && (
@@ -225,7 +225,7 @@ export default function NotificationDropdown() {
                     onClick={handleMarkAllRead}
                     className="text-xs font-semibold text-primary transition-colors hover:text-primary/80"
                   >
-                    Tandai Semua Dibaca
+                    {t('notifications.markAllRead')}
                   </button>
                 )}
               </div>
@@ -357,7 +357,7 @@ export default function NotificationDropdown() {
                                     }}
                                     className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
                                   >
-                                    Tutup
+                                    {t('notifications.close')}
                                   </button>
                                 </div>
                               )}
@@ -388,7 +388,7 @@ export default function NotificationDropdown() {
                 onClick={() => setIsOpen(false)}
                 className="flex-1 text-center text-sm font-semibold text-slate-600 transition-colors hover:text-slate-800"
               >
-                Tutup
+                {t('notifications.close')}
               </button>
             </div>
           </motion.div>

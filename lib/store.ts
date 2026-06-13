@@ -168,10 +168,23 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   isLoading: false,
   error: null,
 
+// Helper function to get current locale from cookie
+function getCurrentLocale(): string {
+  if (typeof document === 'undefined') return 'id';
+  
+  const locale = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('NEXT_LOCALE='))
+    ?.split('=')[1];
+  
+  return locale || 'id';
+}
+
   fetchProfile: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("/api/profile");
+      const locale = getCurrentLocale();
+      const response = await fetch(`/api/profile?lang=${locale}`);
       const result = await response.json();
 
       if (result.success) {
@@ -187,7 +200,8 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   updateProfile: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("/api/profile", {
+      const locale = getCurrentLocale();
+      const response = await fetch(`/api/profile?lang=${locale}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
