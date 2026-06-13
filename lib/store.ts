@@ -163,11 +163,6 @@ interface ProfileStore {
   clearError: () => void;
 }
 
-export const useProfileStore = create<ProfileStore>((set, get) => ({
-  profile: null,
-  isLoading: false,
-  error: null,
-
 // Helper function to get current locale from cookie
 function getCurrentLocale(): string {
   if (typeof document === 'undefined') return 'id';
@@ -179,6 +174,11 @@ function getCurrentLocale(): string {
   
   return locale || 'id';
 }
+
+export const useProfileStore = create<ProfileStore>((set, get) => ({
+  profile: null,
+  isLoading: false,
+  error: null,
 
   fetchProfile: async () => {
     set({ isLoading: true, error: null });
