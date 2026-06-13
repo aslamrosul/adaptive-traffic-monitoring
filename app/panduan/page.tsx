@@ -538,62 +538,62 @@ function PersimpanganSection() {
         <div className="border border-green-200 bg-green-50 rounded-lg p-4">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-green-600">add_circle</span>
-            Menambah Persimpangan Baru
+            {t('guide.intersectionManagement.addNew')}
           </h3>
           <ol className="space-y-2 text-sm text-slate-700">
-            <li><strong>1.</strong> Buka menu <strong>"Persimpangan"</strong> di sidebar</li>
-            <li><strong>2.</strong> Klik tombol <strong>"Tambah Persimpangan"</strong></li>
-            <li><strong>3.</strong> Isi form dengan data:
+            <li><strong>1.</strong> {t('guide.intersectionManagement.addNewStep1')} <strong>{t('guide.intersectionManagement.addNewStep1Bold')}</strong> {t('guide.intersectionManagement.addNewStep1Cont')}</li>
+            <li><strong>2.</strong> {t('guide.intersectionManagement.addNewStep2')} <strong>{t('guide.intersectionManagement.addNewStep2Bold')}</strong></li>
+            <li><strong>3.</strong> {t('guide.intersectionManagement.addNewStep3')}
               <ul className="ml-6 mt-1 text-xs space-y-1">
-                <li>• Nama Persimpangan (contoh: "Simpang Talun")</li>
-                <li>• Alamat lengkap</li>
-                <li>• Device ID (contoh: ESP32_TRAFFIC_01)</li>
-                <li>• Jumlah Jalur (3 atau 4)</li>
-                <li>• Status: Active/Maintenance/Inactive</li>
-                <li>• Koordinat (latitude/longitude - optional)</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub1')}</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub2')}</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub3')}</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub4')}</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub5')}</li>
+                <li>• {t('guide.intersectionManagement.addNewStep3Sub6')}</li>
               </ul>
             </li>
-            <li><strong>4.</strong> Klik <strong>"Simpan"</strong></li>
+            <li><strong>4.</strong> {t('guide.intersectionManagement.addNewStep4')} <strong>{t('guide.intersectionManagement.addNewStep4Bold')}</strong></li>
           </ol>
         </div>
 
         <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">edit</span>
-            Edit Persimpangan
+            {t('guide.intersectionManagement.edit')}
           </h3>
           <p className="text-sm text-slate-700">
-            Klik ikon <strong>Edit (pensil)</strong> pada card persimpangan, ubah data yang diperlukan, lalu klik <strong>"Simpan Perubahan"</strong>.
+            {t('guide.intersectionManagement.editDesc')} <strong>{t('guide.intersectionManagement.editDescBold')}</strong> {t('guide.intersectionManagement.editDescCont')} <strong>{t('guide.intersectionManagement.editDescBold2')}</strong>.
           </p>
         </div>
 
         <div className="border border-red-200 bg-red-50 rounded-lg p-4">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-red-600">delete</span>
-            Hapus Persimpangan
+            {t('guide.intersectionManagement.delete')}
           </h3>
           <p className="text-sm text-slate-700 mb-2">
-            Klik ikon <strong>Hapus (trash)</strong> pada card persimpangan, lalu konfirmasi penghapusan.
+            {t('guide.intersectionManagement.deleteDesc')} <strong>{t('guide.intersectionManagement.deleteDescBold')}</strong> {t('guide.intersectionManagement.deleteDescCont')}
           </p>
           <div className="bg-red-100 border border-red-300 rounded p-2 text-xs text-red-800">
-            ⚠️ <strong>Peringatan:</strong> Penghapusan bersifat permanen dan tidak dapat dikembalikan!
+            ⚠️ <strong>{t('guide.intersectionManagement.deleteWarning')}</strong> {t('guide.intersectionManagement.deleteWarningText')}
           </div>
         </div>
 
         <div className="border border-purple-200 bg-purple-50 rounded-lg p-4">
           <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-purple-600">visibility</span>
-            Lihat Detail Persimpangan
+            {t('guide.intersectionManagement.viewDetail')}
           </h3>
           <p className="text-sm text-slate-700">
-            Klik <strong>"Detail"</strong> atau klik card langsung untuk membuka halaman detail yang menampilkan:
+            {t('guide.intersectionManagement.viewDetailDesc')} <strong>{t('guide.intersectionManagement.viewDetailDescBold')}</strong> {t('guide.intersectionManagement.viewDetailDescCont')}
           </p>
           <ul className="text-xs mt-2 space-y-1 text-slate-600 ml-4">
-            <li>• Informasi lengkap persimpangan</li>
-            <li>• Real-time traffic status</li>
-            <li>• Riwayat telemetry</li>
-            <li>• Grafik volume kendaraan</li>
-            <li>• Device status dan kesehatan sistem</li>
+            <li>• {t('guide.intersectionManagement.viewDetailSub1')}</li>
+            <li>• {t('guide.intersectionManagement.viewDetailSub2')}</li>
+            <li>• {t('guide.intersectionManagement.viewDetailSub3')}</li>
+            <li>• {t('guide.intersectionManagement.viewDetailSub4')}</li>
+            <li>• {t('guide.intersectionManagement.viewDetailSub5')}</li>
           </ul>
         </div>
       </div>
@@ -618,50 +618,50 @@ function AnalyticsSection() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">📊 Vehicle Volume Chart</h3>
-          <p className="text-sm text-slate-700">Line chart volume kendaraan per jam atau per hari dengan filter jalur.</p>
+          <h3 className="font-bold text-slate-900 mb-2">📊 {t('guide.analyticsGuide.vehicleVolumeChart')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.vehicleVolumeDesc')}</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">🥧 Queue Distribution</h3>
-          <p className="text-sm text-slate-700">Pie chart distribusi Level 0 (Lancar), Level 1 (Sedang), Level 2 (Padat).</p>
+          <h3 className="font-bold text-slate-900 mb-2">🥧 {t('guide.analyticsGuide.queueDistribution')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.queueDistributionDesc')}</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">🔥 Queue Hourly Heatmap</h3>
-          <p className="text-sm text-slate-700">Heatmap intensitas antrean per jam untuk identifikasi jam sibuk.</p>
+          <h3 className="font-bold text-slate-900 mb-2">🔥 {t('guide.analyticsGuide.queueHourlyHeatmap')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.queueHourlyHeatmapDesc')}</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">📈 Queue Level by Hour</h3>
-          <p className="text-sm text-slate-700">Stacked bar chart distribusi queue level per jam.</p>
+          <h3 className="font-bold text-slate-900 mb-2">📈 {t('guide.analyticsGuide.queueLevelByHour')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.queueLevelByHourDesc')}</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">⏱️ Green Duration Chart</h3>
-          <p className="text-sm text-slate-700">Efektivitas durasi lampu hijau vs volume kendaraan.</p>
+          <h3 className="font-bold text-slate-900 mb-2">⏱️ {t('guide.analyticsGuide.greenDurationChart')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.greenDurationChartDesc')}</p>
         </div>
 
         <div className="p-4 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-lg">
-          <h3 className="font-bold text-slate-900 mb-2">📋 Effectiveness Table</h3>
-          <p className="text-sm text-slate-700">Tabel skor efektivitas lampu per jalur (0-100).</p>
+          <h3 className="font-bold text-slate-900 mb-2">📋 {t('guide.analyticsGuide.effectivenessTable')}</h3>
+          <p className="text-sm text-slate-700">{t('guide.analyticsGuide.effectivenessTableDesc')}</p>
         </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-slate-900 mb-3">📌 Cara Membaca Skor Efektivitas</h3>
+        <h3 className="font-bold text-slate-900 mb-3">📌 {t('guide.analyticsGuide.effectivenessScore')}</h3>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-green-100 border border-green-300 rounded p-2 text-center">
             <div className="text-2xl font-bold text-green-700">80+</div>
-            <div className="text-xs text-green-600 mt-1">Sangat Efektif</div>
+            <div className="text-xs text-green-600 mt-1">{t('guide.analyticsGuide.veryEffective')}</div>
           </div>
           <div className="bg-yellow-100 border border-yellow-300 rounded p-2 text-center">
             <div className="text-2xl font-bold text-yellow-700">60-80</div>
-            <div className="text-xs text-yellow-600 mt-1">Cukup Efektif</div>
+            <div className="text-xs text-yellow-600 mt-1">{t('guide.analyticsGuide.fairlyEffective')}</div>
           </div>
           <div className="bg-red-100 border border-red-300 rounded p-2 text-center">
             <div className="text-2xl font-bold text-red-700">&lt;60</div>
-            <div className="text-xs text-red-600 mt-1">Kurang Efektif</div>
+            <div className="text-xs text-red-600 mt-1">{t('guide.analyticsGuide.lessEffective')}</div>
           </div>
         </div>
       </div>
@@ -669,11 +669,10 @@ function AnalyticsSection() {
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
         <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-purple-600">download</span>
-          Ekspor Data Analitik
+          {t('guide.analyticsGuide.exportData')}
         </h3>
         <p className="text-sm text-slate-700">
-          Klik tombol <strong>"Ekspor Ringkasan"</strong> di kanan atas untuk download data ke CSV. 
-          File dapat dibuka dengan Excel atau Google Sheets.
+          {t('guide.analyticsGuide.exportDesc')} <strong>{t('guide.analyticsGuide.exportDescBold')}</strong> {t('guide.analyticsGuide.exportDescCont')}
         </p>
       </div>
     </div>
