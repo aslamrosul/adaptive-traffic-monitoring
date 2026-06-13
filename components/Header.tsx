@@ -3,6 +3,7 @@
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
 import SearchBar from "./SearchBar";
+import LanguageSwitcherSimple from "./LanguageSwitcherSimple";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -396,6 +397,8 @@ export default function Header({
           </div>
         </div>
         
+        <div className="hidden sm:block h-8 w-[1px] bg-white/30 mx-2"></div>
+        <LanguageSwitcherSimple />
         <div className="hidden sm:block h-8 w-[1px] bg-white/30 mx-2"></div>
         <ProfileDropdown />
       </div>

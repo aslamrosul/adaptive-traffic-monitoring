@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 interface ModalLaporanProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ModalLaporanProps {
 }
 
 export default function ModalLaporan({ isOpen, onClose }: ModalLaporanProps) {
+  const t = useT();
   const [formData, setFormData] = useState({
     lokasi: "",
     jenis: "Kemacetan",
@@ -19,7 +21,7 @@ export default function ModalLaporan({ isOpen, onClose }: ModalLaporanProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Laporan berhasil dibuat!", {
+    toast.success(t('reports.generated'), {
       icon: "✅",
       duration: 4000,
     });

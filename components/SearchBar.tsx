@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/useT";
 
 interface SearchBarProps {
   isMobile?: boolean;
@@ -23,6 +24,7 @@ export default function SearchBar({
   isMobile = false,
   autoFocus = false,
 }: SearchBarProps) {
+  const t = useT();
   const router = useRouter();
 
   const searchRef = useRef<HTMLDivElement>(null);
@@ -105,9 +107,9 @@ export default function SearchBar({
   };
 
   const getTypeLabel = (type: SearchResult["type"]) => {
-    if (type === "intersection") return "Persimpangan";
-    if (type === "device") return "Perangkat IoT";
-    return "Pengguna";
+    if (type === "intersection") return t('search.intersection');
+    if (type === "device") return t('search.device');
+    return t('search.user');
   };
 
   const getStatusClass = (status?: string) => {
@@ -159,7 +161,7 @@ export default function SearchBar({
               ? "text-slate-900 placeholder:text-slate-400"
               : "text-white placeholder:text-white/60"
           }`}
-          placeholder="Cari simpangan, device, atau pengguna..."
+          placeholder={t('search.placeholder')}
           type="text"
         />
 
@@ -197,8 +199,8 @@ export default function SearchBar({
             <div className="p-3 border-b border-slate-100 bg-slate-50">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 {isLoading
-                  ? "Mencari..."
-                  : `${results.length} hasil ditemukan`}
+                  ? t('search.searching')
+                  : `${results.length} ${t('search.resultsFound')}`}
               </p>
             </div>
 
@@ -206,7 +208,7 @@ export default function SearchBar({
               {isLoading ? (
                 <div className="p-8 text-center">
                   <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-slate-500">Mencari data...</p>
+                  <p className="text-sm text-slate-500">{t('search.searchingData')}</p>
                 </div>
               ) : results.length > 0 ? (
                 results.map((result) => (
@@ -250,7 +252,7 @@ export default function SearchBar({
                   </span>
 
                   <p className="text-sm text-slate-500 mt-2">
-                    Data tidak ditemukan
+                    {t('search.noDataFound')}
                   </p>
                 </div>
               )}

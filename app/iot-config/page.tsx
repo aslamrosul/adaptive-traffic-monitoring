@@ -5,8 +5,10 @@ import IoTConfigPanel from "@/components/IoTConfigPanel";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 export default function IoTConfigPage() {
+  const t = useT();
   const [intersections, setIntersections] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,11 +27,11 @@ export default function IoTConfigPage() {
 
       if (data.success) {
         setIntersections(data.data);
-        setSelectedIndex(0); // Always select first item
+        setSelectedIndex(0);
       }
     } catch (error) {
       console.error('Error loading intersections:', error);
-      toast.error('Gagal memuat data persimpangan');
+      toast.error(t('errors.loadData') || 'Gagal memuat data persimpangan');
     } finally {
       setIsLoading(false);
     }

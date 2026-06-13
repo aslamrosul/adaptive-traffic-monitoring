@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useT } from "@/lib/useT";
 
 interface ModalEditUserProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function ModalEditUser({
   onUpdate,
   user,
 }: ModalEditUserProps) {
+  const t = useT();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -83,8 +85,8 @@ export default function ModalEditUser({
                       <span className="material-symbols-outlined text-2xl">edit</span>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold font-headline">Edit Pengguna</h2>
-                      <p className="text-sm text-blue-100">Perbarui informasi pengguna</p>
+                      <h2 className="text-xl font-bold font-headline">{t('modals.editUser')}</h2>
+                      <p className="text-sm text-blue-100">{t('modals.editUserDesc')}</p>
                     </div>
                   </div>
                   <button
@@ -167,8 +169,8 @@ export default function ModalEditUser({
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                   >
-                    <option value="admin">Admin Pusat</option>
-                    <option value="operator">Operator Lapangan</option>
+                    <option value="admin">{t('modals.centralAdmin')}</option>
+                    <option value="operator">{t('modals.fieldOperator')}</option>
                   </select>
                 </div>
 
@@ -183,8 +185,8 @@ export default function ModalEditUser({
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                   >
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Tidak Aktif</option>
+                    <option value="active">{t('users.active')}</option>
+                    <option value="inactive">{t('users.inactive')}</option>
                   </select>
                 </div>
 
@@ -195,13 +197,13 @@ export default function ModalEditUser({
                     onClick={onClose}
                     className="flex-1 px-6 py-3 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   >
-                    Batal
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-primary/20"
                   >
-                    Simpan Perubahan
+                    {t('modals.saveChanges')}
                   </button>
                 </div>
               </form>

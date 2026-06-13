@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 import {
   CartesianGrid,
   Legend,
@@ -60,6 +61,7 @@ export default function QueueLevelByHourChart({
   intersectionId,
   lane = "all",
 }: QueueLevelByHourChartProps) {
+  const { t } = useTranslation();
   const [chartData, setChartData] = useState<HourlyData[]>([]);
   const [totalSamples, setTotalSamples] = useState(0);
   const [isLoading, setIsLoading] = useState(false);

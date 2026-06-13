@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import LanguageSwitcherSimple from "./LanguageSwitcherSimple";
 
 export default function LandingNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -173,6 +174,7 @@ export default function LandingNav() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3">
+          <LanguageSwitcherSimple />
           {status === "loading" ? (
             <div className="w-16 lg:w-20 h-8 lg:h-10 bg-slate-100 animate-pulse rounded-lg"></div>
           ) : session ? (

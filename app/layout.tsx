@@ -5,6 +5,7 @@ import ToastProvider from "@/components/Toast";
 import { Providers } from "./providers";
 import SessionProvider from "@/components/SessionProvider";
 import LoadingProvider from "@/components/LoadingProvider";
+import { TranslationProvider } from "@/providers/TranslationProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -17,7 +18,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "ASTRAEA - Sistem Pantauan Lalu Lintas",
+  title: "ASTRAEA - Adaptive Smart Traffic System",
   description: "Adaptive Traffic Light Monitoring System",
 };
 
@@ -35,14 +36,16 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${manrope.variable} font-body antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50`}>
-        <SessionProvider>
-          <Providers>
-            <LoadingProvider>
-              <ToastProvider />
-              {children}
-            </LoadingProvider>
-          </Providers>
-        </SessionProvider>
+        <TranslationProvider>
+          <SessionProvider>
+            <Providers>
+              <LoadingProvider>
+                <ToastProvider />
+                {children}
+              </LoadingProvider>
+            </Providers>
+          </SessionProvider>
+        </TranslationProvider>
       </body>
     </html>
   );

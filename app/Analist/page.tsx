@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
+import { useT } from "@/lib/useT";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -104,10 +105,12 @@ function calculateDateRange(
 }
 
 export default function AnalitikPage() {
+  const t = useT();
+
   useActivityLogger({
     type: "analytics.view",
-    action: "Membuka halaman analitik",
-    description: "Pengguna membuka dashboard analitik lalu lintas",
+    action: t('analytics.activityLog.action') || "Membuka halaman analitik",
+    description: t('analytics.activityLog.description') || "Pengguna membuka dashboard analitik lalu lintas",
   });
 
   const [selectedIntersection, setSelectedIntersection] =
@@ -385,7 +388,7 @@ export default function AnalitikPage() {
 
   const selectedIntersectionName = useMemo(() => {
     if (selectedIntersection === "all") {
-      return "Semua Persimpangan";
+      return t('intersections.allIntersections');
     }
 
     const intersection = intersections.find((item: any) => {
@@ -430,8 +433,8 @@ export default function AnalitikPage() {
     });
 
     toast.success(
-      `Persimpangan: ${
-        intersection?.name || "Semua Persimpangan"
+      `${t('intersections.name')}: ${
+        intersection?.name || t('intersections.allIntersections')
       }`,
     );
   };
@@ -440,13 +443,13 @@ export default function AnalitikPage() {
     setSelectedLane(value);
 
     const labels: Record<LaneFilter, string> = {
-      all: "Semua Jalur",
-      north: "Jalur Utara",
-      south: "Jalur Selatan",
-      east: "Jalur Timur",
+      all: t('traffic.allLanes') || "Semua Jalur",
+      north: t('traffic.northLane') || "Jalur Utara",
+      south: t('traffic.southLane') || "Jalur Selatan",
+      east: t('traffic.eastLane') || "Jalur Timur",
     };
 
-    toast.success(`Filter jalur: ${labels[value]}`);
+    toast.success(`${t('common.filter')}: ${labels[value]}`);
   };
 
   const handleExportSummary = () => {
@@ -567,7 +570,7 @@ export default function AnalitikPage() {
               disabled={loadingIntersections}
               className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 lg:px-4 lg:py-3 lg:text-sm"
             >
-              <option value="all">Semua Persimpangan</option>
+              <option value="all">{t('intersections.allIntersections')}</option>
 
               {intersections.map((intersection: any) => {
                 const id =
@@ -597,10 +600,10 @@ export default function AnalitikPage() {
               }
               className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 lg:px-4 lg:py-3 lg:text-sm"
             >
-              <option value="all">Semua Jalur</option>
-              <option value="north">Jalur Utara</option>
-              <option value="south">Jalur Selatan</option>
-              <option value="east">Jalur Timur</option>
+              <option value="all">{t('traffic.allLanes') || 'Semua Jalur'}</option>
+              <option value="north">{t('traffic.northLane') || 'Jalur Utara'}</option>
+              <option value="south">{t('traffic.southLane') || 'Jalur Selatan'}</option>
+              <option value="east">{t('traffic.eastLane') || 'Jalur Timur'}</option>
             </select>
           </div>
         </motion.section>

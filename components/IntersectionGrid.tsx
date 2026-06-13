@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTrafficStore } from "@/lib/store";
+import { useT } from "@/lib/useT";
 
 export default function IntersectionGrid() {
+  const t = useT();
   const router = useRouter();
   const { intersections, fetchIntersections, isLoading, isInitialLoad } = useTrafficStore();
 

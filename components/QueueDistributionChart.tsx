@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface DistributionItem {
   level: 0 | 1 | 2;
@@ -14,28 +15,30 @@ interface QueueDistributionChartProps {
   isLoading?: boolean;
 }
 
-const LEVEL_METADATA = {
-  0: {
-    label: "Lancar",
-    color: "#10b981",
-    className: "bg-emerald-500",
-  },
-  1: {
-    label: "Sedang",
-    color: "#f59e0b",
-    className: "bg-amber-500",
-  },
-  2: {
-    label: "Padat",
-    color: "#ef4444",
-    className: "bg-red-500",
-  },
-};
-
 export default function QueueDistributionChart({
   data,
   isLoading = false,
 }: QueueDistributionChartProps) {
+  const { t } = useTranslation();
+  
+  const LEVEL_METADATA = useMemo(() => ({
+    0: {
+      label: t('traffic.smooth'),
+      color: "#10b981",
+      className: "bg-emerald-500",
+    },
+    1: {
+      label: t('traffic.moderate'),
+      color: "#f59e0b",
+      className: "bg-amber-500",
+    },
+    2: {
+      label: t('traffic.congested'),
+      color: "#ef4444",
+      className: "bg-red-500",
+    },
+  }), [t]);
+  
   const normalizedData = useMemo(() => {
     return ([0, 1, 2] as const).map((level) => {
       const item = data.find((current) => current.level === level);
@@ -76,7 +79,7 @@ export default function QueueDistributionChart({
         <div className="text-center">
           <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
           <p className="text-sm text-slate-500">
-            Memuat distribusi antrian...
+            {t('charts.loadingData')}
           </p>
         </div>
       </div>
@@ -91,16 +94,16 @@ export default function QueueDistributionChart({
     >
       <div>
         <h3 className="text-lg font-bold text-slate-900">
-          Distribusi Antrian
+          {t('charts.queueDistributionTitle')}
         </h3>
 
         <p className="mt-1 text-xs text-slate-500">
-          Persentase sampel berdasarkan level antrean.
+          {t('charts.queueDistributionSubtitle')}
         </p>
       </div>
 
       {total === 0 ? (
-        <EmptyState message="Belum ada data distribusi pada periode ini." />
+        <EmptyState message={t('charts.noDataPeriod')} />
       ) : (
         <>
           <div className="my-7 flex justify-center">
@@ -114,7 +117,7 @@ export default function QueueDistributionChart({
                 </span>
 
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Sampel
+                  {t('charts.samples')}
                 </span>
               </div>
             </div>
@@ -151,7 +154,7 @@ export default function QueueDistributionChart({
                 </div>
 
                 <p className="mt-2 text-xs text-slate-500">
-                  {item.count.toLocaleString("id-ID")} sampel
+                  {item.count.toLocaleString("id-ID")} {t('charts.samples')}
                 </p>
               </div>
             ))}

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 type TrafficLane = Exclude<LaneFilter, "all">;
@@ -32,9 +33,9 @@ interface HeatmapItem {
 }
 
 const LANE_LABELS: Record<TrafficLane, string> = {
-  north: "Jalur Utara",
-  south: "Jalur Selatan",
-  east: "Jalur Timur",
+  north: "North",
+  south: "South",
+  east: "East",
 };
 
 const LANES: TrafficLane[] = [
@@ -94,6 +95,7 @@ export default function QueueHourlyHeatmap({
   intersectionId,
   lane = "all",
 }: QueueHourlyHeatmapProps) {
+  const { t } = useTranslation();
   const [hours, setHours] = useState<HourlyData[]>([]);
   const [totalSamples, setTotalSamples] = useState(0);
 

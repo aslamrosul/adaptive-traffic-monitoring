@@ -9,6 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
+import { useT } from "@/lib/useT";
 
 import type {
   DateRange,
@@ -48,12 +49,13 @@ function pickNewestTraffic(
 }
 
 export default function DashboardPage() {
+  const t = useT();
   const { timezone } = useAppSettings();
 
   useActivityLogger({
     type: "dashboard.view",
-    action: "Membuka dashboard monitoring",
-    description: "Pengguna membuka halaman dashboard realtime",
+    action: t('dashboard.activityLog.action') || "Membuka dashboard monitoring",
+    description: t('dashboard.activityLog.description') || "Pengguna membuka halaman dashboard realtime",
   });
 
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
@@ -149,7 +151,7 @@ export default function DashboardPage() {
 
   const selectedIntersectionName = useMemo(() => {
     if (selectedIntersection === "all") {
-      return "Semua Persimpangan";
+      return t('intersections.allIntersections') || "Semua Persimpangan";
     }
 
     const intersection = intersections.find(

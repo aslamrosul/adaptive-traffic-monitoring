@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface IoTConfig {
   device_id?: string;
@@ -72,6 +73,7 @@ export default function IoTConfigPanel({
   intersectionId,
   onConfigSaved,
 }: IoTConfigPanelProps) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<IoTConfig>(() =>
     createDefaultConfig(deviceId, intersectionId)
   );
@@ -122,7 +124,7 @@ export default function IoTConfigPanel({
       }
 
       throw new Error(
-        data.error || "Gagal mengambil konfigurasi perangkat"
+        data.error || t('iot.configPanel.loadingError')
       );
     } catch (error: any) {
       console.error("Error loading IoT config:", error);
@@ -130,8 +132,7 @@ export default function IoTConfigPanel({
       setConfig(createDefaultConfig(deviceId, intersectionId));
 
       toast.error(
-        error.message ||
-          "Gagal mengambil konfigurasi perangkat"
+        error.message || t('iot.configPanel.loadingError')
       );
     } finally {
       setIsLoading(false);
@@ -181,20 +182,16 @@ export default function IoTConfigPanel({
 
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error || "Gagal menyimpan konfigurasi"
+          data.error || t('errors.saveConfig')
         );
       }
 
       setConfig(data.data);
 
       if (data.mqttSent) {
-        toast.success(
-          "Konfigurasi berhasil disimpan dan dikirim ke ESP32"
-        );
+        toast.success(t('iot.configPanel.saveSuccess'));
       } else {
-        toast.error(
-          "Konfigurasi tersimpan, tetapi sebagian topic MQTT gagal dikirim"
-        );
+        toast.error(t('iot.configPanel.savePartialSuccess'));
       }
 
       onConfigSaved?.(data.data);
@@ -202,8 +199,7 @@ export default function IoTConfigPanel({
       console.error("Error saving IoT config:", error);
 
       toast.error(
-        error.message ||
-          "Terjadi kesalahan saat menyimpan konfigurasi"
+        error.message || t('iot.configPanel.savingError')
       );
     } finally {
       setIsSaving(false);
@@ -234,25 +230,24 @@ export default function IoTConfigPanel({
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2">
         <div>
           <h3 className="text-base font-bold text-slate-900 lg:text-lg">
-            Konfigurasi Perangkat
+            {t('iot.configPanel.title')}
           </h3>
 
           <p className="text-xs text-slate-500 mt-0.5 lg:text-sm lg:mt-1">
-            Konfigurasi disimpan ke DynamoDB dan dikirim ke ESP32
-            melalui Mosquitto MQTT.
+            {t('iot.configPanel.subtitle')}
           </p>
         </div>
 
         <span
           className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase shrink-0 ${syncStatusClass}`}
         >
-          Sync: {config.lastSyncStatus || "pending"}
+          {t('iot.configPanel.sync')}: {t(`iot.configPanel.${config.lastSyncStatus || 'pending'}`)}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3 lg:gap-3 lg:p-4">
-        <InfoItem label="Device ID" value={deviceId} />
-        <InfoItem label="Intersection ID" value={intersectionId || "-"} />
+        <InfoItem label={t('iot.deviceId')} value={deviceId} />
+        <InfoItem label={t('iot.configPanel.intersectionId')} value={intersectionId || "-"} />
       </div>
 
       <section>
@@ -262,30 +257,30 @@ export default function IoTConfigPanel({
           </span>
 
           <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-            Waktu Lampu Manual
+            {t('iot.configPanel.manualTimings')}
           </h4>
         </div>
 
         <div className="grid grid-cols-2 gap-3 lg:gap-4">
           <NumberInput
-            label="Waktu Hijau Manual"
-            description="Digunakan ketika Adaptive Mode dimatikan."
+            label={t('iot.configPanel.manualGreen')}
+            description={t('iot.configPanel.manualGreenDesc')}
             value={config.greenTime}
             min={1}
             max={120}
-            suffix="detik"
+            suffix={t('iot.configPanel.seconds')}
             onChange={(value) =>
               updateNumber("greenTime", value)
             }
           />
 
           <NumberInput
-            label="Waktu Lampu Kuning"
-            description="Durasi transisi sebelum berganti jalur."
+            label={t('iot.configPanel.yellowTime')}
+            description={t('iot.configPanel.yellowTimeDesc')}
             value={config.yellowTime}
             min={1}
             max={30}
-            suffix="detik"
+            suffix={t('iot.configPanel.seconds')}
             onChange={(value) =>
               updateNumber("yellowTime", value)
             }
@@ -300,42 +295,42 @@ export default function IoTConfigPanel({
           </span>
 
           <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-            Durasi Hijau Berdasarkan Density
+            {t('iot.configPanel.densityBasedDuration')}
           </h4>
         </div>
 
         <div className="grid grid-cols-3 gap-2 lg:gap-4">
           <NumberInput
-            label="Density Level 0"
-            description="Tidak ada atau sangat sedikit kendaraan."
+            label={t('iot.configPanel.densityLevel0')}
+            description={t('iot.configPanel.densityLevel0Desc')}
             value={config.densityLevel0Green}
             min={1}
             max={120}
-            suffix="detik"
+            suffix={t('iot.configPanel.seconds')}
             onChange={(value) =>
               updateNumber("densityLevel0Green", value)
             }
           />
 
           <NumberInput
-            label="Density Level 1"
-            description="Antrian kendaraan sedang."
+            label={t('iot.configPanel.densityLevel1')}
+            description={t('iot.configPanel.densityLevel1Desc')}
             value={config.densityLevel1Green}
             min={1}
             max={120}
-            suffix="detik"
+            suffix={t('iot.configPanel.seconds')}
             onChange={(value) =>
               updateNumber("densityLevel1Green", value)
             }
           />
 
           <NumberInput
-            label="Density Level 2"
-            description="Antrian kendaraan padat."
+            label={t('iot.configPanel.densityLevel2')}
+            description={t('iot.configPanel.densityLevel2Desc')}
             value={config.densityLevel2Green}
             min={1}
             max={120}
-            suffix="detik"
+            suffix={t('iot.configPanel.seconds')}
             onChange={(value) =>
               updateNumber("densityLevel2Green", value)
             }
@@ -350,14 +345,14 @@ export default function IoTConfigPanel({
           </span>
 
           <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-            Mode Operasi
+            {t('iot.configPanel.operatingMode')}
           </h4>
         </div>
 
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <ToggleCard
-            title="Auto Mode"
-            description="Lampu berganti jalur secara otomatis."
+            title={t('iot.configPanel.autoMode')}
+            description={t('iot.configPanel.autoModeDesc')}
             checked={config.autoMode}
             onChange={(checked) =>
               setConfig((current) => ({
@@ -368,8 +363,8 @@ export default function IoTConfigPanel({
           />
 
           <ToggleCard
-            title="Adaptive Mode"
-            description="Durasi hijau mengikuti density level."
+            title={t('iot.configPanel.adaptiveMode')}
+            description={t('iot.configPanel.adaptiveModeDesc')}
             checked={config.adaptiveMode}
             onChange={(checked) =>
               setConfig((current) => ({
@@ -384,7 +379,7 @@ export default function IoTConfigPanel({
       {config.lastSyncedAt && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4">
           <p className="text-xs text-green-700 font-semibold">
-            Terakhir dikirim ke MQTT
+            {t('iot.configPanel.lastSyncedAt')}
           </p>
 
           <p className="text-sm text-green-900 mt-1">
@@ -400,7 +395,7 @@ export default function IoTConfigPanel({
         config.lastSyncErrors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <p className="text-sm font-bold text-red-800 mb-2">
-              Topic yang gagal dikirim
+              {t('iot.configPanel.failedTopics')}
             </p>
 
             <div className="space-y-1">
@@ -409,7 +404,7 @@ export default function IoTConfigPanel({
                   key={error.topic}
                   className="text-xs text-red-700"
                 >
-                  {error.topic}: {error.error || "Unknown error"}
+                  {error.topic}: {error.error || t('iot.configPanel.unknownError')}
                 </p>
               ))}
             </div>
@@ -426,14 +421,14 @@ export default function IoTConfigPanel({
           {isSaving ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Menyimpan dan mengirim...
+              {t('iot.configPanel.saving')}
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-lg">
                 send
               </span>
-              Simpan & Kirim ke ESP32
+              {t('iot.configPanel.saveAndSend')}
             </>
           )}
         </motion.button>
@@ -444,7 +439,7 @@ export default function IoTConfigPanel({
           disabled={isSaving}
           className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-all disabled:opacity-50"
         >
-          Muat Ulang
+          {t('iot.configPanel.reload')}
         </button>
       </div>
     </div>

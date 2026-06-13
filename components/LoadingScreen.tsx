@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/useT";
 
 const COLORS = [
   { bg: "rgb(239,68,68)",   shadow: "0 0 20px rgba(239,68,68,0.9), 0 0 40px rgba(239,68,68,0.4)" },
@@ -11,6 +12,7 @@ const COLORS = [
 ];
 
 export default function LoadingScreen() {
+  const t = useT();
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function LoadingScreen() {
           ASTRAEA
         </h1>
         <p className="text-base md:text-lg text-slate-500 font-medium">
-          Sistem Pantauan Lalu Lintas
+          {t('loading.systemMonitoring')}
         </p>
       </motion.div>
 

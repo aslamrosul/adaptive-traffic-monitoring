@@ -6,9 +6,12 @@ import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { useT } from "@/lib/useT";
+import LanguageSwitcherSimple from "@/components/LanguageSwitcherSimple";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useT();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -21,12 +24,12 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Password tidak cocok");
+      toast.error(t('auth.passwordMismatch'));
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error("Password minimal 6 karakter");
+      toast.error(t('auth.passwordMinLength') || 'Password minimal 6 karakter');
       return;
     }
 
@@ -48,13 +51,13 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Registrasi berhasil! Silakan login");
+        toast.success(t('auth.accountCreated'));
         router.push("/login");
       } else {
-        toast.error(result.error || "Gagal registrasi");
+        toast.error(result.error || t('errors.general'));
       }
     } catch (error: any) {
-      toast.error(error.message || "Gagal registrasi");
+      toast.error(error.message || t('errors.general'));
     } finally {
       setIsLoading(false);
     }
@@ -68,19 +71,24 @@ export default function RegisterPage() {
         className="w-full max-w-md"
       >
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Language Switcher */}
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcherSimple />
+          </div>
+
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black text-blue-800 tracking-tighter font-headline mb-2">
-              ASTRAEA
+              {t('common.appName')}
             </h1>
-            <p className="text-slate-600 text-sm">Daftar Akun Baru</p>
+            <p className="text-slate-600 text-sm">{t('auth.registerSubtitle')}</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Nama Lengkap
+                {t('profile.fullName')}
               </label>
               <input
                 type="text"
@@ -97,7 +105,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Email
+                {t('auth.email')}
               </label>
               <input
                 type="email"
@@ -114,7 +122,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Password
+                {t('auth.password')}
               </label>
               <input
                 type="password"
@@ -129,13 +137,13 @@ export default function RegisterPage() {
                 minLength={6}
               />
               <p className="text-xs text-slate-500 mt-1">
-                Minimal 6 karakter
+                {t('auth.passwordMinLength') || 'Minimal 6 karakter'}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Konfirmasi Password
+                {t('auth.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -160,10 +168,10 @@ export default function RegisterPage() {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Memproses...
+                  {t('common.loading')}
                 </span>
               ) : (
-                "Daftar"
+                t('auth.register')
               )}
             </motion.button>
           </form>
@@ -174,7 +182,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-slate-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Atau</span>
+              <span className="px-2 bg-white text-slate-500">{t('common.or')}</span>
             </div>
           </div>
 
@@ -204,18 +212,18 @@ export default function RegisterPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Daftar dengan Google
+            {t('auth.registerWithGoogle') || 'Daftar dengan Google'}
           </motion.button>
 
           {/* Login Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600">
-              Sudah punya akun?{" "}
+              {t('auth.alreadyHaveAccount')}{" "}
               <Link
                 href="/login"
                 className="text-primary font-semibold hover:underline"
               >
-                Masuk di sini
+                {t('auth.signInHere')}
               </Link>
             </p>
           </div>

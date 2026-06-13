@@ -3,12 +3,14 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useT } from "@/lib/useT";
 
 export default function PanduanPage() {
+  const t = useT();
   const [activeSection, setActiveSection] = useState("overview");
 
   return (
-    <DashboardLayout title="Panduan Penggunaan Sistem">
+    <DashboardLayout title={t('navigation.guide')}>
       <div className="p-3 lg:p-6 max-w-[1920px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -22,10 +24,10 @@ export default function PanduanPage() {
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl lg:text-4xl font-black mb-2">
-                  Panduan Penggunaan Sistem
+                  {t('help.systemGuide') || 'Panduan Penggunaan Sistem'}
                 </h1>
                 <p className="text-blue-100 text-sm lg:text-base">
-                  Petunjuk lengkap penggunaan dan konfigurasi Adaptive Traffic Monitoring System
+                  {t('help.systemGuideDesc') || 'Petunjuk lengkap penggunaan dan konfigurasi Adaptive Traffic Monitoring System'}
                 </p>
               </div>
             </div>

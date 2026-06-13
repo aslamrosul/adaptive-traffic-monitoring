@@ -1,17 +1,18 @@
 "use client";
 
 import QueueLevelIndicator from "./QueueLevelIndicator";
-import { motion } from "framer-motion";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 export default function QueueLevelIndicatorDemo() {
+  const { t } = useTranslation();
   return (
     <div className="space-y-8 p-6 bg-slate-50 rounded-xl">
       <div>
         <h3 className="text-lg font-bold text-slate-900 mb-4">
-          QueueLevelIndicator Component Demo
+          {t('common.appName')} QueueLevelIndicator Component Demo
         </h3>
         <p className="text-sm text-slate-600 mb-6">
-          Reusable component untuk menampilkan queue level dengan berbagai size
+          {t('traffic.queue')} level indicator with multiple sizes
         </p>
       </div>
 

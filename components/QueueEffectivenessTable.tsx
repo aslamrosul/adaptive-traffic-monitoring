@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -45,6 +46,7 @@ export default function QueueEffectivenessTable({
   intersectionId = "all",
   lane = "all",
 }: QueueEffectivenessTableProps) {
+  const t = useT();
   const [tableData, setTableData] = useState<RowData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -170,9 +172,9 @@ export default function QueueEffectivenessTable({
   };
 
   const getLevelName = (level: number) => {
-    if (level === 0) return "Lancar";
-    if (level === 1) return "Sedang";
-    return "Padat";
+    if (level === 0) return t('traffic.smooth');
+    if (level === 1) return t('traffic.moderate');
+    return t('traffic.congested');
   };
 
   const getLevelBadgeClass = (level: number) => {
@@ -188,8 +190,8 @@ export default function QueueEffectivenessTable({
   };
 
   const getEffectivenessLabel = (value: number) => {
-    if (value >= 95) return "Sangat Efektif";
-    if (value >= 85) return "Efektif";
+    if (value >= 95) return t('charts.effectiveness') + " Tinggi";
+    if (value >= 85) return t('charts.effectiveness');
     if (value >= 70) return "Cukup";
     return "Perlu Evaluasi";
   };
@@ -202,18 +204,18 @@ export default function QueueEffectivenessTable({
 
   const exportToCsv = () => {
     if (sortedData.length === 0) {
-      toast.error("Tidak ada data untuk diekspor");
+      toast.error(t('errors.noData'));
       return;
     }
 
     const headers = [
-      "Jalur",
+      t('traffic.lane'),
       "Queue Level",
-      "Kondisi",
-      "Jumlah Sampel",
-      "Rata-rata Durasi Aktual",
-      "Target Durasi",
-      "Efektivitas",
+      t('traffic.queue'),
+      t('charts.samples'),
+      t('charts.actualDuration'),
+      t('charts.targetDuration'),
+      t('charts.effectiveness'),
     ];
 
     const rows = sortedData.map((row) => [
@@ -247,7 +249,7 @@ export default function QueueEffectivenessTable({
 
     URL.revokeObjectURL(url);
 
-    toast.success("Data berhasil diekspor");
+    toast.success(t('success.downloaded'));
   };
 
   const SortIcon = ({ column }: { column: keyof RowData }) => {
@@ -272,11 +274,11 @@ export default function QueueEffectivenessTable({
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900 lg:text-xl">
-            Efektivitas Durasi Hijau per Jalur
+            {t('charts.queueEffectivenessTitle')}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500 lg:text-sm">
-            Perbandingan durasi aktual terhadap target setiap level antrian.
+            {t('charts.queueEffectivenessSubtitle')}
           </p>
         </div>
 
@@ -287,7 +289,7 @@ export default function QueueEffectivenessTable({
           className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
-          Ekspor CSV
+          {t('common.export')} CSV
         </button>
       </div>
 
@@ -297,7 +299,7 @@ export default function QueueEffectivenessTable({
             <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
 
             <p className="text-sm text-slate-500">
-              Memuat tabel efektivitas...
+              {t('charts.loadingData')}
             </p>
           </div>
         </div>
@@ -308,7 +310,7 @@ export default function QueueEffectivenessTable({
           </span>
 
           <p className="mt-2 font-bold text-red-700">
-            Data gagal dimuat
+            {t('errors.loadData')}
           </p>
 
           <p className="mt-1 text-sm text-red-600">{error}</p>
@@ -320,11 +322,11 @@ export default function QueueEffectivenessTable({
           </span>
 
           <p className="mt-2 font-bold text-slate-700">
-            Belum ada data efektivitas
+            {t('charts.noDataAvailable')}
           </p>
 
           <p className="mt-1 text-sm text-slate-500">
-            Tidak ditemukan telemetry pada filter yang dipilih.
+            {t('charts.noTelemetryFound')}
           </p>
         </div>
       ) : (
@@ -339,7 +341,7 @@ export default function QueueEffectivenessTable({
                       onClick={() => handleSort("lane")}
                       className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Jalur
+                      {t('traffic.lane')}
                       <SortIcon column="lane" />
                     </button>
                   </th>
@@ -350,7 +352,7 @@ export default function QueueEffectivenessTable({
                       onClick={() => handleSort("queueLevel")}
                       className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Level
+                      {t('charts.level')}
                       <SortIcon column="queueLevel" />
                     </button>
                   </th>
@@ -361,7 +363,7 @@ export default function QueueEffectivenessTable({
                       onClick={() => handleSort("count")}
                       className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Sampel
+                      {t('charts.samples')}
                       <SortIcon column="count" />
                     </button>
                   </th>
@@ -372,14 +374,14 @@ export default function QueueEffectivenessTable({
                       onClick={() => handleSort("avgGreenDuration")}
                       className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Aktual
+                      {t('charts.actual')}
                       <SortIcon column="avgGreenDuration" />
                     </button>
                   </th>
 
                   <th className="px-4 py-3 text-right">
                     <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
-                      Target
+                      {t('charts.target')}
                     </span>
                   </th>
 
@@ -389,7 +391,7 @@ export default function QueueEffectivenessTable({
                       onClick={() => handleSort("effectiveness")}
                       className="ml-auto flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-600"
                     >
-                      Efektivitas
+                      {t('charts.effectiveness')}
                       <SortIcon column="effectiveness" />
                     </button>
                   </th>

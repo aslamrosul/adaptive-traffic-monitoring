@@ -5,8 +5,11 @@ import LandingNav from "@/components/LandingNav";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="bg-white text-slate-900 antialiased">
       <LandingNav />
@@ -30,19 +33,19 @@ export default function LandingPage() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                   </span>
-                  Smart City Ready
+                  {t('landing.smartCityReady')}
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4 md:mb-6">
-                  Revolusi Manajemen{" "}
+                  {t('landing.heroTitle').split(' ').slice(0, 2).join(' ')}{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
-                    Lalu Lintas
+                    {t('landing.heroTitle').split(' ').slice(2, 4).join(' ')}
                   </span>{" "}
-                  Kota Anda
+                  {t('landing.heroTitle').split(' ').slice(4).join(' ')}
                 </h1>
 
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 mb-6 md:mb-8 leading-relaxed">
-                  ASTRAEA memanfaatkan kekuatan IoT dan AI untuk mengoptimalkan durasi lampu lalu lintas secara otomatis berdasarkan kepadatan kendaraan aktual, mengurangi kemacetan hingga 40%.
+                  {t('landing.heroDescription')}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -50,14 +53,14 @@ export default function LandingPage() {
                     href="#tentang-kami"
                     className="inline-flex justify-center items-center px-6 sm:px-8 py-3 md:py-4 text-sm md:text-base font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5"
                   >
-                    Pelajari Lebih Lanjut
+                    {t('landing.learnMore')}
                     <span className="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
                   </Link>
                   <a
                     href="#tim-kami"
                     className="inline-flex justify-center items-center px-6 sm:px-8 py-3 md:py-4 text-sm md:text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
                   >
-                    Lihat Tim Kami
+                    {t('landing.viewTeam')}
                   </a>
                 </div>
               </motion.div>
@@ -87,7 +90,7 @@ export default function LandingPage() {
                     <span className="material-symbols-outlined text-lg md:text-xl">trending_down</span>
                   </div>
                   <div>
-                    <p className="text-xs md:text-sm text-slate-500 font-medium">Pengurangan Antrean</p>
+                    <p className="text-xs md:text-sm text-slate-500 font-medium">{t('landing.queueReduction')}</p>
                     <p className="text-lg md:text-xl font-bold text-slate-900">-42%</p>
                   </div>
                 </motion.div>
@@ -107,10 +110,10 @@ export default function LandingPage() {
               className="text-center max-w-3xl mx-auto mb-8 md:mb-16"
             >
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 md:mb-4 tracking-tight">
-                Kecerdasan Buatan untuk Mobilitas Lebih Baik
+                {t('landing.featuresTitle')}
               </h2>
               <p className="text-sm sm:text-base md:text-lg text-slate-600">
-                Fitur komprehensif kami dirancang untuk menangani kompleksitas lalu lintas perkotaan modern dengan presisi tinggi.
+                {t('landing.featuresSubtitle')}
               </p>
             </motion.div>
 
@@ -128,9 +131,9 @@ export default function LandingPage() {
                     multiline_chart
                   </span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Monitoring Real-time</h3>
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">{t('landing.realtimeMonitoring')}</h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-                  Pantau 4 simpangan atau lebih secara langsung melalui dashboard terpusat. Visibilitas penuh atas kondisi jalan raya setiap detik.
+                  {t('landing.realtimeMonitoringDesc')}
                 </p>
               </motion.div>
 
@@ -147,9 +150,9 @@ export default function LandingPage() {
                     psychology
                   </span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Adaptif AI</h3>
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">{t('landing.adaptiveAI')}</h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-                  Penyesuaian waktu lampu hijau otomatis. AI menganalisis jumlah kendaraan dan memprioritaskan jalur yang padat secara dinamis.
+                  {t('landing.adaptiveAIDesc')}
                 </p>
               </motion.div>
 
@@ -166,9 +169,9 @@ export default function LandingPage() {
                     query_stats
                   </span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Analitik Cerdas</h3>
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">{t('landing.smartAnalytics')}</h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-                  Laporan data mendalam. Pola lalu lintas historis untuk membantu pengambil keputusan dalam perencanaan kota jangka panjang.
+                  {t('landing.smartAnalyticsDesc')}
                 </p>
               </motion.div>
 
@@ -185,9 +188,9 @@ export default function LandingPage() {
                     health_and_safety
                   </span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Fail-safe Mode</h3>
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">{t('landing.failSafeMode')}</h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-                  Keamanan terjamin. Sistem secara otomatis kembali ke pengaturan waktu default yang aman jika sensor IoT mengalami gangguan koneksi.
+                  {t('landing.failSafeModeDesc')}
                 </p>
               </motion.div>
             </div>
@@ -206,16 +209,16 @@ export default function LandingPage() {
                 className="order-2 lg:order-1"
               >
                 <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-xs md:text-sm mb-2 md:mb-3">
-                  Tentang Kami
+                  {t('landing.aboutUs')}
                 </h2>
                 <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4 md:mb-6">
-                  Misi Kami Merevolusi Mobilitas Perkotaan
+                  {t('landing.ourMission')}
                 </h3>
                 <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed mb-4 md:mb-6">
-                  ASTRAEA adalah sistem manajemen lalu lintas cerdas yang mengintegrasikan kecerdasan buatan dengan armada drone otonom. Kami percaya bahwa teknologi dapat menyelesaikan tantangan transportasi modern yang semakin kompleks.
+                  {t('landing.aboutDescription1')}
                 </p>
                 <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed">
-                  Platform kami dirancang untuk membantu pemerintah kota dan otoritas transportasi dalam memantau, menganalisis, dan mengoptimalkan arus lalu lintas secara real-time, menciptakan jalan raya yang lebih aman dan efisien bagi semua orang.
+                  {t('landing.aboutDescription2')}
                 </p>
               </motion.div>
 
@@ -247,13 +250,13 @@ export default function LandingPage() {
               className="text-center max-w-3xl mx-auto mb-8 md:mb-16"
             >
               <h2 className="text-blue-600 font-semibold tracking-wide uppercase text-xs md:text-sm mb-2 md:mb-3">
-                Tim Kami
+                {t('landing.ourTeam')}
               </h2>
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3 md:mb-4">
-                Para Inovator di Balik ASTRAEA
+                {t('landing.teamTitle')}
               </h3>
               <p className="text-sm sm:text-base md:text-lg text-slate-600">
-                Dedikasi kami untuk menciptakan solusi teknologi yang berdampak nyata bagi masyarakat.
+                {t('landing.teamSubtitle')}
               </p>
             </motion.div>
 

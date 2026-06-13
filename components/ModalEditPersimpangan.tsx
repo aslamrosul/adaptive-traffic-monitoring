@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface ModalEditPersimpanganProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function ModalEditPersimpangan({
   onSuccess,
   intersection,
 }: ModalEditPersimpanganProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [devices, setDevices] = useState<any[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
@@ -127,15 +129,15 @@ export default function ModalEditPersimpangan({
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Persimpangan berhasil diupdate!");
+        toast.success(t('intersections.editSuccess'));
         onSuccess();
         onClose();
       } else {
-        toast.error(data.error || "Gagal mengupdate persimpangan");
+        toast.error(data.error || t('errors.general'));
       }
     } catch (error) {
       console.error("Error updating intersection:", error);
-      toast.error("Terjadi kesalahan saat mengupdate persimpangan");
+      toast.error(t('errors.general'));
     } finally {
       setIsLoading(false);
     }
@@ -167,10 +169,10 @@ export default function ModalEditPersimpangan({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-headline font-bold">
-                    Edit Persimpangan
+                    {t('modals.editIntersection')}
                   </h3>
                   <p className="text-sm text-white/80 mt-1">
-                    Update data persimpangan
+                    {t('modals.editIntersectionDesc')}
                   </p>
                 </div>
                 <button
@@ -189,7 +191,7 @@ export default function ModalEditPersimpangan({
                 {/* Nama Persimpangan */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Nama Persimpangan <span className="text-red-500">*</span>
+                    {t('intersections.name')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -197,7 +199,7 @@ export default function ModalEditPersimpangan({
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    placeholder="Contoh: Persimpangan Sudirman-Thamrin"
+                    placeholder={t('intersections.name')}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -205,7 +207,7 @@ export default function ModalEditPersimpangan({
                 {/* Alamat */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Alamat <span className="text-red-500">*</span>
+                    {t('intersections.address')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -213,7 +215,7 @@ export default function ModalEditPersimpangan({
                     value={formData.address}
                     onChange={handleChange}
                     required
-                    placeholder="Contoh: Jl. Sudirman - Jl. Thamrin, Jakarta Pusat"
+                    placeholder={t('intersections.address')}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -222,7 +224,7 @@ export default function ModalEditPersimpangan({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Latitude
+                      {t('intersections.latitude')}
                     </label>
                     <input
                       type="number"
@@ -236,7 +238,7 @@ export default function ModalEditPersimpangan({
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Longitude
+                      {t('intersections.longitude')}
                     </label>
                     <input
                       type="number"
@@ -253,12 +255,12 @@ export default function ModalEditPersimpangan({
                 {/* Device ID - Dropdown or Manual Input */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Device ID <span className="text-red-500">*</span>
+                    {t('iot.deviceId')} <span className="text-red-500">*</span>
                   </label>
                   {loadingDevices ? (
                     <div className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span className="text-sm text-slate-500">Memuat device dari IoT Hub...</span>
+                      <span className="text-sm text-slate-500">{t('modals.loadingDevices')}</span>
                     </div>
                   ) : availableDevices.length > 0 ? (
                     <>
@@ -269,7 +271,7 @@ export default function ModalEditPersimpangan({
                         required
                         className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="">-- Pilih Device --</option>
+                        <option value="">-- {t('modals.selectDevice')} --</option>
                         {availableDevices.map((device) => (
                           <option key={device.deviceId} value={device.deviceId}>
                             {device.deviceId} {device.connectionState === 'Connected' ? '🟢' : '⚪'}
@@ -277,7 +279,7 @@ export default function ModalEditPersimpangan({
                         ))}
                       </select>
                       <p className="text-xs text-slate-500 mt-1">
-                        Hanya menampilkan device yang belum digunakan
+                        {t('modals.deviceInfo')}
                       </p>
                     </>
                   ) : (
@@ -288,13 +290,12 @@ export default function ModalEditPersimpangan({
                         value={formData.deviceId}
                         onChange={handleChange}
                         required
-                        placeholder="Contoh: esp32-traffic-monitor"
+                        placeholder="esp32-traffic-monitor"
                         className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <div className="mt-2 p-3 border border-amber-300 rounded-lg bg-amber-50">
                         <p className="text-xs text-amber-800">
-                          ⚠️ Tidak dapat memuat device dari IoT Hub atau semua device sudah digunakan. 
-                          Masukkan Device ID secara manual.
+                          ⚠️ {t('modals.noDevicesAvailable')}
                         </p>
                       </div>
                     </>
@@ -305,7 +306,7 @@ export default function ModalEditPersimpangan({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Status
+                      {t('intersections.status')}
                     </label>
                     <select
                       name="status"
@@ -313,14 +314,14 @@ export default function ModalEditPersimpangan({
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="active">Active</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="active">{t('intersections.active')}</option>
+                      <option value="maintenance">{t('intersections.maintenance')}</option>
+                      <option value="inactive">{t('intersections.inactive')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Mode Operasi
+                      {t('modals.operatingMode')}
                     </label>
                     <select
                       name="configMode"
@@ -328,8 +329,8 @@ export default function ModalEditPersimpangan({
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="auto">Auto</option>
-                      <option value="manual">Manual</option>
+                      <option value="auto">{t('trafficControl.autoMode')}</option>
+                      <option value="manual">{t('trafficControl.manualMode')}</option>
                     </select>
                   </div>
                 </div>
@@ -337,7 +338,7 @@ export default function ModalEditPersimpangan({
                 {/* Jumlah Jalur */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Jumlah Jalur
+                    {t('modals.lanesCount')}
                   </label>
                   <select
                     name="lanesCount"
@@ -345,10 +346,10 @@ export default function ModalEditPersimpangan({
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="3">3 Jalur</option>
-                    <option value="4">4 Jalur</option>
-                    <option value="5">5 Jalur</option>
-                    <option value="6">6 Jalur</option>
+                    <option value="3">3 {t('modals.lanes')}</option>
+                    <option value="4">4 {t('modals.lanes')}</option>
+                    <option value="5">5 {t('modals.lanes')}</option>
+                    <option value="6">6 {t('modals.lanes')}</option>
                   </select>
                 </div>
               </div>
@@ -361,7 +362,7 @@ export default function ModalEditPersimpangan({
                   disabled={isLoading}
                   className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-50 transition-colors disabled:opacity-50"
                 >
-                  Batal
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -371,12 +372,12 @@ export default function ModalEditPersimpangan({
                   {isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Menyimpan...</span>
+                      <span>{t('modals.saving')}</span>
                     </>
                   ) : (
                     <>
                       <span className="material-symbols-outlined text-sm">save</span>
-                      <span>Simpan Perubahan</span>
+                      <span>{t('modals.saveChanges')}</span>
                     </>
                   )}
                 </button>

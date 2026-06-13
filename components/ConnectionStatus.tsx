@@ -7,6 +7,7 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
+import { useT } from "@/lib/useT";
 
 interface ConnectionStatusProps {
   connectionState: ConnectionState;
@@ -27,6 +28,7 @@ export default function ConnectionStatus({
   compact = false,
   className = "",
 }: ConnectionStatusProps) {
+  const t = useT();
   const { timezone } = useAppSettings();
   
   // Get status config based on connection state
@@ -166,7 +168,7 @@ export default function ConnectionStatus({
                 className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-sm">refresh</span>
-                Reconnect
+                {t('common.refresh')}
               </motion.button>
             )}
 

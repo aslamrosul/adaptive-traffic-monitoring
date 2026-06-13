@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 interface ModalTambahUserProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ModalTambahUserProps {
 }
 
 export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahUserProps) {
+  const t = useT();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -70,9 +72,9 @@ export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahU
                       <span className="material-symbols-outlined text-2xl">person_add</span>
                     </div>
                     <div>
-                      <h2 className="text-xl font-headline font-bold">Tambah Pengguna Baru</h2>
+                      <h2 className="text-xl font-headline font-bold">{t('modals.addUser')}</h2>
                       <p className="text-sm text-primary-fixed/80">
-                        Buat akun untuk operator atau admin
+                        {t('modals.addUserDesc')}
                       </p>
                     </div>
                   </div>
@@ -88,56 +90,56 @@ export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahU
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nama Lengkap
+                    {t('modals.fullName')}
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Masukkan nama lengkap"
+                    placeholder={t('modals.enterFullName')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email
+                    {t('auth.email')}
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="nama@traffic-command.go.id"
+                    placeholder={t('modals.enterEmail')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Role / Jabatan
+                    {t('modals.roleTitle')}
                   </label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
-                    <option value="OPERATOR LAPANGAN">Operator Lapangan</option>
-                    <option value="ADMIN PUSAT">Admin Pusat</option>
+                    <option value="OPERATOR LAPANGAN">{t('modals.fieldOperator')}</option>
+                    <option value="ADMIN PUSAT">{t('modals.centralAdmin')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Password
+                    {t('auth.password')}
                   </label>
                   <input
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Minimal 8 karakter"
+                    placeholder={t('modals.passwordMinChars')}
                     required
                     minLength={8}
                   />
@@ -149,7 +151,7 @@ export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahU
                     onClick={onClose}
                     className="flex-1 px-6 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   >
-                    Batal
+                    {t('common.cancel')}
                   </button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -157,7 +159,7 @@ export default function ModalTambahUser({ isOpen, onClose, onAdd }: ModalTambahU
                     type="submit"
                     className="flex-1 px-6 py-2.5 bg-primary text-white rounded-xl font-semibold shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
                   >
-                    Tambah Pengguna
+                    {t('users.add')}
                   </motion.button>
                 </div>
               </form>

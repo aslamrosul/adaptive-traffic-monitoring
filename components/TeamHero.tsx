@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 export default function TeamHero() {
+  const { t } = useTranslation();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -10,14 +13,13 @@ export default function TeamHero() {
       className="mb-12"
     >
       <p className="text-primary font-headline font-extrabold tracking-widest text-xs uppercase mb-2">
-        The ASTRAEA Squad
+        {t('team.title')}
       </p>
       <h1 className="text-4xl md:text-5xl font-black text-on-surface tracking-tight mb-4 max-w-2xl leading-tight">
-        Membangun Masa Depan Mobilitas Cerdas.
+        {t('team.heroTitle')}
       </h1>
       <p className="text-secondary max-w-xl text-lg">
-        Insinyur, desainer, dan analis kami berkolaborasi untuk menciptakan solusi
-        manajemen lalu lintas yang prediktif dan efisien bagi kota pintar.
+        {t('team.heroSubtitle')}
       </p>
     </motion.div>
   );

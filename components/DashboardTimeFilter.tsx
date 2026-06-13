@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 export type TimeRange = "today" | "yesterday" | "7days" | "30days" | "custom";
 
@@ -26,6 +27,7 @@ export default function DashboardTimeFilter({
   selectedIntersection = "all",
   intersections = []
 }: DashboardTimeFilterProps) {
+  const t = useT();
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -37,11 +39,11 @@ export default function DashboardTimeFilter({
   });
 
   const filters = [
-    { id: "today" as TimeRange, label: "Hari Ini", icon: "today" },
-    { id: "yesterday" as TimeRange, label: "Kemarin", icon: "history" },
-    { id: "7days" as TimeRange, label: "7 Hari", icon: "date_range" },
-    { id: "30days" as TimeRange, label: "30 Hari", icon: "calendar_month" },
-    { id: "custom" as TimeRange, label: "Custom", icon: "tune" },
+    { id: "today" as TimeRange, label: t('analytics.daily'), icon: "today" },
+    { id: "yesterday" as TimeRange, label: t('time.yesterday'), icon: "history" },
+    { id: "7days" as TimeRange, label: "7 " + t('time.days'), icon: "date_range" },
+    { id: "30days" as TimeRange, label: "30 " + t('time.days'), icon: "calendar_month" },
+    { id: "custom" as TimeRange, label: t('analytics.custom'), icon: "tune" },
   ];
 
   const handleQuickFilter = (range: TimeRange) => {
@@ -122,7 +124,7 @@ export default function DashboardTimeFilter({
                 onChange={(e) => onIntersectionChange(e.target.value)}
                 className="appearance-none pl-8 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
               >
-                <option value="all">Semua Persimpangan</option>
+                <option value="all">{t('lanes.allIntersections')}</option>
                 {intersections.map((intersection) => (
                   <option key={intersection.id} value={intersection.id}>
                     {intersection.name}

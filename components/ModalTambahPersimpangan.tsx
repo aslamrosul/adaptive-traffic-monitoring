@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface DeviceOption {
   device_id: string;
@@ -78,13 +79,13 @@ function getDirectionsByLaneCount(count: number): string[] {
 
 function formatLastSeen(value?: string | null): string {
   if (!value) {
-    return "Belum diketahui";
+    return "N/A";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Belum diketahui";
+    return "N/A";
   }
 
   return date.toLocaleString("id-ID");
@@ -95,6 +96,7 @@ export default function ModalTambahPersimpangan({
   onClose,
   onSuccess,
 }: ModalTambahPersimpanganProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] =
     useState<IntersectionFormData>(INITIAL_FORM);
 
@@ -157,7 +159,7 @@ export default function ModalTambahPersimpangan({
 
       if (!devicesResponse.ok || devicesJson.success === false) {
         throw new Error(
-          devicesJson.error || "Gagal memuat perangkat dari DeviceStatus"
+          devicesJson.error || t('errors.fetchDevices')
         );
       }
 
@@ -184,7 +186,7 @@ export default function ModalTambahPersimpangan({
       setUsedDeviceIds([]);
 
       setDeviceLoadError(
-        error.message || "Gagal memuat daftar perangkat yang terdeteksi"
+        error.message || t('errors.fetchDevices')
       );
     } finally {
       setIsLoadingDevices(false);
@@ -263,22 +265,22 @@ export default function ModalTambahPersimpangan({
     const intersectionId = formData.intersectionId.trim();
 
     if (!name) {
-      toast.error("Nama persimpangan wajib diisi");
+      toast.error(t('intersections.name') + ' ' + t('common.error'));
       return;
     }
 
     if (!address) {
-      toast.error("Alamat persimpangan wajib diisi");
+      toast.error(t('intersections.address') + ' ' + t('common.error'));
       return;
     }
 
     if (!deviceId) {
-      toast.error("Pilih atau masukkan Device ID");
+      toast.error(t('iot.deviceId') + ' ' + t('common.error'));
       return;
     }
 
     if (!intersectionId) {
-      toast.error("Intersection ID wajib tersedia");
+      toast.error(t('modals.intersectionIdRequired') + ' ' + t('common.error'));
       return;
     }
 
@@ -288,7 +290,7 @@ export default function ModalTambahPersimpangan({
       });
 
       if (!device) {
-        toast.error("Device yang dipilih tidak ditemukan");
+        toast.error(t('errors.fetchDevices'));
         return;
       }
     }
@@ -342,11 +344,11 @@ export default function ModalTambahPersimpangan({
 
       if (!response.ok || result.success === false) {
         throw new Error(
-          result.error || "Gagal menambahkan persimpangan"
+          result.error || t('intersections.addSuccess')
         );
       }
 
-      toast.success("Persimpangan berhasil ditambahkan");
+      toast.success(t('intersections.addSuccess'));
 
       resetForm();
       onSuccess();
@@ -355,7 +357,7 @@ export default function ModalTambahPersimpangan({
       console.error("Error adding intersection:", error);
 
       toast.error(
-        error.message || "Terjadi kesalahan saat menambahkan persimpangan"
+        error.message || t('errors.general')
       );
     } finally {
       setIsSubmitting(false);
@@ -392,11 +394,11 @@ export default function ModalTambahPersimpangan({
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h3 className="text-xl font-bold lg:text-2xl">
-                    Tambah Persimpangan Baru
+                    {t('modals.addIntersection')}
                   </h3>
 
                   <p className="mt-1 text-sm text-white/80">
-                    Hubungkan persimpangan dengan perangkat ESP32 yang terdeteksi
+                    {t('modals.addIntersectionDesc')}
                   </p>
                 </div>
 
@@ -420,7 +422,7 @@ export default function ModalTambahPersimpangan({
               <div className="space-y-5">
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Nama Persimpangan{" "}
+                    {t('intersections.name')}{" "}
                     <span className="text-red-500">*</span>
                   </label>
 
@@ -430,14 +432,14 @@ export default function ModalTambahPersimpangan({
                     value={formData.name}
                     onChange={handleTextChange}
                     required
-                    placeholder="Contoh: Simpang Talun"
+                    placeholder={t('intersections.name')}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Alamat <span className="text-red-500">*</span>
+                    {t('intersections.address')} <span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -446,7 +448,7 @@ export default function ModalTambahPersimpangan({
                     value={formData.address}
                     onChange={handleTextChange}
                     required
-                    placeholder="Contoh: Jl. Talun, Kabupaten Malang"
+                    placeholder={t('intersections.address')}
                     className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
@@ -454,7 +456,7 @@ export default function ModalTambahPersimpangan({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Latitude
+                      {t('intersections.latitude')}
                     </label>
 
                     <input
@@ -470,7 +472,7 @@ export default function ModalTambahPersimpangan({
 
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Longitude
+                      {t('intersections.longitude')}
                     </label>
 
                     <input
@@ -489,11 +491,11 @@ export default function ModalTambahPersimpangan({
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
                       <label className="block text-sm font-bold text-slate-700">
-                        Device ID <span className="text-red-500">*</span>
+                        {t('iot.deviceId')} <span className="text-red-500">*</span>
                       </label>
 
                       <p className="mt-1 text-xs text-slate-500">
-                        Device diambil dari DynamoDB DeviceStatus.
+                        {t('modals.deviceTakenFromDynamoDB')}
                       </p>
                     </div>
 
@@ -503,8 +505,8 @@ export default function ModalTambahPersimpangan({
                       className="shrink-0 text-xs font-bold text-blue-600 hover:text-blue-800"
                     >
                       {manualDeviceMode
-                        ? "Pilih device terdeteksi"
-                        : "Masukkan manual"}
+                        ? t('modals.selectDetectedDevice')
+                        : t('modals.enterManual')}
                     </button>
                   </div>
 
@@ -515,7 +517,7 @@ export default function ModalTambahPersimpangan({
                       value={formData.deviceId}
                       onChange={handleTextChange}
                       required
-                      placeholder="Contoh: ESP32_TRAFFIC_01"
+                      placeholder="ESP32_TRAFFIC_01"
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     />
                   ) : (
@@ -531,8 +533,8 @@ export default function ModalTambahPersimpangan({
                     >
                       <option value="">
                         {isLoadingDevices
-                          ? "Memuat perangkat..."
-                          : "Pilih perangkat terdeteksi"}
+                          ? t('modals.loadingDevices')
+                          : t('modals.selectDetectedDevicePlaceholder')}
                       </option>
 
                       {availableDevices.map((device) => {
@@ -542,7 +544,7 @@ export default function ModalTambahPersimpangan({
                         const intersectionId =
                           device.intersection_id ||
                           device.intersectionId ||
-                          "Tanpa Intersection ID";
+                          "N/A";
 
                         return (
                           <option key={deviceId} value={deviceId}>
@@ -555,7 +557,7 @@ export default function ModalTambahPersimpangan({
 
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs text-slate-500">
-                      {availableDevices.length} perangkat tersedia
+                      {availableDevices.length} {t('modals.devicesAvailable')}
                     </p>
 
                     <button
@@ -567,7 +569,7 @@ export default function ModalTambahPersimpangan({
                       <span className="material-symbols-outlined text-sm">
                         refresh
                       </span>
-                      Muat ulang
+                      {t('modals.reload')}
                     </button>
                   </div>
 
@@ -585,8 +587,7 @@ export default function ModalTambahPersimpangan({
                     !manualDeviceMode && (
                       <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
                         <p className="text-xs text-amber-800">
-                          Tidak ada device tersedia. Pastikan ESP32 sudah
-                          mengirim telemetry atau gunakan input manual.
+                          {t('modals.noDevicesAvailable')}
                         </p>
                       </div>
                     )}
@@ -594,7 +595,7 @@ export default function ModalTambahPersimpangan({
 
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Intersection ID{" "}
+                    {t('modals.intersectionIdRequired')}{" "}
                     <span className="text-red-500">*</span>
                   </label>
 
@@ -605,7 +606,7 @@ export default function ModalTambahPersimpangan({
                     onChange={handleTextChange}
                     readOnly={!manualDeviceMode}
                     required
-                    placeholder="Otomatis mengikuti data ESP32"
+                    placeholder={t('modals.autoFollowsESP32')}
                     className={`w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600 ${
                       !manualDeviceMode
                         ? "cursor-not-allowed bg-slate-100 text-slate-600"
@@ -617,14 +618,14 @@ export default function ModalTambahPersimpangan({
                     <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
                       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                         <p className="text-blue-800">
-                          Status:{" "}
+                          {t('intersections.status')}:{" "}
                           <span className="font-bold">
                             {selectedDevice.status}
                           </span>
                         </p>
 
                         <p className="text-blue-800">
-                          Last seen:{" "}
+                          {t('iot.lastSeen')}:{" "}
                           <span className="font-bold">
                             {formatLastSeen(
                               selectedDevice.last_seen ||
@@ -640,7 +641,7 @@ export default function ModalTambahPersimpangan({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Status
+                      {t('intersections.status')}
                     </label>
 
                     <select
@@ -649,15 +650,15 @@ export default function ModalTambahPersimpangan({
                       onChange={handleTextChange}
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     >
-                      <option value="active">Active</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="active">{t('intersections.active')}</option>
+                      <option value="maintenance">{t('intersections.maintenance')}</option>
+                      <option value="inactive">{t('intersections.inactive')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Mode Operasi
+                      {t('modals.operatingMode')}
                     </label>
 
                     <select
@@ -666,15 +667,15 @@ export default function ModalTambahPersimpangan({
                       onChange={handleTextChange}
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                     >
-                      <option value="auto">Auto</option>
-                      <option value="manual">Manual</option>
+                      <option value="auto">{t('trafficControl.autoMode')}</option>
+                      <option value="manual">{t('trafficControl.manualMode')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-bold text-slate-700">
-                    Jumlah Jalur
+                    {t('modals.lanesCount')}
                   </label>
 
                   <select
@@ -683,14 +684,14 @@ export default function ModalTambahPersimpangan({
                     onChange={handleTextChange}
                     className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                   >
-                    <option value="3">3 Jalur</option>
-                    <option value="4">4 Jalur</option>
-                    <option value="5">5 Jalur</option>
-                    <option value="6">6 Jalur</option>
+                    <option value="3">3 {t('modals.lanes')}</option>
+                    <option value="4">4 {t('modals.lanes')}</option>
+                    <option value="5">5 {t('modals.lanes')}</option>
+                    <option value="6">6 {t('modals.lanes')}</option>
                   </select>
 
                   <p className="mt-2 text-xs text-slate-500">
-                    Arah jalur: {formData.lanesDirections.join(", ")}
+                    {t('modals.lanesDirections')}: {formData.lanesDirections.join(", ")}
                   </p>
                 </div>
 
@@ -702,12 +703,11 @@ export default function ModalTambahPersimpangan({
 
                     <div>
                       <p className="text-sm font-bold text-blue-900">
-                        Informasi
+                        {t('common.info')}
                       </p>
 
                       <p className="mt-1 text-xs leading-relaxed text-blue-700">
-                        Device muncul setelah ESP32 mengirim telemetry ke MQTT.
-                        Satu device hanya dapat dihubungkan ke satu persimpangan.
+                        {t('modals.deviceInfo')}
                       </p>
                     </div>
                   </div>
@@ -721,7 +721,7 @@ export default function ModalTambahPersimpangan({
                   disabled={isSubmitting}
                   className="rounded-lg border border-slate-300 px-6 py-3 font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
                 >
-                  Batal
+                  {t('common.cancel')}
                 </button>
 
                 <button
@@ -735,14 +735,14 @@ export default function ModalTambahPersimpangan({
                   {isSubmitting ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Menyimpan...
+                      {t('modals.saving')}
                     </>
                   ) : (
                     <>
                       <span className="material-symbols-outlined text-sm">
                         add
                       </span>
-                      Tambah Persimpangan
+                      {t('modals.addIntersection')}
                     </>
                   )}
                 </button>

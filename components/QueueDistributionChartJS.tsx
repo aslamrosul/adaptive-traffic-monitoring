@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from "cha
 import { Pie } from "react-chartjs-2";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -27,6 +28,7 @@ export default function QueueDistributionChartJS({
   endDate,
   lane = "all",
 }: QueueDistributionChartJSProps) {
+  const { t } = useTranslation();
   const [selectedLane, setSelectedLane] = useState<"north" | "south" | "east" | "west" | "all">(lane);
   const [chartData, setChartData] = useState<QueueData>({
     level0: { percentage: 45, count: 450 },
@@ -56,10 +58,10 @@ export default function QueueDistributionChartJS({
         level2: { percentage: data.level2.percentage, count: data.level2.count },
         total: data.total,
       });
-      toast.success("Data berhasil dimuat");
+      toast.success(t('success.saved'));
     } catch (error) {
       console.error("Error fetching queue distribution data:", error);
-      toast.error("Gagal memuat data distribusi antrian");
+      toast.error(t('errors.fetchQueueData'));
       // Keep default data on error
     } finally {
       setIsLoading(false);
@@ -80,7 +82,11 @@ export default function QueueDistributionChartJS({
 
   // Chart data configuration
   const pieChartData = {
-    labels: ["Level 0 - Lancar", "Level 1 - Sedang", "Level 2 - Padat"],
+    labels: [
+      `${t('charts.level')} 0 - ${t('traffic.smooth')}`,
+      `${t('charts.level')} 1 - ${t('traffic.moderate')}`,
+      `${t('charts.level')} 2 - ${t('traffic.congested')}`
+    ],
     datasets: [
       {
         data: [chartData.level0.percentage, chartData.level1.percentage, chartData.level2.percentage],
@@ -152,30 +158,28 @@ export default function QueueDistributionChartJS({
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg lg:text-xl font-bold font-headline text-on-surface mb-2">
-          Distribusi Level Antrian
+          {t('charts.queueDistributionTitle')}
         </h3>
         <p className="text-sm text-slate-500">
-          Persentase distribusi level antrian berdasarkan data sensor ultrasonic dari{" "}
-          <span className="font-semibold">{startDate}</span> hingga{" "}
-          <span className="font-semibold">{endDate}</span>
+          {t('charts.queueDistributionSubtitle')}
         </p>
       </div>
 
       {/* Lane Filter */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-slate-600 mb-2">
-          Pilih Jalur:
+          {t('traffic.lane')}:
         </label>
         <select
           value={selectedLane}
           onChange={handleLaneChange}
           className="w-full lg:w-64 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-700 font-medium"
         >
-          <option value="all">Semua Jalur</option>
-          <option value="north">Jalur Utara</option>
-          <option value="south">Jalur Selatan</option>
-          <option value="east">Jalur Timur</option>
-          <option value="west">Jalur Barat</option>
+          <option value="all">{t('traffic.allLanes')}</option>
+          <option value="north">{t('traffic.northLane')}</option>
+          <option value="south">{t('traffic.southLane')}</option>
+          <option value="east">{t('traffic.eastLane')}</option>
+          <option value="west">{t('traffic.westLane')}</option>
         </select>
       </div>
 
@@ -185,7 +189,7 @@ export default function QueueDistributionChartJS({
           <div className="flex items-center justify-center h-80">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-slate-500 font-medium">Memuat data distribusi antrian...</p>
+              <p className="text-slate-500 font-medium">{t('charts.loadingData')}</p>
             </div>
           </div>
         ) : (
@@ -206,16 +210,13 @@ export default function QueueDistributionChartJS({
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-4 h-4 rounded-full bg-green-500"></div>
-            <span className="text-sm font-semibold text-slate-600">Level 0 - Lancar</span>
+            <span className="text-sm font-semibold text-slate-600">{t('charts.level')} 0 - {t('traffic.smooth')}</span>
           </div>
           <div className="text-3xl font-bold text-green-600 mb-1">
             {chartData.level0.percentage}%
           </div>
           <div className="text-xs text-slate-500">
             {chartData.level0.count} records
-          </div>
-          <div className="mt-2 text-[11px] text-slate-600 leading-relaxed">
-            Jarak antrian: &gt; 20cm | Durasi hijau: 7 detik
           </div>
         </motion.div>
 
@@ -228,16 +229,13 @@ export default function QueueDistributionChartJS({
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-            <span className="text-sm font-semibold text-slate-600">Level 1 - Sedang</span>
+            <span className="text-sm font-semibold text-slate-600">{t('charts.level')} 1 - {t('traffic.moderate')}</span>
           </div>
           <div className="text-3xl font-bold text-yellow-600 mb-1">
             {chartData.level1.percentage}%
           </div>
           <div className="text-xs text-slate-500">
             {chartData.level1.count} records
-          </div>
-          <div className="mt-2 text-[11px] text-slate-600 leading-relaxed">
-            Jarak antrian: 10-20cm | Durasi hijau: 10 detik
           </div>
         </motion.div>
 
@@ -250,7 +248,7 @@ export default function QueueDistributionChartJS({
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-4 h-4 rounded-full bg-red-500"></div>
-            <span className="text-sm font-semibold text-slate-600">Level 2 - Padat</span>
+            <span className="text-sm font-semibold text-slate-600">{t('charts.level')} 2 - {t('traffic.congested')}</span>
           </div>
           <div className="text-3xl font-bold text-red-600 mb-1">
             {chartData.level2.percentage}%

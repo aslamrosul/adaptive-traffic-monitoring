@@ -5,6 +5,7 @@ import { useTrafficStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useT } from "@/lib/useT";
 
 interface AlertsPanelProps {
   timeRange: TimeRange;
@@ -12,6 +13,7 @@ interface AlertsPanelProps {
 }
 
 export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps) {
+  const t = useT();
   const router = useRouter();
   const { recentEvents, isLoading } = useDashboardWithFilter(timeRange, customDates);
   const { intersections, fetchIntersections } = useTrafficStore();
@@ -45,12 +47,12 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
     const eventTime = new Date(timestamp).getTime();
     const diffMinutes = Math.floor((now - eventTime) / (1000 * 60));
     
-    if (diffMinutes < 1) return 'Baru saja';
-    if (diffMinutes < 60) return `${diffMinutes} mnt`;
+    if (diffMinutes < 1) return t('time.justNow');
+    if (diffMinutes < 60) return `${diffMinutes} ${t('time.minutes')}`;
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} jam`;
+    if (diffHours < 24) return `${diffHours} ${t('time.hours')}`;
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} hari`;
+    return `${diffDays} ${t('time.days')}`;
   };
 
   const getIntersectionName = (intersectionId: string) => {
@@ -83,7 +85,7 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
   return (
     <div className="bg-white rounded-lg shadow-lg border border-orange-100 overflow-hidden sticky top-16 lg:top-20">
       <header className="p-2 lg:p-3 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-orange-50 to-amber-50">
-        <h4 className="font-headline font-bold text-slate-900 text-xs lg:text-sm">Peringatan Terbaru</h4>
+        <h4 className="font-headline font-bold text-slate-900 text-xs lg:text-sm">{t('dashboard.recentActivity')}</h4>
         {liveCount > 0 && (
           <motion.span
             animate={{ scale: [1, 1.1, 1] }}
@@ -101,7 +103,7 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
             <span className="material-symbols-outlined text-3xl text-slate-300 mb-2 inline-block">
               check_circle
             </span>
-            <p className="text-xs text-slate-500">Tidak ada peringatan saat ini</p>
+            <p className="text-xs text-slate-500">{t('dashboard.noData')}</p>
           </div>
         ) : (
           recentEvents.slice(0, 5).map((event, idx) => {
@@ -143,7 +145,7 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
                     </p>
                     <div className="pt-1">
                       <button className="text-[9px] font-bold text-primary uppercase tracking-wider group-hover:underline">
-                        Lihat Detail
+                        {t('dashboard.viewDetails')}
                       </button>
                     </div>
                   </div>
@@ -159,7 +161,7 @@ export default function AlertsPanel({ timeRange, customDates }: AlertsPanelProps
           onClick={() => router.push("/persimpangan")}
           className="text-[9px] font-bold text-slate-500 hover:text-slate-800 transition-colors"
         >
-          Lihat Semua Riwayat
+          {t('notifications.viewAll')}
         </button>
       </footer>
     </div>

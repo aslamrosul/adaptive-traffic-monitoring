@@ -6,14 +6,16 @@ import SettingsTabs from "@/components/SettingsTabs";
 import HelpContent from "@/components/HelpContent";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useT } from "@/lib/useT";
 
 function ProfilePageContent() {
   const searchParams = useSearchParams();
+  const t = useT();
   const tab = searchParams.get("tab");
 
-  const title = tab === "settings" ? "Pengaturan" : 
-                tab === "help" ? "Bantuan" : 
-                "Profil Saya";
+  const title = tab === "settings" ? t('navigation.settings') : 
+                tab === "help" ? t('navigation.help') : 
+                t('profile.myProfile');
 
   return (
     <DashboardLayout title={title}>

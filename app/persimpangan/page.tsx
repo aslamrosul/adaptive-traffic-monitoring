@@ -7,9 +7,11 @@ import { useIntersections } from "@/lib/hooks/useIntersections";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/useT";
 
 export default function PersimpanganPage() {
   const router = useRouter();
+  const t = useT();
   const { intersections, isLoading, isError, mutate } = useIntersections();
   const [showAll, setShowAll] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

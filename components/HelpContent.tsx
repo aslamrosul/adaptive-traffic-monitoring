@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 export default function HelpContent() {
+  const t = useT();
   const [openIndex, setOpenIndex] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -30,7 +32,7 @@ export default function HelpContent() {
       if (result.success) {
         setFaqs(result.data || []);
       } else {
-        toast.error("Gagal memuat FAQ");
+        toast.error(t('errors.loadData'));
       }
     } catch (error) {
       console.error("Error fetching FAQs:", error);
@@ -53,7 +55,7 @@ export default function HelpContent() {
       if (result.success) {
         setGuides(result.data || []);
       } else {
-        toast.error("Gagal memuat panduan");
+        toast.error(t('errors.loadData'));
       }
     } catch (error) {
       console.error("Error fetching guides:", error);
@@ -127,11 +129,11 @@ export default function HelpContent() {
         className="rounded-xl bg-gradient-to-br from-primary to-blue-600 p-4 text-white lg:rounded-2xl lg:p-8"
       >
         <h1 className="mb-1 break-words font-headline text-xl font-bold lg:mb-2 lg:text-3xl">
-          Ada yang bisa kami bantu?
+          {t('help.searchHelp')}
         </h1>
 
         <p className="mb-3 text-sm text-blue-100 lg:mb-6 lg:text-base">
-          Cari jawaban, panduan penggunaan, atau hubungi support.
+          {t('help.getStarted')}
         </p>
 
         <div className="relative">

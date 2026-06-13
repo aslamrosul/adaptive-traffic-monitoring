@@ -5,6 +5,8 @@ import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "@/lib/user-settings";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 const tabs = [
   { id: "general", label: "Umum", icon: "settings" },
@@ -14,6 +16,8 @@ const tabs = [
 ];
 
 export default function SettingsTabs() {
+  const t = useT();
+  const { locale, setLocale } = useTranslation();
   const [activeTab, setActiveTab] = useState("general");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -228,8 +232,12 @@ export default function SettingsTabs() {
 
             <SelectRow
               title="Bahasa Sistem"
-              value={settings.language}
-              onChange={(value) => updateSetting("language", value)}
+              value={locale}
+              onChange={(value) => {
+                setLocale(value);
+                updateSetting("language", value);
+                toast.success("Bahasa berhasil diubah");
+              }}
               options={LANGUAGE_OPTIONS}
             />
 

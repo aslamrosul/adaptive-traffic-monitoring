@@ -6,8 +6,10 @@ import ModalEditUser from "@/components/ModalEditUser";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 export default function PenggunaPage() {
+  const t = useT();
   const [users, setUsers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -17,7 +19,6 @@ export default function PenggunaPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Fetch users from API
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -31,11 +32,11 @@ export default function PenggunaPage() {
       if (result.success) {
         setUsers(result.data);
       } else {
-        toast.error("Gagal memuat data pengguna");
+        toast.error(t('errors.loadData') || "Gagal memuat data pengguna");
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Gagal memuat data pengguna");
+      toast.error(t('errors.loadData') || "Gagal memuat data pengguna");
     } finally {
       setIsLoading(false);
     }

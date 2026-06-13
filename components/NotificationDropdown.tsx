@@ -10,8 +10,10 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
+import { useT } from "@/lib/useT";
 
 export default function NotificationDropdown() {
+  const t = useT();
   const { timezone } = useAppSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -237,7 +239,7 @@ export default function NotificationDropdown() {
                   </span>
 
                   <p className="text-sm font-semibold text-slate-500">
-                    Tidak ada notifikasi
+                    {t('notifications.noNotifications')}
                   </p>
                 </div>
               ) : (
@@ -344,7 +346,7 @@ export default function NotificationDropdown() {
                                     }}
                                     className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
                                   >
-                                    Lihat Detail
+                                    {t('dashboard.viewDetails')}
                                   </button>
 
                                   <button
@@ -378,7 +380,7 @@ export default function NotificationDropdown() {
                 }}
                 className="flex-1 text-center text-sm font-semibold text-primary transition-colors hover:text-primary/80"
               >
-                Lihat Semua
+                {t('notifications.viewAll') || 'Lihat Semua'}
               </button>
 
               <button

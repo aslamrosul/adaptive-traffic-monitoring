@@ -9,8 +9,10 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
+import { useT } from "@/lib/useT";
 
 export default function NotificationList() {
+  const t = useT();
   const { timezone } = useAppSettings();
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");

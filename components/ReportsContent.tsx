@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 const reports = [
   {
@@ -71,14 +72,15 @@ const templates = [
 ];
 
 export default function ReportsContent() {
+  const t = useT();
   const [selectedType, setSelectedType] = useState("all");
 
   const handleDownload = (report: typeof reports[0]) => {
-    toast.success(`Mengunduh ${report.title}...`);
+    toast.success(t('reports.downloading'));
   };
 
   const handleGenerateReport = (template: typeof templates[0]) => {
-    toast.success(`Membuat ${template.name}...`);
+    toast.success(t('reports.generating'));
   };
 
   const filteredReports = selectedType === "all" 
@@ -90,17 +92,17 @@ export default function ReportsContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Laporan & Analisis</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('reports.title')}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Unduh laporan atau buat laporan custom
+            {t('reports.download')}
           </p>
         </div>
         <button
-          onClick={() => toast.success("Membuka generator laporan...")}
+          onClick={() => toast.success(t('reports.generating'))}
           className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <span className="material-symbols-outlined">add</span>
-          Buat Laporan Baru
+          {t('reports.generate')}
         </button>
       </div>
 

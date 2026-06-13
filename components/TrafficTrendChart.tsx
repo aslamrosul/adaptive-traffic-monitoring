@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 ChartJS.register(
   CategoryScale,
@@ -192,14 +193,15 @@ function formatRangeSubtitle(
   timeRange: TimeRange,
   startDate: string,
   endDate: string,
+  t: any,
 ) {
-  if (timeRange === "today") return "Hari ini";
-  if (timeRange === "yesterday") return "Kemarin";
-  if (timeRange === "7days") return "7 hari terakhir";
-  if (timeRange === "30days") return "30 hari terakhir";
-  if (timeRange === "custom") return `${startDate} sampai ${endDate}`;
+  if (timeRange === "today") return t('trafficTrend.today');
+  if (timeRange === "yesterday") return t('trafficTrend.yesterday');
+  if (timeRange === "7days") return t('trafficTrend.last7Days');
+  if (timeRange === "30days") return t('trafficTrend.last30Days');
+  if (timeRange === "custom") return `${startDate} ${t('analytics.to')} ${endDate}`;
 
-  return "Periode terpilih";
+  return t('trafficTrend.customPeriod');
 }
 
 export default function TrafficTrendChart({
@@ -207,6 +209,7 @@ export default function TrafficTrendChart({
   customDates,
   intersectionId = "all",
 }: TrafficTrendChartProps) {
+  const { t } = useTranslation();
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -412,7 +415,7 @@ export default function TrafficTrendChart({
     labels: hourlyData.map((item) => item.hour),
     datasets: [
       {
-        label: "Vehicle Count",
+        label: t('trafficTrend.vehicleCount'),
         data: hourlyData.map((item) => item.vehicleCount),
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -426,7 +429,7 @@ export default function TrafficTrendChart({
         pointBorderWidth: 2,
       },
       {
-        label: "Queue Level",
+        label: t('trafficTrend.queueLevel'),
         data: hourlyData.map((item) => item.queueLevel),
         borderColor: "rgb(249, 115, 22)",
         backgroundColor: "rgba(249, 115, 22, 0.1)",
@@ -480,19 +483,19 @@ export default function TrafficTrendChart({
 
             if (context.parsed.y === null) return label;
 
-            if (context.dataset.label === "Queue Level") {
+            if (context.dataset.label === t('trafficTrend.queueLevel')) {
               const level = Math.round(context.parsed.y);
               const levelText =
                 level === 0
-                  ? "Lancar"
+                  ? t('trafficTrend.queueLevelSmooth')
                   : level === 1
-                    ? "Sedang"
-                    : "Padat";
+                    ? t('trafficTrend.queueLevelModerate')
+                    : t('trafficTrend.queueLevelCongested');
 
               return `${label}${context.parsed.y} (${levelText})`;
             }
 
-            return `${label}${context.parsed.y} kendaraan`;
+            return `${label}${context.parsed.y} ${t('lanes.vehicles').toLowerCase()}`;
           },
         },
       },
@@ -505,7 +508,7 @@ export default function TrafficTrendChart({
         suggestedMax: Math.max(10, Math.ceil(maxVehicleValue * 1.2)),
         title: {
           display: true,
-          text: "Vehicle Count",
+          text: t('trafficTrend.vehicleCount'),
           font: {
             size: 11,
             weight: "bold",
@@ -529,7 +532,7 @@ export default function TrafficTrendChart({
         max: 2,
         title: {
           display: true,
-          text: "Queue Level",
+          text: t('trafficTrend.queueLevel'),
           font: {
             size: 11,
             weight: "bold",
@@ -542,7 +545,11 @@ export default function TrafficTrendChart({
             size: 10,
           },
           callback(value: any) {
-            const labels = ["0 (Lancar)", "1 (Sedang)", "2 (Padat)"];
+            const labels = [
+              `0 (${t('trafficTrend.queueLevelSmooth')})`,
+              `1 (${t('trafficTrend.queueLevelModerate')})`,
+              `2 (${t('trafficTrend.queueLevelCongested')})`
+            ];
             return labels[value] || value;
           },
         },
@@ -590,7 +597,7 @@ export default function TrafficTrendChart({
             <span className="material-symbols-outlined text-primary">
               show_chart
             </span>
-            Tren Lalu Lintas & Queue Level
+            {t('trafficTrend.title')}
           </h4>
 
           <p className="mt-1 text-xs text-slate-500">
@@ -598,10 +605,11 @@ export default function TrafficTrendChart({
               timeRange,
               range.startDate,
               range.endDate,
+              t,
             )}{" "}
             ·{" "}
             {intersectionId === "all"
-              ? "Semua persimpangan"
+              ? t('trafficTrend.allIntersections')
               : intersectionId}
           </p>
         </div>
@@ -614,10 +622,10 @@ export default function TrafficTrendChart({
             }
             className="flex-1 cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 lg:flex-none"
           >
-            <option value="all">Semua Jalur</option>
-            <option value="north">Jalur Utara</option>
-            <option value="south">Jalur Selatan</option>
-            <option value="east">Jalur Timur</option>
+            <option value="all">{t('trafficTrend.allLanes')}</option>
+            <option value="north">{t('trafficTrend.northLane')}</option>
+            <option value="south">{t('trafficTrend.southLane')}</option>
+            <option value="east">{t('trafficTrend.eastLane')}</option>
           </select>
 
           <motion.button
@@ -630,7 +638,7 @@ export default function TrafficTrendChart({
             onClick={() => void fetchChartData(true)}
             disabled={isRefreshing}
             className="rounded-lg p-2 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-            title="Refresh data"
+            title={t('trafficTrend.refreshData')}
             type="button"
           >
             <span
@@ -656,7 +664,7 @@ export default function TrafficTrendChart({
               </span>
 
               <p className="text-sm text-slate-500">
-                Belum ada data untuk ditampilkan
+                {t('trafficTrend.noData')}
               </p>
             </div>
           </div>
@@ -669,8 +677,7 @@ export default function TrafficTrendChart({
             <div className="h-0.5 w-8 rounded bg-blue-500" />
 
             <span className="text-slate-600">
-              <span className="font-bold">Vehicle Count:</span> Total
-              kendaraan berdasarkan counter tertinggi per jalur.
+              <span className="font-bold">{t('trafficTrend.vehicleCount')}:</span> {t('trafficTrend.vehicleCountNote')}
             </span>
           </div>
 
@@ -678,8 +685,7 @@ export default function TrafficTrendChart({
             <div className="h-0.5 w-8 rounded border-t-2 border-dashed border-orange-500 bg-orange-500" />
 
             <span className="text-slate-600">
-              <span className="font-bold">Queue Level:</span> 0=Lancar,
-              1=Sedang, 2=Padat.
+              <span className="font-bold">{t('trafficTrend.queueLevel')}:</span> {t('trafficTrend.queueLevelNote')}
             </span>
           </div>
         </div>

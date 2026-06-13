@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { useProfileStore } from "@/lib/store";
 import { useActivityLogger } from "@/lib/hooks/useActivityLogger";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 type ProfileTab = "overview" | "activity" | "achievements" | "settings";
 
@@ -70,10 +71,12 @@ function getActivityStyle(type?: string) {
 }
 
 export default function ProfileContent() {
+  const { t } = useTranslation();
+  
   useActivityLogger({
     type: "profile.view",
-    action: "Membuka halaman profil",
-    description: "Pengguna membuka halaman profil pribadi",
+    action: t('profile.activityLog.action'),
+    description: t('profile.activityLog.description'),
   });
 
   const {
@@ -225,9 +228,9 @@ export default function ProfileContent() {
         skills: parseSkills(skillsInput),
       } as any);
       setIsEditing(false);
-      toast.success("Profil berhasil diperbarui!");
+      toast.success(t('profile.updateSuccess'));
     } catch (error) {
-      toast.error("Gagal memperbarui profil");
+      toast.error(t('profile.updateFailed'));
     }
   };
 
@@ -258,33 +261,33 @@ export default function ProfileContent() {
 
     // Validasi ukuran file (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran file terlalu besar. Maksimal 5MB");
+      toast.error(t('errors.fileTooLarge'));
       return;
     }
 
     // Validasi tipe file
     if (!file.type.startsWith("image/")) {
-      toast.error("File harus berupa gambar");
+      toast.error(t('errors.invalidFileType'));
       return;
     }
 
     try {
-      const loadingToast = toast.loading("Mengupload foto...");
+      const loadingToast = toast.loading(t('profile.uploadingAvatar'));
       await uploadAvatar(file);
       toast.dismiss(loadingToast);
-      toast.success("Foto berhasil diupload!");
+      toast.success(t('profile.avatarUpdated'));
     } catch (error) {
-      toast.error("Gagal mengupload foto");
+      toast.error(t('profile.avatarUpdateFailed'));
     }
   };
 
   const handleDeleteAvatar = async () => {
-    if (confirm("Apakah Anda yakin ingin menghapus foto profil?")) {
+    if (confirm(t('profile.confirmDeleteAvatar'))) {
       try {
         await deleteAvatar();
-        toast.success("Foto profil berhasil dihapus");
+        toast.success(t('profile.avatarDeleted'));
       } catch (error) {
-        toast.error("Gagal menghapus foto profil");
+        toast.error(t('profile.avatarDeleteFailed'));
       }
     }
   };
@@ -308,12 +311,12 @@ export default function ProfileContent() {
     link.download = `profile-${profile.id}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Data profil berhasil diexport!");
+    toast.success(t('profile.exportSuccess'));
 
     await logProfileAction({
       type: "profile.export",
-      action: "Export data profil",
-      description: "Pengguna mengekspor data profil pribadi",
+      action: t('profile.exportAction'),
+      description: t('profile.exportDescription'),
     });
   };
 
@@ -325,9 +328,9 @@ export default function ProfileContent() {
         [key]: !profile.settings[key],
       });
       await refreshActivity();
-      toast.success("Pengaturan berhasil diperbarui");
+      toast.success(t('settings.savedSuccessfully'));
     } catch (error) {
-      toast.error("Gagal memperbarui pengaturan");
+      toast.error(t('settings.saveFailed'));
     }
   };
 
@@ -357,22 +360,22 @@ export default function ProfileContent() {
   }> = [
     {
       id: "overview",
-      label: "Overview",
+      label: t('profile.overview'),
       icon: "dashboard",
     },
     {
       id: "activity",
-      label: "Aktivitas",
+      label: t('profile.activity'),
       icon: "history",
     },
     {
       id: "achievements",
-      label: "Pencapaian",
+      label: t('profile.achievements'),
       icon: "emoji_events",
     },
     {
       id: "settings",
-      label: "Pengaturan",
+      label: t('profile.settings'),
       icon: "settings",
     },
   ];
@@ -382,7 +385,7 @@ export default function ProfileContent() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Memuat profil...</p>
+          <p className="text-slate-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -395,12 +398,12 @@ export default function ProfileContent() {
           <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">
             error
           </span>
-          <p className="text-slate-600">Gagal memuat profil</p>
+          <p className="text-slate-600">{t('errors.loadData')}</p>
           <button
             onClick={() => fetchProfile()}
             className="mt-4 px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
-            Coba Lagi
+            {t('common.refresh')}
           </button>
         </div>
       </div>
@@ -409,25 +412,25 @@ export default function ProfileContent() {
 
   const stats = [
     {
-      label: "Jam Aktif",
-      value: `${profile.stats.activeHours.toLocaleString()} jam`,
+      label: t('profile.activeHours'),
+      value: `${profile.stats.activeHours.toLocaleString()} ${t('time.hours')}`,
       icon: "schedule",
       color: "bg-orange-100 text-orange-600",
     },
     {
-      label: "Status Akun",
-      value: "Aktif",
+      label: t('profile.accountStatus'),
+      value: t('common.active'),
       icon: "verified_user",
       color: "bg-green-100 text-green-600",
     },
     {
-      label: "Role",
+      label: t('users.role'),
       value: profile.position || "Operator",
       icon: "badge",
       color: "bg-blue-100 text-blue-600",
     },
     {
-      label: "Akun",
+      label: t('profile.accountType'),
       value: profile.accountType,
       icon: "workspace_premium",
       color: "bg-yellow-100 text-yellow-600",

@@ -5,16 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const menuItems = [
-  { icon: "dashboard", label: "Dasbor", href: "/dashboard" },
-  { icon: "traffic", label: "Persimpangan", href: "/persimpangan" },
-  { icon: "analytics", label: "Analist", href: "/Analist" },
-  { icon: "settings_remote", label: "Remote IoT", href: "/iot-config" },
-  { icon: "group", label: "Manajemen Pengguna", href: "/pengguna" },
-  { icon: "menu_book", label: "Panduan Sistem", href: "/panduan" },
-  { icon: "article", label: "Panduan Lengkap", href: "/panduan-lengkap" },
-];
+import { useT } from "@/lib/useT";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -23,11 +14,21 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarProps = {}) {
   const pathname = usePathname();
+  const t = useT();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { fetchProfile } = useProfileStore();
 
   // Use external state if provided, otherwise use internal
   const isSidebarOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+
+  const menuItems = [
+    { icon: "dashboard", label: t('navigation.dashboard'), href: "/dashboard" },
+    { icon: "traffic", label: t('navigation.intersections'), href: "/persimpangan" },
+    { icon: "analytics", label: t('navigation.analytics'), href: "/Analist" },
+    { icon: "settings_remote", label: t('navigation.iotConfig'), href: "/iot-config" },
+    { icon: "group", label: t('navigation.users'), href: "/pengguna" },
+    { icon: "menu_book", label: t('navigation.guide'), href: "/panduan" },
+  ];
   const setIsSidebarOpen = (open: boolean) => {
     if (onToggle) {
       onToggle(open);
@@ -181,7 +182,7 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
                 ? 'px-4 py-3' 
                 : 'lg:justify-center lg:px-3 lg:py-3 lg:mx-auto lg:w-14'
             }`}
-            title={!isSidebarOpen ? 'Pengaturan' : ''}
+            title={!isSidebarOpen ? t('navigation.settings') : ''}
           >
             <span className={`material-symbols-outlined group-hover:scale-110 ${
               !isSidebarOpen ? 'lg:text-2xl' : ''
@@ -191,13 +192,13 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
             <span className={`whitespace-nowrap ${
               isSidebarOpen ? 'block' : 'hidden'
             }`}>
-              Pengaturan
+              {t('navigation.settings')}
             </span>
             
             {/* Tooltip for collapsed state */}
             {!isSidebarOpen && (
               <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                Pengaturan
+                {t('navigation.settings')}
                 <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
               </div>
             )}
@@ -209,7 +210,7 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
                 ? 'px-4 py-3' 
                 : 'lg:justify-center lg:px-3 lg:py-3 lg:mx-auto lg:w-14'
             }`}
-            title={!isSidebarOpen ? 'Bantuan' : ''}
+            title={!isSidebarOpen ? t('navigation.help') : ''}
           >
             <span className={`material-symbols-outlined group-hover:scale-110 ${
               !isSidebarOpen ? 'lg:text-2xl' : ''
@@ -219,13 +220,13 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
             <span className={`whitespace-nowrap ${
               isSidebarOpen ? 'block' : 'hidden'
             }`}>
-              Bantuan
+              {t('navigation.help')}
             </span>
             
             {/* Tooltip for collapsed state */}
             {!isSidebarOpen && (
               <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                Bantuan
+                {t('navigation.help')}
                 <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
               </div>
             )}

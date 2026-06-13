@@ -3,6 +3,7 @@
 import { useDashboardWithFilter, type TimeRange, type DateRange } from "@/lib/hooks/useDashboardWithFilter";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/useT";
 
 interface DashboardStatsProps {
   timeRange: TimeRange;
@@ -16,6 +17,7 @@ export default function DashboardStats({
   intersectionId = "all",
 }: DashboardStatsProps) {
   const router = useRouter();
+  const t = useT();
 
   const { stats, isLoading } = useDashboardWithFilter(
     timeRange,
@@ -46,9 +48,9 @@ export default function DashboardStats({
 
   const statsConfig = [
     {
-      label: "Total Kendaraan",
+      label: t('dashboard.totalVehicles') || "Total Kendaraan",
       value: stats.totalVehiclesToday.toLocaleString(),
-      change: `${stats.changeVsYesterday >= 0 ? '+' : ''}${stats.changeVsYesterday}% vs Kemarin`,
+      change: `${stats.changeVsYesterday >= 0 ? '+' : ''}${stats.changeVsYesterday}% vs ${t('time.yesterday') || 'Kemarin'}`,
       changeType: stats.changeVsYesterday >= 0 ? "positive" : "negative",
       icon: "directions_car",
       bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
@@ -58,9 +60,9 @@ export default function DashboardStats({
       link: "/Analist",
     },
     {
-      label: "Status IoT",
+      label: t('iot.status') || "Status IoT",
       value: `${stats.activeDevices}/${stats.totalDevices}`,
-      subtitle: "Perangkat Aktif",
+      subtitle: t('dashboard.activeDevices') || "Perangkat Aktif",
       icon: "cloud_done",
       bgColor: "bg-gradient-to-br from-emerald-500 to-green-600",
       iconBg: "",
@@ -69,10 +71,10 @@ export default function DashboardStats({
       link: "/persimpangan",
     },
     {
-      label: "Waktu Tunggu (Rerata)",
+      label: t('traffic.waitingTime') || "Waktu Tunggu (Rerata)",
       value: stats.avgWaitTime.toString(),
-      unit: "detik",
-      change: `${stats.changeWaitTime >= 0 ? '+' : ''}${stats.changeWaitTime} detik hari ini`,
+      unit: t('time.seconds') || "detik",
+      change: `${stats.changeWaitTime >= 0 ? '+' : ''}${stats.changeWaitTime} ${t('time.seconds') || 'detik'} ${t('time.today') || 'hari ini'}`,
       changeType: stats.changeWaitTime >= 0 ? "negative" : "positive",
       icon: "timer",
       bgColor: "bg-gradient-to-br from-orange-500 to-amber-600",

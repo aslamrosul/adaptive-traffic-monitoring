@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface QueueDistributionChartRechartsProps {
   startDate: string;
@@ -30,6 +31,7 @@ export default function QueueDistributionChartRecharts({
   endDate,
   lane = "all",
 }: QueueDistributionChartRechartsProps) {
+  const { t } = useTranslation();
   const [selectedLane, setSelectedLane] = useState<"north" | "south" | "east" | "west" | "all">(lane);
   const [chartData, setChartData] = useState<QueueData>({
     level0: { percentage: 45, count: 450 },
@@ -83,19 +85,19 @@ export default function QueueDistributionChartRecharts({
   // Prepare chart data for Recharts
   const pieData: ChartDataPoint[] = [
     {
-      name: "Level 0 - Lancar",
+      name: `${t('charts.level')} 0 - ${t('traffic.smooth')}`,
       value: chartData.level0.percentage,
       count: chartData.level0.count,
       fill: "#22c55e", // green
     },
     {
-      name: "Level 1 - Sedang",
+      name: `${t('charts.level')} 1 - ${t('traffic.moderate')}`,
       value: chartData.level1.percentage,
       count: chartData.level1.count,
       fill: "#eab308", // yellow
     },
     {
-      name: "Level 2 - Padat",
+      name: `${t('charts.level')} 2 - ${t('traffic.congested')}`,
       value: chartData.level2.percentage,
       count: chartData.level2.count,
       fill: "#ef4444", // red

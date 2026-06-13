@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
 
 export type TimeRange = "today" | "yesterday" | "7days" | "30days" | "custom";
 
@@ -17,6 +18,7 @@ interface AnalyticsTimeFilterProps {
 }
 
 export default function AnalyticsTimeFilter({ onFilterChange, currentRange }: AnalyticsTimeFilterProps) {
+  const t = useT();
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -28,11 +30,11 @@ export default function AnalyticsTimeFilter({ onFilterChange, currentRange }: An
   });
 
   const filters = [
-    { id: "today" as TimeRange, label: "Hari Ini", icon: "today" },
-    { id: "yesterday" as TimeRange, label: "Kemarin", icon: "history" },
-    { id: "7days" as TimeRange, label: "7 Hari", icon: "date_range" },
-    { id: "30days" as TimeRange, label: "30 Hari", icon: "calendar_month" },
-    { id: "custom" as TimeRange, label: "Custom", icon: "tune" },
+    { id: "today" as TimeRange, label: t('analytics.daily'), icon: "today" },
+    { id: "yesterday" as TimeRange, label: t('time.yesterday'), icon: "history" },
+    { id: "7days" as TimeRange, label: "7 " + t('time.days'), icon: "date_range" },
+    { id: "30days" as TimeRange, label: "30 " + t('time.days'), icon: "calendar_month" },
+    { id: "custom" as TimeRange, label: t('analytics.custom'), icon: "tune" },
   ];
 
   const handleQuickFilter = (range: TimeRange) => {

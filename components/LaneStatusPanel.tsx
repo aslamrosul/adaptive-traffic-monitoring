@@ -7,6 +7,7 @@ import {
   formatWithTimezone,
   getTimezoneLabel,
 } from "@/lib/user-settings";
+import { useT } from "@/lib/useT";
 
 interface LaneData {
   name: string;
@@ -23,6 +24,7 @@ interface LaneStatusPanelProps {
 }
 
 export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPanelProps) {
+  const t = useT();
   const { timezone } = useAppSettings();
   const [lanes, setLanes] = useState<LaneData[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -206,7 +208,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
             </div>
             <div>
               <h3 className="font-headline font-bold text-white text-base lg:text-lg">
-                Status Antrian Per Jalur
+                {t('lanes.title')}
               </h3>
               <p className="text-xs lg:text-sm text-white/80 mt-0.5">
                 {intersectionName}
@@ -235,9 +237,9 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
         {/* Update Info */}
         <div className="flex items-center gap-2 mt-3 text-xs text-white/70">
           <span className="material-symbols-outlined text-sm">schedule</span>
-          <span>Update otomatis setiap 5 detik</span>
+          <span>{t('lanes.autoRefresh')}</span>
           <span>•</span>
-          <span>Terakhir: {formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}</span>
+          <span>{t('lanes.lastUpdate')}: {formatWithTimezone(lastUpdate.toISOString(), timezone)} {getTimezoneLabel(timezone)}</span>
         </div>
       </div>
 
@@ -256,8 +258,8 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
             <span className="material-symbols-outlined text-slate-300 text-5xl mb-3">
               traffic
             </span>
-            <p className="text-slate-500 font-semibold">Tidak ada data jalur</p>
-            <p className="text-xs text-slate-400 mt-1">Pilih persimpangan untuk melihat status</p>
+            <p className="text-slate-500 font-semibold">{t('lanes.noLaneData')}</p>
+            <p className="text-xs text-slate-400 mt-1">{t('lanes.selectIntersectionToView')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -273,7 +275,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-                      Jalur {lane.name}
+                      {t('lanes.lane')} {lane.name}
                     </h4>
                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${getLightColor(lane.light)}`}>
                       {getLightIcon(lane.light)} {lane.light.toUpperCase()}
@@ -291,7 +293,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                       <span className="material-symbols-outlined text-blue-600 text-base">
                         schedule
                       </span>
-                      <p className="text-xs text-slate-500 font-semibold">Lampu hijau</p>
+                      <p className="text-xs text-slate-500 font-semibold">{t('lanes.greenLight')}</p>
                     </div>
                     <p className="text-lg font-bold text-slate-900">
                       {lane.greenDuration}s
@@ -303,7 +305,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                       <span className="material-symbols-outlined text-orange-600 text-base">
                         directions_car
                       </span>
-                      <p className="text-xs text-slate-500 font-semibold">Kendaraan</p>
+                      <p className="text-xs text-slate-500 font-semibold">{t('lanes.vehicles')}</p>
                     </div>
                     <p className="text-lg font-bold text-slate-900">
                       {lane.vehicleCount}
@@ -315,7 +317,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                       <span className="material-symbols-outlined text-purple-600 text-base">
                         straighten
                       </span>
-                      <p className="text-xs text-slate-500 font-semibold">Jarak antrian</p>
+                      <p className="text-xs text-slate-500 font-semibold">{t('lanes.queueDistance')}</p>
                     </div>
                     <p className="text-lg font-bold text-slate-900">
                       {lane.queueLength}cm

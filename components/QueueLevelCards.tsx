@@ -3,6 +3,7 @@
 import { formatWib } from "@/lib/timezone";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface LaneData {
   lane: string;
@@ -21,27 +22,27 @@ interface QueueLevelBadge {
   icon: string;
 }
 
-function getQueueLevelBadge(level: number): QueueLevelBadge {
+function getQueueLevelBadge(level: number, t: any): QueueLevelBadge {
   switch (level) {
     case 0:
       return {
         color: 'text-emerald-700',
         bgColor: 'bg-emerald-100',
-        text: 'Lancar',
+        text: t('traffic.smooth'),
         icon: '🟢'
       };
     case 1:
       return {
         color: 'text-yellow-700',
         bgColor: 'bg-yellow-100',
-        text: 'Sedang',
+        text: t('traffic.moderate'),
         icon: '🟡'
       };
     case 2:
       return {
         color: 'text-red-700',
         bgColor: 'bg-red-100',
-        text: 'Padat',
+        text: t('traffic.congested'),
         icon: '🔴'
       };
     default:
@@ -54,30 +55,31 @@ function getQueueLevelBadge(level: number): QueueLevelBadge {
   }
 }
 
-function getLaneName(lane: string): string {
+function getLaneName(lane: string, t: any): string {
   const laneMap: Record<string, string> = {
-    'north': 'Utara',
-    'south': 'Selatan',
-    'east': 'Timur',
-    'west': 'Barat',
+    'north': t('traffic.north'),
+    'south': t('traffic.south'),
+    'east': t('traffic.east'),
+    'west': t('traffic.west'),
   };
   return laneMap[lane.toLowerCase()] || lane;
 }
 
-function getLightColor(light: string): { bg: string; text: string } {
+function getLightColor(light: string, t: any): { bg: string; text: string } {
   switch (light) {
     case 'red':
-      return { bg: 'bg-red-500', text: 'Merah' };
+      return { bg: 'bg-red-500', text: t('traffic.redLight') };
     case 'yellow':
-      return { bg: 'bg-yellow-500', text: 'Kuning' };
+      return { bg: 'bg-yellow-500', text: t('traffic.yellowLight') };
     case 'green':
-      return { bg: 'bg-green-500', text: 'Hijau' };
+      return { bg: 'bg-green-500', text: t('traffic.greenLight') };
     default:
       return { bg: 'bg-slate-500', text: 'Off' };
   }
 }
 
 export default function QueueLevelCards() {
+  const { t } = useTranslation();
   const [laneData, setLaneData] = useState<LaneData[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -256,8 +258,8 @@ export default function QueueLevelCards() {
       {/* Lane Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {laneData.map((lane, idx) => {
-          const badge = getQueueLevelBadge(lane.queueLevel);
-          const lightColor = getLightColor(lane.light);
+          const badge = getQueueLevelBadge(lane.queueLevel, t);
+          const lightColor = getLightColor(lane.light, t);
 
           return (
             <motion.div
@@ -270,7 +272,7 @@ export default function QueueLevelCards() {
               {/* Lane Name & Light Status */}
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-                  Jalur {getLaneName(lane.lane)}
+                  {t('traffic.lane')} {getLaneName(lane.lane, t)}
                 </h4>
                 <div className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${lightColor.bg} animate-pulse`}></div>

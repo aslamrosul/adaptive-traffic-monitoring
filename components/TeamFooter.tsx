@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 export default function TeamFooter() {
+  const { t } = useTranslation();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -12,11 +15,10 @@ export default function TeamFooter() {
     >
       <div className="flex-1">
         <h2 className="text-2xl font-bold font-headline mb-3">
-          Kolaborasi Global, Dampak Lokal.
+          {t('team.footerTitle')}
         </h2>
         <p className="text-secondary">
-          Tim kami bekerja dengan standar keamanan tertinggi dan protokol data privasi
-          untuk memastikan sistem ASTRAEA aman bagi seluruh warga.
+          {t('team.footerDescription')}
         </p>
       </div>
       <div className="flex gap-4">
@@ -29,7 +31,7 @@ export default function TeamFooter() {
           </div>
           <div>
             <p className="font-bold text-lg">15+</p>
-            <p className="text-xs text-slate-500 uppercase font-semibold">Bahasa</p>
+            <p className="text-xs text-slate-500 uppercase font-semibold">{t('team.languages')}</p>
           </div>
         </motion.div>
         <motion.div
@@ -41,7 +43,7 @@ export default function TeamFooter() {
           </div>
           <div>
             <p className="font-bold text-lg">4</p>
-            <p className="text-xs text-slate-500 uppercase font-semibold">Kantor Cabang</p>
+            <p className="text-xs text-slate-500 uppercase font-semibold">{t('team.offices')}</p>
           </div>
         </motion.div>
       </div>

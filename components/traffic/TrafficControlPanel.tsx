@@ -7,6 +7,7 @@ import type {
 } from "@/lib/hooks/useMqttTraffic";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/useT";
 
 interface Props {
   data: TrafficUpdate | null;
@@ -23,17 +24,21 @@ const activeLanes: LaneName[] = [
   "east",
 ];
 
-const laneLabels: Record<LaneName, string> = {
-  north: "Utara",
-  south: "Selatan",
-  east: "Timur",
-  west: "Barat",
+const getLaneLabel = (lane: LaneName, t: (key: string) => string): string => {
+  const labels: Record<LaneName, string> = {
+    north: t('traffic.north'),
+    south: t('traffic.south'),
+    east: t('traffic.east'),
+    west: t('traffic.west'),
+  };
+  return labels[lane];
 };
 
 export default function TrafficControlPanel({
   data,
   publishMqtt,
 }: Props) {
+  const t = useT();
   const [greenInput, setGreenInput] = useState(10);
   const [yellowInput, setYellowInput] = useState(3);
   const [level0Input, setLevel0Input] = useState(10);
@@ -153,7 +158,7 @@ export default function TrafficControlPanel({
     successMessage: string,
   ) => {
     if (!deviceId) {
-      showMessage("Device ID belum tersedia.");
+      showMessage(t('iot.deviceId') + " " + t('errors.noData'));
       return false;
     }
 
@@ -182,7 +187,7 @@ export default function TrafficControlPanel({
       if (!response.ok || !result.success) {
         throw new Error(
           result.error ||
-            "Gagal menyimpan konfigurasi",
+            t('errors.saveConfig'),
         );
       }
 
@@ -192,18 +197,18 @@ export default function TrafficControlPanel({
         showMessage(successMessage);
       } else {
         showMessage(
-          "Konfigurasi tersimpan, tetapi pengiriman MQTT tidak sepenuhnya berhasil.",
+          t('iot.configSaved') + ", " + t('errors.sendMqtt'),
         );
       }
 
       return true;
     } catch (error: any) {
       console.error(
-        "Gagal menyimpan konfigurasi:",
+        t('errors.saveConfig'),
         error,
       );
       showMessage(
-        error.message || "Gagal menyimpan konfigurasi.",
+        error.message || t('errors.saveConfig'),
       );
       return false;
     } finally {
@@ -220,8 +225,8 @@ export default function TrafficControlPanel({
         autoMode: enabled,
       },
       enabled
-        ? "Auto Mode berhasil diaktifkan dan disimpan."
-        : "Auto Mode berhasil dimatikan dan disimpan.",
+        ? t('trafficControl.autoMode') + " " + t('common.active') + " " + t('success.saved')
+        : t('trafficControl.autoMode') + " " + t('common.inactive') + " " + t('success.saved'),
     );
   };
 
@@ -233,8 +238,8 @@ export default function TrafficControlPanel({
         adaptiveMode: enabled,
       },
       enabled
-        ? "Adaptive Mode berhasil diaktifkan dan disimpan."
-        : "Adaptive Mode berhasil dimatikan dan disimpan.",
+        ? t('trafficControl.adaptiveMode') + " " + t('common.active') + " " + t('success.saved')
+        : t('trafficControl.adaptiveMode') + " " + t('common.inactive') + " " + t('success.saved'),
     );
   };
 
@@ -244,7 +249,7 @@ export default function TrafficControlPanel({
   ) => {
     if (autoMode) {
       showMessage(
-        "Matikan Auto Mode sebelum mengontrol lampu secara manual.",
+        t('trafficControl.disableAutoModeFirst'),
       );
 
       return;
@@ -252,7 +257,7 @@ export default function TrafficControlPanel({
 
     if (!deviceId) {
       showMessage(
-        "Device ID belum tersedia, tidak dapat mengirim perintah lampu.",
+        t('iot.deviceId') + " " + t('errors.noData'),
       );
       return;
     }
@@ -268,15 +273,13 @@ export default function TrafficControlPanel({
 
     if (!success) {
       showMessage(
-        "Gagal mengirim perintah lampu melalui MQTT.",
+        t('errors.sendMqtt'),
       );
       return;
     }
 
     showMessage(
-      `Lampu Jalur ${laneLabels[lane]} diubah menjadi ${getLightLabel(
-        color,
-      )}.`,
+      `${t('traffic.lane')} ${getLaneLabel(lane, t)} - ${getLightLabel(color, t)}`,
     );
   };
 
@@ -284,11 +287,11 @@ export default function TrafficControlPanel({
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg lg:p-5">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Realtime Control
+          {t('trafficControl.title')}
         </p>
 
         <h2 className="text-xl font-bold text-slate-900">
-          Data & Kontrol
+          {t('dashboard.overview')} & {t('trafficControl.manualControl')}
         </h2>
       </header>
 
@@ -317,15 +320,15 @@ export default function TrafficControlPanel({
 
           <InformationRow
             label="Uptime"
-            value={`${data?.uptimeS ?? 0} detik`}
+            value={`${data?.uptimeS ?? 0} ${t('time.seconds')}`}
           />
 
           <InformationRow
             label="Dummy Mode"
             value={
               data?.dummyMode
-                ? "Aktif"
-                : "Tidak Aktif"
+                ? t('common.active')
+                : t('common.inactive')
             }
           />
         </div>
@@ -333,24 +336,26 @@ export default function TrafficControlPanel({
 
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <h3 className="mb-3 font-bold text-slate-900">
-          Mode Operasi
+          {t('intersections.operatingMode')}
         </h3>
 
         <div className="space-y-3">
           <ModeControl
-            label="Auto Mode"
-            description="Lampu berpindah secara otomatis."
+            label={t('trafficControl.autoMode')}
+            description={t('trafficControl.autoModeDesc')}
             active={autoMode}
             onEnable={() => changeAutoMode(true)}
             onDisable={() => changeAutoMode(false)}
+            t={t}
           />
 
           <ModeControl
-            label="Adaptive Mode"
-            description="Durasi hijau mengikuti tingkat kepadatan."
+            label={t('trafficControl.adaptiveMode')}
+            description={t('trafficControl.adaptiveModeDesc')}
             active={adaptiveMode}
             onEnable={() => changeAdaptiveMode(true)}
             onDisable={() => changeAdaptiveMode(false)}
+            t={t}
           />
         </div>
       </section>
@@ -359,18 +364,18 @@ export default function TrafficControlPanel({
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-bold text-slate-900">
-              Kontrol Lampu Manual
+              {t('trafficControl.manualLightControl')}
             </h3>
 
             <p className="mt-0.5 text-xs text-slate-500">
-              Matikan Auto Mode untuk mengontrol lampu.
+              {t('trafficControl.disableAutoModeToControl')}
             </p>
           </div>
 
           <StatusBadge
             active={!autoMode}
-            activeText="Manual Aktif"
-            inactiveText="Terkunci"
+            activeText={t('trafficControl.manualMode')}
+            inactiveText={t('trafficControl.locked')}
           />
         </div>
 
@@ -390,17 +395,17 @@ export default function TrafficControlPanel({
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="font-bold text-slate-900">
-                      Jalur {laneLabels[lane]}
+                      {t('traffic.lane')} {getLaneLabel(lane, t)}
                     </p>
 
                     <p className="text-xs text-slate-500">
-                      Kendaraan:{" "}
+                      {t('lanes.vehicles')}:{" "}
                       {laneData?.vehicleCount ?? 0}
                       {" · "}
-                      Density:{" "}
+                      {t('traffic.density')}:{" "}
                       {laneData?.queueLevel ?? 0}
                       {" · "}
-                      Antrean:{" "}
+                      {t('lanes.queueDistance')}:{" "}
                       {laneData?.queueLength ?? 0} cm
                     </p>
                   </div>
@@ -410,7 +415,7 @@ export default function TrafficControlPanel({
 
                 <div className="grid grid-cols-3 gap-2">
                   <LightButton
-                    label="Merah"
+                    label={t('traffic.redLight')}
                     color="red"
                     active={currentLight === "red"}
                     disabled={autoMode}
@@ -420,7 +425,7 @@ export default function TrafficControlPanel({
                   />
 
                   <LightButton
-                    label="Kuning"
+                    label={t('traffic.yellowLight')}
                     color="yellow"
                     active={
                       currentLight === "yellow"
@@ -432,7 +437,7 @@ export default function TrafficControlPanel({
                   />
 
                   <LightButton
-                    label="Hijau"
+                    label={t('traffic.greenLight')}
                     color="green"
                     active={
                       currentLight === "green"
@@ -452,32 +457,29 @@ export default function TrafficControlPanel({
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3">
           <h3 className="font-bold text-slate-900">
-            Pengaturan Durasi
+            {t('trafficControl.durationSettings')}
           </h3>
 
           <p className="mt-0.5 text-xs text-slate-500">
-            Nilai akan disimpan ke DynamoDB dan
-            dikirim menuju ESP32 melalui MQTT
-            retained.
+            {t('trafficControl.durationSettingsDesc')}
           </p>
         </div>
 
         {isLoadingConfig && (
           <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
-            Memuat konfigurasi tersimpan...
+            {t('common.loading')}...
           </div>
         )}
 
         {isSavingConfig && (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-            Menyimpan ke DynamoDB dan mengirim
-            ke ESP32...
+            {t('common.saving')}...
           </div>
         )}
 
         <div className="space-y-2">
           <InputRow
-            label="Manual"
+            label={t('trafficControl.manualDuration')}
             value={greenInput}
             min={1}
             max={120}
@@ -487,14 +489,15 @@ export default function TrafficControlPanel({
                 {
                   greenTime: value,
                 },
-                `Durasi hijau manual disimpan menjadi ${value} detik.`,
+                `${t('trafficControl.greenDuration')} ${value} ${t('time.seconds')} ${t('success.saved')}`,
               )
             }
             disabled={isSavingConfig || !deviceId}
+            t={t}
           />
 
           <InputRow
-            label="Kuning"
+            label={t('traffic.yellowLight')}
             value={yellowInput}
             min={1}
             max={30}
@@ -504,10 +507,11 @@ export default function TrafficControlPanel({
                 {
                   yellowTime: value,
                 },
-                `Durasi lampu kuning disimpan menjadi ${value} detik.`,
+                `${t('traffic.yellowLight')} ${value} ${t('time.seconds')} ${t('success.saved')}`,
               )
             }
             disabled={isSavingConfig || !deviceId}
+            t={t}
           />
 
           <InputRow
@@ -521,10 +525,11 @@ export default function TrafficControlPanel({
                 {
                   densityLevel0Green: value,
                 },
-                `Durasi Level 0 disimpan menjadi ${value} detik.`,
+                `Level 0 ${value} ${t('time.seconds')} ${t('success.saved')}`,
               )
             }
             disabled={isSavingConfig || !deviceId}
+            t={t}
           />
 
           <InputRow
@@ -538,10 +543,11 @@ export default function TrafficControlPanel({
                 {
                   densityLevel1Green: value,
                 },
-                `Durasi Level 1 disimpan menjadi ${value} detik.`,
+                `Level 1 ${value} ${t('time.seconds')} ${t('success.saved')}`,
               )
             }
             disabled={isSavingConfig || !deviceId}
+            t={t}
           />
 
           <InputRow
@@ -555,37 +561,38 @@ export default function TrafficControlPanel({
                 {
                   densityLevel2Green: value,
                 },
-                `Durasi Level 2 disimpan menjadi ${value} detik.`,
+                `Level 2 ${value} ${t('time.seconds')} ${t('success.saved')}`,
               )
             }
             disabled={isSavingConfig || !deviceId}
+            t={t}
           />
         </div>
       </section>
 
       <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
         <h3 className="mb-2 text-sm font-bold text-indigo-950">
-          Konfigurasi Aktif
+          {t('trafficControl.activeConfig')}
         </h3>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <ConfigItem
-            label="Auto Mode"
+            label={t('trafficControl.autoMode')}
             value={autoMode ? "ON" : "OFF"}
           />
 
           <ConfigItem
-            label="Adaptive Mode"
+            label={t('trafficControl.adaptiveMode')}
             value={adaptiveMode ? "ON" : "OFF"}
           />
 
           <ConfigItem
-            label="Manual"
+            label={t('trafficControl.manualDuration')}
             value={`${data?.greenTimeS ?? 10}s`}
           />
 
           <ConfigItem
-            label="Kuning"
+            label={t('traffic.yellowLight')}
             value={`${data?.yellowTimeS ?? 3}s`}
           />
 
@@ -642,11 +649,11 @@ function normalizeLight(
 
 function getLightLabel(
   light: LightStatus,
+  t: (key: string) => string,
 ): string {
-  if (light === "green") return "hijau";
-  if (light === "yellow") return "kuning";
-
-  return "merah";
+  if (light === "green") return t('traffic.greenLight');
+  if (light === "yellow") return t('traffic.yellowLight');
+  return t('traffic.redLight');
 }
 
 function InformationRow({
@@ -675,12 +682,14 @@ function ModeControl({
   active,
   onEnable,
   onDisable,
+  t,
 }: {
   label: string;
   description: string;
   active: boolean;
   onEnable: () => void;
   onDisable: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3">
@@ -714,7 +723,7 @@ function ModeControl({
               : "bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800",
           ].join(" ")}
         >
-          Aktifkan
+          {t('common.active')}
         </button>
 
         <button
@@ -728,7 +737,7 @@ function ModeControl({
               : "bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800",
           ].join(" ")}
         >
-          Matikan
+          {t('common.inactive')}
         </button>
       </div>
     </div>
@@ -852,6 +861,7 @@ function InputRow({
   onChange,
   onSet,
   disabled = false,
+  t,
 }: {
   label: string;
   value: number;
@@ -860,6 +870,7 @@ function InputRow({
   onChange: (value: number) => void;
   onSet: (value: number) => void;
   disabled?: boolean;
+  t: (key: string) => string;
 }) {
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -901,7 +912,7 @@ function InputRow({
         />
 
         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
-          detik
+          {t('time.seconds')}
         </span>
       </div>
 
@@ -911,7 +922,7 @@ function InputRow({
         onClick={handleSet}
         className="rounded-lg bg-blue-600 px-2 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Set
+        {t('common.apply')}
       </button>
     </div>
   );

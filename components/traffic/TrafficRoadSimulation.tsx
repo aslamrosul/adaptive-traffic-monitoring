@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface Props {
   data: TrafficUpdate | null;
@@ -37,12 +38,6 @@ const EMPTY_LANE: LaneData = {
   queueLength: 0,
   queueLevel: 0,
   greenDuration: 0,
-};
-
-const LANE_LABELS: Record<ActiveLane, string> = {
-  north: "North",
-  south: "South",
-  east: "East",
 };
 
 const CAR_COLORS = [
@@ -84,10 +79,12 @@ function TrafficLight({
   lane,
   light,
   className,
+  laneLabel,
 }: {
   lane: ActiveLane;
   light: LightStatus;
   className: string;
+  laneLabel: string;
 }) {
   const bulbs = [
     {
@@ -112,7 +109,7 @@ function TrafficLight({
       className={`absolute z-50 w-[62px] rounded-xl border-2 border-black bg-black p-2 shadow-2xl ${className}`}
     >
       <div className="mb-1 text-center text-xs font-bold text-white">
-        {LANE_LABELS[lane][0]}
+        {laneLabel[0]}
       </div>
 
       {bulbs.map((bulb) => {
@@ -232,9 +229,13 @@ function EquipmentLabel({
 function RoadEquipment({
   lane,
   laneData,
+  equipmentLabel,
+  laneLabel,
 }: {
   lane: ActiveLane;
   laneData: LaneData;
+  equipmentLabel: string;
+  laneLabel: string;
 }) {
   const light = normalizeLight(laneData.light);
   const irActive = laneData.vehicleDetected;
@@ -244,12 +245,13 @@ function RoadEquipment({
     return (
       <>
         <EquipmentLabel
-          text="NORTH: LAMPU → IR → HC-SR04"
+          text={equipmentLabel}
           className="left-[calc(50%+180px)] top-[calc(50%-525px)]"
         />
         <TrafficLight
           lane="north"
           light={light}
+          laneLabel={laneLabel}
           className="left-[calc(50%+105px)] top-[calc(50%-340px)]"
         />
         <IrSensor
@@ -268,12 +270,13 @@ function RoadEquipment({
     return (
       <>
         <EquipmentLabel
-          text="SOUTH: LAMPU → IR → HC-SR04"
+          text={equipmentLabel}
           className="left-[calc(50%-380px)] top-[calc(50%+500px)]"
         />
         <TrafficLight
           lane="south"
           light={light}
+          laneLabel={laneLabel}
           className="left-[calc(50%-170px)] top-[calc(50%+205px)]"
         />
         <IrSensor
@@ -291,12 +294,13 @@ function RoadEquipment({
   return (
     <>
       <EquipmentLabel
-        text="EAST: LAMPU → IR → HC-SR04"
+        text={equipmentLabel}
         className="right-[calc(50%-650px)] top-[calc(50%+260px)]"
       />
       <TrafficLight
         lane="east"
         light={light}
+        laneLabel={laneLabel}
         className="right-[calc(50%-330px)] top-[calc(50%+165px)]"
       />
       <IrSensor
@@ -358,27 +362,31 @@ function DensityIndicator({
   data,
   className,
   simulatedCars,
+  laneLabel,
+  t,
 }: {
   lane: ActiveLane;
   data: LaneData;
   className: string;
   simulatedCars: number;
+  laneLabel: string;
+  t: (key: string) => string;
 }) {
   return (
     <div
       className={`absolute z-20 rounded-xl bg-black/80 px-3 py-2 text-xs leading-relaxed text-white ${className}`}
     >
-      <b>{LANE_LABELS[lane]}</b>
+      <b>{laneLabel}</b>
       <br />
-      Count asli: <b>{data.vehicleCount}</b>
+      {t('roadSimulation.actualCount')}: <b>{data.vehicleCount}</b>
       <br />
-      Mobil simulasi: <b>{simulatedCars}</b>
+      {t('roadSimulation.simulatedCars')}: <b>{simulatedCars}</b>
       <br />
-      Density: <b>{data.queueLevel}</b>
+      {t('roadSimulation.density')}: <b>{data.queueLevel}</b>
       <br />
-      Queue: <b>{data.queueLength}</b> cm
+      {t('roadSimulation.queue')}: <b>{data.queueLength}</b> {t('roadSimulation.cm')}
       <br />
-      Green: <b>{data.greenDuration}</b> s
+      {t('roadSimulation.green')}: <b>{data.greenDuration}</b> s
     </div>
   );
 }
@@ -392,6 +400,7 @@ function calculateCountDelta(current: number, previous: number): number {
 }
 
 export default function TrafficRoadSimulation({ data }: Props) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const lastFrameAtRef = useRef<number | null>(null);
@@ -650,43 +659,42 @@ export default function TrafficRoadSimulation({ data }: Props) {
           onClick={toggleFullscreen}
           className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white"
         >
-          ⛶ Fullscreen
+          ⛶ {t('roadSimulation.fullscreen')}
         </button>
         <button
           type="button"
           onClick={zoomIn}
           className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white"
         >
-          ＋ Zoom
+          ＋ {t('roadSimulation.zoomIn')}
         </button>
         <button
           type="button"
           onClick={zoomOut}
           className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white"
         >
-          － Zoom
+          － {t('roadSimulation.zoomOut')}
         </button>
         <button
           type="button"
           onClick={resetMap}
           className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white"
         >
-          ⟳ Reset Map
+          ⟳ {t('roadSimulation.resetMap')}
         </button>
         <button
           type="button"
           onClick={clearSimulation}
           className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white"
         >
-          Bersihkan Mobil
+          {t('roadSimulation.clearCars')}
         </button>
       </div>
 
-      <div className="mb-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
-        Mobil virtual hanya muncul ketika <b>vehicleCount asli bertambah</b>.
-        Lampu merah membuat mobil berhenti dan membentuk antrean; lampu hijau
-        menjalankan antrean melewati persimpangan.
-      </div>
+      <div 
+        className="mb-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800"
+        dangerouslySetInnerHTML={{ __html: t('roadSimulation.info') }}
+      />
 
       <div
         className={`relative h-[520px] w-full select-none overflow-hidden rounded-2xl bg-green-700 lg:h-[600px] ${
@@ -748,18 +756,33 @@ export default function TrafficRoadSimulation({ data }: Props) {
           <div className="absolute right-[calc(50%-170px)] top-1/2 z-[5] h-[230px] w-2 -translate-y-1/2 bg-white" />
 
           <div className="absolute left-1/2 top-8 z-20 -translate-x-1/2 rounded-xl bg-white/95 px-3 py-2 font-bold shadow">
-            NORTH
+            {t('roadSimulation.northLabel')}
           </div>
           <div className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 rounded-xl bg-white/95 px-3 py-2 font-bold shadow">
-            SOUTH
+            {t('roadSimulation.southLabel')}
           </div>
           <div className="absolute right-12 top-1/2 z-20 -translate-y-1/2 rounded-xl bg-white/95 px-3 py-2 font-bold shadow">
-            EAST
+            {t('roadSimulation.eastLabel')}
           </div>
 
-          <RoadEquipment lane="north" laneData={north} />
-          <RoadEquipment lane="south" laneData={south} />
-          <RoadEquipment lane="east" laneData={east} />
+          <RoadEquipment 
+            lane="north" 
+            laneData={north}
+            equipmentLabel={t('roadSimulation.equipmentLabel.north')}
+            laneLabel={t('roadSimulation.north')}
+          />
+          <RoadEquipment 
+            lane="south" 
+            laneData={south}
+            equipmentLabel={t('roadSimulation.equipmentLabel.south')}
+            laneLabel={t('roadSimulation.south')}
+          />
+          <RoadEquipment 
+            lane="east" 
+            laneData={east}
+            equipmentLabel={t('roadSimulation.equipmentLabel.east')}
+            laneLabel={t('roadSimulation.east')}
+          />
 
           {cars.map((car) => (
             <CarView key={car.id} car={car} />
@@ -769,18 +792,24 @@ export default function TrafficRoadSimulation({ data }: Props) {
             lane="north"
             data={north}
             simulatedCars={carCountByLane.north}
+            laneLabel={t('roadSimulation.north')}
+            t={t}
             className="left-[calc(50%-430px)] top-[300px]"
           />
           <DensityIndicator
             lane="south"
             data={south}
             simulatedCars={carCountByLane.south}
+            laneLabel={t('roadSimulation.south')}
+            t={t}
             className="bottom-[260px] left-[calc(50%+220px)]"
           />
           <DensityIndicator
             lane="east"
             data={east}
             simulatedCars={carCountByLane.east}
+            laneLabel={t('roadSimulation.east')}
+            t={t}
             className="right-[300px] top-[calc(50%+180px)]"
           />
         </div>

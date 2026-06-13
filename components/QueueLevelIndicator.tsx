@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 interface QueueLevelIndicatorProps {
   lane: 'north' | 'south' | 'east' | 'west';
@@ -48,11 +49,11 @@ const getBadgeStyle = (level: number) => {
   }
 };
 
-const getLevelText = (level: number): string => {
+const getLevelText = (level: number, t: any): string => {
   switch (level) {
-    case 0: return 'Lancar';
-    case 1: return 'Sedang';
-    case 2: return 'Padat';
+    case 0: return t('traffic.smooth');
+    case 1: return t('traffic.moderate');
+    case 2: return t('traffic.congested');
     default: return 'Unknown';
   }
 };
@@ -66,12 +67,12 @@ const getLevelIcon = (level: number): string => {
   }
 };
 
-const getLaneName = (lane: string): string => {
+const getLaneName = (lane: string, t: any): string => {
   const laneMap: Record<string, string> = {
-    'north': 'Utara',
-    'south': 'Selatan',
-    'east': 'Timur',
-    'west': 'Barat',
+    'north': t('traffic.north'),
+    'south': t('traffic.south'),
+    'east': t('traffic.east'),
+    'west': t('traffic.west'),
   };
   return laneMap[lane.toLowerCase()] || lane;
 };
@@ -95,13 +96,14 @@ export default function QueueLevelIndicator({
   size = 'md',
   className = '',
 }: QueueLevelIndicatorProps) {
+  const { t } = useTranslation();
   const [showTooltip, setShowTooltip] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const badgeStyle = getBadgeStyle(queueLevel);
-  const levelText = getLevelText(queueLevel);
+  const levelText = getLevelText(queueLevel, t);
   const levelIcon = getLevelIcon(queueLevel);
-  const laneName = getLaneName(lane);
+  const laneName = getLaneName(lane, t);
 
   // Size configurations
   const sizeConfig = {

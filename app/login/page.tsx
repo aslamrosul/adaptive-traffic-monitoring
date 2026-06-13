@@ -6,9 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useT } from "@/lib/useT";
+import LanguageSwitcherSimple from "@/components/LanguageSwitcherSimple";
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useT();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -27,14 +30,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error(result.error);
+        toast.error(t('auth.invalidCredentials'));
       } else {
-        toast.success("Login berhasil!");
-        // Redirect to dashboard
+        toast.success(t('auth.loginSuccess'));
         window.location.href = "/dashboard";
       }
     } catch (error: any) {
-      toast.error(error.message || "Gagal login");
+      toast.error(error.message || t('errors.general'));
     } finally {
       setIsLoading(false);
     }
@@ -48,13 +50,18 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Language Switcher */}
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcherSimple />
+          </div>
+
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black text-blue-800 tracking-tighter font-headline mb-2">
-              ASTRAEA
+              {t('common.appName')}
             </h1>
             <p className="text-slate-600 text-sm">
-              Sistem Pantauan Lalu Lintas
+              {t('common.appDescription')}
             </p>
           </div>
 
@@ -62,7 +69,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Email
+                {t('auth.email')}
               </label>
               <input
                 type="email"
@@ -79,7 +86,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Password
+                {t('auth.password')}
               </label>
               <input
                 type="password"
@@ -104,10 +111,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Memproses...
+                  {t('common.loading')}
                 </span>
               ) : (
-                "Masuk"
+                t('auth.login')
               )}
             </motion.button>
           </form>
@@ -118,7 +125,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-slate-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Atau</span>
+              <span className="px-2 bg-white text-slate-500">{t('common.or') || 'Atau'}</span>
             </div>
           </div>
 
@@ -148,43 +155,22 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Masuk dengan Google
+            {t('auth.loginWithGoogle') || 'Masuk dengan Google'}
           </motion.button>
 
           {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600">
-              Belum punya akun?{" "}
+              {t('auth.dontHaveAccount')}{" "}
               <Link
                 href="/register"
                 className="text-primary font-semibold hover:underline"
               >
-                Daftar di sini
+                {t('auth.signUpHere')}
               </Link>
             </p>
           </div>
         </div>
-
-        {/* Demo Mode */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4"
-        >
-          <p className="text-xs font-semibold text-blue-900 mb-2">
-            💡 Mode Demo - Langsung Masuk:
-          </p>
-          <p className="text-xs text-blue-700 mb-3">
-            Untuk testing, Anda bisa langsung masuk ke dashboard tanpa login
-          </p>
-          <Link
-            href="/dashboard"
-            className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Masuk ke Dashboard (Demo)
-          </Link>
-        </motion.div>
 
         {/* Back to Home */}
         <div className="mt-4 text-center">
@@ -193,7 +179,7 @@ export default function LoginPage() {
             className="text-sm text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
-            Kembali ke Beranda
+            {t('common.back')}
           </Link>
         </div>
       </motion.div>

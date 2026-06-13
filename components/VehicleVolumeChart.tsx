@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useT } from "@/lib/useT";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -45,6 +46,7 @@ export default function VehicleVolumeChart({
   intersectionId,
   lane = "all",
 }: VehicleVolumeChartProps) {
+  const t = useT();
   const [data, setData] = useState<VehicleVolumePoint[]>([]);
   const [groupBy, setGroupBy] = useState<"hour" | "day">("day");
   const [totalVehicles, setTotalVehicles] = useState(0);
@@ -85,7 +87,7 @@ export default function VehicleVolumeChart({
 
         if (!response.ok || json.success === false) {
           throw new Error(
-            json.error || "Gagal mengambil volume kendaraan",
+            json.error || t('errors.fetchVehicleVolume'),
           );
         }
 
@@ -145,19 +147,18 @@ export default function VehicleVolumeChart({
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">
-            Volume Kendaraan
+            {t('charts.vehicleVolumeTitle')}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
-            Jumlah kendaraan baru yang terdeteksi berdasarkan jalur
-            per {groupBy === "hour" ? "jam" : "hari"}.
+            {t('charts.vehicleVolumeSubtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl bg-blue-50 px-4 py-2 text-right">
             <p className="text-[10px] font-bold uppercase text-blue-500">
-              Total Kendaraan
+              {t('analytics.vehicleVolume')}
             </p>
 
             <p className="text-xl font-black text-blue-800">
@@ -167,7 +168,7 @@ export default function VehicleVolumeChart({
 
           <div className="rounded-xl bg-amber-50 px-4 py-2 text-right">
             <p className="text-[10px] font-bold uppercase text-amber-600">
-              Periode Tersibuk
+              {t('traffic.peakHours')}
             </p>
 
             <p className="text-sm font-black text-amber-800">
@@ -176,7 +177,7 @@ export default function VehicleVolumeChart({
 
             <p className="text-[10px] text-amber-600">
               {peak
-                ? `${peak.count.toLocaleString("id-ID")} kendaraan · ${peak.laneName}`
+                ? `${peak.count.toLocaleString("id-ID")} ${t('charts.vehicles')} · ${peak.laneName}`
                 : "-"}
             </p>
           </div>
@@ -223,7 +224,7 @@ export default function VehicleVolumeChart({
 
             <Tooltip
               formatter={(value: any, name: any) => [
-                `${Number(value).toLocaleString("id-ID")} kendaraan`,
+                `${Number(value).toLocaleString("id-ID")} ${t('charts.vehicles')}`,
                 name,
               ]}
             />
@@ -232,21 +233,21 @@ export default function VehicleVolumeChart({
 
             <Bar
               dataKey="north"
-              name="Jalur Utara"
+              name={t('traffic.northLane')}
               fill="#2563eb"
               radius={[5, 5, 0, 0]}
             />
 
             <Bar
               dataKey="south"
-              name="Jalur Selatan"
+              name={t('traffic.southLane')}
               fill="#10b981"
               radius={[5, 5, 0, 0]}
             />
 
             <Bar
               dataKey="east"
-              name="Jalur Timur"
+              name={t('traffic.eastLane')}
               fill="#f59e0b"
               radius={[5, 5, 0, 0]}
             />
@@ -258,13 +259,14 @@ export default function VehicleVolumeChart({
 }
 
 function ChartLoading() {
+  const t = useT();
   return (
     <div className="flex h-[340px] items-center justify-center">
       <div className="text-center">
         <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
 
         <p className="text-sm text-slate-500">
-          Memuat volume kendaraan...
+          {t('charts.loadingData')}
         </p>
       </div>
     </div>
@@ -272,6 +274,7 @@ function ChartLoading() {
 }
 
 function ChartEmpty() {
+  const t = useT();
   return (
     <div className="flex h-[340px] flex-col items-center justify-center text-center">
       <span className="material-symbols-outlined text-5xl text-slate-300">
@@ -279,7 +282,7 @@ function ChartEmpty() {
       </span>
 
       <p className="mt-3 text-sm font-semibold text-slate-500">
-        Belum ada kenaikan counter kendaraan pada periode ini.
+        {t('charts.noVehicleData')}
       </p>
     </div>
   );

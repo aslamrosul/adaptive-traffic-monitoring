@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "@/providers/TranslationProvider";
 
 const teamMembers = [
   {
@@ -36,6 +37,8 @@ const teamMembers = [
 ];
 
 export default function TeamGrid() {
+  const { t } = useTranslation();
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {teamMembers.map((member, idx) => (
@@ -95,11 +98,10 @@ export default function TeamGrid() {
         </motion.div>
         <div className="space-y-2 max-w-md">
           <h3 className="font-headline font-black text-2xl text-on-surface">
-            Bergabunglah dengan Kami!
+            {t('team.joinUs')}
           </h3>
           <p className="text-secondary text-base leading-relaxed">
-            Kami terus mencari inovator, insinyur, dan pemikir kreatif untuk membantu
-            kami merevolusi mobilitas perkotaan.
+            {t('team.joinDescription')}
           </p>
           <div className="pt-4">
             <motion.button
@@ -107,7 +109,7 @@ export default function TeamGrid() {
               whileTap={{ scale: 0.95 }}
               className="bg-primary text-on-primary px-8 py-3 rounded-full font-headline font-bold text-sm shadow-lg hover:shadow-primary/30 transition-all flex items-center gap-2 mx-auto"
             >
-              Lihat Lowongan
+              {t('team.viewJobs')}
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
             </motion.button>
           </div>

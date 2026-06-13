@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useT } from "@/lib/useT";
 
 type LaneFilter = "all" | "north" | "south" | "east";
 
@@ -70,6 +71,7 @@ export default function GreenDurationChart({
   intersectionId = "all",
   lane = "all",
 }: GreenDurationChartProps) {
+  const t = useT();
   const [chartData, setChartData] = useState(createEmptyData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -109,7 +111,7 @@ export default function GreenDurationChart({
 
         if (!response.ok || result.success === false) {
           throw new Error(
-            result.error || "Gagal mengambil data durasi lampu hijau"
+            result.error || t('errors.loadData')
           );
         }
 
@@ -126,7 +128,7 @@ export default function GreenDurationChart({
         console.error("Error fetching green duration analytics:", fetchError);
 
         setError(
-          fetchError.message || "Gagal memuat data durasi lampu hijau"
+          fetchError.message || t('errors.loadData')
         );
 
         setChartData(createEmptyData());
@@ -215,21 +217,21 @@ export default function GreenDurationChart({
 
         <div className="space-y-1 text-xs">
           <p className="text-slate-600">
-            Target:{" "}
+            {t('charts.target')}:{" "}
             <span className="font-bold text-slate-900">
-              {item.expected.toFixed(1)} detik
+              {item.expected.toFixed(1)} {t('charts.seconds')}
             </span>
           </p>
 
           <p className="text-slate-600">
-            Aktual:{" "}
+            {t('charts.actual')}:{" "}
             <span className="font-bold text-blue-600">
-              {item.actual.toFixed(1)} detik
+              {item.actual.toFixed(1)} {t('charts.seconds')}
             </span>
           </p>
 
           <p className="text-slate-600">
-            Efektivitas:{" "}
+            {t('charts.effectiveness')}:{" "}
             <span
               className={`font-bold ${getEffectivenessClass(
                 item.effectiveness
@@ -240,7 +242,7 @@ export default function GreenDurationChart({
           </p>
 
           <p className="text-slate-600">
-            Sampel:{" "}
+            {t('charts.samples')}:{" "}
             <span className="font-bold text-slate-900">{item.count}</span>
           </p>
         </div>
@@ -258,17 +260,17 @@ export default function GreenDurationChart({
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900 lg:text-xl">
-            Durasi Hijau vs Level Antrian
+            {t('charts.greenDurationTitle')}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500 lg:text-sm">
-            Perbandingan target durasi hijau dengan rata-rata durasi aktual.
+            {t('charts.greenDurationSubtitle')}
           </p>
         </div>
 
         <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-3 text-right">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Efektivitas Keseluruhan
+            {t('charts.overallEffectiveness')}
           </p>
 
           <p
@@ -280,7 +282,7 @@ export default function GreenDurationChart({
           </p>
 
           <p className="text-[10px] text-slate-500">
-            {totalSamples.toLocaleString("id-ID")} sampel
+            {totalSamples.toLocaleString("id-ID")} {t('charts.samples')}
           </p>
         </div>
       </div>
@@ -291,7 +293,7 @@ export default function GreenDurationChart({
             <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
 
             <p className="text-sm text-slate-500">
-              Memuat efektivitas durasi hijau...
+              {t('common.loading')}...
             </p>
           </div>
         </div>
@@ -303,7 +305,7 @@ export default function GreenDurationChart({
             </span>
 
             <p className="mt-2 font-bold text-red-700">
-              Data gagal dimuat
+              {t('errors.loadData')}
             </p>
 
             <p className="mt-1 text-sm text-red-600">{error}</p>
@@ -317,11 +319,11 @@ export default function GreenDurationChart({
             </span>
 
             <p className="mt-2 font-bold text-slate-700">
-              Belum ada data durasi hijau
+              {t('charts.noGreenDurationData')}
             </p>
 
             <p className="mt-1 text-sm text-slate-500">
-              Tidak ditemukan telemetry pada periode dan filter yang dipilih.
+              {t('charts.noTelemetryFound')}
             </p>
           </div>
         </div>
@@ -370,14 +372,14 @@ export default function GreenDurationChart({
 
                 <Bar
                   dataKey="expected"
-                  name="Target Durasi"
+                  name={t('charts.targetDuration')}
                   fill="#94a3b8"
                   radius={[8, 8, 0, 0]}
                 />
 
                 <Bar
                   dataKey="actual"
-                  name="Durasi Aktual"
+                  name={t('charts.actualDuration')}
                   fill="#2563eb"
                   radius={[8, 8, 0, 0]}
                 />
@@ -411,12 +413,12 @@ export default function GreenDurationChart({
                   </p>
 
                   <p className="mt-1 text-xs text-slate-600">
-                    Aktual {item.actual.toFixed(1)}s / target{" "}
+                    {t('charts.actual')} {item.actual.toFixed(1)}s / {t('charts.target').toLowerCase()}{" "}
                     {item.expected.toFixed(1)}s
                   </p>
 
                   <p className="mt-1 text-xs font-semibold text-slate-500">
-                    {item.count.toLocaleString("id-ID")} sampel
+                    {item.count.toLocaleString("id-ID")} {t('charts.samples')}
                   </p>
                 </div>
               );
