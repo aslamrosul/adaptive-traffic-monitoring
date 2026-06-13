@@ -1,10 +1,3 @@
-import { useTranslations } from 'next-intl';
-
-export { useTranslations };
-
-// Helper untuk mendapatkan translations di server components  
-export { getTranslations } from 'next-intl/server';
-
 // Locale type
 export type Locale = 'en' | 'id';
 
