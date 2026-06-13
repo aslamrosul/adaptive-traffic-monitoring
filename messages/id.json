@@ -53,7 +53,9 @@
     "less": "Lebih Sedikit",
     "show": "Tampilkan",
     "hide": "Sembunyikan",
-    "or": "Atau"
+    "or": "Atau",
+    "chat": "Chat dengan Support",
+    "email": "Email Support"
   },
   "auth": {
     "login": "Masuk",
@@ -117,6 +119,10 @@
     "viewDetails": "Lihat Detail",
     "noData": "Tidak ada data tersedia",
     "refreshData": "Perbarui Data",
+    "totalVehicles": "Total Kendaraan",
+    "flowScore": "Skor Kelancaran",
+    "flowScoreSubtitle": "Berdasarkan data real-time",
+    "laneStatus": "Status Jalur",
     "activityLog": {
       "action": "Membuka dashboard monitoring",
       "description": "Pengguna membuka halaman dashboard realtime"

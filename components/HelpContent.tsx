@@ -32,11 +32,11 @@ export default function HelpContent() {
       if (result.success) {
         setFaqs(result.data || []);
       } else {
-        toast.error(t('errors.loadData'));
+        toast.error(t('errors.loadData') || 'Gagal memuat data');
       }
     } catch (error) {
       console.error("Error fetching FAQs:", error);
-      toast.error("Gagal memuat FAQ");
+      toast.error(t('errors.loadData') || "Gagal memuat FAQ");
     } finally {
       setIsLoadingFaqs(false);
     }
@@ -55,11 +55,11 @@ export default function HelpContent() {
       if (result.success) {
         setGuides(result.data || []);
       } else {
-        toast.error(t('errors.loadData'));
+        toast.error(t('errors.loadData') || 'Gagal memuat data');
       }
     } catch (error) {
       console.error("Error fetching guides:", error);
-      toast.error("Gagal memuat panduan");
+      toast.error(t('errors.loadData') || "Gagal memuat panduan");
     } finally {
       setIsLoadingGuides(false);
     }
@@ -129,11 +129,11 @@ export default function HelpContent() {
         className="rounded-xl bg-gradient-to-br from-primary to-blue-600 p-4 text-white lg:rounded-2xl lg:p-8"
       >
         <h1 className="mb-1 break-words font-headline text-xl font-bold lg:mb-2 lg:text-3xl">
-          {t('help.searchHelp')}
+          {t('help.title') || 'Bantuan'}
         </h1>
 
         <p className="mb-3 text-sm text-blue-100 lg:mb-6 lg:text-base">
-          {t('help.getStarted')}
+          {t('help.getStarted') || 'Memulai'}
         </p>
 
         <div className="relative">
@@ -145,7 +145,7 @@ export default function HelpContent() {
             type="text"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Cari bantuan, FAQ, MQTT, IoT, dashboard..."
+            placeholder={t('help.searchHelp') || "Cari bantuan, FAQ, MQTT, IoT, dashboard..."}
             className="w-full rounded-lg bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-300 lg:rounded-xl lg:py-3 lg:pl-12 lg:pr-4 lg:text-base"
           />
         </div>
@@ -153,13 +153,13 @@ export default function HelpContent() {
 
       <div>
         <h2 className="mb-3 truncate text-base font-bold text-slate-900 lg:mb-4 lg:text-xl">
-          Panduan Cepat
+          {t('help.guides') || 'Panduan Cepat'}
         </h2>
 
         {isLoadingGuides ? (
           <Loading />
         ) : filteredGuides.length === 0 ? (
-          <Empty text="Panduan tidak ditemukan." />
+          <Empty text={t('search.noDataFound') || "Panduan tidak ditemukan."} />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
             {filteredGuides.map((guide: any, idx: number) => (
@@ -195,13 +195,13 @@ export default function HelpContent() {
 
       <div>
         <h2 className="mb-3 break-words text-base font-bold text-slate-900 lg:mb-4 lg:text-xl">
-          Pertanyaan yang Sering Diajukan
+          {t('help.faqs') || 'Pertanyaan yang Sering Diajukan'}
         </h2>
 
         {isLoadingFaqs ? (
           <Loading />
         ) : filteredFaqs.length === 0 ? (
-          <Empty text="FAQ tidak ditemukan." />
+          <Empty text={t('search.noDataFound') || "FAQ tidak ditemukan."} />
         ) : (
           <div className="space-y-4 lg:space-y-6">
             {filteredFaqs.map((category: any, catIdx: number) => (
@@ -279,11 +279,11 @@ export default function HelpContent() {
         </span>
 
         <h3 className="mb-1 break-words text-base font-bold text-slate-900 lg:mb-2 lg:text-xl">
-          Masih butuh bantuan?
+          {t('help.support') || 'Masih butuh bantuan?'}
         </h3>
 
         <p className="mb-4 break-words text-sm text-slate-600 lg:mb-6 lg:text-base">
-          Hubungi support untuk masalah login, MQTT, IoT, atau dashboard.
+          {t('help.contactUs') || 'Hubungi support untuk masalah login, MQTT, IoT, atau dashboard.'}
         </p>
 
         <div className="flex flex-col justify-center gap-2 sm:flex-row lg:gap-4">
@@ -292,7 +292,7 @@ export default function HelpContent() {
             onClick={handleChatSupport}
             className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 sm:w-auto lg:rounded-xl lg:px-6 lg:py-3 lg:text-base"
           >
-            Chat dengan Support
+            {t('common.chat') || 'Chat dengan Support'}
           </button>
 
           <button
@@ -300,7 +300,7 @@ export default function HelpContent() {
             onClick={handleEmailSupport}
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-white sm:w-auto lg:rounded-xl lg:px-6 lg:py-3 lg:text-base"
           >
-            Email Support
+            {t('common.email') || 'Email Support'}
           </button>
         </div>
       </motion.div>

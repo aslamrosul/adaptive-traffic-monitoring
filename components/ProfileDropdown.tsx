@@ -28,16 +28,16 @@ export default function ProfileDropdown() {
 
   const handleLogout = async () => {
     setIsOpen(false);
-    toast.loading("Logging out...");
+    toast.loading(t('auth.logout') || "Logging out...");
     await signOut({ callbackUrl: "/" });
     toast.dismiss();
-    toast.success("Berhasil keluar dari sistem");
+    toast.success(t('auth.logoutSuccess') || "Berhasil keluar dari sistem");
   };
 
   const menuItems = [
     {
       icon: "home",
-      label: "Beranda",
+      label: t('navigation.home') || "Beranda",
       action: () => {
         router.push("/");
         setIsOpen(false);
@@ -45,7 +45,7 @@ export default function ProfileDropdown() {
     },
     {
       icon: "person",
-      label: "Profil Saya",
+      label: t('profile.myProfile') || "Profil Saya",
       action: () => {
         router.push("/profile");
         setIsOpen(false);
@@ -53,7 +53,7 @@ export default function ProfileDropdown() {
     },
     {
       icon: "settings",
-      label: "Pengaturan",
+      label: t('navigation.settings') || "Pengaturan",
       action: () => {
         router.push("/profile?tab=settings");
         setIsOpen(false);
@@ -61,7 +61,7 @@ export default function ProfileDropdown() {
     },
     {
       icon: "help",
-      label: "Bantuan",
+      label: t('navigation.help') || "Bantuan",
       action: () => {
         router.push("/profile?tab=help");
         setIsOpen(false);
@@ -69,7 +69,7 @@ export default function ProfileDropdown() {
     },
     {
       icon: "logout",
-      label: "Keluar",
+      label: t('auth.logout') || "Keluar",
       action: handleLogout,
       danger: true,
     },

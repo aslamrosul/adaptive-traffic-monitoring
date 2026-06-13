@@ -53,7 +53,9 @@
     "less": "Less",
     "show": "Show",
     "hide": "Hide",
-    "or": "Or"
+    "or": "Or",
+    "chat": "Chat with Support",
+    "email": "Email Support"
   },
   "auth": {
     "login": "Login",
@@ -117,6 +119,10 @@
     "viewDetails": "View Details",
     "noData": "No data available",
     "refreshData": "Refresh Data",
+    "totalVehicles": "Total Vehicles",
+    "flowScore": "Flow Score",
+    "flowScoreSubtitle": "Based on real-time data",
+    "laneStatus": "Lane Status",
     "activityLog": {
       "action": "Opening dashboard monitoring",
       "description": "User opened realtime dashboard page"

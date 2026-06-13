@@ -84,9 +84,9 @@ export default function DashboardStats({
       link: "/Analist",
     },
     {
-      label: "Skor Kelancaran",
+      label: t('dashboard.flowScore') || "Skor Kelancaran",
       value: stats.flowScore,
-      subtitle: "Berdasarkan data real-time",
+      subtitle: t('dashboard.flowScoreSubtitle') || "Berdasarkan data real-time",
       icon: "speed",
       bgColor: "bg-gradient-to-br from-purple-600 to-indigo-700",
       iconBg: "",

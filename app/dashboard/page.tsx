@@ -438,7 +438,7 @@ export default function DashboardPage() {
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
                   <div className="mb-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Status jalur
+                      {t('dashboard.laneStatus') || 'Status jalur'}
                     </p>
 
                     <h2 className="text-lg font-bold text-slate-900">
