@@ -89,10 +89,9 @@ export default function IoTConfigPage() {
                 <span className="material-symbols-outlined text-white text-lg">info</span>
               </div>
               <div>
-                <h3 className="font-bold text-white mb-1 text-xs">Remote Configuration untuk Smart Traffic Light</h3>
+                <h3 className="font-bold text-white mb-1 text-xs">{t('iot.remoteConfigTitle')}</h3>
                 <p className="text-blue-100 text-[10px] leading-relaxed">
-                  Atur durasi lampu lalu lintas berdasarkan jumlah kendaraan secara real-time.
-                  Konfigurasi akan disimpan ke database dan dikirim ke ESP32 melalui MQTT/API.
+                  {t('iot.remoteConfigDesc')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {["Real-time", "MQTT", "Auto Sync"].map((tag) => (
@@ -342,13 +341,13 @@ export default function IoTConfigPage() {
         >
           <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">lightbulb</span>
-            {t('help.title')}
+            {t('iot.howItWorks')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { step: "1", title: "Atur Konfigurasi", desc: "Tentukan batas kendaraan dan durasi lampu untuk setiap kondisi lalu lintas" },
-              { step: "2", title: "Simpan ke Database", desc: "Konfigurasi disimpan ke DynamoDB dan dikirim ke perangkat melalui Mosquitto MQTT" },
-              { step: "3", title: "ESP32 Terima Data", desc: "ESP32 menerima konfigurasi via MQTT/API dan menerapkan aturan baru" },
+              { step: "1", title: t('iot.step1Title'), desc: t('iot.step1Desc') },
+              { step: "2", title: t('iot.step2Title'), desc: t('iot.step2Desc') },
+              { step: "3", title: t('iot.step3Title'), desc: t('iot.step3Desc') },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
