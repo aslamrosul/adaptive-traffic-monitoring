@@ -91,11 +91,15 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    if (!body.title || !body.message) {
+    const hasFallbackText = Boolean(body.title && body.message);
+    const hasTranslationKeys = Boolean(body.titleKey && body.messageKey);
+
+    if (!hasFallbackText && !hasTranslationKeys) {
       return NextResponse.json(
         {
           success: false,
-          error: "title dan message wajib diisi",
+          error:
+            "title/message atau titleKey/messageKey wajib diisi",
         },
         { status: 400 },
       );
@@ -116,8 +120,15 @@ export async function POST(request: Request) {
       severity: body.severity || body.type || "info",
       category: body.category || "system",
 
-      title: body.title,
-      message: body.message,
+      title: body.title || body.titleKey || "Notifikasi",
+      message: body.message || body.messageKey || "",
+
+      titleKey: body.titleKey || null,
+      messageKey: body.messageKey || null,
+      params: body.params || {},
+      notificationType:
+        body.notificationType || body.code || body.notif_type || null,
+      code: body.code || body.notificationType || body.notif_type || null,
 
       read: false,
 

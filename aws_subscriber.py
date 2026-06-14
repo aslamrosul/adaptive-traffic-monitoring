@@ -403,6 +403,163 @@ def get_user_telegram_config(user: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+NOTIFICATION_TRANSLATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
+    "id": {
+        "dummyMode": {
+            "title": "Mode Dummy Masih Aktif",
+            "message": (
+                "Perangkat {deviceId} pada {intersection} masih mengirim data dummy. "
+                "Data belum berasal dari sensor asli."
+            ),
+        },
+        "sensorModeFalse": {
+            "title": "Sensor Mode Tidak Aktif",
+            "message": "Perangkat {deviceId} pada {intersection} belum menggunakan mode sensor asli.",
+        },
+        "weakWifi": {
+            "title": "Sinyal WiFi ESP32 Lemah",
+            "message": (
+                "Sinyal WiFi perangkat {deviceId} lemah ({rssi} dBm). "
+                "Periksa jarak router atau kualitas jaringan."
+            ),
+        },
+        "queueLevel2": {
+            "title": "Antrean Padat Jalur {lane}",
+            "message": (
+                "Jalur {lane} pada {intersection} mencapai Queue Level {level}. "
+                "Estimasi antrean {queueEstimateCm} cm dan sekitar {queueVehicles} kendaraan."
+            ),
+        },
+    },
+    "en": {
+        "dummyMode": {
+            "title": "Dummy Mode Still Active",
+            "message": (
+                "Device {deviceId} at {intersection} is still sending dummy data. "
+                "The data is not from real sensors yet."
+            ),
+        },
+        "sensorModeFalse": {
+            "title": "Sensor Mode Is Not Active",
+            "message": "Device {deviceId} at {intersection} is not using real sensor mode yet.",
+        },
+        "weakWifi": {
+            "title": "Weak ESP32 WiFi Signal",
+            "message": (
+                "Device {deviceId} has a weak WiFi signal ({rssi} dBm). "
+                "Check the router distance or network quality."
+            ),
+        },
+        "queueLevel2": {
+            "title": "Heavy Queue on {lane} Lane",
+            "message": (
+                "The {lane} lane at {intersection} reached Queue Level {level}. "
+                "Estimated queue length is {queueEstimateCm} cm with around {queueVehicles} vehicles."
+            ),
+        },
+    },
+}
+
+NOTIFICATION_CODE_BY_TYPE = {
+    "dummy_mode": "dummyMode",
+    "sensor_mode_false": "sensorModeFalse",
+    "weak_wifi": "weakWifi",
+    "queue_level_2": "queueLevel2",
+}
+
+LANE_LABELS = {
+    "id": {
+        "north": "Utara",
+        "south": "Selatan",
+        "east": "Timur",
+        "west": "Barat",
+    },
+    "en": {
+        "north": "North",
+        "south": "South",
+        "east": "East",
+        "west": "West",
+    },
+}
+
+
+def get_user_locale(user: Dict[str, Any]) -> str:
+    app_settings = user.get("appSettings") or {}
+    locale = str(
+        app_settings.get("language")
+        or app_settings.get("locale")
+        or app_settings.get("appLanguage")
+        or "id"
+    ).lower()
+
+    if locale not in ["id", "en"]:
+        return "id"
+
+    return locale
+
+
+def get_notification_code(notif_type: str) -> str:
+    return NOTIFICATION_CODE_BY_TYPE.get(notif_type, notif_type)
+
+
+def build_notification_params(
+    document: Dict[str, Any],
+    lane: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    locale: str = "id",
+) -> Dict[str, Any]:
+    meta = metadata or {}
+    raw_lane = lane or str(meta.get("lane") or "-")
+    lane_label = LANE_LABELS.get(locale, LANE_LABELS["id"]).get(raw_lane, raw_lane)
+
+    return {
+        "intersection": document.get("intersection_id", "-"),
+        "intersectionId": document.get("intersection_id", "-"),
+        "deviceId": document.get("device_id", "-"),
+        "device_id": document.get("device_id", "-"),
+        "lane": lane_label,
+        "laneRaw": raw_lane,
+        "level": meta.get("queue_level", meta.get("queueLevel", "-")),
+        "queueEstimateCm": meta.get(
+            "queue_estimate_cm",
+            meta.get("queueEstimateCm", "-"),
+        ),
+        "queueVehicles": meta.get(
+            "queue_vehicles",
+            meta.get("queueVehicles", "-"),
+        ),
+        "rssi": meta.get("wifi_rssi", meta.get("wifiRssi", "-")),
+        "threshold": meta.get("threshold", "-"),
+        "light": meta.get("light", "-"),
+    }
+
+
+def format_template(template: str, params: Dict[str, Any]) -> str:
+    text = template
+
+    for key, value in params.items():
+        text = text.replace("{" + key + "}", str(value))
+
+    return text
+
+
+def render_notification_text(
+    notif_type: str,
+    field: str,
+    params: Dict[str, Any],
+    locale: str = "id",
+    fallback: str = "",
+) -> str:
+    code = get_notification_code(notif_type)
+    translations = NOTIFICATION_TRANSLATIONS.get(locale) or NOTIFICATION_TRANSLATIONS["id"]
+    template = (translations.get(code) or {}).get(field)
+
+    if not template:
+        return fallback
+
+    return format_template(template, params)
+
+
 def build_telegram_alert_text(
     title: str,
     message: str,
@@ -410,21 +567,31 @@ def build_telegram_alert_text(
     category: str,
     document: Dict[str, Any],
     lane: Optional[str] = None,
+    locale: str = "id",
 ) -> str:
     intersection_id = document.get("intersection_id", "-")
     device_id = document.get("device_id", "-")
-    lane_text = lane or "-"
+    lane_text = (
+        LANE_LABELS.get(locale, LANE_LABELS["id"]).get(lane, lane)
+        if lane
+        else "-"
+    )
+
+    label_category = "Category" if locale == "en" else "Kategori"
+    label_intersection = "Intersection" if locale == "en" else "Persimpangan"
+    label_lane = "Lane" if locale == "en" else "Jalur"
+    label_time = "UTC Time" if locale == "en" else "Waktu UTC"
 
     return (
         f"🚦 <b>ASTRAEA Alert</b>\n\n"
         f"<b>{title}</b>\n"
         f"{message}\n\n"
         f"Severity: <b>{severity.upper()}</b>\n"
-        f"Kategori: {category}\n"
-        f"Persimpangan: {intersection_id}\n"
+        f"{label_category}: {category}\n"
+        f"{label_intersection}: {intersection_id}\n"
         f"Device: {device_id}\n"
-        f"Jalur: {lane_text}\n"
-        f"Waktu UTC: {utc_now_iso()}"
+        f"{label_lane}: {lane_text}\n"
+        f"{label_time}: {utc_now_iso()}"
     )
 
 
@@ -469,9 +636,20 @@ def build_email_alert_html(
     category: str,
     document: Dict[str, Any],
     lane: Optional[str] = None,
+    locale: str = "id",
 ) -> str:
     intersection_id = document.get("intersection_id", "-")
     device_id = document.get("device_id", "-")
+    lane_text = (
+        LANE_LABELS.get(locale, LANE_LABELS["id"]).get(lane, lane)
+        if lane
+        else "-"
+    )
+
+    label_category = "Category" if locale == "en" else "Kategori"
+    label_intersection = "Intersection" if locale == "en" else "Persimpangan"
+    label_lane = "Lane" if locale == "en" else "Jalur"
+    label_time = "UTC Time" if locale == "en" else "Waktu UTC"
 
     return f"""
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a">
@@ -482,11 +660,11 @@ def build_email_alert_html(
       <hr />
 
       <p><b>Severity:</b> {severity.upper()}</p>
-      <p><b>Kategori:</b> {category}</p>
-      <p><b>Persimpangan:</b> {intersection_id}</p>
+      <p><b>{label_category}:</b> {category}</p>
+      <p><b>{label_intersection}:</b> {intersection_id}</p>
       <p><b>Device:</b> {device_id}</p>
-      <p><b>Jalur:</b> {lane or "-"}</p>
-      <p><b>Waktu UTC:</b> {utc_now_iso()}</p>
+      <p><b>{label_lane}:</b> {lane_text}</p>
+      <p><b>{label_time}:</b> {utc_now_iso()}</p>
     </div>
     """
 
@@ -505,18 +683,49 @@ def save_notification(
     created_at = utc_now_iso()
     target_users = get_notification_target_users()
 
-    telegram_text = build_telegram_alert_text(
-        title=title,
-        message=message,
-        severity=severity,
-        category=category,
+    notification_code = get_notification_code(notif_type)
+    title_key = f"notifications.items.{notification_code}.title"
+    message_key = f"notifications.items.{notification_code}.message"
+
+    base_metadata = {
+        **(metadata or {}),
+        "notificationType": notif_type,
+        "code": notification_code,
+    }
+
+    params_id = build_notification_params(
         document=document,
         lane=lane,
+        metadata=base_metadata,
+        locale="id",
     )
 
     for user in target_users:
         user_id = str(user.get("id") or "user-001")
         notification_id = f"notif_{uuid.uuid4().hex[:12]}"
+        locale = get_user_locale(user)
+
+        user_params = build_notification_params(
+            document=document,
+            lane=lane,
+            metadata=base_metadata,
+            locale=locale,
+        )
+
+        localized_title = render_notification_text(
+            notif_type=notif_type,
+            field="title",
+            params=user_params,
+            locale=locale,
+            fallback=title,
+        )
+        localized_message = render_notification_text(
+            notif_type=notif_type,
+            field="message",
+            params=user_params,
+            locale=locale,
+            fallback=message,
+        )
 
         item = {
             "user_id": user_id,
@@ -526,15 +735,25 @@ def save_notification(
             "type": severity,
             "severity": severity,
             "category": category,
+
+            # Fallback text for old UI / direct DB checks.
             "title": title,
             "message": message,
+
+            # I18n fields for dashboard rendering.
+            "titleKey": title_key,
+            "messageKey": message_key,
+            "params": params_id,
+            "notificationType": notif_type,
+            "code": notification_code,
+
             "read": False,
             "actionUrl": action_url,
             "relatedTo": document.get("id"),
             "intersection_id": document.get("intersection_id"),
             "device_id": document.get("device_id"),
             "lane": lane,
-            "metadata": metadata or {},
+            "metadata": base_metadata,
             "createdAt": created_at,
             "updatedAt": created_at,
         }
@@ -545,6 +764,7 @@ def save_notification(
         print(f"  user_id={user_id}")
         print(f"  notification_id={notification_id}")
         print(f"  title={title}")
+        print(f"  titleKey={title_key}")
 
         if should_send_telegram(user):
             config = get_user_telegram_config(user)
@@ -552,7 +772,15 @@ def save_notification(
             sent = send_telegram_message(
                 bot_token=config["bot_token"],
                 chat_id=config["chat_id"],
-                text=telegram_text,
+                text=build_telegram_alert_text(
+                    title=localized_title,
+                    message=localized_message,
+                    severity=severity,
+                    category=category,
+                    document=document,
+                    lane=lane,
+                    locale=locale,
+                ),
             )
 
             if sent:
@@ -565,14 +793,15 @@ def save_notification(
         if should_send_email(user):
             email_sent = send_email_message(
                 to_email=str(user.get("email") or ""),
-                subject=f"[ASTRAEA] {title}",
+                subject=f"[ASTRAEA] {localized_title}",
                 html=build_email_alert_html(
-                    title=title,
-                    message=message,
+                    title=localized_title,
+                    message=localized_message,
                     severity=severity,
                     category=category,
                     document=document,
                     lane=lane,
+                    locale=locale,
                 ),
             )
 

@@ -320,6 +320,11 @@ interface NotificationData {
 
   title: string;
   message: string;
+  titleKey?: string | null;
+  messageKey?: string | null;
+  params?: any;
+  notificationType?: string | null;
+  code?: string | null;
 
   read: boolean;
 
@@ -364,13 +369,24 @@ function normalizeNotification(item: any): NotificationData {
     severity: item.severity || item.type || "info",
     category: item.category || "system",
 
-    title: item.title || "Notifikasi",
-    message: item.message || "",
+    title: item.title || item.titleKey || "Notifikasi",
+    message: item.message || item.messageKey || "",
+    titleKey: item.titleKey ?? null,
+    messageKey: item.messageKey ?? null,
+    params: item.params ?? {},
+    notificationType:
+      item.notificationType || item.code || item.notif_type || null,
+    code: item.code || item.notificationType || item.notif_type || null,
 
     read: Boolean(item.read),
 
     actionUrl: item.actionUrl ?? null,
     relatedTo: item.relatedTo ?? null,
+
+    intersection_id: item.intersection_id ?? null,
+    device_id: item.device_id ?? null,
+    lane: item.lane ?? null,
+    metadata: item.metadata ?? {},
 
     createdAt:
       item.createdAt ||

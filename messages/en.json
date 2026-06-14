@@ -293,7 +293,26 @@
       "warning": "Warning",
       "info": "Info",
       "success": "Success",
-      "error": "Error"
+      "error": "Error",
+      "critical": "Critical"
+    },
+    "items": {
+      "weakWifi": {
+        "title": "Weak ESP32 WiFi Signal",
+        "message": "Device {deviceId} has a weak WiFi signal ({rssi} dBm). Check the router distance or network quality."
+      },
+      "dummyMode": {
+        "title": "Dummy Mode Still Active",
+        "message": "Device {deviceId} at {intersection} is still sending dummy data. The data is not from real sensors yet."
+      },
+      "sensorModeFalse": {
+        "title": "Sensor Mode Is Not Active",
+        "message": "Device {deviceId} at {intersection} is not using real sensor mode yet."
+      },
+      "queueLevel2": {
+        "title": "Heavy Queue on {lane} Lane",
+        "message": "The {lane} lane at {intersection} reached Queue Level {level}. Estimated queue length is {queueEstimateCm} cm with around {queueVehicles} vehicles."
+      }
     }
   },
   "reports": {

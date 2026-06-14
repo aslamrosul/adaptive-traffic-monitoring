@@ -10,6 +10,7 @@ import {
   getTimezoneLabel,
 } from "@/lib/user-settings";
 import { useT } from "@/lib/useT";
+import { getNotificationText } from "@/lib/notification-i18n";
 
 export default function NotificationList() {
   const t = useT();
@@ -185,7 +186,7 @@ export default function NotificationList() {
                         !notif.read ? "font-extrabold" : ""
                       }`}
                     >
-                      {notif.title}
+                      {getNotificationText(notif, "title", t)}
                     </h3>
 
                     {!notif.read && (
@@ -194,7 +195,7 @@ export default function NotificationList() {
                   </div>
 
                   <p className="mb-2 text-sm text-slate-600">
-                    {notif.message}
+                    {getNotificationText(notif, "message", t)}
                   </p>
 
                   <div className="flex items-center justify-between">

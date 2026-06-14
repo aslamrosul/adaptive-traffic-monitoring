@@ -293,7 +293,26 @@
       "warning": "Perhatian",
       "info": "Informasi",
       "success": "Sukses",
-      "error": "Error"
+      "error": "Error",
+      "critical": "Kritis"
+    },
+    "items": {
+      "weakWifi": {
+        "title": "Sinyal WiFi ESP32 Lemah",
+        "message": "Sinyal WiFi perangkat {deviceId} lemah ({rssi} dBm). Periksa jarak router atau kualitas jaringan."
+      },
+      "dummyMode": {
+        "title": "Mode Dummy Masih Aktif",
+        "message": "Perangkat {deviceId} pada {intersection} masih mengirim data dummy. Data belum berasal dari sensor asli."
+      },
+      "sensorModeFalse": {
+        "title": "Sensor Mode Tidak Aktif",
+        "message": "Perangkat {deviceId} pada {intersection} belum menggunakan mode sensor asli."
+      },
+      "queueLevel2": {
+        "title": "Antrean Padat Jalur {lane}",
+        "message": "Jalur {lane} pada {intersection} mencapai Queue Level {level}. Estimasi antrean {queueEstimateCm} cm dan sekitar {queueVehicles} kendaraan."
+      }
     }
   },
   "reports": {

@@ -11,6 +11,7 @@ import {
   getTimezoneLabel,
 } from "@/lib/user-settings";
 import { useT } from "@/lib/useT";
+import { getNotificationText } from "@/lib/notification-i18n";
 
 export default function NotificationDropdown() {
   const t = useT();
@@ -51,11 +52,11 @@ export default function NotificationDropdown() {
     lastNotificationIdRef.current = newest.id;
 
     showBrowserNotification({
-      title: newest.title,
-      body: newest.message,
+      title: getNotificationText(newest, "title", t),
+      body: getNotificationText(newest, "message", t),
       url: newest.actionUrl || "/notifikasi",
     });
-  }, [notifications]);
+  }, [notifications, t]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -278,7 +279,7 @@ export default function NotificationDropdown() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-sm font-semibold text-slate-900">
-                                {notif.title}
+                                {getNotificationText(notif, "title", t)}
                               </p>
 
                               <div className="flex items-center gap-2">
@@ -295,7 +296,7 @@ export default function NotificationDropdown() {
                             </div>
 
                             <p className="mt-1 line-clamp-2 text-xs text-slate-600">
-                              {notif.message}
+                              {getNotificationText(notif, "message", t)}
                             </p>
 
                             <p className="mt-2 text-[10px] text-slate-400">
@@ -328,7 +329,7 @@ export default function NotificationDropdown() {
                           >
                             <div className="p-4 pl-16">
                               <p className="text-sm leading-relaxed text-slate-700">
-                                {notif.message}
+                                {getNotificationText(notif, "message", t)}
                               </p>
 
                               {notif.actionUrl && (
