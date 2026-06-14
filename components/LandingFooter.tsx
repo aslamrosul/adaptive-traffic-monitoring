@@ -22,15 +22,15 @@ export default function LandingFooter() {
         </div>
         
         <div className="flex flex-col md:flex-row md:justify-end gap-6 text-xs">
-          <a href="#" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
+          <Link href="/privacy-policy" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
             {t('help.privacyPolicy')}
-          </a>
-          <a href="#" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
+          </Link>
+          <Link href="/terms" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
             {t('help.termsConditions')}
-          </a>
-          <a href="#" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
+          </Link>
+          <Link href="/help" className="text-slate-500 hover:text-slate-900 hover:underline transition-all">
             {t('help.title')}
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

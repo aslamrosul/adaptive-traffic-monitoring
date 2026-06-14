@@ -1804,5 +1804,271 @@
       "documentation": "Dokumentasi Lengkap",
       "documentationDesc": "Untuk panduan lebih detail, silakan baca file dokumentasi lengkap:"
     }
+  },
+  "pages": {
+    "privacyPolicy": {
+      "title": "Kebijakan Privasi",
+      "lastUpdated": "Terakhir diperbarui: 14 Juni 2026",
+      "backToHome": "Kembali ke Beranda",
+      "introduction": {
+        "title": "Pendahuluan",
+        "content": "ASTRAEA (Adaptive Traffic Light Monitoring System) berkomitmen untuk melindungi privasi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi pribadi Anda saat menggunakan sistem kami."
+      },
+      "dataCollection": {
+        "title": "Informasi yang Kami Kumpulkan",
+        "accountInfo": "Informasi Akun",
+        "accountItems": ["Nama lengkap", "Alamat email", "Nomor telepon", "Foto profil (opsional)", "Jabatan dan organisasi"],
+        "usageData": "Data Penggunaan",
+        "usageItems": ["Log aktivitas sistem", "Waktu akses dan interaksi", "Alamat IP dan informasi perangkat", "Preferensi pengaturan"],
+        "trafficData": "Data Lalu Lintas",
+        "trafficItems": ["Data sensor IoT (anonim)", "Statistik volume kendaraan", "Durasi sinyal lalu lintas", "Analitik performa sistem"]
+      },
+      "dataUsage": {
+        "title": "Bagaimana Kami Menggunakan Informasi",
+        "items": [
+          "Menyediakan dan memelihara layanan ASTRAEA",
+          "Meningkatkan pengalaman pengguna dan fungsionalitas sistem",
+          "Mengirim notifikasi dan pembaruan penting",
+          "Menganalisis dan mengoptimalkan performa traffic light",
+          "Melindungi keamanan dan integritas sistem"
+        ]
+      },
+      "dataSecurity": {
+        "title": "Keamanan Data",
+        "description": "Kami menerapkan langkah-langkah keamanan teknis dan organisasi untuk melindungi data Anda:",
+        "items": [
+          "Enkripsi data end-to-end",
+          "Autentikasi multi-faktor",
+          "Monitoring keamanan 24/7",
+          "Backup data berkala",
+          "Akses terbatas berdasarkan role"
+        ]
+      },
+      "dataSharing": {
+        "title": "Pembagian Informasi",
+        "description": "Kami tidak akan menjual, menyewakan, atau membagikan informasi pribadi Anda kepada pihak ketiga tanpa persetujuan Anda, kecuali dalam situasi berikut:",
+        "items": [
+          "Diwajibkan oleh hukum atau regulasi",
+          "Melindungi hak dan keamanan ASTRAEA dan penggunanya",
+          "Dengan penyedia layanan terpercaya (dengan perjanjian kerahasiaan)"
+        ]
+      },
+      "userRights": {
+        "title": "Hak Anda",
+        "description": "Anda memiliki hak untuk:",
+        "items": [
+          "Mengakses data pribadi Anda",
+          "Memperbarui atau mengoreksi informasi",
+          "Menghapus akun Anda",
+          "Mengekspor data Anda",
+          "Menolak pemrosesan data tertentu"
+        ]
+      },
+      "cookies": {
+        "title": "Cookies dan Teknologi Pelacakan",
+        "description": "Kami menggunakan cookies dan teknologi serupa untuk meningkatkan pengalaman pengguna, menganalisis penggunaan, dan menyimpan preferensi Anda. Anda dapat mengatur browser Anda untuk menolak cookies, namun ini mungkin mempengaruhi fungsionalitas sistem."
+      },
+      "policyChanges": {
+        "title": "Perubahan Kebijakan",
+        "description": "Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan material akan diinformasikan melalui email atau notifikasi dalam sistem. Penggunaan berkelanjutan setelah perubahan menunjukkan penerimaan Anda terhadap kebijakan yang diperbarui."
+      },
+      "contact": {
+        "title": "Hubungi Kami",
+        "description": "Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami:",
+        "email": "Email: privacy@astraea.com",
+        "phone": "Telepon: +62 21 1234 5678",
+        "address": "Alamat: Jakarta, Indonesia"
+      }
+    },
+    "terms": {
+      "title": "Syarat & Ketentuan",
+      "lastUpdated": "Terakhir diperbarui: 14 Juni 2026",
+      "backToHome": "Kembali ke Beranda",
+      "acceptance": {
+        "title": "Penerimaan Ketentuan",
+        "content": "Dengan mengakses dan menggunakan ASTRAEA (Adaptive Traffic Light Monitoring System), Anda setuju untuk terikat dengan Syarat dan Ketentuan ini. Jika Anda tidak setuju dengan ketentuan ini, harap tidak menggunakan layanan kami."
+      },
+      "definitions": {
+        "title": "Definisi",
+        "service": "Layanan",
+        "serviceDesc": "Mengacu pada platform ASTRAEA dan semua fitur, fungsi, dan konten yang disediakan.",
+        "user": "Pengguna",
+        "userDesc": "Setiap individu atau entitas yang mendaftar dan menggunakan layanan ASTRAEA.",
+        "content": "Konten",
+        "contentDesc": "Data, informasi, teks, grafik, dan material lain yang ditampilkan dalam sistem."
+      },
+      "userAccount": {
+        "title": "Akun Pengguna",
+        "registration": "Pendaftaran",
+        "registrationItems": [
+          "Anda harus berusia minimal 18 tahun untuk membuat akun",
+          "Informasi yang diberikan harus akurat dan lengkap",
+          "Anda bertanggung jawab menjaga kerahasiaan kredensial akun",
+          "Satu orang hanya diperbolehkan memiliki satu akun"
+        ],
+        "security": "Keamanan Akun",
+        "securityDesc": "Anda bertanggung jawab atas semua aktivitas yang terjadi di akun Anda. Segera laporkan kepada kami jika Anda mencurigai akses tidak sah."
+      },
+      "serviceUsage": {
+        "title": "Penggunaan Layanan",
+        "permitted": "Penggunaan yang Diizinkan",
+        "permittedItems": [
+          "Memantau dan mengelola sistem traffic light",
+          "Mengakses data analitik dan laporan",
+          "Mengonfigurasi perangkat IoT yang terhubung",
+          "Berkolaborasi dengan tim melalui fitur notifikasi"
+        ],
+        "prohibited": "Penggunaan yang Dilarang",
+        "prohibitedItems": [
+          "Mengakses sistem tanpa otorisasi",
+          "Mengganggu atau merusak operasi layanan",
+          "Menyebarkan malware atau kode berbahaya",
+          "Melakukan reverse engineering atau dekompilasi sistem",
+          "Menggunakan layanan untuk tujuan ilegal"
+        ]
+      },
+      "intellectualProperty": {
+        "title": "Hak Kekayaan Intelektual",
+        "description": "Semua konten, fitur, dan fungsionalitas ASTRAEA dilindungi oleh hak cipta, merek dagang, dan hukum kekayaan intelektual lainnya. Anda tidak diperbolehkan:",
+        "items": [
+          "Menyalin atau menduplikasi layanan tanpa izin tertulis",
+          "Menggunakan logo atau merek ASTRAEA tanpa persetujuan",
+          "Membuat karya turunan dari layanan kami"
+        ]
+      },
+      "serviceAvailability": {
+        "title": "Ketersediaan Layanan",
+        "description": "Kami berupaya menyediakan layanan yang andal dan tersedia 99.9% waktu. Namun, kami tidak menjamin bahwa layanan akan selalu bebas dari gangguan, penundaan, atau kesalahan. Kami berhak melakukan maintenance terjadwal dan tidak bertanggung jawab atas kerugian yang timbul dari downtime yang tidak dapat dihindari."
+      },
+      "liability": {
+        "title": "Batasan Tanggung Jawab",
+        "warning": "Harap diperhatikan:",
+        "items": [
+          "Layanan disediakan \"sebagaimana adanya\" tanpa jaminan tersurat maupun tersirat",
+          "Kami tidak bertanggung jawab atas kerusakan langsung, tidak langsung, atau konsekuensial",
+          "Pengguna bertanggung jawab atas keputusan operasional berdasarkan data sistem",
+          "Kami tidak bertanggung jawab atas kehilangan data akibat force majeure"
+        ]
+      },
+      "termination": {
+        "title": "Penghentian Layanan",
+        "description": "Kami berhak menangguhkan atau menghentikan akses Anda ke layanan jika:",
+        "items": [
+          "Anda melanggar Syarat dan Ketentuan ini",
+          "Aktivitas Anda membahayakan keamanan sistem",
+          "Anda memberikan informasi palsu atau menyesatkan",
+          "Atas permintaan otoritas yang berwenang"
+        ]
+      },
+      "changes": {
+        "title": "Perubahan Ketentuan",
+        "description": "Kami dapat memodifikasi Syarat dan Ketentuan ini kapan saja. Perubahan material akan diinformasikan melalui email atau notifikasi dalam sistem minimal 30 hari sebelum berlaku. Penggunaan berkelanjutan setelah perubahan menunjukkan penerimaan Anda terhadap ketentuan yang diperbarui."
+      },
+      "law": {
+        "title": "Hukum yang Berlaku",
+        "description": "Syarat dan Ketentuan ini diatur oleh dan ditafsirkan sesuai dengan hukum Republik Indonesia. Setiap sengketa yang timbul akan diselesaikan melalui Pengadilan Negeri Jakarta Pusat."
+      },
+      "contact": {
+        "title": "Hubungi Kami",
+        "description": "Jika Anda memiliki pertanyaan tentang Syarat & Ketentuan ini, silakan hubungi kami:",
+        "email": "Email: legal@astraea.com",
+        "phone": "Telepon: +62 21 1234 5678",
+        "address": "Alamat: Jakarta, Indonesia"
+      }
+    },
+    "helpCenter": {
+      "title": "Pusat Bantuan",
+      "subtitle": "Temukan jawaban untuk pertanyaan Anda tentang ASTRAEA",
+      "searchPlaceholder": "Cari bantuan...",
+      "backToHome": "Kembali ke Beranda",
+      "quickGuides": "Panduan Cepat",
+      "faq": "Pertanyaan yang Sering Diajukan",
+      "categories": {
+        "all": "Semua",
+        "gettingStarted": "Memulai",
+        "features": "Fitur",
+        "troubleshooting": "Troubleshooting",
+        "account": "Akun"
+      },
+      "guides": {
+        "gettingStarted": {
+          "title": "Panduan Memulai",
+          "description": "Pelajari cara menggunakan ASTRAEA dari awal",
+          "items": ["Registrasi & Login", "Navigasi Dashboard", "Fitur Dasar"]
+        },
+        "trafficManagement": {
+          "title": "Manajemen Traffic Light",
+          "description": "Kelola dan monitor persimpangan Anda",
+          "items": ["Lihat Status Real-time", "Analitik Data", "Konfigurasi Sinyal"]
+        },
+        "iotConfig": {
+          "title": "Konfigurasi IoT",
+          "description": "Setup dan kelola perangkat IoT",
+          "items": ["Tambah Device", "Update Config", "Troubleshooting"]
+        },
+        "reports": {
+          "title": "Laporan & Analitik",
+          "description": "Generate dan ekspor laporan",
+          "items": ["Buat Laporan", "Filter Data", "Export PDF/Excel"]
+        }
+      },
+      "faqs": {
+        "whatIsAstraea": {
+          "question": "Apa itu ASTRAEA?",
+          "answer": "ASTRAEA (Adaptive Traffic Light Monitoring System) adalah sistem monitoring dan manajemen traffic light berbasis IoT yang memungkinkan pemantauan real-time dan analitik data lalu lintas."
+        },
+        "howToRegister": {
+          "question": "Bagaimana cara mendaftar akun?",
+          "answer": "Klik tombol 'Daftar' di halaman utama, isi formulir dengan informasi yang diperlukan, dan verifikasi email Anda. Setelah disetujui admin, Anda dapat login dan menggunakan sistem."
+        },
+        "mainFeatures": {
+          "question": "Apa saja fitur utama ASTRAEA?",
+          "answer": "Fitur utama meliputi: monitoring real-time traffic light, dashboard analitik, manajemen persimpangan, konfigurasi IoT devices, sistem notifikasi, laporan otomatis, dan manajemen pengguna."
+        },
+        "accessDashboard": {
+          "question": "Bagaimana cara mengakses dashboard?",
+          "answer": "Setelah login, Anda akan langsung diarahkan ke dashboard. Atau klik tombol 'Dashboard' di navbar untuk mengaksesnya."
+        },
+        "realTimeMonitoring": {
+          "question": "Apa itu real-time monitoring?",
+          "answer": "Real-time monitoring memungkinkan Anda melihat status traffic light secara langsung menggunakan teknologi SignalR. Data diperbarui otomatis tanpa perlu refresh halaman."
+        },
+        "cannotLogin": {
+          "question": "Tidak bisa login, apa yang harus dilakukan?",
+          "answer": "Pastikan email dan password Anda benar. Jika lupa password, gunakan fitur 'Lupa Password'. Jika masih bermasalah, hubungi administrator."
+        },
+        "dataNotUpdating": {
+          "question": "Data tidak terupdate secara real-time?",
+          "answer": "Periksa koneksi internet Anda. Jika koneksi baik tapi masih bermasalah, coba refresh halaman atau logout lalu login kembali."
+        },
+        "deviceNotDetected": {
+          "question": "Device IoT tidak terdeteksi?",
+          "answer": "Pastikan device sudah terkonfigurasi dengan benar di halaman IoT Config. Periksa koneksi device ke Azure IoT Hub dan status device di dashboard."
+        },
+        "changeProfile": {
+          "question": "Bagaimana cara mengubah profil?",
+          "answer": "Klik foto profil Anda di navbar, pilih 'Profil Saya', kemudian klik tombol 'Edit' untuk mengubah informasi profil."
+        },
+        "changePassword": {
+          "question": "Bagaimana cara mengganti password?",
+          "answer": "Di halaman profil, pilih tab 'Keamanan', masukkan password lama dan password baru, lalu klik 'Simpan Perubahan'."
+        },
+        "roleDifference": {
+          "question": "Apa perbedaan role Admin dan Operator?",
+          "answer": "Admin memiliki akses penuh untuk mengelola pengguna, persimpangan, dan konfigurasi sistem. Operator dapat melihat data dan monitoring tapi tidak bisa mengubah konfigurasi sistem."
+        }
+      },
+      "contactSupport": {
+        "title": "Butuh Bantuan Lebih Lanjut?",
+        "description": "Tim support kami siap membantu Anda. Hubungi kami melalui salah satu channel di bawah ini.",
+        "email": "Email",
+        "emailValue": "support@astraea.com",
+        "phone": "Telepon",
+        "phoneValue": "+62 21 1234 5678",
+        "liveChat": "Live Chat",
+        "liveChatValue": "Senin - Jumat, 09:00 - 17:00"
+      },
+      "noResults": "Tidak ada hasil yang ditemukan untuk"
+    }
   }
 }

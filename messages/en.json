@@ -1803,5 +1803,271 @@
       "documentation": "Complete Documentation",
       "documentationDesc": "For more detailed guide, please read the complete documentation files:"
     }
+  },
+  "pages": {
+    "privacyPolicy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: June 14, 2026",
+      "backToHome": "Back to Home",
+      "introduction": {
+        "title": "Introduction",
+        "content": "ASTRAEA (Adaptive Traffic Light Monitoring System) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your personal information when using our system."
+      },
+      "dataCollection": {
+        "title": "Information We Collect",
+        "accountInfo": "Account Information",
+        "accountItems": ["Full name", "Email address", "Phone number", "Profile picture (optional)", "Position and organization"],
+        "usageData": "Usage Data",
+        "usageItems": ["System activity logs", "Access time and interactions", "IP address and device information", "Settings preferences"],
+        "trafficData": "Traffic Data",
+        "trafficItems": ["IoT sensor data (anonymous)", "Vehicle volume statistics", "Traffic signal duration", "System performance analytics"]
+      },
+      "dataUsage": {
+        "title": "How We Use Information",
+        "items": [
+          "Provide and maintain ASTRAEA services",
+          "Improve user experience and system functionality",
+          "Send notifications and important updates",
+          "Analyze and optimize traffic light performance",
+          "Protect system security and integrity"
+        ]
+      },
+      "dataSecurity": {
+        "title": "Data Security",
+        "description": "We implement technical and organizational security measures to protect your data:",
+        "items": [
+          "End-to-end data encryption",
+          "Multi-factor authentication",
+          "24/7 security monitoring",
+          "Regular data backups",
+          "Role-based access control"
+        ]
+      },
+      "dataSharing": {
+        "title": "Information Sharing",
+        "description": "We will not sell, rent, or share your personal information with third parties without your consent, except in the following situations:",
+        "items": [
+          "Required by law or regulation",
+          "Protecting the rights and security of ASTRAEA and its users",
+          "With trusted service providers (with confidentiality agreements)"
+        ]
+      },
+      "userRights": {
+        "title": "Your Rights",
+        "description": "You have the right to:",
+        "items": [
+          "Access your personal data",
+          "Update or correct information",
+          "Delete your account",
+          "Export your data",
+          "Reject certain data processing"
+        ]
+      },
+      "cookies": {
+        "title": "Cookies and Tracking Technologies",
+        "description": "We use cookies and similar technologies to improve user experience, analyze usage, and store your preferences. You can set your browser to reject cookies, but this may affect system functionality."
+      },
+      "policyChanges": {
+        "title": "Policy Changes",
+        "description": "We may update this Privacy Policy from time to time. Material changes will be informed via email or in-system notifications. Continued use after changes indicates your acceptance of the updated policy."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "If you have questions about this Privacy Policy, please contact us:",
+        "email": "Email: privacy@astraea.com",
+        "phone": "Phone: +62 21 1234 5678",
+        "address": "Address: Jakarta, Indonesia"
+      }
+    },
+    "terms": {
+      "title": "Terms & Conditions",
+      "lastUpdated": "Last updated: June 14, 2026",
+      "backToHome": "Back to Home",
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By accessing and using ASTRAEA (Adaptive Traffic Light Monitoring System), you agree to be bound by these Terms and Conditions. If you do not agree with these terms, please do not use our services."
+      },
+      "definitions": {
+        "title": "Definitions",
+        "service": "Service",
+        "serviceDesc": "Refers to the ASTRAEA platform and all features, functions, and content provided.",
+        "user": "User",
+        "userDesc": "Any individual or entity that registers and uses ASTRAEA services.",
+        "content": "Content",
+        "contentDesc": "Data, information, text, graphics, and other materials displayed in the system."
+      },
+      "userAccount": {
+        "title": "User Account",
+        "registration": "Registration",
+        "registrationItems": [
+          "You must be at least 18 years old to create an account",
+          "Information provided must be accurate and complete",
+          "You are responsible for maintaining account credential confidentiality",
+          "One person is only allowed to have one account"
+        ],
+        "security": "Account Security",
+        "securityDesc": "You are responsible for all activities that occur on your account. Immediately report to us if you suspect unauthorized access."
+      },
+      "serviceUsage": {
+        "title": "Service Usage",
+        "permitted": "Permitted Use",
+        "permittedItems": [
+          "Monitor and manage traffic light systems",
+          "Access analytics data and reports",
+          "Configure connected IoT devices",
+          "Collaborate with team through notification features"
+        ],
+        "prohibited": "Prohibited Use",
+        "prohibitedItems": [
+          "Access system without authorization",
+          "Disrupt or damage service operations",
+          "Spread malware or malicious code",
+          "Perform reverse engineering or system decompilation",
+          "Use services for illegal purposes"
+        ]
+      },
+      "intellectualProperty": {
+        "title": "Intellectual Property Rights",
+        "description": "All content, features, and functionality of ASTRAEA are protected by copyright, trademark, and other intellectual property laws. You are not permitted to:",
+        "items": [
+          "Copy or duplicate services without written permission",
+          "Use ASTRAEA logo or brand without approval",
+          "Create derivative works from our services"
+        ]
+      },
+      "serviceAvailability": {
+        "title": "Service Availability",
+        "description": "We strive to provide reliable services available 99.9% of the time. However, we do not guarantee that services will always be free from interruptions, delays, or errors. We reserve the right to perform scheduled maintenance and are not responsible for losses arising from unavoidable downtime."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "warning": "Please note:",
+        "items": [
+          "Services are provided \"as is\" without express or implied warranties",
+          "We are not responsible for direct, indirect, or consequential damages",
+          "Users are responsible for operational decisions based on system data",
+          "We are not responsible for data loss due to force majeure"
+        ]
+      },
+      "termination": {
+        "title": "Service Termination",
+        "description": "We reserve the right to suspend or terminate your access to services if:",
+        "items": [
+          "You violate these Terms and Conditions",
+          "Your activities endanger system security",
+          "You provide false or misleading information",
+          "Upon request from authorized authorities"
+        ]
+      },
+      "changes": {
+        "title": "Terms Changes",
+        "description": "We may modify these Terms and Conditions at any time. Material changes will be informed via email or in-system notifications at least 30 days before taking effect. Continued use after changes indicates your acceptance of the updated terms."
+      },
+      "law": {
+        "title": "Governing Law",
+        "description": "These Terms and Conditions are governed by and interpreted in accordance with the laws of the Republic of Indonesia. Any disputes arising will be resolved through the Central Jakarta District Court."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "If you have questions about these Terms & Conditions, please contact us:",
+        "email": "Email: legal@astraea.com",
+        "phone": "Phone: +62 21 1234 5678",
+        "address": "Address: Jakarta, Indonesia"
+      }
+    },
+    "helpCenter": {
+      "title": "Help Center",
+      "subtitle": "Find answers to your questions about ASTRAEA",
+      "searchPlaceholder": "Search help...",
+      "backToHome": "Back to Home",
+      "quickGuides": "Quick Guides",
+      "faq": "Frequently Asked Questions",
+      "categories": {
+        "all": "All",
+        "gettingStarted": "Getting Started",
+        "features": "Features",
+        "troubleshooting": "Troubleshooting",
+        "account": "Account"
+      },
+      "guides": {
+        "gettingStarted": {
+          "title": "Getting Started Guide",
+          "description": "Learn how to use ASTRAEA from scratch",
+          "items": ["Registration & Login", "Dashboard Navigation", "Basic Features"]
+        },
+        "trafficManagement": {
+          "title": "Traffic Light Management",
+          "description": "Manage and monitor your intersections",
+          "items": ["View Real-time Status", "Data Analytics", "Signal Configuration"]
+        },
+        "iotConfig": {
+          "title": "IoT Configuration",
+          "description": "Setup and manage IoT devices",
+          "items": ["Add Device", "Update Config", "Troubleshooting"]
+        },
+        "reports": {
+          "title": "Reports & Analytics",
+          "description": "Generate and export reports",
+          "items": ["Create Report", "Filter Data", "Export PDF/Excel"]
+        }
+      },
+      "faqs": {
+        "whatIsAstraea": {
+          "question": "What is ASTRAEA?",
+          "answer": "ASTRAEA (Adaptive Traffic Light Monitoring System) is an IoT-based traffic light monitoring and management system that enables real-time monitoring and traffic data analytics."
+        },
+        "howToRegister": {
+          "question": "How to register an account?",
+          "answer": "Click the 'Register' button on the main page, fill out the form with required information, and verify your email. After admin approval, you can login and use the system."
+        },
+        "mainFeatures": {
+          "question": "What are ASTRAEA's main features?",
+          "answer": "Main features include: real-time traffic light monitoring, analytics dashboard, intersection management, IoT device configuration, notification system, automated reports, and user management."
+        },
+        "accessDashboard": {
+          "question": "How to access the dashboard?",
+          "answer": "After logging in, you will be automatically directed to the dashboard. Or click the 'Dashboard' button in the navbar to access it."
+        },
+        "realTimeMonitoring": {
+          "question": "What is real-time monitoring?",
+          "answer": "Real-time monitoring allows you to see traffic light status live using SignalR technology. Data is updated automatically without page refresh."
+        },
+        "cannotLogin": {
+          "question": "Cannot login, what should I do?",
+          "answer": "Ensure your email and password are correct. If you forgot your password, use the 'Forgot Password' feature. If still problematic, contact the administrator."
+        },
+        "dataNotUpdating": {
+          "question": "Data not updating in real-time?",
+          "answer": "Check your internet connection. If connection is good but still problematic, try refreshing the page or logout and login again."
+        },
+        "deviceNotDetected": {
+          "question": "IoT device not detected?",
+          "answer": "Ensure the device is properly configured on the IoT Config page. Check device connection to Azure IoT Hub and device status on dashboard."
+        },
+        "changeProfile": {
+          "question": "How to change profile?",
+          "answer": "Click your profile picture in the navbar, select 'My Profile', then click the 'Edit' button to change profile information."
+        },
+        "changePassword": {
+          "question": "How to change password?",
+          "answer": "On the profile page, select the 'Security' tab, enter old password and new password, then click 'Save Changes'."
+        },
+        "roleDifference": {
+          "question": "What's the difference between Admin and Operator roles?",
+          "answer": "Admin has full access to manage users, intersections, and system configuration. Operator can view data and monitoring but cannot change system configuration."
+        }
+      },
+      "contactSupport": {
+        "title": "Need Further Assistance?",
+        "description": "Our support team is ready to help you. Contact us through one of the channels below.",
+        "email": "Email",
+        "emailValue": "support@astraea.com",
+        "phone": "Phone",
+        "phoneValue": "+62 21 1234 5678",
+        "liveChat": "Live Chat",
+        "liveChatValue": "Monday - Friday, 09:00 - 17:00"
+      },
+      "noResults": "No results found for"
+    }
   }
 }
