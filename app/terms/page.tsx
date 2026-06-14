@@ -9,6 +9,12 @@ import LanguageSwitcherSimple from "@/components/LanguageSwitcherSimple";
 export default function TermsPage() {
   const { t } = useTranslation();
 
+  // Helper function to safely get array from translation
+  const getTranslationArray = (key: string): string[] => {
+    const value = t(key);
+    return Array.isArray(value) ? value : [];
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Header */}
@@ -90,7 +96,7 @@ export default function TermsPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">{t('pages.terms.userAccount.registration')}</h3>
                   <ul className="list-disc list-inside space-y-1 ml-4">
-                    {(t('pages.terms.userAccount.registrationItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.terms.userAccount.registrationItems').map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
                   </ul>
@@ -111,7 +117,7 @@ export default function TermsPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2 text-green-600">{t('pages.terms.serviceUsage.permitted')}</h3>
                   <ul className="space-y-2">
-                    {(t('pages.terms.serviceUsage.permittedItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.terms.serviceUsage.permittedItems').map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-green-600 text-sm flex-shrink-0">check_circle</span>
                         <span>{item}</span>
@@ -122,7 +128,7 @@ export default function TermsPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2 text-red-600">{t('pages.terms.serviceUsage.prohibited')}</h3>
                   <ul className="space-y-2">
-                    {(t('pages.terms.serviceUsage.prohibitedItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.terms.serviceUsage.prohibitedItems').map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-red-600 text-sm flex-shrink-0">cancel</span>
                         <span>{item}</span>
@@ -142,7 +148,7 @@ export default function TermsPage() {
                 {t('pages.terms.intellectualProperty.description')}
               </p>
               <ul className="space-y-2 text-slate-700 ml-4">
-                {(t('pages.terms.intellectualProperty.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.terms.intellectualProperty.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-blue-600">•</span>
                     <span>{item}</span>
@@ -169,7 +175,7 @@ export default function TermsPage() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 space-y-3 text-slate-700">
                 <p className="font-semibold text-yellow-900">{t('pages.terms.liability.warning')}</p>
                 <ul className="space-y-2 text-sm">
-                  {(t('pages.terms.liability.items') as string[]).map((item, idx) => (
+                  {getTranslationArray('pages.terms.liability.items').map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-yellow-600">⚠</span>
                       <span>{item}</span>
@@ -188,7 +194,7 @@ export default function TermsPage() {
                 {t('pages.terms.termination.description')}
               </p>
               <ul className="space-y-2 text-slate-700 ml-4">
-                {(t('pages.terms.termination.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.terms.termination.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-red-600">✕</span>
                     <span>{item}</span>

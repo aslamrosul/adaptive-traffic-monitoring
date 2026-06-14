@@ -12,6 +12,12 @@ export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
+  // Helper function to safely get array from translation
+  const getTranslationArray = (key: string): string[] => {
+    const value = t(key);
+    return Array.isArray(value) ? value : [];
+  };
+
   const categories = [
     { id: "all", name: t('pages.helpCenter.categories.all'), icon: "apps" },
     { id: "getting-started", name: t('pages.helpCenter.categories.gettingStarted'), icon: "rocket_launch" },
@@ -92,28 +98,28 @@ export default function HelpPage() {
       description: t('pages.helpCenter.guides.gettingStarted.description'),
       icon: "menu_book",
       color: "blue",
-      items: t('pages.helpCenter.guides.gettingStarted.items') as string[]
+      items: getTranslationArray('pages.helpCenter.guides.gettingStarted.items')
     },
     {
       title: t('pages.helpCenter.guides.trafficManagement.title'),
       description: t('pages.helpCenter.guides.trafficManagement.description'),
       icon: "traffic",
       color: "green",
-      items: t('pages.helpCenter.guides.trafficManagement.items') as string[]
+      items: getTranslationArray('pages.helpCenter.guides.trafficManagement.items')
     },
     {
       title: t('pages.helpCenter.guides.iotConfig.title'),
       description: t('pages.helpCenter.guides.iotConfig.description'),
       icon: "settings_input_antenna",
       color: "purple",
-      items: t('pages.helpCenter.guides.iotConfig.items') as string[]
+      items: getTranslationArray('pages.helpCenter.guides.iotConfig.items')
     },
     {
       title: t('pages.helpCenter.guides.reports.title'),
       description: t('pages.helpCenter.guides.reports.description'),
       icon: "analytics",
       color: "orange",
-      items: t('pages.helpCenter.guides.reports.items') as string[]
+      items: getTranslationArray('pages.helpCenter.guides.reports.items')
     },
   ];
 

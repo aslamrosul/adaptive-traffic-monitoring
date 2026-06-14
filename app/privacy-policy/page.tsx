@@ -9,6 +9,12 @@ import LanguageSwitcherSimple from "@/components/LanguageSwitcherSimple";
 export default function PrivacyPolicyPage() {
   const { t } = useTranslation();
 
+  // Helper function to safely get array from translation
+  const getTranslationArray = (key: string): string[] => {
+    const value = t(key);
+    return Array.isArray(value) ? value : [];
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Header */}
@@ -69,7 +75,7 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">1. {t('pages.privacyPolicy.dataCollection.accountInfo')}</h3>
                   <ul className="list-disc list-inside space-y-1 ml-4">
-                    {(t('pages.privacyPolicy.dataCollection.accountItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.privacyPolicy.dataCollection.accountItems').map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
                   </ul>
@@ -77,7 +83,7 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">2. {t('pages.privacyPolicy.dataCollection.usageData')}</h3>
                   <ul className="list-disc list-inside space-y-1 ml-4">
-                    {(t('pages.privacyPolicy.dataCollection.usageItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.privacyPolicy.dataCollection.usageItems').map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
                   </ul>
@@ -85,7 +91,7 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">3. {t('pages.privacyPolicy.dataCollection.trafficData')}</h3>
                   <ul className="list-disc list-inside space-y-1 ml-4">
-                    {(t('pages.privacyPolicy.dataCollection.trafficItems') as string[]).map((item, idx) => (
+                    {getTranslationArray('pages.privacyPolicy.dataCollection.trafficItems').map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
                   </ul>
@@ -99,7 +105,7 @@ export default function PrivacyPolicyPage() {
                 {t('pages.privacyPolicy.dataUsage.title')}
               </h2>
               <ul className="space-y-3 text-slate-700">
-                {(t('pages.privacyPolicy.dataUsage.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.privacyPolicy.dataUsage.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
                     <span className="material-symbols-outlined text-green-600 flex-shrink-0">done</span>
                     <span>{item}</span>
@@ -117,7 +123,7 @@ export default function PrivacyPolicyPage() {
                 {t('pages.privacyPolicy.dataSecurity.description')}
               </p>
               <ul className="space-y-2 text-slate-700 ml-4">
-                {(t('pages.privacyPolicy.dataSecurity.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.privacyPolicy.dataSecurity.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-blue-600">•</span>
                     <span>{item}</span>
@@ -135,7 +141,7 @@ export default function PrivacyPolicyPage() {
                 {t('pages.privacyPolicy.dataSharing.description')}
               </p>
               <ul className="space-y-2 text-slate-700 ml-4 mt-3">
-                {(t('pages.privacyPolicy.dataSharing.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.privacyPolicy.dataSharing.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-blue-600">•</span>
                     <span>{item}</span>
@@ -153,7 +159,7 @@ export default function PrivacyPolicyPage() {
                 {t('pages.privacyPolicy.userRights.description')}
               </p>
               <ul className="space-y-2 text-slate-700 ml-4">
-                {(t('pages.privacyPolicy.userRights.items') as string[]).map((item, idx) => (
+                {getTranslationArray('pages.privacyPolicy.userRights.items').map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-green-600">✓</span>
                     <span>{item}</span>
