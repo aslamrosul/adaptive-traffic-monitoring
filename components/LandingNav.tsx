@@ -174,7 +174,7 @@ export default function LandingNav() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3">
-          <LanguageSwitcherSimple />
+          <LanguageSwitcherSimple variant="light" />
           {status === "loading" ? (
             <div className="w-16 lg:w-20 h-8 lg:h-10 bg-slate-100 animate-pulse rounded-lg"></div>
           ) : session ? (
