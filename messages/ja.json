@@ -1,0 +1,2105 @@
+{
+  "common": {
+    "appName": "ASTRAEA",
+    "appFullName": "ASTRAEA - Adaptive Smart Traffic Regulation and Analysis for Efficient Automation",
+    "appDescription": "適応型交通信号監視システム",
+    "save": "保存",
+    "saving": "保存中",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "filter": "フィルター",
+    "export": "エクスポート",
+    "import": "インポート",
+    "refresh": "更新",
+    "reconnect": "再接続",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功",
+    "confirm": "確認",
+    "yes": "はい",
+    "no": "いいえ",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "submit": "送信",
+    "reset": "リセット",
+    "clear": "クリア",
+    "select": "選択",
+    "selectAll": "すべて選択",
+    "deselectAll": "選択解除",
+    "view": "表示",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "print": "印刷",
+    "share": "共有",
+    "copy": "コピー",
+    "paste": "貼り付け",
+    "cut": "切り取り",
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "apply": "適用",
+    "ok": "OK",
+    "done": "完了",
+    "active": "有効",
+    "inactive": "無効",
+    "online": "オンライン",
+    "offline": "オフライン",
+    "all": "すべて",
+    "none": "なし",
+    "more": "もっと見る",
+    "less": "少なく表示",
+    "show": "表示",
+    "hide": "非表示",
+    "or": "または",
+    "of": "の",
+    "chat": "サポートとチャット",
+    "email": "メールサポート"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "register": "登録",
+    "username": "ユーザー名",
+    "email": "メール",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "rememberMe": "ログイン状態を保持",
+    "loginTitle": "ダッシュボードにログイン",
+    "loginSubtitle": "ダッシュボードにアクセスするため認証情報を入力してください",
+    "registerTitle": "新しいアカウントを登録",
+    "registerSubtitle": "システムにアクセスするためアカウントを作成してください",
+    "invalidCredentials": "メールまたはパスワードが無効です",
+    "passwordMismatch": "パスワードが一致しません",
+    "accountCreated": "アカウントが正常に作成されました",
+    "loginSuccess": "ログイン成功",
+    "logoutSuccess": "ログアウト成功",
+    "sessionExpired": "セッションの有効期限が切れました",
+    "unauthorized": "権限のないアクセス",
+    "alreadyHaveAccount": "すでにアカウントをお持ちですか？",
+    "dontHaveAccount": "アカウントをお持ちでないですか？",
+    "signInHere": "こちらからログイン",
+    "signUpHere": "こちらから登録",
+    "loginWithGoogle": "Googleでログイン",
+    "registerWithGoogle": "Googleで登録",
+    "passwordMinLength": "最低6文字",
+    "or": "または"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "analytics": "分析",
+    "intersections": "交差点",
+    "users": "ユーザー管理",
+    "reports": "レポート",
+    "notifications": "通知",
+    "settings": "設定",
+    "profile": "プロフィール",
+    "help": "ヘルプ",
+    "iotConfig": "IoTリモート",
+    "home": "ホーム",
+    "guide": "システムガイド",
+    "fullGuide": "完全ガイド"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "ようこそ",
+    "overview": "概要",
+    "statistics": "統計",
+    "recentActivity": "最近のアクティビティ",
+    "quickActions": "クイック操作",
+    "totalIntersections": "交差点合計",
+    "activeDevices": "稼働デバイス",
+    "todayEvents": "今日のイベント",
+    "averageQueueTime": "平均待ち時間",
+    "trafficVolume": "交通量",
+    "systemStatus": "システム状態",
+    "lastUpdate": "最終更新",
+    "viewDetails": "詳細を見る",
+    "noData": "利用可能なデータがありません",
+    "refreshData": "データ更新",
+    "totalVehicles": "車両合計",
+    "flowScore": "流れスコア",
+    "flowScoreSubtitle": "リアルタイムデータに基づく",
+    "laneStatus": "車線状態",
+    "activityLog": {
+      "action": "Opening dashboard monitoring",
+      "description": "User opened realtime dashboard page"
+    }
+  },
+  "intersections": {
+    "title": "交差点",
+    "list": "Intersection List",
+    "add": "Add Intersection",
+    "operatingMode": "Operating Mode",
+    "edit": "Edit Intersection",
+    "delete": "Delete Intersection",
+    "details": "Intersection Details",
+    "name": "Intersection Name",
+    "location": "Location",
+    "address": "住所",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "status": "状態",
+    "deviceId": "デバイスID",
+    "lanes": "Lanes",
+    "signalPhases": "Signal Phases",
+    "greenDuration": "Green Duration",
+    "redDuration": "Red Duration",
+    "yellowDuration": "Yellow Duration",
+    "created": "Created",
+    "updated": "Updated",
+    "active": "有効",
+    "inactive": "無効",
+    "maintenance": "Maintenance",
+    "deleteConfirm": "Are you sure you want to delete this intersection?",
+    "addSuccess": "Intersection added successfully",
+    "editSuccess": "Intersection updated successfully",
+    "deleteSuccess": "Intersection deleted successfully",
+    "noIntersections": "No intersections yet",
+    "searchPlaceholder": "Search intersections...",
+    "allIntersections": "All Intersections",
+    "viewAll": "View All Intersections"
+  },
+  "traffic": {
+    "title": "交通",
+    "realtime": "リアルタイム",
+    "volume": "量",
+    "speed": "速度",
+    "density": "密度",
+    "queue": "待ち行列",
+    "queueLength": "待ち行列長",
+    "waitingTime": "待ち時間",
+    "vehicleCount": "車両数",
+    "averageSpeed": "平均速度",
+    "peakHours": "ピーク時間",
+    "greenLight": "青信号",
+    "redLight": "赤信号",
+    "yellowLight": "黄信号",
+    "smooth": "円滑",
+    "moderate": "中程度",
+    "congested": "渋滞",
+    "heavy": "非常に混雑",
+    "lane": "車線",
+    "north": "北",
+    "south": "南",
+    "east": "東",
+    "west": "西",
+    "direction": "方向",
+    "allLanes": "全車線",
+    "northLane": "北車線",
+    "southLane": "南車線",
+    "eastLane": "東車線",
+    "westLane": "西車線"
+  },
+  "analytics": {
+    "title": "分析",
+    "pageTitle": "Traffic Analytics Dashboard",
+    "subtitle": "Traffic & Queue Analytics",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "custom": "Custom",
+    "dateRange": "Date Range",
+    "from": "From",
+    "to": "To",
+    "apply": "適用",
+    "vehicleVolume": "Vehicle Volume",
+    "queueEffectiveness": "Queue Effectiveness",
+    "greenDurationEffectiveness": "Green Duration Effectiveness",
+    "queueByHour": "Queue by Hour",
+    "queueDistribution": "Queue Distribution",
+    "peakHourAnalysis": "Peak Hour Analysis",
+    "trafficPattern": "Traffic Pattern",
+    "comparison": "Comparison",
+    "trend": "Trend",
+    "forecast": "Forecast",
+    "exportReport": "Export Report",
+    "generateReport": "Generate Report",
+    "noDataAvailable": "No data available for this period",
+    "exportSummary": "Export Summary",
+    "newVehiclesDetected": "New vehicles detected",
+    "peakVolume": "Peak Volume",
+    "averageQueue": "Average Queue",
+    "levelRange": "Level 0–2",
+    "devicesOnline": "Devices Online",
+    "devicesOffline": "devices offline",
+    "pageDescription": "Analyze vehicle volume, queue, and light effectiveness from DynamoDB without dummy data.",
+    "aboutAnalytics": "About Analytics",
+    "aboutDescription": "Vehicle volume is calculated based on vehicle counter increases, not by summing all telemetry. Level 0 means smooth, Level 1 means moderate queue, and Level 2 means heavy queue. All dates and hourly groupings use WIB.",
+    "sampleCount": "Queue samples in this period",
+    "exportSuccess": "Analytics summary exported successfully",
+    "activityLog": {
+      "action": "Opening analytics page",
+      "description": "User opened traffic analytics dashboard"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "list": "User List",
+    "add": "Add User",
+    "edit": "Edit User",
+    "delete": "Delete User",
+    "details": "User Details",
+    "name": "Name",
+    "email": "メール",
+    "role": "Role",
+    "status": "状態",
+    "lastLogin": "Last Login",
+    "created": "Created",
+    "admin": "Administrator",
+    "operator": "Operator",
+    "viewer": "Viewer",
+    "active": "有効",
+    "inactive": "無効",
+    "suspended": "Suspended",
+    "deleteConfirm": "Are you sure you want to delete this user?",
+    "addSuccess": "User added successfully",
+    "editSuccess": "User updated successfully",
+    "deleteSuccess": "User deleted successfully",
+    "noUsers": "No users yet",
+    "searchPlaceholder": "Search users..."
+  },
+  "notifications": {
+    "title": "通知",
+    "all": "すべて",
+    "unread": "未読",
+    "read": "既読",
+    "markAsRead": "既読にする",
+    "markAllAsRead": "すべて既読にする",
+    "delete": "通知を削除",
+    "deleteAll": "すべて削除",
+    "settings": "通知設定",
+    "enable": "通知を有効化",
+    "disable": "通知を無効化",
+    "email": "メール",
+    "push": "Push",
+    "sms": "SMS",
+    "telegram": "Telegram",
+    "noNotifications": "通知はありません",
+    "loadMore": "さらに読み込む",
+    "viewAll": "すべて表示",
+    "loading": "通知を読み込み中...",
+    "unreadNotifications": "未読通知",
+    "viewDetail": "詳細を見る",
+    "close": "閉じる",
+    "markAllRead": "すべて既読にする",
+    "types": {
+      "alert": "アラート",
+      "warning": "警告",
+      "info": "情報",
+      "success": "成功",
+      "error": "Error",
+      "critical": "重大"
+    },
+    "items": {
+      "weakWifi": {
+        "title": "ESP32のWiFi信号が弱い",
+        "message": "デバイス {deviceId} のWiFi信号が弱いです（{rssi} dBm）。ルーターとの距離またはネットワーク品質を確認してください。"
+      },
+      "dummyMode": {
+        "title": "ダミーモードが有効です",
+        "message": "{intersection} のデバイス {deviceId} はまだダミーデータを送信しています。データはまだ実センサーからのものではありません。"
+      },
+      "sensorModeFalse": {
+        "title": "センサーモードが無効です",
+        "message": "{intersection} のデバイス {deviceId} はまだ実センサーモードを使用していません。"
+      },
+      "queueLevel2": {
+        "title": "{lane} 車線で激しい渋滞",
+        "message": "{intersection} の {lane} 車線がキューレベル {level} に達しました。推定待ち行列長は {queueEstimateCm} cm、約 {queueVehicles} 台です。"
+      }
+    }
+  },
+  "reports": {
+    "title": "レポート",
+    "generate": "Generate Report",
+    "type": "Report Type",
+    "period": "Period",
+    "format": "Format",
+    "download": "Download Report",
+    "downloading": "Downloading report...",
+    "schedule": "Schedule Report",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "csv": "CSV",
+    "trafficReport": "Traffic Report",
+    "performanceReport": "Performance Report",
+    "incidentReport": "Incident Report",
+    "summaryReport": "Summary Report",
+    "detailedReport": "Detailed Report",
+    "generating": "Generating report...",
+    "generated": "Report generated successfully",
+    "failed": "Failed to generate report",
+    "noReports": "No reports yet"
+  },
+  "settings": {
+    "title": "設定",
+    "general": "一般",
+    "notifications": "通知",
+    "security": "セキュリティ",
+    "display": "表示",
+    "system": "システム",
+    "save": "設定を保存",
+    "cancel": "キャンセル",
+    "reset": "初期値に戻す",
+    "language": "言語",
+    "timezone": "タイムゾーン",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "theme": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "auto": "自動",
+    "emailNotifications": "Email Notifications",
+    "pushNotifications": "Push Notifications",
+    "telegramNotifications": "Telegram Notifications",
+    "changePassword": "パスワード変更",
+    "twoFactorAuth": "二要素認証",
+    "sessionTimeout": "セッションタイムアウト",
+    "apiKeys": "APIキー",
+    "savedSuccessfully": "Settings saved successfully",
+    "saveFailed": "Failed to save settings",
+    "autoMode": "Auto Mode",
+    "autoModeDesc": "System will control traffic lights automatically.",
+    "timezoneNote": "Timezone Note",
+    "timezoneDesc": "Data is stored in UTC in the database. Timezone only affects dashboard display.",
+    "browserNotifications": "Browser Notifications",
+    "browserNotificationsDesc": "Show alerts in browser when queue is congested or device is offline.",
+    "browserNotificationsEnabled": "Browser notifications enabled",
+    "browserNotificationsDenied": "Browser notification permission denied",
+    "emailNotificationsDesc": "Send important alert summary to account email.",
+    "telegramNotificationsDesc": "Send important alerts to Telegram bot.",
+    "sensorInterval": "Data Collection Interval (seconds)",
+    "currentInterval": "Current",
+    "iotConfigNote": "Light timing and adaptive mode settings are still configured through the IoT Config page to sync with ESP32.",
+    "secureLogin": "Secure Login",
+    "secureLoginDesc": "Account uses NextAuth. Local password is bcrypt encrypted, while Google account uses OAuth.",
+    "passwordNote": "Note: this feature only applies to email/password accounts. Google accounts do not have local passwords."
+  },
+  "profile": {
+    "title": "プロフィール",
+    "myProfile": "マイプロフィール",
+    "edit": "プロフィール編集",
+    "avatar": "アバター",
+    "changeAvatar": "Change Avatar",
+    "uploadAvatar": "Upload Avatar",
+    "removeAvatar": "Remove Avatar",
+    "personalInfo": "個人情報",
+    "fullName": "氏名",
+    "email": "メール",
+    "phone": "電話",
+    "address": "住所",
+    "bio": "Bio",
+    "changePassword": "パスワード変更",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "activity": "アクティビティ",
+    "recentActivity": "最近のアクティビティ",
+    "loginHistory": "Login History",
+    "preferences": "設定",
+    "updateSuccess": "Profile updated successfully",
+    "updateFailed": "Failed to update profile",
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Failed to change password",
+    "avatarUpdated": "Avatar updated successfully",
+    "avatarUpdateFailed": "Failed to update avatar",
+    "uploadingAvatar": "Uploading avatar...",
+    "confirmDeleteAvatar": "Are you sure you want to delete avatar?",
+    "avatarDeleted": "Avatar deleted successfully",
+    "avatarDeleteFailed": "Failed to delete avatar",
+    "exportSuccess": "Data exported successfully",
+    "exportAction": "Export profile data",
+    "exportDescription": "User exported profile data in JSON format",
+    "overview": "概要",
+    "achievements": "実績",
+    "settings": "設定",
+    "activeHours": "Active Hours",
+    "accountStatus": "Account Status",
+    "accountType": "Account Type",
+    "activityLog": {
+      "action": "Viewing profile",
+      "description": "User opened profile page"
+    },
+    "quickActions": "クイック操作",
+    "skills": "スキル",
+    "noSkills": "No skills added yet.",
+    "skillsPlaceholder": "Example: Traffic Management, IoT Systems, Data Analysis",
+    "skillsSeparator": "Separate each skill with a comma.",
+    "department": "部署",
+    "memberSince": "Member Since",
+    "performance": "Performance",
+    "responseTime": "Response Time",
+    "responseTimeDesc": "Response speed based on user activity gaps",
+    "averageResponseMinutes": "Average activity gap {minutes} minutes",
+    "accuracy": "Accuracy",
+    "accuracyDesc": "Successful activity ratio based on activity log",
+    "efficiency": "Efficiency",
+    "efficiencyDesc": "Activity efficiency based on user active hours",
+    "performanceUnavailable": "Performance data not yet available",
+    "performanceUnavailableDesc": "Performance will appear automatically after user activities are recorded.",
+    "savingChanges": "Saving...",
+    "saveChanges": "Save Changes",
+    "accountInfo": "Account Info",
+    "userId": "User ID",
+    "lastLogin": "Last Login",
+    "privacySettings": "Privacy Settings",
+    "publicProfile": "Public Profile",
+    "publicProfileDesc": "Allow others to view your profile",
+    "showEmail": "Show Email",
+    "showEmailDesc": "Email will be visible on public profile",
+    "showActivity": "Show Activity",
+    "showActivityDesc": "Activity will be visible on public profile",
+    "noActivityYet": "No activity yet",
+    "noActivityDesc": "User activities will appear after actions in the system.",
+    "about": "概要"
+  },
+  "iot": {
+    "title": "IoT",
+    "config": "設定",
+    "devices": "デバイス",
+    "deviceId": "デバイスID",
+    "deviceName": "デバイス名",
+    "deviceType": "デバイスタイプ",
+    "status": "状態",
+    "connected": "接続済み",
+    "disconnected": "切断済み",
+    "lastSeen": "最終確認",
+    "firmware": "ファームウェア",
+    "version": "バージョン",
+    "update": "更新",
+    "restart": "再起動",
+    "configure": "設定",
+    "credentials": "認証情報",
+    "connectionString": "接続文字列",
+    "endpoint": "エンドポイント",
+    "port": "ポート",
+    "protocol": "プロトコル",
+    "testConnection": "接続テスト",
+    "connectionFailed": "接続失敗",
+    "configSaved": "設定が正常に保存されました",
+    "configFailed": "設定の保存に失敗しました",
+    "remoteConfigTitle": "Remote Configuration for Smart Traffic Light",
+    "remoteConfigDesc": "Set traffic light duration based on real-time vehicle count. Configuration will be saved to database and sent to ESP32 via MQTT/API.",
+    "howItWorks": "仕組み",
+    "step1Title": "Set Configuration",
+    "step1Desc": "Define vehicle limits and light duration for each traffic condition",
+    "step2Title": "Save to Database",
+    "step2Desc": "Configuration is saved to DynamoDB and sent to device via Mosquitto MQTT",
+    "step3Title": "ESP32 Receives Data",
+    "step3Desc": "ESP32 receives configuration via MQTT/API and applies new rules",
+    "configPanel": {
+      "title": "Device Configuration",
+      "subtitle": "Configuration saved to DynamoDB and sent to ESP32 via Mosquitto MQTT.",
+      "sync": "Sync",
+      "pending": "pending",
+      "success": "success",
+      "partial": "partial",
+      "failed": "failed",
+      "intersectionId": "Intersection ID",
+      "manualTimings": "Manual Light Timing",
+      "manualGreen": "Manual Green Time",
+      "manualGreenDesc": "Used when Adaptive Mode is disabled.",
+      "yellowTime": "Yellow Light Time",
+      "yellowTimeDesc": "Transition duration before switching lanes.",
+      "densityBasedDuration": "Green Duration Based on Density",
+      "densityLevel0": "Density Level 0",
+      "densityLevel0Desc": "No or very few vehicles.",
+      "densityLevel1": "Density Level 1",
+      "densityLevel1Desc": "Medium vehicle queue.",
+      "densityLevel2": "Density Level 2",
+      "densityLevel2Desc": "Heavy vehicle queue.",
+      "operatingMode": "Operating Mode",
+      "autoMode": "Auto Mode",
+      "autoModeDesc": "Lights switch lanes automatically.",
+      "adaptiveMode": "Adaptive Mode",
+      "adaptiveModeDesc": "Green duration follows density level.",
+      "lastSyncedAt": "Last sent to MQTT",
+      "failedTopics": "Topics that failed to send",
+      "unknownError": "Unknown error",
+      "saving": "Saving and sending...",
+      "saveAndSend": "Save & Send to ESP32",
+      "reload": "Reload",
+      "seconds": "秒",
+      "loadingError": "Failed to load device configuration",
+      "savingError": "An error occurred while saving configuration",
+      "saveSuccess": "Configuration saved successfully and sent to ESP32",
+      "savePartialSuccess": "Configuration saved, but some MQTT topics failed to send"
+    }
+  },
+  "help": {
+    "title": "ヘルプ",
+    "faqs": "FAQs",
+    "guides": "Guides",
+    "documentation": "Documentation",
+    "support": "Support",
+    "contactUs": "Contact Us",
+    "searchHelp": "Search help...",
+    "getStarted": "Get Started",
+    "tutorials": "Tutorials",
+    "videoGuides": "Video Guides",
+    "troubleshooting": "Troubleshooting",
+    "reportBug": "Report Bug",
+    "featureRequest": "Feature Request",
+    "feedback": "Feedback",
+    "systemGuide": "System Usage Guide",
+    "systemGuideDesc": "Complete guide for using and configuring Adaptive Traffic Monitoring System",
+    "privacyPolicy": "Privacy Policy",
+    "termsConditions": "Terms & Conditions",
+    "api": {
+      "faqIdRequired": "faqId is required",
+      "feedbackRecorded": "Feedback recorded",
+      "failedFetchFaqs": "Failed to fetch FAQs",
+      "failedRecordFeedback": "Failed to record feedback",
+      "guideNotFound": "Guide not found",
+      "failedFetchGuides": "Failed to fetch guides"
+    },
+    "faqItems": [
+      {
+        "id": "faq_001",
+        "category": "一般",
+        "questions": [
+          {
+            "id": "q_001",
+            "question": "What is Adaptive Traffic Monitoring?",
+            "answer": "Adaptive Traffic Monitoring is an intelligent traffic management system that uses IoT and AI to optimize vehicle flow at intersections in real-time.",
+            "tags": [
+              "general",
+              "system",
+              "introduction"
+            ],
+            "views": 1250,
+            "helpful": 980
+          },
+          {
+            "id": "q_002",
+            "question": "How to access the dashboard?",
+            "answer": "Login using your credentials, then you will be directed to the main dashboard displaying real-time statistics from all connected intersections.",
+            "tags": [
+              "dashboard",
+              "login",
+              "access"
+            ],
+            "views": 850,
+            "helpful": 720
+          },
+          {
+            "id": "q_003",
+            "question": "Who can use this system?",
+            "answer": "This system is used by traffic operators, system admins, and authorized parties who have access for traffic monitoring and management.",
+            "tags": [
+              "users",
+              "access",
+              "role"
+            ],
+            "views": 620,
+            "helpful": 540
+          }
+        ],
+        "categoryKey": "general"
+      },
+      {
+        "id": "faq_002",
+        "category": "Features",
+        "questions": [
+          {
+            "id": "q_004",
+            "question": "How to view intersection details?",
+            "answer": "Click on the intersection card in dashboard or use the search bar to find a specific intersection. You can also access the Intersections page to view all intersections in grid format.",
+            "tags": [
+              "intersection",
+              "detail",
+              "navigation"
+            ],
+            "views": 1100,
+            "helpful": 890
+          },
+          {
+            "id": "q_005",
+            "question": "What is Manual Override?",
+            "answer": "Manual Override allows operators to take control of traffic lights manually during emergencies or special situations requiring direct intervention.",
+            "tags": [
+              "manual",
+              "override",
+              "control"
+            ],
+            "views": 950,
+            "helpful": 820
+          },
+          {
+            "id": "q_006",
+            "question": "How to create reports?",
+            "answer": "Open the Reports page, click \"Create New Report\", select intersection, report type, priority, and fill in report details. Reports are saved immediately and accessible to the team.",
+            "tags": [
+              "report",
+              "create"
+            ],
+            "views": 780,
+            "helpful": 650
+          },
+          {
+            "id": "q_007",
+            "question": "How to view historical data?",
+            "answer": "Open the Analytics page to view charts and historical data trends. You can filter by date, intersection, and data type.",
+            "tags": [
+              "historical",
+              "analytics",
+              "data"
+            ],
+            "views": 680,
+            "helpful": 590
+          }
+        ],
+        "categoryKey": "features"
+      },
+      {
+        "id": "faq_003",
+        "category": "IoT & Sensors",
+        "questions": [
+          {
+            "id": "q_008",
+            "question": "IoT sensor not connected, what should I do?",
+            "answer": "Check internet connection, restart IoT device, and ensure firmware is updated. If problem persists, contact technical team via Support menu.",
+            "tags": [
+              "iot",
+              "sensor",
+              "troubleshooting"
+            ],
+            "views": 1450,
+            "helpful": 1120
+          },
+          {
+            "id": "q_009",
+            "question": "What is the sensor data collection interval?",
+            "answer": "Default interval is 5 seconds. You can change it in Settings > IoT & Sensor. Shorter intervals provide more real-time data but use more bandwidth.",
+            "tags": [
+              "sensor",
+              "interval",
+              "configuration"
+            ],
+            "views": 520,
+            "helpful": 440
+          },
+          {
+            "id": "q_010",
+            "question": "How to add new sensors?",
+            "answer": "Contact system admin to register new device ID in Azure IoT Hub. After registration, configure ESP32 with the provided connection string.",
+            "tags": [
+              "sensor",
+              "add",
+              "setup"
+            ],
+            "views": 380,
+            "helpful": 320
+          }
+        ],
+        "categoryKey": "iot-sensor"
+      },
+      {
+        "id": "faq_004",
+        "category": "Troubleshooting",
+        "questions": [
+          {
+            "id": "q_011",
+            "question": "Data not updating in real-time?",
+            "answer": "Refresh your browser page. If problem continues, check data collection interval settings in Settings > IoT & Sensor. Also ensure stable internet connection.",
+            "tags": [
+              "realtime",
+              "update",
+              "troubleshooting"
+            ],
+            "views": 920,
+            "helpful": 780
+          },
+          {
+            "id": "q_012",
+            "question": "Charts not showing in Analytics page?",
+            "answer": "Ensure there is historical data for the selected period. Try selecting a wider date range. If still problematic, clear browser cache and refresh page.",
+            "tags": [
+              "charts",
+              "analytics",
+              "troubleshooting"
+            ],
+            "views": 560,
+            "helpful": 470
+          },
+          {
+            "id": "q_013",
+            "question": "Cannot login to system?",
+            "answer": "Ensure email and password are correct. If you forgot password, use \"Forgot Password\" feature. If still problematic, contact admin to reset your account.",
+            "tags": [
+              "login",
+              "password",
+              "access"
+            ],
+            "views": 1280,
+            "helpful": 1050
+          },
+          {
+            "id": "q_014",
+            "question": "Notifications not appearing?",
+            "answer": "Check notification settings in Settings > Notifications. Ensure browser allows notifications from this application. For email notifications, check spam folder.",
+            "tags": [
+              "notification",
+              "alert",
+              "troubleshooting"
+            ],
+            "views": 640,
+            "helpful": 530
+          }
+        ],
+        "categoryKey": "troubleshooting"
+      },
+      {
+        "id": "faq_005",
+        "category": "セキュリティ",
+        "questions": [
+          {
+            "id": "q_015",
+            "question": "How to change password?",
+            "answer": "Open Profile menu > Settings > Security. Enter old password, new password, and confirm new password. Click Save Changes.",
+            "tags": [
+              "password",
+              "security",
+              "account"
+            ],
+            "views": 890,
+            "helpful": 760
+          },
+          {
+            "id": "q_016",
+            "question": "What is Two-Factor Authentication?",
+            "answer": "2FA adds an extra security layer by requiring a verification code in addition to password when logging in. Highly recommended for admin accounts.",
+            "tags": [
+              "2fa",
+              "security",
+              "authentication"
+            ],
+            "views": 420,
+            "helpful": 360
+          },
+          {
+            "id": "q_017",
+            "question": "How to logout from all devices?",
+            "answer": "Open Profile menu > Settings > Security > Active Sessions. Click \"Logout\" on each session you want to end, or use \"Logout All Devices\" button.",
+            "tags": [
+              "logout",
+              "session",
+              "security"
+            ],
+            "views": 310,
+            "helpful": 270
+          }
+        ],
+        "categoryKey": "security"
+      }
+    ],
+    "guideItems": [
+      {
+        "id": "guide_001",
+        "title": "Getting Started Guide",
+        "description": "Learn the basics of using Adaptive Traffic Monitoring",
+        "icon": "rocket_launch",
+        "color": "bg-blue-100 text-blue-600",
+        "category": "getting-started",
+        "duration": "10 minutes",
+        "difficulty": "Beginner",
+        "steps": [
+          {
+            "title": "Login to System",
+            "description": "Use credentials provided by admin",
+            "content": "Open the application and enter your email and password. If this is your first login, you will be asked to change the default password."
+          },
+          {
+            "title": "Familiarize Dashboard",
+            "description": "Understand main dashboard components",
+            "content": "Dashboard displays real-time statistics, intersection status, and latest alerts. Use sidebar to navigate to other pages."
+          },
+          {
+            "title": "Monitor Intersections",
+            "description": "View intersection status and data",
+            "content": "Click on intersection card to view complete details including vehicle volume, light status, and sensor data."
+          },
+          {
+            "title": "Create Reports",
+            "description": "Document incidents or issues",
+            "content": "Use Reports page to create documentation of incidents, technical issues, or important observations."
+          }
+        ],
+        "relatedGuides": [
+          "guide_002",
+          "guide_003"
+        ],
+        "tags": [
+          "beginner",
+          "basic",
+          "tutorial"
+        ],
+        "views": 2450,
+        "lastUpdated": "2024-01-15"
+      },
+      {
+        "id": "guide_002",
+        "title": "Video Tutorials",
+        "description": "Watch complete guide videos",
+        "icon": "play_circle",
+        "color": "bg-purple-100 text-purple-600",
+        "category": "video",
+        "duration": "25 minutes",
+        "difficulty": "All Levels",
+        "videos": [
+          {
+            "title": "System Introduction",
+            "url": "https://example.com/video1",
+            "duration": "5:30",
+            "thumbnail": "/thumbnails/intro.jpg"
+          },
+          {
+            "title": "Real-time Monitoring",
+            "url": "https://example.com/video2",
+            "duration": "8:45",
+            "thumbnail": "/thumbnails/monitoring.jpg"
+          },
+          {
+            "title": "Creating Reports",
+            "url": "https://example.com/video3",
+            "duration": "6:20",
+            "thumbnail": "/thumbnails/reports.jpg"
+          },
+          {
+            "title": "Analytics and Insights",
+            "url": "https://example.com/video4",
+            "duration": "10:15",
+            "thumbnail": "/thumbnails/analytics.jpg"
+          }
+        ],
+        "relatedGuides": [
+          "guide_001",
+          "guide_004"
+        ],
+        "tags": [
+          "video",
+          "tutorial",
+          "visual"
+        ],
+        "views": 1890,
+        "lastUpdated": "2024-01-20"
+      },
+      {
+        "id": "guide_003",
+        "title": "API Documentation",
+        "description": "Complete documentation for developers",
+        "icon": "code",
+        "color": "bg-green-100 text-green-600",
+        "category": "developer",
+        "duration": "30 minutes",
+        "difficulty": "Advanced",
+        "sections": [
+          {
+            "title": "Authentication",
+            "description": "How to authenticate with API",
+            "endpoints": [
+              {
+                "method": "POST",
+                "path": "/api/auth/login",
+                "description": "Login and get access token"
+              },
+              {
+                "method": "POST",
+                "path": "/api/auth/refresh",
+                "description": "Refresh access token"
+              }
+            ]
+          },
+          {
+            "title": "交差点",
+            "description": "Endpoints for intersection data",
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/api/intersections",
+                "description": "List all intersections"
+              },
+              {
+                "method": "GET",
+                "path": "/api/intersections/[id]",
+                "description": "Intersection details"
+              },
+              {
+                "method": "POST",
+                "path": "/api/intersections",
+                "description": "Add new intersection"
+              }
+            ]
+          },
+          {
+            "title": "Traffic Data",
+            "description": "Endpoints for traffic data",
+            "endpoints": [
+              {
+                "method": "GET",
+                "path": "/api/traffic/realtime",
+                "description": "Real-time data"
+              },
+              {
+                "method": "GET",
+                "path": "/api/analytics/daily",
+                "description": "Daily analytics"
+              }
+            ]
+          }
+        ],
+        "relatedGuides": [
+          "guide_004"
+        ],
+        "tags": [
+          "api",
+          "developer",
+          "technical"
+        ],
+        "views": 1250,
+        "lastUpdated": "2024-01-18"
+      },
+      {
+        "id": "guide_004",
+        "title": "Contact Support",
+        "description": "Our team is ready to help 24/7",
+        "icon": "support_agent",
+        "color": "bg-orange-100 text-orange-600",
+        "category": "support",
+        "duration": "5 minutes",
+        "difficulty": "All Levels",
+        "contacts": [
+          {
+            "type": "メール",
+            "value": "support@traffic-monitoring.com",
+            "icon": "email",
+            "responseTime": "< 2 hours"
+          },
+          {
+            "type": "電話",
+            "value": "+62 21 1234 5678",
+            "icon": "phone",
+            "responseTime": "Immediate"
+          },
+          {
+            "type": "Live Chat",
+            "value": "Chat with support team",
+            "icon": "chat",
+            "responseTime": "< 5 minutes"
+          },
+          {
+            "type": "WhatsApp",
+            "value": "+62 812 3456 7890",
+            "icon": "chat",
+            "responseTime": "< 15 minutes"
+          }
+        ],
+        "supportHours": {
+          "weekdays": "24/7",
+          "weekends": "24/7",
+          "holidays": "24/7"
+        },
+        "relatedGuides": [
+          "guide_001"
+        ],
+        "tags": [
+          "support",
+          "help",
+          "contact"
+        ],
+        "views": 3120,
+        "lastUpdated": "2024-01-10"
+      },
+      {
+        "id": "guide_005",
+        "title": "IoT Sensor Configuration",
+        "description": "Setup and configure ESP32 sensors",
+        "icon": "sensors",
+        "color": "bg-cyan-100 text-cyan-600",
+        "category": "iot",
+        "duration": "45 minutes",
+        "difficulty": "Advanced",
+        "steps": [
+          {
+            "title": "Hardware Preparation",
+            "description": "Required components",
+            "content": "ESP32 DevKit, HC-SR04 ultrasonic sensor, jumper wires, breadboard, and 5V power supply."
+          },
+          {
+            "title": "Install Arduino IDE",
+            "description": "Setup development environment",
+            "content": "Download and install Arduino IDE. Add ESP32 board manager and install required libraries."
+          },
+          {
+            "title": "Upload Firmware",
+            "description": "Flash code to ESP32",
+            "content": "Open traffic_sensor.ino file, adjust WiFi credentials and Azure IoT Hub connection string, then upload to ESP32."
+          },
+          {
+            "title": "Testing & Calibration",
+            "description": "Verify sensor works",
+            "content": "Monitor serial output to ensure sensor sends data to cloud. Perform calibration if needed."
+          }
+        ],
+        "relatedGuides": [
+          "guide_003"
+        ],
+        "tags": [
+          "iot",
+          "esp32",
+          "sensor",
+          "hardware"
+        ],
+        "views": 680,
+        "lastUpdated": "2024-01-22"
+      }
+    ]
+  },
+  "errors": {
+    "general": "エラーが発生しました",
+    "network": "Network error",
+    "serverError": "Server error",
+    "notFound": "見つかりません",
+    "unauthorized": "Unauthorized",
+    "forbidden": "アクセス拒否",
+    "validation": "Validation failed",
+    "timeout": "Request timeout",
+    "tryAgain": "再試行",
+    "contactSupport": "サポートに連絡",
+    "loadData": "Failed to load data",
+    "fetchDevices": "デバイスの取得に失敗しました",
+    "fetchConfig": "設定の取得に失敗しました",
+    "saveConfig": "設定の保存に失敗しました",
+    "sendMqtt": "MQTTコマンドの送信に失敗しました",
+    "fetchVehicleVolume": "Failed to fetch vehicle volume",
+    "fetchQueueData": "Failed to load queue level",
+    "fetchEffectiveness": "Failed to fetch queue effectiveness",
+    "noData": "利用可能なデータがありません",
+    "fileTooLarge": "File size too large (max 5MB)",
+    "invalidFileType": "Invalid file type. Use images (jpg, png, etc)"
+  },
+  "success": {
+    "saved": "正常に保存されました",
+    "updated": "正常に更新されました",
+    "deleted": "正常に削除されました",
+    "created": "正常に作成されました",
+    "sent": "正常に送信されました",
+    "uploaded": "正常にアップロードされました",
+    "downloaded": "正常にダウンロードされました"
+  },
+  "time": {
+    "seconds": "秒",
+    "minutes": "分",
+    "hours": "時間",
+    "days": "日",
+    "weeks": "週",
+    "months": "か月",
+    "years": "年",
+    "ago": "前",
+    "justNow": "たった今",
+    "today": "今日",
+    "yesterday": "昨日",
+    "tomorrow": "明日"
+  },
+  "timeFilter": {
+    "filterPeriod": "Filter Period",
+    "selectDateRange": "Select Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "startDateMustBeBeforeEnd": "Start date must not be greater than end date",
+    "selectDateRangeToView": "Select date range to view historical data. Maximum 90 days back.",
+    "filterChanged": "Filter changed",
+    "customFilter": "Custom filter"
+  },
+  "search": {
+    "placeholder": "Search intersections, devices, or users...",
+    "searching": "Searching...",
+    "resultsFound": "results found",
+    "searchingData": "Searching data...",
+    "noDataFound": "No data found",
+    "intersection": "Intersection",
+    "device": "IoT Device",
+    "user": "User"
+  },
+  "lanes": {
+    "title": "Lane Queue Status",
+    "allIntersections": "All Intersections",
+    "autoRefresh": "Auto update every 5 seconds",
+    "lastUpdate": "Last",
+    "noLaneData": "No lane data",
+    "selectIntersectionToView": "Select intersection to view status",
+    "lane": "車線",
+    "greenLight": "Green light",
+    "vehicles": "Vehicles",
+    "queueDistance": "Queue distance",
+    "level": "LEVEL",
+    "smooth": "円滑",
+    "moderate": "中程度",
+    "congested": "渋滞",
+    "north": "北",
+    "south": "南",
+    "east": "東",
+    "west": "西"
+  },
+  "trafficTrend": {
+    "title": "Traffic Trend & Queue Level",
+    "today": "今日",
+    "yesterday": "昨日",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "customPeriod": "Selected period",
+    "allIntersections": "All intersections",
+    "allLanes": "全車線",
+    "northLane": "北車線",
+    "southLane": "南車線",
+    "eastLane": "東車線",
+    "vehicleCount": "車両数",
+    "queueLevel": "Queue Level",
+    "queueLevelSmooth": "円滑",
+    "queueLevelModerate": "中程度",
+    "queueLevelCongested": "渋滞",
+    "vehicleCountNote": "Total vehicles based on highest counter per lane.",
+    "queueLevelNote": "0=Smooth, 1=Moderate, 2=Congested.",
+    "noData": "No data to display yet",
+    "refreshData": "Refresh data"
+  },
+  "loading": {
+    "systemMonitoring": "Traffic Monitoring System"
+  },
+  "modals": {
+    "addUser": "Add New User",
+    "addUserDesc": "Create account for operator or admin",
+    "editUser": "Edit User",
+    "editUserDesc": "Update user information",
+    "addIntersection": "Add New Intersection",
+    "addIntersectionDesc": "Connect intersection with detected ESP32 device",
+    "editIntersection": "Edit Intersection",
+    "editIntersectionDesc": "Update intersection data",
+    "fullName": "氏名",
+    "enterFullName": "Enter full name",
+    "enterEmail": "name@traffic-command.go.id",
+    "roleTitle": "Role / Position",
+    "fieldOperator": "Field Operator",
+    "centralAdmin": "Central Admin",
+    "passwordMinChars": "Minimum 8 characters",
+    "phoneNumber": "Phone Number",
+    "location": "Location",
+    "operatingMode": "Operating Mode",
+    "lanesCount": "Number of Lanes",
+    "lanes": "Lanes",
+    "deviceInfo": "Device appears after ESP32 sends telemetry to MQTT. One device can only be connected to one intersection.",
+    "devicesAvailable": "devices available",
+    "reload": "Reload",
+    "noDevicesAvailable": "No devices available. Make sure ESP32 is sending telemetry or use manual input.",
+    "autoFollowsESP32": "Automatically follows ESP32 data",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "selectDevice": "Select Device",
+    "enterManual": "Enter manually",
+    "selectDetectedDevice": "Select detected device",
+    "loadingDevices": "Loading devices...",
+    "selectDetectedDevicePlaceholder": "Select detected device",
+    "deviceTakenFromDynamoDB": "Device taken from DynamoDB DeviceStatus.",
+    "intersectionIdRequired": "Intersection ID",
+    "lanesDirections": "Lane directions"
+  },
+  "charts": {
+    "loadingData": "Loading data...",
+    "noDataAvailable": "利用可能なデータがありません",
+    "noDataPeriod": "No data to display",
+    "loadingChart": "Loading chart...",
+    "vehicleVolume": "Vehicle volume",
+    "queueLevel": "Queue level",
+    "samples": "samples",
+    "effectiveness": "Effectiveness",
+    "distribution": "Distribution",
+    "trend": "Trend",
+    "comparison": "Comparison",
+    "greenDurationTitle": "Green Duration vs Queue Level",
+    "greenDurationSubtitle": "Comparison of target green duration with average actual duration.",
+    "overallEffectiveness": "Overall Effectiveness",
+    "targetDuration": "Target Duration",
+    "actualDuration": "Actual Duration",
+    "noGreenDurationData": "No green duration data yet",
+    "noTelemetryFound": "No telemetry found in selected period and filters.",
+    "level": "Level",
+    "target": "Target",
+    "actual": "Actual",
+    "seconds": "秒",
+    "queueEffectivenessTitle": "Queue Reduction Effectiveness",
+    "queueEffectivenessSubtitle": "Percentage of adaptive system success in reducing queue time.",
+    "queueByHourTitle": "Hourly Queue Level Distribution",
+    "queueByHourSubtitle": "Queue pattern throughout the day to identify peak hours.",
+    "queueDistributionTitle": "Queue Level Distribution",
+    "queueDistributionSubtitle": "Percentage of time at each queue level.",
+    "vehicleVolumeTitle": "Daily Vehicle Volume",
+    "vehicleVolumeSubtitle": "Number of vehicles passing through intersections daily.",
+    "noVehicleData": "No vehicle volume data yet",
+    "vehicles": "Vehicles",
+    "date": "Date",
+    "hour": "Hour",
+    "percentage": "Percentage",
+    "count": "Count"
+  },
+  "trafficControl": {
+    "title": "Real-time Traffic Control",
+    "subtitle": "Adaptive traffic light control simulation",
+    "manualControl": "Manual Control",
+    "autoMode": "Automatic Mode",
+    "manualMode": "Manual Mode",
+    "greenDuration": "Green Duration",
+    "currentPhase": "Current Phase",
+    "timeRemaining": "Time Remaining",
+    "forceGreen": "Force Green",
+    "forceRed": "Force Red",
+    "resetToAuto": "Reset to Auto",
+    "manualLightControl": "Manual Light Control",
+    "disableAutoModeToControl": "Disable Auto Mode to control lights",
+    "disableAutoModeFirst": "Disable Auto Mode before controlling lights manually",
+    "locked": "Locked",
+    "durationSettings": "Duration Settings",
+    "durationSettingsDesc": "Values will be saved to DynamoDB and sent to ESP32 via MQTT retained",
+    "manualDuration": "Manual",
+    "activeConfig": "Active Configuration",
+    "autoModeDesc": "Lights switch automatically",
+    "adaptiveModeDesc": "Green duration follows traffic density level",
+    "adaptiveMode": "Adaptive Mode"
+  },
+  "roadSimulation": {
+    "title": "Traffic Simulation",
+    "subtitle": "Real-time traffic condition visualization",
+    "playSimulation": "Start Simulation",
+    "pauseSimulation": "Pause Simulation",
+    "resetSimulation": "Reset Simulation",
+    "speed": "Simulation Speed",
+    "addVehicle": "Add Vehicle",
+    "clearVehicles": "Clear All Vehicles",
+    "fullscreen": "Fullscreen",
+    "zoomIn": "Zoom",
+    "zoomOut": "Zoom",
+    "resetMap": "Reset Map",
+    "clearCars": "Clear Cars",
+    "info": "Virtual cars only appear when <b>actual vehicleCount increases</b>. Red lights make cars stop and form queues; green lights make queues pass through intersections.",
+    "north": "北",
+    "south": "南",
+    "east": "東",
+    "west": "西",
+    "northLabel": "NORTH",
+    "southLabel": "SOUTH",
+    "eastLabel": "EAST",
+    "actualCount": "Actual count",
+    "simulatedCars": "Simulated cars",
+    "density": "密度",
+    "queue": "待ち行列",
+    "green": "Green",
+    "cm": "cm",
+    "equipmentLabel": {
+      "north": "NORTH: LIGHT → IR → HC-SR04",
+      "south": "SOUTH: LIGHT → IR → HC-SR04",
+      "east": "EAST: LIGHT → IR → HC-SR04"
+    }
+  },
+  "team": {
+    "title": "Our Team",
+    "subtitle": "Meet the ASTRAEA development team",
+    "meetTeam": "Meet Our Team",
+    "developers": "Developers",
+    "contributors": "Contributors",
+    "viewProfile": "View Profile",
+    "contact": "Contact",
+    "heroTitle": "Building the Future of Smart Mobility.",
+    "heroSubtitle": "Our engineers, designers, and analysts collaborate to create predictive and efficient traffic management solutions for smart cities.",
+    "footerTitle": "Global Collaboration, Local Impact.",
+    "footerDescription": "Our team works with the highest security standards and data privacy protocols to ensure the ASTRAEA system is safe for all citizens.",
+    "languages": "Languages",
+    "offices": "Branch Offices",
+    "joinUs": "Join Us!",
+    "joinDescription": "We are constantly looking for innovators, engineers, and creative thinkers to help us revolutionize urban mobility.",
+    "viewJobs": "View Jobs"
+  },
+  "landing": {
+    "hero": "Adaptive Traffic Monitoring System",
+    "heroSubtitle": "IoT Technology for more efficient traffic management",
+    "features": "Key Features",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "viewDemo": "View Demo",
+    "copyright": "Copyright",
+    "allRightsReserved": "All rights reserved",
+    "smartCityReady": "Smart City Ready",
+    "heroTitle": "Revolutionize Your City's Traffic Management",
+    "heroDescription": "ASTRAEA leverages the power of IoT and AI to automatically optimize traffic light duration based on actual vehicle density, reducing congestion by up to 40%.",
+    "viewTeam": "View Our Team",
+    "queueReduction": "Queue Reduction",
+    "featuresTitle": "Artificial Intelligence for Better Mobility",
+    "featuresSubtitle": "Our comprehensive features are designed to handle the complexities of modern urban traffic with high precision.",
+    "realtimeMonitoring": "Real-time Monitoring",
+    "realtimeMonitoringDesc": "Monitor 4 or more intersections directly through a centralized dashboard. Full visibility of road conditions every second.",
+    "adaptiveAI": "Adaptive AI",
+    "adaptiveAIDesc": "Automatic green light timing adjustment. AI analyzes vehicle counts and dynamically prioritizes congested lanes.",
+    "smartAnalytics": "Smart Analytics",
+    "smartAnalyticsDesc": "In-depth data reports. Historical traffic patterns to assist decision-makers in long-term city planning.",
+    "failSafeMode": "Fail-safe Mode",
+    "failSafeModeDesc": "Guaranteed safety. System automatically returns to safe default timing settings if IoT sensors experience connection disruptions.",
+    "aboutUs": "About Us",
+    "ourMission": "Our Mission to Revolutionize Urban Mobility",
+    "aboutDescription1": "ASTRAEA is a smart traffic management system that integrates artificial intelligence with autonomous drone fleets. We believe technology can solve increasingly complex modern transportation challenges.",
+    "aboutDescription2": "Our platform is designed to help city governments and transportation authorities monitor, analyze, and optimize traffic flow in real-time, creating safer and more efficient roadways for everyone.",
+    "ourTeam": "Our Team",
+    "teamTitle": "The Innovators Behind ASTRAEA",
+    "teamSubtitle": "Our dedication to creating technology solutions with real impact for society."
+  },
+  "guide": {
+    "tableOfContents": "Table of Contents",
+    "sections": {
+      "overview": "System Overview",
+      "requirements": "System Requirements",
+      "installation": "Installation & Setup",
+      "dashboard": "Dashboard Monitoring",
+      "persimpangan": "Intersection Management",
+      "analytics": "Traffic Analytics",
+      "iotConfig": "IoT Configuration",
+      "users": "ユーザー管理",
+      "notifications": "Notifications & Alerts",
+      "esp32": "ESP32 Device Setup",
+      "mqtt": "MQTT Configuration",
+      "troubleshooting": "Troubleshooting",
+      "title": "User Guide",
+      "subtitle": "Learn how to use the Smart Traffic Light system",
+      "searchPlaceholder": "Search guides...",
+      "allGuides": "All Guides",
+      "gettingStarted": "Getting Started",
+      "advanced": "Advanced",
+      "backToGuides": "Back to Guides"
+    },
+    "overview": {
+      "title": "System Overview",
+      "subtitle": "Introduction to Adaptive Traffic Monitoring System",
+      "whatIs": "What is this System?",
+      "whatIsDesc": "is an integrated IoT solution designed to monitor and manage traffic in real-time using ESP32 sensors, cloud analytics, and modern web dashboard.",
+      "mainFeatures": "Main Features",
+      "architecture": "System Architecture",
+      "features": {
+        "realtimeMonitoring": "Real-time Monitoring",
+        "realtimeDesc": "Monitor traffic flow directly via MQTT WebSocket",
+        "advancedAnalytics": "Advanced Analytics",
+        "advancedDesc": "Data visualization with interactive charts and statistics",
+        "remoteConfig": "Remote Configuration",
+        "remoteDesc": "Configure traffic light duration from dashboard",
+        "autoNotif": "Automatic Notifications",
+        "autoNotifDesc": "Alerts via Telegram and Email for traffic conditions"
+      },
+      "arch": {
+        "iotLayer": "IoT Layer (ESP32)",
+        "iotLayerDesc": "IR and Ultrasonic sensors for vehicle detection",
+        "mqttBroker": "MQTT Broker (Mosquitto)",
+        "mqttBrokerDesc": "Real-time communication between devices and server",
+        "pythonSubscriber": "Python Subscriber",
+        "pythonSubscriberDesc": "Data processing and storage to DynamoDB",
+        "dynamodb": "AWS DynamoDB",
+        "dynamodbDesc": "Storage for telemetry, device status, and notifications",
+        "nextjsDashboard": "Next.js Dashboard",
+        "nextjsDashboardDesc": "Web interface for monitoring and control"
+      }
+    },
+    "requirements": {
+      "title": "System Requirements",
+      "subtitle": "Required Hardware and Software",
+      "importantNote": "Important Note",
+      "importantNoteDesc": "For production deployment, ensure AWS account has sufficient credits (estimated $10-20/month). MQTT Broker runs on AWS EC2 (3.25.72.124). Complete documentation available in PANDUAN_PENGGUNAAN.md",
+      "frontend": "Dashboard (Frontend)",
+      "backend": "Backend (Python)",
+      "hardware": "Hardware (ESP32)",
+      "nodejs": "Node.js 20+",
+      "ram": "RAM Min. 4 GB",
+      "browser": "Modern Browser (Chrome/Firefox)",
+      "internet": "Stable Internet",
+      "python": "Python 3.10+",
+      "boto3": "boto3 AWS SDK",
+      "pahoMqtt": "paho-mqtt Client",
+      "awsAccount": "AWS Account + DynamoDB",
+      "esp32DevKit": "ESP32 DevKit",
+      "sensorIR": "IR Sensor (3 units)",
+      "hcsr04": "HC-SR04 (3 units)",
+      "ledRgb": "RGB LED or Traffic Light"
+    },
+    "installation": {
+      "title": "Installation & Setup",
+      "subtitle": "Step-by-step installation guide",
+      "totalTime": "Total Setup Time",
+      "totalTimeDesc": "Dashboard: 15 minutes • Python: 10 minutes • ESP32: 20 minutes • Total: ±45 minutes",
+      "setupDashboard": "A. Setup Dashboard (Next.js)",
+      "cloneRepo": "1. Clone Repository",
+      "installDeps": "2. Install Dependencies",
+      "configEnv": "3. Configure Environment",
+      "configEnvDesc": "Edit .env.local with your credentials",
+      "runDev": "4. Run Development",
+      "runDevDesc": "Open http://localhost:3000",
+      "setupPython": "B. Setup Python Subscriber",
+      "installPythonDeps": "1. Install Dependencies",
+      "configDotEnv": "2. Configure .env",
+      "runSubscriber": "3. Run Subscriber",
+      "setupESP32": "C. Setup ESP32 Device",
+      "setupESP32Step1": "1. Install Arduino IDE or PlatformIO",
+      "setupESP32Step2": "2. Upload code from",
+      "setupESP32Step3": "3. Edit WiFi SSID and password",
+      "setupESP32Step4": "4. Upload to ESP32"
+    },
+    "dashboardGuide": {
+      "title": "Using Dashboard",
+      "subtitle": "Dashboard navigation and features guide",
+      "mqttStatus": "MQTT Connection Status",
+      "mqttStatusDesc": "Banner above dashboard displays:",
+      "mqttConnected": "CONNECTED - System connected to broker",
+      "mqttDisconnected": "DISCONNECTED - Connection lost",
+      "mqttDeviceId": "Device ID and active intersection",
+      "mqttTimestamp": "Last update timestamp",
+      "timeFilter": "Time Filter",
+      "timeFilterDesc": "Select data range:",
+      "today": "Today - Today's data",
+      "yesterday": "Yesterday - Yesterday's data",
+      "sevenDays": "7 Days - Last 7 days",
+      "thirtyDays": "30 Days - Last 30 days",
+      "custom": "Custom - Manual date selection",
+      "roadSimulation": "Traffic Road Simulation",
+      "roadSimulationDesc": "Real-time intersection visualization:",
+      "threeLanes": "3 Lanes: North, South, East",
+      "lightsUpdate": "Lights update automatically",
+      "vehicleCountPerLane": "Vehicle count per lane",
+      "queueLevels": "Queue Level: 0 (Smooth), 1 (Moderate), 2 (Heavy)",
+      "controlPanel": "Traffic Control Panel",
+      "controlPanelDesc": "Control panel on right sidebar:",
+      "autoModeToggle": "Auto Mode ON/OFF",
+      "adaptiveModeToggle": "Adaptive Mode ON/OFF",
+      "greenYellowTime": "Green/Yellow Time configuration",
+      "manualControlLights": "Manual Control change lights manually",
+      "manualControl": "How to Use Manual Control",
+      "manualControlStep1": "1. Turn off Auto Mode in Traffic Control Panel",
+      "manualControlStep2": "2. Select lane to change (North/South/East)",
+      "manualControlStep3": "3. Select light color (Red/Yellow/Green)",
+      "manualControlStep4": "4. Click Apply button",
+      "manualControlNote": "Manual control only works when Auto Mode is OFF!"
+    },
+    "intersectionManagement": {
+      "title": "Intersection Management",
+      "subtitle": "CRUD operations for intersections",
+      "addNew": "Adding New Intersection",
+      "addNewStep1": "Open menu",
+      "addNewStep1Bold": "\"Intersections\"",
+      "addNewStep1Cont": "in sidebar",
+      "addNewStep2": "Click button",
+      "addNewStep2Bold": "\"Add Intersection\"",
+      "addNewStep3": "Fill form with data:",
+      "addNewStep3Sub1": "Intersection Name (example: \"Talun Junction\")",
+      "addNewStep3Sub2": "Full address",
+      "addNewStep3Sub3": "Device ID (example: ESP32_TRAFFIC_01)",
+      "addNewStep3Sub4": "Number of Lanes (3 or 4)",
+      "addNewStep3Sub5": "Status: Active/Maintenance/Inactive",
+      "addNewStep3Sub6": "Coordinates (latitude/longitude - optional)",
+      "addNewStep4": "Click",
+      "addNewStep4Bold": "\"Save\"",
+      "edit": "Edit Intersection",
+      "editDesc": "Click icon",
+      "editDescBold": "Edit (pencil)",
+      "editDescCont": "on intersection card, modify required data, then click",
+      "editDescBold2": "\"Save Changes\"",
+      "delete": "Delete Intersection",
+      "deleteDesc": "Click icon",
+      "deleteDescBold": "Delete (trash)",
+      "deleteDescCont": "on intersection card, then confirm deletion.",
+      "deleteWarning": "Warning:",
+      "deleteWarningText": "Deletion is permanent and cannot be undone!",
+      "viewDetail": "View Intersection Details",
+      "viewDetailDesc": "Click",
+      "viewDetailDescBold": "\"Detail\"",
+      "viewDetailDescCont": "or click card directly to open detail page showing:",
+      "viewDetailSub1": "Complete intersection information",
+      "viewDetailSub2": "Real-time traffic status",
+      "viewDetailSub3": "Telemetry history",
+      "viewDetailSub4": "Vehicle volume charts",
+      "viewDetailSub5": "Device status and system health"
+    },
+    "analyticsGuide": {
+      "title": "Traffic Analytics",
+      "subtitle": "In-depth data visualization and analysis",
+      "vehicleVolumeChart": "Vehicle Volume Chart",
+      "vehicleVolumeDesc": "Line chart of vehicle volume per hour or per day with lane filter.",
+      "queueDistribution": "Queue Distribution",
+      "queueDistributionDesc": "Pie chart of Level 0 (Smooth), Level 1 (Moderate), Level 2 (Heavy) distribution.",
+      "queueHourlyHeatmap": "Queue Hourly Heatmap",
+      "queueHourlyHeatmapDesc": "Heatmap of queue intensity per hour to identify peak hours.",
+      "queueLevelByHour": "Queue Level by Hour",
+      "queueLevelByHourDesc": "Stacked bar chart of queue level distribution per hour.",
+      "greenDurationChart": "Green Duration Chart",
+      "greenDurationChartDesc": "Effectiveness of green light duration vs vehicle volume.",
+      "effectivenessTable": "Effectiveness Table",
+      "effectivenessTableDesc": "Table of light effectiveness score per lane (0-100).",
+      "effectivenessScore": "How to Read Effectiveness Score",
+      "veryEffective": "Very Effective",
+      "fairlyEffective": "Fairly Effective",
+      "lessEffective": "Less Effective",
+      "exportData": "Export Analytics Data",
+      "exportDesc": "Click button",
+      "exportDescBold": "\"Export Summary\"",
+      "exportDescCont": "at top right to download data to CSV. File can be opened with Excel or Google Sheets."
+    },
+    "iotConfigGuide": {
+      "title": "IoT Device Configuration",
+      "subtitle": "Remote configuration for ESP32",
+      "greenTime": "Green Time (Seconds)",
+      "greenTimeDesc": "Default green light duration when not adaptive.",
+      "greenTimeMin": "Min:",
+      "greenTimeMax": "Max:",
+      "greenTimeRecommended": "Recommended:",
+      "yellowTime": "Yellow Time (Seconds)",
+      "yellowTimeDesc": "Yellow light transition duration.",
+      "yellowTimeMin": "Min:",
+      "yellowTimeMax": "Max:",
+      "yellowTimeRecommended": "Recommended:",
+      "level0Green": "Level 0 Green",
+      "level0GreenDesc": "Duration when SMOOTH (no vehicles)",
+      "level0Recommended": "Recommended: 10 seconds",
+      "level1Green": "Level 1 Green",
+      "level1GreenDesc": "Duration when MODERATE (some vehicles)",
+      "level1Recommended": "Recommended: 20 seconds",
+      "level2Green": "Level 2 Green",
+      "level2GreenDesc": "Duration when HEAVY (long queue)",
+      "level2Recommended": "Recommended: 30-40 seconds",
+      "operatingMode": "Operating Mode",
+      "autoMode": "Auto Mode",
+      "autoModeOn": "ON:",
+      "autoModeOnDesc": "Lights alternate automatically",
+      "autoModeOff": "OFF:",
+      "autoModeOffDesc": "Manual control from dashboard",
+      "adaptiveMode": "Adaptive Mode",
+      "adaptiveModeOn": "ON:",
+      "adaptiveModeOnDesc": "Duration follows density level",
+      "adaptiveModeOff": "OFF:",
+      "adaptiveModeOffDesc": "Fixed duration according to Green Time",
+      "optimalTips": "Optimal Configuration Tips",
+      "peakHours": "ピーク時間",
+      "offPeak": "Off-Peak Hours",
+      "greenTimeConfig": "Green Time:",
+      "level0Config": "Level 0:",
+      "level1Config": "Level 1:",
+      "level2Config": "Level 2:",
+      "adaptiveConfigValue": "Adaptive:",
+      "saveConfig": "How to Save Configuration",
+      "saveConfigStep1": "Set desired values",
+      "saveConfigStep2": "Click button",
+      "saveConfigStep2Bold": "\"Save Configuration\"",
+      "saveConfigStep3": "System will save to DynamoDB",
+      "saveConfigStep4": "Command sent to ESP32 via MQTT topic:",
+      "saveConfigStep5": "ESP32 receives and applies new configuration"
+    },
+    "userManagement": {
+      "title": "ユーザー管理",
+      "subtitle": "Role-based access control",
+      "centralAdmin": "Central Admin",
+      "centralAdminPerm1": "Full access to all features",
+      "centralAdminPerm2": "User management (CRUD)",
+      "centralAdminPerm3": "IoT device configuration",
+      "centralAdminPerm4": "Intersection management",
+      "centralAdminPerm5": "Data export",
+      "fieldOperator": "Field Operator",
+      "fieldOperatorPerm1": "View monitoring dashboard",
+      "fieldOperatorPerm2": "View analytics",
+      "fieldOperatorPerm3": "View intersections",
+      "fieldOperatorPerm4": "Cannot modify configuration",
+      "fieldOperatorPerm5": "Cannot CRUD users",
+      "addNewUser": "Adding New User",
+      "addNewUserStep1": "Open menu",
+      "addNewUserStep1Bold": "\"Users\"",
+      "addNewUserStep2": "Click",
+      "addNewUserStep2Bold": "\"Add User\"",
+      "addNewUserStep3": "Fill: Name, Email, Password, Role, Status",
+      "addNewUserStep4": "Click",
+      "addNewUserStep4Bold": "\"Add User\"",
+      "editUser": "Edit User",
+      "editUserDesc": "Click Edit icon (pencil), modify data, then Save Changes.",
+      "deleteUser": "Delete User",
+      "deleteUserDesc": "Click Delete icon (trash), then confirm.",
+      "deleteNote": "Cannot delete your own account!"
+    },
+    "notificationsGuide": {
+      "title": "Notifications & Alerts",
+      "subtitle": "Setup Telegram & Email notifications",
+      "critical": "重大",
+      "criticalSub1": "Queue Level 2 (Heavy)",
+      "criticalSub2": "High vehicle count",
+      "warning": "警告",
+      "warningSub1": "Weak WiFi Signal",
+      "warningSub2": "Dummy Mode Active",
+      "info": "情報",
+      "infoSub1": "Device Online",
+      "infoSub2": "Config Updated",
+      "setupTelegram": "Setup Telegram",
+      "telegramStep1": "Open Telegram, search for",
+      "telegramStep2": "Send",
+      "telegramStep2Cont": "and follow instructions",
+      "telegramStep3": "保存",
+      "telegramStep3Bold": "Bot Token",
+      "telegramStep4": "Start your bot, then access:",
+      "telegramStep5": "Find",
+      "telegramStep5Bold": "Chat ID",
+      "telegramStep5Cont": "from JSON response",
+      "telegramStep6": "Enter Bot Token and Chat ID in",
+      "telegramStep6Bold": "Profile → Settings → Notifications",
+      "telegramStep7": "Click",
+      "telegramStep7Bold": "\"Test Telegram\"",
+      "telegramStep7Cont": "and",
+      "telegramStep7Bold2": "\"Save\"",
+      "setupEmail": "Setup Email (Gmail)",
+      "emailStep1": "Login to Gmail",
+      "emailStep2": "Open",
+      "emailStep2Bold": "Google Account → Security",
+      "emailStep3": "Enable",
+      "emailStep3Bold": "2-Step Verification",
+      "emailStep4": "Click",
+      "emailStep4Bold": "App passwords",
+      "emailStep5": "選択",
+      "emailStep5Bold": "Mail",
+      "emailStep5Cont": "and",
+      "emailStep5Bold2": "Other",
+      "emailStep5Cont2": "(Custom name)",
+      "emailStep6": "Google will generate 16-character password",
+      "emailStep7": "Enter in",
+      "emailStep7Bold": "Profile → Settings → Notifications",
+      "emailStep8": "Click",
+      "emailStep8Bold": "\"Test Email\"",
+      "emailStep8Cont": "and",
+      "emailStep8Bold2": "\"Save\"",
+      "cooldownPeriod": "Cooldown Period",
+      "cooldownDesc": "To prevent spam, notifications have a cooldown of",
+      "cooldownDescBold": "5 minutes",
+      "cooldownDescCont": ". This means the same alert will not be sent again within 5 minutes."
+    },
+    "esp32Setup": {
+      "title": "ESP32 Hardware Setup",
+      "subtitle": "Wiring and uploading code to ESP32",
+      "pinConfiguration": "Pin Configuration",
+      "trafficLight": "Traffic Light (LED)",
+      "northRed": "North Red:",
+      "northYellow": "North Yellow:",
+      "northGreen": "North Green:",
+      "southRed": "South Red:",
+      "southYellow": "South Yellow:",
+      "southGreen": "South Green:",
+      "eastRed": "East Red:",
+      "eastYellow": "East Yellow:",
+      "eastGreen": "East Green:",
+      "irSensors": "IR Sensors",
+      "northIR": "North IR:",
+      "southIR": "South IR:",
+      "eastIR": "East IR:",
+      "ultrasonic": "Ultrasonic (HC-SR04)",
+      "northTRIG": "North TRIG:",
+      "northECHO": "North ECHO:",
+      "southTRIG": "South TRIG:",
+      "southECHO": "South ECHO:",
+      "eastTRIG": "East TRIG:",
+      "eastECHO": "East ECHO:",
+      "uploadCode": "Upload Code to ESP32",
+      "uploadStep1": "Install",
+      "uploadStep1Bold": "Arduino IDE",
+      "uploadStep1Cont": "or",
+      "uploadStep1Bold2": "PlatformIO",
+      "uploadStep2": "Install library:",
+      "uploadStep2Sub1": "WiFi.h (built-in)",
+      "uploadStep2Sub2": "PubSubClient.h (MQTT)",
+      "uploadStep2Sub3": "ArduinoJson.h",
+      "uploadStep3": "Open file",
+      "uploadStep4": "Edit WiFi and MQTT credentials:",
+      "uploadStep5": "Select board:",
+      "uploadStep5Bold": "ESP32 Dev Module",
+      "uploadStep6": "Select appropriate COM port",
+      "uploadStep7": "Click",
+      "uploadStep7Bold": "アップロード",
+      "uploadStep8": "Open",
+      "uploadStep8Bold": "Serial Monitor",
+      "uploadStep8Cont": "(115200 baud) to view logs",
+      "verifyConnection": "Verify Connection",
+      "verifyDesc": "Correct Serial Monitor output:"
+    },
+    "mqttConfig": {
+      "title": "MQTT & Database Configuration",
+      "subtitle": "MQTT Broker and AWS DynamoDB",
+      "mqttBroker": "MQTT Broker (Mosquitto)",
+      "host": "Host:",
+      "port": "Port:",
+      "portDesc": "(non-SSL)",
+      "username": "Username:",
+      "password": "Password:",
+      "mqttTopics": "MQTT Topics",
+      "topic": "Topic",
+      "description": "Description",
+      "topicAllData": "Telemetry from all ESP32",
+      "topicDeviceData": "Telemetry from specific device",
+      "topicConfigSet": "Send config to device",
+      "topicLightSet": "Manual light control",
+      "dynamodbTables": "AWS DynamoDB Tables",
+      "trafficTelemetry": "Stores all real-time sensor data",
+      "deviceStatus": "Device online/offline status",
+      "notifications": "System notifications",
+      "users": "User data and credentials"
+    },
+    "troubleshootingGuide": {
+      "title": "Troubleshooting",
+      "subtitle": "Common problem solutions",
+      "mqttDisconnected": "Dashboard: MQTT Disconnected",
+      "mqttDisconnectedCause": "Cause:",
+      "mqttDisconnectedCause1": "MQTT Broker down (EC2 down)",
+      "mqttDisconnectedCause2": "Wrong credentials in .env.local",
+      "mqttDisconnectedCause3": "Firewall blocking port 9001 (WebSocket)",
+      "mqttDisconnectedSolution": "Solution:",
+      "mqttDisconnectedSolution1": "Check EC2 status in AWS Console",
+      "mqttDisconnectedSolution2": "Ensure",
+      "mqttDisconnectedSolution3": "Click \"Reconnect\" button",
+      "wifiIssue": "ESP32: WiFi connection failed",
+      "wifiIssueSolution": "Solution:",
+      "wifiIssueSolution1": "Ensure SSID and password are correct",
+      "wifiIssueSolution2": "ESP32 only supports WiFi 2.4 GHz (not 5 GHz)",
+      "wifiIssueSolution3": "Distance from ESP32 to router < 10 meters",
+      "wifiIssueSolution4": "Reset ESP32: press EN button",
+      "awsError": "Python Subscriber: AWS Error",
+      "awsErrorCause": "Cause:",
+      "awsErrorCauseDesc": "Wrong AWS credentials or no permissions",
+      "awsErrorSolution": "Solution:",
+      "awsErrorSolution1": "Check",
+      "awsErrorSolution1Cont": "and",
+      "awsErrorSolution2": "Ensure IAM User has permissions:",
+      "awsErrorSolution3": "Test connection:",
+      "noData": "Data not showing in Dashboard",
+      "noDataChecklist": "Checklist:",
+      "noDataCheck1": "ESP32 connected to WiFi? (check Serial Monitor)",
+      "noDataCheck2": "ESP32 connected to MQTT? (log: \"MQTT connected\")",
+      "noDataCheck3": "Python subscriber running? (",
+      "noDataCheck4": "Data in DynamoDB? (check AWS Console)",
+      "noDataCheck5": "Dashboard connected to MQTT? (green status banner)",
+      "sensorIssue": "Sensor not working",
+      "irSensor": "IR Sensor:",
+      "irSensor1": "Check wiring: VCC → 5V, GND → GND, OUT → GPIO",
+      "irSensor2": "Test with hand in front of sensor (LED should light up)",
+      "irSensor3": "Detection range 2-30 cm",
+      "ultrasonicSensor": "Ultrasonic HC-SR04:",
+      "ultrasonicSensor1": "VCC → 5V, GND → GND, TRIG → GPIO, ECHO → GPIO",
+      "ultrasonicSensor2": "Min distance 2cm, max 400cm",
+      "ultrasonicSensor3": "Ensure no obstacles in front of sensor during test",
+      "needHelp": "Need More Help?",
+      "contactSupport": "If the issue persists, contact technical support:",
+      "email": "メール",
+      "phone": "電話",
+      "documentation": "Complete Documentation",
+      "documentationDesc": "For more detailed guide, please read the complete documentation files:"
+    }
+  },
+  "pages": {
+    "privacyPolicy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: June 14, 2026",
+      "backToHome": "Back to Home",
+      "introduction": {
+        "title": "Introduction",
+        "content": "ASTRAEA (Adaptive Traffic Light Monitoring System) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your personal information when using our system."
+      },
+      "dataCollection": {
+        "title": "Information We Collect",
+        "accountInfo": "Account Information",
+        "accountItems": [
+          "Full name",
+          "Email address",
+          "Phone number",
+          "Profile picture (optional)",
+          "Position and organization"
+        ],
+        "usageData": "Usage Data",
+        "usageItems": [
+          "System activity logs",
+          "Access time and interactions",
+          "IP address and device information",
+          "Settings preferences"
+        ],
+        "trafficData": "Traffic Data",
+        "trafficItems": [
+          "IoT sensor data (anonymous)",
+          "Vehicle volume statistics",
+          "Traffic signal duration",
+          "System performance analytics"
+        ]
+      },
+      "dataUsage": {
+        "title": "How We Use Information",
+        "items": [
+          "Provide and maintain ASTRAEA services",
+          "Improve user experience and system functionality",
+          "Send notifications and important updates",
+          "Analyze and optimize traffic light performance",
+          "Protect system security and integrity"
+        ]
+      },
+      "dataSecurity": {
+        "title": "Data Security",
+        "description": "We implement technical and organizational security measures to protect your data:",
+        "items": [
+          "End-to-end data encryption",
+          "Multi-factor authentication",
+          "24/7 security monitoring",
+          "Regular data backups",
+          "Role-based access control"
+        ]
+      },
+      "dataSharing": {
+        "title": "Information Sharing",
+        "description": "We will not sell, rent, or share your personal information with third parties without your consent, except in the following situations:",
+        "items": [
+          "Required by law or regulation",
+          "Protecting the rights and security of ASTRAEA and its users",
+          "With trusted service providers (with confidentiality agreements)"
+        ]
+      },
+      "userRights": {
+        "title": "Your Rights",
+        "description": "You have the right to:",
+        "items": [
+          "Access your personal data",
+          "Update or correct information",
+          "Delete your account",
+          "Export your data",
+          "Reject certain data processing"
+        ]
+      },
+      "cookies": {
+        "title": "Cookies and Tracking Technologies",
+        "description": "We use cookies and similar technologies to improve user experience, analyze usage, and store your preferences. You can set your browser to reject cookies, but this may affect system functionality."
+      },
+      "policyChanges": {
+        "title": "Policy Changes",
+        "description": "We may update this Privacy Policy from time to time. Material changes will be informed via email or in-system notifications. Continued use after changes indicates your acceptance of the updated policy."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "If you have questions about this Privacy Policy, please contact us:",
+        "email": "Email: privacy@astraea.com",
+        "phone": "Phone: +62 21 1234 5678",
+        "address": "Address: Jakarta, Indonesia"
+      }
+    },
+    "terms": {
+      "title": "Terms & Conditions",
+      "lastUpdated": "Last updated: June 14, 2026",
+      "backToHome": "Back to Home",
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By accessing and using ASTRAEA (Adaptive Traffic Light Monitoring System), you agree to be bound by these Terms and Conditions. If you do not agree with these terms, please do not use our services."
+      },
+      "definitions": {
+        "title": "Definitions",
+        "service": "Service",
+        "serviceDesc": "Refers to the ASTRAEA platform and all features, functions, and content provided.",
+        "user": "User",
+        "userDesc": "Any individual or entity that registers and uses ASTRAEA services.",
+        "content": "Content",
+        "contentDesc": "Data, information, text, graphics, and other materials displayed in the system."
+      },
+      "userAccount": {
+        "title": "User Account",
+        "registration": "Registration",
+        "registrationItems": [
+          "You must be at least 18 years old to create an account",
+          "Information provided must be accurate and complete",
+          "You are responsible for maintaining account credential confidentiality",
+          "One person is only allowed to have one account"
+        ],
+        "security": "Account Security",
+        "securityDesc": "You are responsible for all activities that occur on your account. Immediately report to us if you suspect unauthorized access."
+      },
+      "serviceUsage": {
+        "title": "Service Usage",
+        "permitted": "Permitted Use",
+        "permittedItems": [
+          "Monitor and manage traffic light systems",
+          "Access analytics data and reports",
+          "Configure connected IoT devices",
+          "Collaborate with team through notification features"
+        ],
+        "prohibited": "Prohibited Use",
+        "prohibitedItems": [
+          "Access system without authorization",
+          "Disrupt or damage service operations",
+          "Spread malware or malicious code",
+          "Perform reverse engineering or system decompilation",
+          "Use services for illegal purposes"
+        ]
+      },
+      "intellectualProperty": {
+        "title": "Intellectual Property Rights",
+        "description": "All content, features, and functionality of ASTRAEA are protected by copyright, trademark, and other intellectual property laws. You are not permitted to:",
+        "items": [
+          "Copy or duplicate services without written permission",
+          "Use ASTRAEA logo or brand without approval",
+          "Create derivative works from our services"
+        ]
+      },
+      "serviceAvailability": {
+        "title": "Service Availability",
+        "description": "We strive to provide reliable services available 99.9% of the time. However, we do not guarantee that services will always be free from interruptions, delays, or errors. We reserve the right to perform scheduled maintenance and are not responsible for losses arising from unavoidable downtime."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "warning": "Please note:",
+        "items": [
+          "Services are provided \"as is\" without express or implied warranties",
+          "We are not responsible for direct, indirect, or consequential damages",
+          "Users are responsible for operational decisions based on system data",
+          "We are not responsible for data loss due to force majeure"
+        ]
+      },
+      "termination": {
+        "title": "Service Termination",
+        "description": "We reserve the right to suspend or terminate your access to services if:",
+        "items": [
+          "You violate these Terms and Conditions",
+          "Your activities endanger system security",
+          "You provide false or misleading information",
+          "Upon request from authorized authorities"
+        ]
+      },
+      "changes": {
+        "title": "Terms Changes",
+        "description": "We may modify these Terms and Conditions at any time. Material changes will be informed via email or in-system notifications at least 30 days before taking effect. Continued use after changes indicates your acceptance of the updated terms."
+      },
+      "law": {
+        "title": "Governing Law",
+        "description": "These Terms and Conditions are governed by and interpreted in accordance with the laws of the Republic of Indonesia. Any disputes arising will be resolved through the Central Jakarta District Court."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "If you have questions about these Terms & Conditions, please contact us:",
+        "email": "Email: legal@astraea.com",
+        "phone": "Phone: +62 21 1234 5678",
+        "address": "Address: Jakarta, Indonesia"
+      }
+    },
+    "helpCenter": {
+      "title": "Help Center",
+      "subtitle": "Find answers to your questions about ASTRAEA",
+      "searchPlaceholder": "Search help...",
+      "backToHome": "Back to Home",
+      "quickGuides": "Quick Guides",
+      "faq": "Frequently Asked Questions",
+      "categories": {
+        "all": "すべて",
+        "gettingStarted": "Getting Started",
+        "features": "Features",
+        "troubleshooting": "Troubleshooting",
+        "account": "Account"
+      },
+      "guides": {
+        "gettingStarted": {
+          "title": "Getting Started Guide",
+          "description": "Learn how to use ASTRAEA from scratch",
+          "items": [
+            "Registration & Login",
+            "Dashboard Navigation",
+            "Basic Features"
+          ]
+        },
+        "trafficManagement": {
+          "title": "Traffic Light Management",
+          "description": "Manage and monitor your intersections",
+          "items": [
+            "View Real-time Status",
+            "Data Analytics",
+            "Signal Configuration"
+          ]
+        },
+        "iotConfig": {
+          "title": "IoT Configuration",
+          "description": "Setup and manage IoT devices",
+          "items": [
+            "Add Device",
+            "Update Config",
+            "Troubleshooting"
+          ]
+        },
+        "reports": {
+          "title": "Reports & Analytics",
+          "description": "Generate and export reports",
+          "items": [
+            "Create Report",
+            "Filter Data",
+            "Export PDF/Excel"
+          ]
+        }
+      },
+      "faqs": {
+        "whatIsAstraea": {
+          "question": "What is ASTRAEA?",
+          "answer": "ASTRAEA (Adaptive Traffic Light Monitoring System) is an IoT-based traffic light monitoring and management system that enables real-time monitoring and traffic data analytics."
+        },
+        "howToRegister": {
+          "question": "How to register an account?",
+          "answer": "Click the 'Register' button on the main page, fill out the form with required information, and verify your email. After admin approval, you can login and use the system."
+        },
+        "mainFeatures": {
+          "question": "What are ASTRAEA's main features?",
+          "answer": "Main features include: real-time traffic light monitoring, analytics dashboard, intersection management, IoT device configuration, notification system, automated reports, and user management."
+        },
+        "accessDashboard": {
+          "question": "How to access the dashboard?",
+          "answer": "After logging in, you will be automatically directed to the dashboard. Or click the 'Dashboard' button in the navbar to access it."
+        },
+        "realTimeMonitoring": {
+          "question": "What is real-time monitoring?",
+          "answer": "Real-time monitoring allows you to see traffic light status live using SignalR technology. Data is updated automatically without page refresh."
+        },
+        "cannotLogin": {
+          "question": "Cannot login, what should I do?",
+          "answer": "Ensure your email and password are correct. If you forgot your password, use the 'Forgot Password' feature. If still problematic, contact the administrator."
+        },
+        "dataNotUpdating": {
+          "question": "Data not updating in real-time?",
+          "answer": "Check your internet connection. If connection is good but still problematic, try refreshing the page or logout and login again."
+        },
+        "deviceNotDetected": {
+          "question": "IoT device not detected?",
+          "answer": "Ensure the device is properly configured on the IoT Config page. Check device connection to Azure IoT Hub and device status on dashboard."
+        },
+        "changeProfile": {
+          "question": "How to change profile?",
+          "answer": "Click your profile picture in the navbar, select 'My Profile', then click the 'Edit' button to change profile information."
+        },
+        "changePassword": {
+          "question": "How to change password?",
+          "answer": "On the profile page, select the 'Security' tab, enter old password and new password, then click 'Save Changes'."
+        },
+        "roleDifference": {
+          "question": "What's the difference between Admin and Operator roles?",
+          "answer": "Admin has full access to manage users, intersections, and system configuration. Operator can view data and monitoring but cannot change system configuration."
+        }
+      },
+      "contactSupport": {
+        "title": "Need Further Assistance?",
+        "description": "Our support team is ready to help you. Contact us through one of the channels below.",
+        "email": "メール",
+        "emailValue": "support@astraea.com",
+        "phone": "電話",
+        "phoneValue": "+62 21 1234 5678",
+        "liveChat": "Live Chat",
+        "liveChatValue": "Monday - Friday, 09:00 - 17:00"
+      },
+      "noResults": "No results found for"
+    }
+  }
+}
