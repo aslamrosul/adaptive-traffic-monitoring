@@ -31,8 +31,11 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [intersectionName, setIntersectionName] = useState<string>(t('lanes.allIntersections'));
+  const [intersectionNameFromApi, setIntersectionNameFromApi] = useState<string | null>(null);
   const [laneCount, setLaneCount] = useState<number>(4);
+
+  // Get intersection name reactively
+  const intersectionName = intersectionNameFromApi || t('lanes.allIntersections');
 
   const hasLoadedRef = useRef(false);
   const isFetchingRef = useRef(false);
@@ -60,11 +63,11 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
         const intData = await intRes.json();
         
         if (intData.success) {
-          setIntersectionName(intData.data.name);
+          setIntersectionNameFromApi(intData.data.name);
           setLaneCount(intData.data.lanes?.count || 4);
         }
       } else {
-        setIntersectionName(t('lanes.allIntersections'));
+        setIntersectionNameFromApi(null);
         setLaneCount(4); // Default 4 lanes for "all"
       }
 

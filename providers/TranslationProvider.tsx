@@ -73,10 +73,6 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     
     setLocaleState(newLocale);
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    
-    // Force reload page to ensure all components update
-    // This prevents "stuck" translations
-    window.location.reload();
   }, [locale]);
 
   const t = useCallback((key: string): string => {
