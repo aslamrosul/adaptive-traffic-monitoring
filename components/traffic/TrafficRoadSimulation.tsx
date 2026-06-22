@@ -19,14 +19,12 @@ interface Props {
 }
 
 type ActiveLane = "north" | "south" | "east";
-type EastTurnDirection = "north" | "south";
 
 interface SimulatedCar {
   id: string;
   lane: ActiveLane;
   progress: number;
   colorClass: string;
-  turnDirection?: EastTurnDirection;
 }
 
 const ACTIVE_LANES: ActiveLane[] = ["north", "south", "east"];
@@ -62,21 +60,6 @@ const CAR_SPACING = 0.055;
 const NORMAL_SPEED = 0.085;
 const YELLOW_SPEED = 0.038;
 const MAX_CARS_PER_LANE = 12;
-
-const MAP_WIDTH_PX = 2600;
-const MAP_HEIGHT_PX = 1500;
-const MAP_CENTER_X_PX = MAP_WIDTH_PX / 2;
-const MAP_CENTER_Y_PX = MAP_HEIGHT_PX / 2;
-const EAST_APPROACH_END_PROGRESS = 0.5;
-const EAST_TURN_EXIT_PROGRESS = 1.08;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-function lerp(start: number, end: number, amount: number): number {
-  return start + (end - start) * amount;
-}
 
 function normalizeLight(value: unknown): LightStatus {
   const normalized = String(value ?? "red").trim().toLowerCase();
@@ -294,7 +277,7 @@ function RoadEquipment({
           lane="south"
           light={light}
           laneLabel={laneLabel}
-          className="left-[calc(50%+110px)] top-[calc(50%+205px)]"
+          className="left-[calc(50%-170px)] top-[calc(50%+205px)]"
         />
         <IrSensor
           active={irActive}
@@ -318,7 +301,7 @@ function RoadEquipment({
         lane="east"
         light={light}
         laneLabel={laneLabel}
-        className="right-[calc(50%-330px)] top-[calc(50%-185px)]"
+        className="right-[calc(50%-330px)] top-[calc(50%+165px)]"
       />
       <IrSensor
         active={irActive}
@@ -342,7 +325,7 @@ function CarView({ car }: { car: SimulatedCar }) {
         className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
         style={{
           left: "calc(50% + 42px)",
-          top: `${car.progress * MAP_HEIGHT_PX}px`,
+          top: `${car.progress * 1500}px`,
           transform: "translateY(-50%)",
         }}
       />
@@ -355,63 +338,20 @@ function CarView({ car }: { car: SimulatedCar }) {
         className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
         style={{
           left: "calc(50% - 82px)",
-          top: `${(1 - car.progress) * MAP_HEIGHT_PX}px`,
+          top: `${(1 - car.progress) * 1500}px`,
           transform: "translateY(-50%) rotate(180deg)",
         }}
       />
     );
   }
 
-  /*
-   * Jalur timur sebelumnya dibuat lurus dari kanan ke kiri:
-   * left = (1 - progress) * 2600.
-   * Karena maketnya berbentuk T-junction dan tidak ada jalan ke barat,
-   * setelah masuk area simpang mobil timur dibelokkan ke utara/selatan.
-   */
-  if (car.progress <= EAST_APPROACH_END_PROGRESS) {
-    return (
-      <div
-        className={`${base} ${car.colorClass} h-[38px] w-[60px] before:left-8 before:top-2 before:h-[22px] before:w-[18px]`}
-        style={{
-          left: `${(1 - car.progress) * MAP_WIDTH_PX}px`,
-          top: "calc(50% + 44px)",
-          transform: "translateX(-50%) rotate(180deg)",
-        }}
-      />
-    );
-  }
-
-  const turnDirection = car.turnDirection ?? "north";
-  const turnAmount = clamp(
-    (car.progress - EAST_APPROACH_END_PROGRESS) /
-      (EAST_TURN_EXIT_PROGRESS - EAST_APPROACH_END_PROGRESS),
-    0,
-    1,
-  );
-
-  const targetX =
-    turnDirection === "north"
-      ? MAP_CENTER_X_PX + 42
-      : MAP_CENTER_X_PX - 82;
-
-  const targetY =
-    turnDirection === "north"
-      ? -80
-      : MAP_HEIGHT_PX + 80;
-
-  const x = lerp(MAP_CENTER_X_PX, targetX, Math.min(turnAmount * 2, 1));
-  const y = lerp(MAP_CENTER_Y_PX + 44, targetY, turnAmount);
-
   return (
     <div
-      className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
+      className={`${base} ${car.colorClass} h-[38px] w-[60px] before:left-8 before:top-2 before:h-[22px] before:w-[18px]`}
       style={{
-        left: `${x}px`,
-        top: `${y}px`,
-        transform:
-          turnDirection === "north"
-            ? "translate(-50%, -50%) rotate(180deg)"
-            : "translate(-50%, -50%)",
+        left: `${(1 - car.progress) * 2600}px`,
+        top: "calc(50% + 44px)",
+        transform: "translateX(-50%) rotate(180deg)",
       }}
     />
   );
@@ -544,25 +484,15 @@ export default function TrafficRoadSimulation({ data }: Props) {
 
       const created: SimulatedCar[] = Array.from(
         { length: amountToCreate },
-        (_, index) => {
-          const eastCarIndex = laneCars.length + index;
-
-          return {
-            id: `${lane}-${Date.now()}-${index}-${Math.random()
-              .toString(16)
-              .slice(2)}`,
-            lane,
-            progress: -0.04 - index * CAR_SPACING,
-            colorClass:
-              CAR_COLORS[(currentCars.length + index) % CAR_COLORS.length],
-            turnDirection:
-              lane === "east"
-                ? eastCarIndex % 2 === 0
-                  ? "north"
-                  : "south"
-                : undefined,
-          };
-        },
+        (_, index) => ({
+          id: `${lane}-${Date.now()}-${index}-${Math.random()
+            .toString(16)
+            .slice(2)}`,
+          lane,
+          progress: -0.04 - index * CAR_SPACING,
+          colorClass:
+            CAR_COLORS[(currentCars.length + index) % CAR_COLORS.length],
+        }),
       );
 
       return [...currentCars, ...created];
