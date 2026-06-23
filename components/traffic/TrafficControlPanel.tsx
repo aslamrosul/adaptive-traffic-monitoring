@@ -301,65 +301,6 @@ export default function TrafficControlPanel({
         </div>
       )}
 
-      <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-        <div className="grid gap-2 text-sm">
-          <InformationRow
-            label="Intersection ID"
-            value={data?.intersectionId || "-"}
-          />
-
-          <InformationRow
-            label="Device ID"
-            value={data?.deviceId || "-"}
-          />
-
-          <InformationRow
-            label="WiFi RSSI"
-            value={`${data?.wifiRssi ?? 0} dBm`}
-          />
-
-          <InformationRow
-            label="Uptime"
-            value={`${data?.uptimeS ?? 0} ${t('time.seconds')}`}
-          />
-
-          <InformationRow
-            label="Dummy Mode"
-            value={
-              data?.dummyMode
-                ? t('common.active')
-                : t('common.inactive')
-            }
-          />
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <h3 className="mb-3 font-bold text-slate-900">
-          {t('intersections.operatingMode')}
-        </h3>
-
-        <div className="space-y-3">
-          <ModeControl
-            label={t('trafficControl.autoMode')}
-            description={t('trafficControl.autoModeDesc')}
-            active={autoMode}
-            onEnable={() => changeAutoMode(true)}
-            onDisable={() => changeAutoMode(false)}
-            t={t}
-          />
-
-          <ModeControl
-            label={t('trafficControl.adaptiveMode')}
-            description={t('trafficControl.adaptiveModeDesc')}
-            active={adaptiveMode}
-            onEnable={() => changeAdaptiveMode(true)}
-            onDisable={() => changeAdaptiveMode(false)}
-            t={t}
-          />
-        </div>
-      </section>
-
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
@@ -478,6 +419,66 @@ export default function TrafficControlPanel({
           })}
         </div>
       </section>
+      <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+        <div className="grid gap-2 text-sm">
+          <InformationRow
+            label="Intersection ID"
+            value={data?.intersectionId || "-"}
+          />
+
+          <InformationRow
+            label="Device ID"
+            value={data?.deviceId || "-"}
+          />
+
+          <InformationRow
+            label="WiFi RSSI"
+            value={`${data?.wifiRssi ?? 0} dBm`}
+          />
+
+          <InformationRow
+            label="Uptime"
+            value={`${data?.uptimeS ?? 0} ${t('time.seconds')}`}
+          />
+
+          <InformationRow
+            label="Dummy Mode"
+            value={
+              data?.dummyMode
+                ? t('common.active')
+                : t('common.inactive')
+            }
+          />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <h3 className="mb-3 font-bold text-slate-900">
+          {t('intersections.operatingMode')}
+        </h3>
+
+        <div className="space-y-3">
+          <ModeControl
+            label={t('trafficControl.autoMode')}
+            description={t('trafficControl.autoModeDesc')}
+            active={autoMode}
+            onEnable={() => changeAutoMode(true)}
+            onDisable={() => changeAutoMode(false)}
+            t={t}
+          />
+
+          <ModeControl
+            label={t('trafficControl.adaptiveMode')}
+            description={t('trafficControl.adaptiveModeDesc')}
+            active={adaptiveMode}
+            onEnable={() => changeAdaptiveMode(true)}
+            onDisable={() => changeAdaptiveMode(false)}
+            t={t}
+          />
+        </div>
+      </section>
+
+
 
       <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3">
