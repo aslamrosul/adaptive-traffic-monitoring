@@ -246,21 +246,21 @@ function RoadEquipment({
       <>
         <EquipmentLabel
           text={equipmentLabel}
-          className="left-[calc(50%+180px)] top-[calc(50%-525px)]"
+          className="left-[calc(50%-380px)] top-[calc(50%-525px)]"
         />
         <TrafficLight
           lane="north"
           light={light}
           laneLabel={laneLabel}
-          className="left-[calc(50%+105px)] top-[calc(50%-340px)]"
+          className="left-[calc(50%-170px)] top-[calc(50%-340px)]"
         />
         <IrSensor
           active={irActive}
-          className="left-[calc(50%+125px)] top-[calc(50%-435px)]"
+          className="left-[calc(50%-150px)] top-[calc(50%-435px)]"
         />
         <HcSensor
           active={hcActive}
-          className="left-[calc(50%+105px)] top-[calc(50%-515px)]"
+          className="left-[calc(50%-170px)] top-[calc(50%-515px)]"
         />
       </>
     );
@@ -271,21 +271,21 @@ function RoadEquipment({
       <>
         <EquipmentLabel
           text={equipmentLabel}
-          className="left-[calc(50%-380px)] top-[calc(50%+500px)]"
+          className="left-[calc(50%+180px)] top-[calc(50%+500px)]"
         />
         <TrafficLight
           lane="south"
           light={light}
           laneLabel={laneLabel}
-          className="left-[calc(50%-170px)] top-[calc(50%+205px)]"
+          className="left-[calc(50%+105px)] top-[calc(50%+205px)]"
         />
         <IrSensor
           active={irActive}
-          className="left-[calc(50%-150px)] top-[calc(50%+390px)]"
+          className="left-[calc(50%+125px)] top-[calc(50%+390px)]"
         />
         <HcSensor
           active={hcActive}
-          className="left-[calc(50%-170px)] top-[calc(50%+485px)]"
+          className="left-[calc(50%+105px)] top-[calc(50%+485px)]"
         />
       </>
     );
@@ -295,21 +295,21 @@ function RoadEquipment({
     <>
       <EquipmentLabel
         text={equipmentLabel}
-        className="right-[calc(50%-650px)] top-[calc(50%+260px)]"
+        className="right-[calc(50%-650px)] top-[calc(50%-300px)]"
       />
       <TrafficLight
         lane="east"
         light={light}
         laneLabel={laneLabel}
-        className="right-[calc(50%-330px)] top-[calc(50%+165px)]"
+        className="right-[calc(50%-330px)] top-[calc(50%-365px)]"
       />
       <IrSensor
         active={irActive}
-        className="right-[calc(50%-445px)] top-[calc(50%+205px)]"
+        className="right-[calc(50%-445px)] top-[calc(50%-310px)]"
       />
       <HcSensor
         active={hcActive}
-        className="right-[calc(50%-570px)] top-[calc(50%+212px)]"
+        className="right-[calc(50%-570px)] top-[calc(50%-305px)]"
       />
     </>
   );
