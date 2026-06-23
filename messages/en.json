@@ -1265,8 +1265,8 @@
     "forceRed": "Force Red",
     "resetToAuto": "Reset to Auto",
     "manualLightControl": "Manual Light Control",
-    "disableAutoModeToControl": "Disable Auto Mode to control lights",
-    "disableAutoModeFirst": "Disable Auto Mode before controlling lights manually",
+    "disableAutoModeToControl": "Disable Automatic Mode to control each lane light.",
+    "disableAutoModeFirst": "Disable Automatic Mode before controlling lights manually",
     "locked": "Locked",
     "durationSettings": "Duration Settings",
     "durationSettingsDesc": "Values will be saved to DynamoDB and sent to ESP32 via MQTT retained",
@@ -1274,7 +1274,24 @@
     "activeConfig": "Active Configuration",
     "autoModeDesc": "Lights switch automatically",
     "adaptiveModeDesc": "Green duration follows traffic density level",
-    "adaptiveMode": "Adaptive Mode"
+    "adaptiveMode": "Adaptive Mode",
+    "manualLightSummary": "Sensor summary and current light status.",
+    "metrics": {
+      "vehicles": "Vehicles",
+      "density": "Density",
+      "queueDistance": "Queue Distance",
+      "currentDuration": "Current Duration"
+    },
+    "metricHelpers": {
+      "counted": "counted",
+      "ultrasonic": "HC-SR04",
+      "waiting": "Waiting"
+    },
+    "densityDescription": {
+      "smooth": "Smooth",
+      "moderate": "Moderate",
+      "heavy": "Heavy"
+    }
   },
   "roadSimulation": {
     "title": "Traffic Simulation",
@@ -1816,11 +1833,27 @@
       "dataCollection": {
         "title": "Information We Collect",
         "accountInfo": "Account Information",
-        "accountItems": ["Full name", "Email address", "Phone number", "Profile picture (optional)", "Position and organization"],
+        "accountItems": [
+          "Full name",
+          "Email address",
+          "Phone number",
+          "Profile picture (optional)",
+          "Position and organization"
+        ],
         "usageData": "Usage Data",
-        "usageItems": ["System activity logs", "Access time and interactions", "IP address and device information", "Settings preferences"],
+        "usageItems": [
+          "System activity logs",
+          "Access time and interactions",
+          "IP address and device information",
+          "Settings preferences"
+        ],
         "trafficData": "Traffic Data",
-        "trafficItems": ["IoT sensor data (anonymous)", "Vehicle volume statistics", "Traffic signal duration", "System performance analytics"]
+        "trafficItems": [
+          "IoT sensor data (anonymous)",
+          "Vehicle volume statistics",
+          "Traffic signal duration",
+          "System performance analytics"
+        ]
       },
       "dataUsage": {
         "title": "How We Use Information",
@@ -1993,22 +2026,38 @@
         "gettingStarted": {
           "title": "Getting Started Guide",
           "description": "Learn how to use ASTRAEA from scratch",
-          "items": ["Registration & Login", "Dashboard Navigation", "Basic Features"]
+          "items": [
+            "Registration & Login",
+            "Dashboard Navigation",
+            "Basic Features"
+          ]
         },
         "trafficManagement": {
           "title": "Traffic Light Management",
           "description": "Manage and monitor your intersections",
-          "items": ["View Real-time Status", "Data Analytics", "Signal Configuration"]
+          "items": [
+            "View Real-time Status",
+            "Data Analytics",
+            "Signal Configuration"
+          ]
         },
         "iotConfig": {
           "title": "IoT Configuration",
           "description": "Setup and manage IoT devices",
-          "items": ["Add Device", "Update Config", "Troubleshooting"]
+          "items": [
+            "Add Device",
+            "Update Config",
+            "Troubleshooting"
+          ]
         },
         "reports": {
           "title": "Reports & Analytics",
           "description": "Generate and export reports",
-          "items": ["Create Report", "Filter Data", "Export PDF/Excel"]
+          "items": [
+            "Create Report",
+            "Filter Data",
+            "Export PDF/Excel"
+          ]
         }
       },
       "faqs": {

@@ -1257,7 +1257,7 @@
     "title": "Kontrol Lalu Lintas Real-time",
     "subtitle": "Simulasi kontrol lampu lalu lintas adaptif",
     "manualControl": "Kontrol Manual",
-    "autoMode": "Mode Otomatis",
+    "autoMode": "Mode Ottomatis",
     "manualMode": "Mode Manual",
     "greenDuration": "Durasi Hijau",
     "currentPhase": "Fase Saat Ini",
@@ -1266,8 +1266,8 @@
     "forceRed": "Paksa Merah",
     "resetToAuto": "Reset ke Otomatis",
     "manualLightControl": "Kontrol Lampu Manual",
-    "disableAutoModeToControl": "Matikan Auto Mode untuk mengontrol lampu",
-    "disableAutoModeFirst": "Matikan Auto Mode sebelum mengontrol lampu secara manual",
+    "disableAutoModeToControl": "Nonaktifkan Mode Otomatis untuk mengubah lampu setiap jalur.",
+    "disableAutoModeFirst": "Nonaktifkan Mode Otomatis sebelum mengontrol lampu secara manual",
     "locked": "Terkunci",
     "durationSettings": "Pengaturan Durasi",
     "durationSettingsDesc": "Nilai akan disimpan ke DynamoDB dan dikirim menuju ESP32 melalui MQTT retained",
@@ -1275,7 +1275,24 @@
     "activeConfig": "Konfigurasi Aktif",
     "autoModeDesc": "Lampu berpindah secara otomatis",
     "adaptiveModeDesc": "Durasi hijau mengikuti tingkat kepadatan",
-    "adaptiveMode": "Adaptive Mode"
+    "adaptiveMode": "Mode Adaptif",
+    "manualLightSummary": "Ringkasan sensor dan status lampu saat ini.",
+    "metrics": {
+      "vehicles": "Kendaraan",
+      "density": "Kepadatan",
+      "queueDistance": "Jarak Antrian",
+      "currentDuration": "Durasi Saat Ini"
+    },
+    "metricHelpers": {
+      "counted": "terhitung",
+      "ultrasonic": "HC-SR04",
+      "waiting": "Menunggu"
+    },
+    "densityDescription": {
+      "smooth": "Lancar",
+      "moderate": "Sedang",
+      "heavy": "Padat"
+    }
   },
   "roadSimulation": {
     "title": "Simulasi Lalu Lintas",
@@ -1817,11 +1834,27 @@
       "dataCollection": {
         "title": "Informasi yang Kami Kumpulkan",
         "accountInfo": "Informasi Akun",
-        "accountItems": ["Nama lengkap", "Alamat email", "Nomor telepon", "Foto profil (opsional)", "Jabatan dan organisasi"],
+        "accountItems": [
+          "Nama lengkap",
+          "Alamat email",
+          "Nomor telepon",
+          "Foto profil (opsional)",
+          "Jabatan dan organisasi"
+        ],
         "usageData": "Data Penggunaan",
-        "usageItems": ["Log aktivitas sistem", "Waktu akses dan interaksi", "Alamat IP dan informasi perangkat", "Preferensi pengaturan"],
+        "usageItems": [
+          "Log aktivitas sistem",
+          "Waktu akses dan interaksi",
+          "Alamat IP dan informasi perangkat",
+          "Preferensi pengaturan"
+        ],
         "trafficData": "Data Lalu Lintas",
-        "trafficItems": ["Data sensor IoT (anonim)", "Statistik volume kendaraan", "Durasi sinyal lalu lintas", "Analitik performa sistem"]
+        "trafficItems": [
+          "Data sensor IoT (anonim)",
+          "Statistik volume kendaraan",
+          "Durasi sinyal lalu lintas",
+          "Analitik performa sistem"
+        ]
       },
       "dataUsage": {
         "title": "Bagaimana Kami Menggunakan Informasi",
@@ -1994,22 +2027,38 @@
         "gettingStarted": {
           "title": "Panduan Memulai",
           "description": "Pelajari cara menggunakan ASTRAEA dari awal",
-          "items": ["Registrasi & Login", "Navigasi Dashboard", "Fitur Dasar"]
+          "items": [
+            "Registrasi & Login",
+            "Navigasi Dashboard",
+            "Fitur Dasar"
+          ]
         },
         "trafficManagement": {
           "title": "Manajemen Traffic Light",
           "description": "Kelola dan monitor persimpangan Anda",
-          "items": ["Lihat Status Real-time", "Analitik Data", "Konfigurasi Sinyal"]
+          "items": [
+            "Lihat Status Real-time",
+            "Analitik Data",
+            "Konfigurasi Sinyal"
+          ]
         },
         "iotConfig": {
           "title": "Konfigurasi IoT",
           "description": "Setup dan kelola perangkat IoT",
-          "items": ["Tambah Device", "Update Config", "Troubleshooting"]
+          "items": [
+            "Tambah Device",
+            "Update Config",
+            "Troubleshooting"
+          ]
         },
         "reports": {
           "title": "Laporan & Analitik",
           "description": "Generate dan ekspor laporan",
-          "items": ["Buat Laporan", "Filter Data", "Export PDF/Excel"]
+          "items": [
+            "Buat Laporan",
+            "Filter Data",
+            "Export PDF/Excel"
+          ]
         }
       },
       "faqs": {

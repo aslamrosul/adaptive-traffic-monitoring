@@ -73,22 +73,22 @@ export default function TrafficControlPanel({
     setLevel0Input(
       Number(
         config.densityLevel0Green ??
-          data?.densityLevel0GreenS ??
-          10,
+        data?.densityLevel0GreenS ??
+        10,
       ),
     );
     setLevel1Input(
       Number(
         config.densityLevel1Green ??
-          data?.densityLevel1GreenS ??
-          20,
+        data?.densityLevel1GreenS ??
+        20,
       ),
     );
     setLevel2Input(
       Number(
         config.densityLevel2Green ??
-          data?.densityLevel2GreenS ??
-          30,
+        data?.densityLevel2GreenS ??
+        30,
       ),
     );
     setSavedAutoMode(
@@ -187,7 +187,7 @@ export default function TrafficControlPanel({
       if (!response.ok || !result.success) {
         throw new Error(
           result.error ||
-            t('errors.saveConfig'),
+          t('errors.saveConfig'),
         );
       }
 
@@ -360,22 +360,22 @@ export default function TrafficControlPanel({
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/40 p-3 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-bold text-slate-900">
-              Kontrol Lampu Manual
+              {t('trafficControl.manualLightControl')}
             </h3>
 
             <p className="mt-0.5 text-xs text-slate-500">
-              Nonaktifkan Mode Otomatis untuk mengubah lampu setiap jalur.
+              {t('trafficControl.disableAutoModeToControl')}
             </p>
           </div>
 
           <StatusBadge
             active={!autoMode}
-            activeText="Mode Manual"
-            inactiveText="Terkunci"
+            activeText={t('trafficControl.manualMode')}
+            inactiveText={t('trafficControl.locked')}
           />
         </div>
 
@@ -383,82 +383,66 @@ export default function TrafficControlPanel({
           {activeLanes.map((lane) => {
             const laneData = data?.[lane];
 
-            const currentLight = normalizeLight(
-              laneData?.light,
-            );
+            const currentLight = normalizeLight(laneData?.light);
 
-            const vehicleCount = toDisplayNumber(
-              laneData?.vehicleCount,
-            );
-            const queueLevel = toDisplayNumber(
-              laneData?.queueLevel,
-            );
-            const queueLength = toDisplayNumber(
-              laneData?.queueLength,
-            );
+            const vehicleCount = toDisplayNumber(laneData?.vehicleCount);
+            const queueLevel = toDisplayNumber(laneData?.queueLevel);
+            const queueLength = toDisplayNumber(laneData?.queueLength);
+
             const currentDurationSeconds =
-              getCurrentLightDurationSeconds(
-                currentLight,
-                laneData,
-                data,
-              );
-
-            const laneCardClass =
-              getLaneCardClasses(currentLight);
+              getCurrentLightDurationSeconds(currentLight, laneData, data);
 
             return (
               <article
                 key={lane}
-                className={laneCardClass}
+                className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-bold text-slate-900">
-                      Jalur {getIndonesianLaneLabel(lane)}
+                      {t('traffic.lane')} {getLaneLabel(lane, t)}
                     </p>
 
                     <p className="mt-0.5 text-xs text-slate-500">
-                      Ringkasan sensor dan status lampu saat ini.
+                      {t('trafficControl.manualLightSummary')}
                     </p>
                   </div>
 
                   <LightBadge
                     light={currentLight}
-                    label={getIndonesianLightLabel(currentLight)}
+                    label={getLightLabel(currentLight, t)}
                   />
                 </div>
 
                 <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <MetricCard
-                    label="Kendaraan"
+                    label={t('trafficControl.metrics.vehicles')}
                     value={vehicleCount}
-                    helper="terhitung"
+                    helper={t('trafficControl.metricHelpers.counted')}
                     icon="🚗"
                     tone="blue"
                   />
 
                   <MetricCard
-                    label="Kepadatan"
+                    label={t('trafficControl.metrics.density')}
                     value={`Level ${queueLevel}`}
-                    helper={getDensityDescription(queueLevel)}
+                    helper={getDensityDescription(queueLevel, t)}
                     icon="📊"
                     tone={getDensityMetricTone(queueLevel)}
                   />
 
                   <MetricCard
-                    label="Jarak antrian"
+                    label={t('trafficControl.metrics.queueDistance')}
                     value={`${queueLength} cm`}
-                    helper="HC-SR04"
+                    helper={t('trafficControl.metricHelpers.ultrasonic')}
                     icon="📏"
                     tone="violet"
                   />
 
                   <MetricCard
-                    label="Durasi saat ini"
-                    value={formatDurationText(
-                      currentDurationSeconds,
-                    )}
-                    helper={getIndonesianLightLabel(currentLight)}
+                    label={t('trafficControl.metrics.currentDuration')}
+                    value={formatDurationText(currentDurationSeconds, t)}
+                    helper={getLightLabel(currentLight, t)}
                     icon="⏱️"
                     tone={getLightMetricTone(currentLight)}
                   />
@@ -466,37 +450,27 @@ export default function TrafficControlPanel({
 
                 <div className="grid grid-cols-3 gap-2">
                   <LightButton
-                    label="Lampu Merah"
+                    label={t('traffic.redLight')}
                     color="red"
                     active={currentLight === "red"}
                     disabled={autoMode}
-                    onClick={() =>
-                      setLight(lane, "red")
-                    }
+                    onClick={() => setLight(lane, "red")}
                   />
 
                   <LightButton
-                    label="Lampu Kuning"
+                    label={t('traffic.yellowLight')}
                     color="yellow"
-                    active={
-                      currentLight === "yellow"
-                    }
+                    active={currentLight === "yellow"}
                     disabled={autoMode}
-                    onClick={() =>
-                      setLight(lane, "yellow")
-                    }
+                    onClick={() => setLight(lane, "yellow")}
                   />
 
                   <LightButton
-                    label="Lampu Hijau"
+                    label={t('traffic.greenLight')}
                     color="green"
-                    active={
-                      currentLight === "green"
-                    }
+                    active={currentLight === "green"}
                     disabled={autoMode}
-                    onClick={() =>
-                      setLight(lane, "green")
-                    }
+                    onClick={() => setLight(lane, "green")}
                   />
                 </div>
               </article>
@@ -649,23 +623,20 @@ export default function TrafficControlPanel({
 
           <ConfigItem
             label="Density 0"
-            value={`${
-              data?.densityLevel0GreenS ?? 10
-            }s`}
+            value={`${data?.densityLevel0GreenS ?? 10
+              }s`}
           />
 
           <ConfigItem
             label="Density 1"
-            value={`${
-              data?.densityLevel1GreenS ?? 20
-            }s`}
+            value={`${data?.densityLevel1GreenS ?? 20
+              }s`}
           />
 
           <ConfigItem
             label="Density 2"
-            value={`${
-              data?.densityLevel2GreenS ?? 30
-            }s`}
+            value={`${data?.densityLevel2GreenS ?? 30
+              }s`}
           />
 
           <ConfigItem
@@ -757,9 +728,9 @@ function getCurrentLightDurationSeconds(
   currentLight: LightStatus,
   laneData:
     | {
-        greenDuration?: number;
-        queueLevel?: number;
-      }
+      greenDuration?: number;
+      queueLevel?: number;
+    }
     | undefined,
   data: TrafficUpdate | null,
 ): number | null {
