@@ -360,7 +360,7 @@ export default function TrafficControlPanel({
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <section className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/40 p-3 shadow-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-bold text-slate-900">
@@ -403,10 +403,13 @@ export default function TrafficControlPanel({
                 data,
               );
 
+            const laneCardClass =
+              getLaneCardClasses(currentLight);
+
             return (
               <article
                 key={lane}
-                className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                className={laneCardClass}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
@@ -430,18 +433,24 @@ export default function TrafficControlPanel({
                     label="Kendaraan"
                     value={vehicleCount}
                     helper="terhitung"
+                    icon="🚗"
+                    tone="blue"
                   />
 
                   <MetricCard
                     label="Kepadatan"
                     value={`Level ${queueLevel}`}
                     helper={getDensityDescription(queueLevel)}
+                    icon="📊"
+                    tone={getDensityMetricTone(queueLevel)}
                   />
 
                   <MetricCard
                     label="Jarak antrian"
                     value={`${queueLength} cm`}
                     helper="HC-SR04"
+                    icon="📏"
+                    tone="violet"
                   />
 
                   <MetricCard
@@ -450,6 +459,8 @@ export default function TrafficControlPanel({
                       currentDurationSeconds,
                     )}
                     helper={getIndonesianLightLabel(currentLight)}
+                    icon="⏱️"
+                    tone={getLightMetricTone(currentLight)}
                   />
                 </div>
 
@@ -806,6 +817,54 @@ function formatDurationText(
   return `${seconds} detik`;
 }
 
+type MetricTone =
+  | "blue"
+  | "emerald"
+  | "amber"
+  | "rose"
+  | "violet";
+
+function getDensityMetricTone(level: number): MetricTone {
+  if (level >= 2) {
+    return "rose";
+  }
+
+  if (level === 1) {
+    return "amber";
+  }
+
+  return "emerald";
+}
+
+function getLightMetricTone(
+  light: LightStatus,
+): MetricTone {
+  if (light === "green") {
+    return "emerald";
+  }
+
+  if (light === "yellow") {
+    return "amber";
+  }
+
+  return "rose";
+}
+
+function getLaneCardClasses(
+  light: LightStatus,
+): string {
+  const classes: Record<LightStatus, string> = {
+    red: "rounded-xl border border-red-200 bg-gradient-to-br from-white to-red-50/80 p-3 shadow-sm shadow-red-100",
+    yellow:
+      "rounded-xl border border-yellow-200 bg-gradient-to-br from-white to-yellow-50/80 p-3 shadow-sm shadow-yellow-100",
+    green:
+      "rounded-xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/80 p-3 shadow-sm shadow-emerald-100",
+  };
+
+  return classes[light];
+}
+
+
 function InformationRow({
   label,
   value,
@@ -948,23 +1007,107 @@ function MetricCard({
   label,
   value,
   helper,
+  icon,
+  tone,
 }: {
   label: string;
   value: string | number;
   helper?: string;
+  icon: string;
+  tone: MetricTone;
 }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
+  const styles: Record<
+    MetricTone,
+    {
+      card: string;
+      icon: string;
+      label: string;
+      value: string;
+      helper: string;
+    }
+  > = {
+    blue: {
+      card: "border-blue-200 bg-gradient-to-br from-blue-50 to-white shadow-blue-100",
+      icon: "bg-blue-600 text-white",
+      label: "text-blue-700",
+      value: "text-blue-950",
+      helper: "text-blue-700/80",
+    },
+    emerald: {
+      card: "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-emerald-100",
+      icon: "bg-emerald-600 text-white",
+      label: "text-emerald-700",
+      value: "text-emerald-950",
+      helper: "text-emerald-700/80",
+    },
+    amber: {
+      card: "border-yellow-200 bg-gradient-to-br from-yellow-50 to-white shadow-yellow-100",
+      icon: "bg-yellow-400 text-yellow-950",
+      label: "text-yellow-700",
+      value: "text-yellow-950",
+      helper: "text-yellow-700/80",
+    },
+    rose: {
+      card: "border-red-200 bg-gradient-to-br from-red-50 to-white shadow-red-100",
+      icon: "bg-red-600 text-white",
+      label: "text-red-700",
+      value: "text-red-950",
+      helper: "text-red-700/80",
+    },
+    violet: {
+      card: "border-violet-200 bg-gradient-to-br from-violet-50 to-white shadow-violet-100",
+      icon: "bg-violet-600 text-white",
+      label: "text-violet-700",
+      value: "text-violet-950",
+      helper: "text-violet-700/80",
+    },
+  };
 
-      <p className="mt-1 text-base font-extrabold text-slate-950">
+  const selected = styles[tone];
+
+  return (
+    <div
+      className={[
+        "group rounded-xl border px-3 py-2.5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        selected.card,
+      ].join(" ")}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p
+          className={[
+            "text-[10px] font-black uppercase tracking-[0.14em]",
+            selected.label,
+          ].join(" ")}
+        >
+          {label}
+        </p>
+
+        <span
+          className={[
+            "grid h-7 w-7 place-items-center rounded-full text-sm shadow-sm transition group-hover:scale-105",
+            selected.icon,
+          ].join(" ")}
+        >
+          {icon}
+        </span>
+      </div>
+
+      <p
+        className={[
+          "text-lg font-extrabold leading-none",
+          selected.value,
+        ].join(" ")}
+      >
         {value}
       </p>
 
       {helper && (
-        <p className="mt-0.5 text-[11px] text-slate-500">
+        <p
+          className={[
+            "mt-1 text-[11px] font-medium",
+            selected.helper,
+          ].join(" ")}
+        >
           {helper}
         </p>
       )}
