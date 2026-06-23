@@ -25,6 +25,7 @@ interface SimulatedCar {
   lane: ActiveLane;
   progress: number;
   colorClass: string;
+  turnTo?: "north" | "south";
 }
 
 const ACTIVE_LANES: ActiveLane[] = ["north", "south", "east"];
@@ -60,6 +61,18 @@ const CAR_SPACING = 0.055;
 const NORMAL_SPEED = 0.085;
 const YELLOW_SPEED = 0.038;
 const MAX_CARS_PER_LANE = 12;
+
+const MAP_WIDTH = 2600;
+const MAP_HEIGHT = 1500;
+const CENTER_X = MAP_WIDTH / 2;
+const CENTER_Y = MAP_HEIGHT / 2;
+
+const RIGHT_LANE_X_FROM_NORTH = CENTER_X - 63;
+const RIGHT_LANE_X_FROM_SOUTH = CENTER_X + 61;
+const RIGHT_LANE_Y_FROM_EAST = CENTER_Y - 63;
+
+const EAST_TURN_START = 0.5;
+const EAST_TURN_END = 0.62;
 
 function normalizeLight(value: unknown): LightStatus {
   const normalized = String(value ?? "red").trim().toLowerCase();
@@ -315,6 +328,10 @@ function RoadEquipment({
   );
 }
 
+function lerp(start: number, end: number, ratio: number): number {
+  return start + (end - start) * ratio;
+}
+
 function CarView({ car }: { car: SimulatedCar }) {
   const base =
     "absolute z-10 rounded-lg shadow-xl before:absolute before:rounded before:bg-white/65 before:content-['']";
@@ -324,8 +341,8 @@ function CarView({ car }: { car: SimulatedCar }) {
       <div
         className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
         style={{
-          left: "calc(50% + 42px)",
-          top: `${car.progress * 1500}px`,
+          left: `${RIGHT_LANE_X_FROM_NORTH - 19}px`,
+          top: `${car.progress * MAP_HEIGHT}px`,
           transform: "translateY(-50%)",
         }}
       />
@@ -337,21 +354,83 @@ function CarView({ car }: { car: SimulatedCar }) {
       <div
         className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
         style={{
-          left: "calc(50% - 82px)",
-          top: `${(1 - car.progress) * 1500}px`,
+          left: `${RIGHT_LANE_X_FROM_SOUTH - 19}px`,
+          top: `${(1 - car.progress) * MAP_HEIGHT}px`,
           transform: "translateY(-50%) rotate(180deg)",
         }}
       />
     );
   }
 
+  const turnTo = car.turnTo ?? "north";
+
+  if (car.progress < EAST_TURN_START) {
+    return (
+      <div
+        className={`${base} ${car.colorClass} h-[38px] w-[60px] before:left-8 before:top-2 before:h-[22px] before:w-[18px]`}
+        style={{
+          left: `${(1 - car.progress) * MAP_WIDTH}px`,
+          top: `${RIGHT_LANE_Y_FROM_EAST}px`,
+          transform: "translate(-50%, -50%) rotate(180deg)",
+        }}
+      />
+    );
+  }
+
+  const turnRatio = Math.min(
+    1,
+    Math.max(
+      0,
+      (car.progress - EAST_TURN_START) / (EAST_TURN_END - EAST_TURN_START),
+    ),
+  );
+
+  if (turnTo === "south") {
+    const exitRatio = Math.max(
+      0,
+      (car.progress - EAST_TURN_END) / (1.08 - EAST_TURN_END),
+    );
+    const centerX =
+      car.progress < EAST_TURN_END
+        ? lerp(CENTER_X, RIGHT_LANE_X_FROM_NORTH, turnRatio)
+        : RIGHT_LANE_X_FROM_NORTH;
+    const centerY =
+      car.progress < EAST_TURN_END
+        ? lerp(RIGHT_LANE_Y_FROM_EAST, CENTER_Y + 92, turnRatio)
+        : lerp(CENTER_Y + 92, MAP_HEIGHT + 90, exitRatio);
+
+    return (
+      <div
+        className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
+        style={{
+          left: `${centerX}px`,
+          top: `${centerY}px`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+    );
+  }
+
+  const exitRatio = Math.max(
+    0,
+    (car.progress - EAST_TURN_END) / (1.08 - EAST_TURN_END),
+  );
+  const centerX =
+    car.progress < EAST_TURN_END
+      ? lerp(CENTER_X, RIGHT_LANE_X_FROM_SOUTH, turnRatio)
+      : RIGHT_LANE_X_FROM_SOUTH;
+  const centerY =
+    car.progress < EAST_TURN_END
+      ? lerp(RIGHT_LANE_Y_FROM_EAST, CENTER_Y - 92, turnRatio)
+      : lerp(CENTER_Y - 92, -90, exitRatio);
+
   return (
     <div
-      className={`${base} ${car.colorClass} h-[38px] w-[60px] before:left-8 before:top-2 before:h-[22px] before:w-[18px]`}
+      className={`${base} ${car.colorClass} h-[60px] w-[38px] before:left-2 before:top-2 before:h-[14px] before:w-[22px]`}
       style={{
-        left: `${(1 - car.progress) * 2600}px`,
-        top: "calc(50% + 44px)",
-        transform: "translateX(-50%) rotate(180deg)",
+        left: `${centerX}px`,
+        top: `${centerY}px`,
+        transform: "translate(-50%, -50%) rotate(180deg)",
       }}
     />
   );
@@ -492,6 +571,12 @@ export default function TrafficRoadSimulation({ data }: Props) {
           progress: -0.04 - index * CAR_SPACING,
           colorClass:
             CAR_COLORS[(currentCars.length + index) % CAR_COLORS.length],
+          turnTo:
+            lane === "east"
+              ? (currentCars.length + index) % 2 === 0
+                ? "north"
+                : "south"
+              : undefined,
         }),
       );
 
