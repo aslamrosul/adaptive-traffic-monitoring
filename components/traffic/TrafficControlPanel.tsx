@@ -364,18 +364,18 @@ export default function TrafficControlPanel({
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-bold text-slate-900">
-              {t('trafficControl.manualLightControl')}
+              Kontrol Lampu Manual
             </h3>
 
             <p className="mt-0.5 text-xs text-slate-500">
-              {t('trafficControl.disableAutoModeToControl')}
+              Nonaktifkan Mode Otomatis untuk mengubah lampu setiap jalur.
             </p>
           </div>
 
           <StatusBadge
             active={!autoMode}
-            activeText={t('trafficControl.manualMode')}
-            inactiveText={t('trafficControl.locked')}
+            activeText="Mode Manual"
+            inactiveText="Terkunci"
           />
         </div>
 
@@ -387,35 +387,75 @@ export default function TrafficControlPanel({
               laneData?.light,
             );
 
+            const vehicleCount = toDisplayNumber(
+              laneData?.vehicleCount,
+            );
+            const queueLevel = toDisplayNumber(
+              laneData?.queueLevel,
+            );
+            const queueLength = toDisplayNumber(
+              laneData?.queueLength,
+            );
+            const currentDurationSeconds =
+              getCurrentLightDurationSeconds(
+                currentLight,
+                laneData,
+                data,
+              );
+
             return (
               <article
                 key={lane}
-                className="rounded-xl border border-slate-200 bg-white p-3"
+                className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
               >
-                <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-bold text-slate-900">
-                      {t('traffic.lane')} {getLaneLabel(lane, t)}
+                      Jalur {getIndonesianLaneLabel(lane)}
                     </p>
 
-                    <p className="text-xs text-slate-500">
-                      {t('lanes.vehicles')}:{" "}
-                      {laneData?.vehicleCount ?? 0}
-                      {" · "}
-                      {t('traffic.density')}:{" "}
-                      {laneData?.queueLevel ?? 0}
-                      {" · "}
-                      {t('lanes.queueDistance')}:{" "}
-                      {laneData?.queueLength ?? 0} cm
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Ringkasan sensor dan status lampu saat ini.
                     </p>
                   </div>
 
-                  <LightBadge light={currentLight} />
+                  <LightBadge
+                    light={currentLight}
+                    label={getIndonesianLightLabel(currentLight)}
+                  />
+                </div>
+
+                <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <MetricCard
+                    label="Kendaraan"
+                    value={vehicleCount}
+                    helper="terhitung"
+                  />
+
+                  <MetricCard
+                    label="Kepadatan"
+                    value={`Level ${queueLevel}`}
+                    helper={getDensityDescription(queueLevel)}
+                  />
+
+                  <MetricCard
+                    label="Jarak antrian"
+                    value={`${queueLength} cm`}
+                    helper="HC-SR04"
+                  />
+
+                  <MetricCard
+                    label="Durasi saat ini"
+                    value={formatDurationText(
+                      currentDurationSeconds,
+                    )}
+                    helper={getIndonesianLightLabel(currentLight)}
+                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <LightButton
-                    label={t('traffic.redLight')}
+                    label="Lampu Merah"
                     color="red"
                     active={currentLight === "red"}
                     disabled={autoMode}
@@ -425,7 +465,7 @@ export default function TrafficControlPanel({
                   />
 
                   <LightButton
-                    label={t('traffic.yellowLight')}
+                    label="Lampu Kuning"
                     color="yellow"
                     active={
                       currentLight === "yellow"
@@ -437,7 +477,7 @@ export default function TrafficControlPanel({
                   />
 
                   <LightButton
-                    label={t('traffic.greenLight')}
+                    label="Lampu Hijau"
                     color="green"
                     active={
                       currentLight === "green"
@@ -656,6 +696,116 @@ function getLightLabel(
   return t('traffic.redLight');
 }
 
+function getIndonesianLaneLabel(
+  lane: LaneName,
+): string {
+  const labels: Record<LaneName, string> = {
+    north: "Utara",
+    south: "Selatan",
+    east: "Timur",
+    west: "Barat",
+  };
+
+  return labels[lane];
+}
+
+function getIndonesianLightLabel(
+  light: LightStatus,
+): string {
+  if (light === "green") return "Lampu Hijau";
+  if (light === "yellow") return "Lampu Kuning";
+  return "Lampu Merah";
+}
+
+function toDisplayNumber(
+  value: unknown,
+  fallback = 0,
+): number {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function getDensityDescription(level: number): string {
+  if (level >= 2) {
+    return "Padat";
+  }
+
+  if (level === 1) {
+    return "Sedang";
+  }
+
+  return "Lancar";
+}
+
+function getCurrentLightDurationSeconds(
+  currentLight: LightStatus,
+  laneData:
+    | {
+        greenDuration?: number;
+        queueLevel?: number;
+      }
+    | undefined,
+  data: TrafficUpdate | null,
+): number | null {
+  if (currentLight === "yellow") {
+    return toDisplayNumber(data?.yellowTimeS, 3);
+  }
+
+  if (currentLight !== "green") {
+    return null;
+  }
+
+  const telemetryGreenDuration = toDisplayNumber(
+    laneData?.greenDuration,
+  );
+
+  if (telemetryGreenDuration > 0) {
+    return telemetryGreenDuration;
+  }
+
+  if (data?.adaptiveMode) {
+    const queueLevel = toDisplayNumber(
+      laneData?.queueLevel,
+    );
+
+    if (queueLevel >= 2) {
+      return toDisplayNumber(
+        data?.densityLevel2GreenS,
+        30,
+      );
+    }
+
+    if (queueLevel === 1) {
+      return toDisplayNumber(
+        data?.densityLevel1GreenS,
+        20,
+      );
+    }
+
+    return toDisplayNumber(
+      data?.densityLevel0GreenS,
+      10,
+    );
+  }
+
+  return toDisplayNumber(data?.greenTimeS, 10);
+}
+
+function formatDurationText(
+  seconds: number | null,
+): string {
+  if (seconds === null) {
+    return "Menunggu";
+  }
+
+  return `${seconds} detik`;
+}
+
 function InformationRow({
   label,
   value,
@@ -769,8 +919,10 @@ function StatusBadge({
 
 function LightBadge({
   light,
+  label,
 }: {
   light: LightStatus;
+  label?: string;
 }) {
   const classes: Record<LightStatus, string> = {
     red: "bg-red-600 text-white shadow-md shadow-red-200",
@@ -787,8 +939,36 @@ function LightBadge({
         classes[light],
       ].join(" ")}
     >
-      {light}
+      {label ?? light}
     </span>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string | number;
+  helper?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-1 text-base font-extrabold text-slate-950">
+        {value}
+      </p>
+
+      {helper && (
+        <p className="mt-0.5 text-[11px] text-slate-500">
+          {helper}
+        </p>
+      )}
+    </div>
   );
 }
 
