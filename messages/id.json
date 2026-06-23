@@ -1257,7 +1257,7 @@
     "title": "Kontrol Lalu Lintas Real-time",
     "subtitle": "Simulasi kontrol lampu lalu lintas adaptif",
     "manualControl": "Kontrol Manual",
-    "autoMode": "Mode Ottomatis",
+    "autoMode": "Mode Otomatis",
     "manualMode": "Mode Manual",
     "greenDuration": "Durasi Hijau",
     "currentPhase": "Fase Saat Ini",

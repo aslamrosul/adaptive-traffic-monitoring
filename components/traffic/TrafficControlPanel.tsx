@@ -712,16 +712,19 @@ function toDisplayNumber(
   return parsed;
 }
 
-function getDensityDescription(level: number): string {
+function getDensityDescription(
+  level: number,
+  t: (key: string) => string,
+): string {
   if (level >= 2) {
-    return "Padat";
+    return t("trafficControl.densityDescription.heavy");
   }
 
   if (level === 1) {
-    return "Sedang";
+    return t("trafficControl.densityDescription.moderate");
   }
 
-  return "Lancar";
+  return t("trafficControl.densityDescription.smooth");
 }
 
 function getCurrentLightDurationSeconds(
@@ -780,12 +783,13 @@ function getCurrentLightDurationSeconds(
 
 function formatDurationText(
   seconds: number | null,
+  t: (key: string) => string,
 ): string {
   if (seconds === null) {
-    return "Menunggu";
+    return t("trafficControl.metricHelpers.waiting");
   }
 
-  return `${seconds} detik`;
+  return `${seconds} ${t("time.seconds")}`;
 }
 
 type MetricTone =
