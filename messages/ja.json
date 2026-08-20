@@ -2147,7 +2147,8 @@
       "suggestCongested": "どの車線が一番混雑していますか？",
       "suggestPeak": "ピーク時間はいつですか？",
       "suggestRecommend": "青信号時間の推奨は？",
-      "suggestAnomaly": "異常はありますか？"
+      "suggestAnomaly": "異常はありますか？",
+      "suggestTutorial": "このアプリの使い方は？"
     },
     "confidence": {
       "high": "高い",
@@ -2163,6 +2164,16 @@
       "increase": "増加",
       "decrease": "減少",
       "keep": "維持"
+    },
+    "widget": {
+      "title": "AIアシスタント",
+      "subtitle": "交通状況や使い方を質問",
+      "close": "閉じる",
+      "navDashboard": "ダッシュボード",
+      "navAnalytics": "分析",
+      "navIntersections": "交差点",
+      "navIot": "IoT設定",
+      "navGuide": "ガイド"
     }
   }
 }

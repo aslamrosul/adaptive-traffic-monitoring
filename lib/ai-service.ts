@@ -122,9 +122,15 @@ export interface AiAnomalyResult {
   summary: { total: number; high: number; medium: number; low: number };
 }
 
+export interface AiChatAction {
+  label: string;
+  href: string;
+}
+
 export interface AiChatResponse {
   answer: string;
   source: "ai" | "template";
+  actions: AiChatAction[];
 }
 
 export interface AiRequestContext {
@@ -821,6 +827,52 @@ function intentMatch(
   return keywords.some((keyword) => normalized.includes(keyword));
 }
 
+// ---------------------------------------------------------------------------
+// Navigasi bantuan (halaman aplikasi)
+// ---------------------------------------------------------------------------
+
+export const AI_PAGE_MAP: { keys: string[]; label: string; href: string }[] = [
+  { keys: ["dashboard", "beranda", "home", "pantauan", "status"], label: "Dashboard", href: "/dashboard" },
+  { keys: ["analis", "analitik", "analytics", "grafik", "chart", "prediksi", "forecast", "statistik"], label: "Analitik", href: "/Analist" },
+  { keys: ["persimpangan", "intersection", "simpang", "simpangan"], label: "Persimpangan", href: "/persimpangan" },
+  { keys: ["iot", "config", "konfigurasi", "perangkat", "device", "kontrol", "lampu", "pengaturan lampu"], label: "IoT Config", href: "/iot-config" },
+  { keys: ["panduan", "tutorial", "bantuan", "help", "guide", "cara pakai", "petunjuk"], label: "Panduan", href: "/panduan" },
+  { keys: ["laporan", "report", "insiden"], label: "Laporan", href: "/laporan" },
+  { keys: ["notifikasi", "notif", "peringatan"], label: "Notifikasi", href: "/notifikasi" },
+  { keys: ["profil", "profile", "akun", "pengaturan akun"], label: "Profil", href: "/profile" },
+];
+
+function normalizeText(text: string): string {
+  return text.toLowerCase().replace(/[^\w\s]/g, " ");
+}
+
+/** Tentukan halaman yang relevan dari pertanyaan & jawaban (maks 3). */
+function getSuggestedActions(question: string, answer: string): AiChatAction[] {
+  const haystack = `${normalizeText(question)} ${normalizeText(answer)}`;
+  const found = AI_PAGE_MAP.filter((page) =>
+    page.keys.some((key) => haystack.includes(key))
+  ).slice(0, 3);
+
+  const hasDashboard = found.some((page) => page.href === "/dashboard");
+  if (!hasDashboard && found.length < 3) {
+    found.unshift(AI_PAGE_MAP[0]);
+  }
+
+  return found.slice(0, 3).map((page) => ({ label: page.label, href: page.href }));
+}
+
+const AI_GUIDE_TEXT = [
+  "Panduan penggunaan sistem ASTRAEA (Adaptive Smart Traffic System):",
+  "1. Dashboard (/dashboard) — pantau status real-time semua persimpangan: level antrean tiap jalur (0=lancar, 1=sedang, 2=padat), durasi lampu hijau, dan notifikasi.",
+  "2. Kontrol Lampu (di Dashboard / menu IoT Config) — atur mode otomatis/adaptif dan durasi hijau per level antrean, lalu kirim ke perangkat lewat MQTT.",
+  "3. Analitik (/Analist) — lihat grafik volume kendaraan, antrean per jam, distribusi level, heatmap, dan efektivitas durasi lampu.",
+  "4. Persimpangan (/persimpangan) — kelola data persimpangan, jalur, dan perangkat yang terhubung.",
+  "5. IoT Config (/iot-config) — atur konfigurasi perangkat (ESP32) dan kirimkan via MQTT retained.",
+  "6. Laporan (/laporan) — buat laporan insiden atau anomali lalu lintas.",
+  "7. Profil (/profile) — kelola akun, zona waktu, dan preferensi notifikasi.",
+  "Gunakan tombol navigasi di bawah untuk langsung membuka halaman yang dimaksud.",
+].join("\n");
+
 export async function getAiChatAnswer(
   question: string,
   ctx: AiRequestContext
@@ -837,6 +889,10 @@ export async function getAiChatAnswer(
     forecast,
   });
 
+  const pageList = AI_PAGE_MAP.map(
+    (page) => `- ${page.label}: ${page.href}`
+  ).join("\n");
+
   // Opsional: gunakan LLM bila API key disediakan
   const apiKey = process.env.AI_LLM_API_KEY;
   if (apiKey) {
@@ -846,9 +902,13 @@ export async function getAiChatAnswer(
       const model = process.env.AI_LLM_MODEL || "gpt-4o-mini";
 
       const systemPrompt = [
-        "Kamu adalah asisten AI untuk sistem Adaptive Traffic Monitoring.",
-        "Jawab hanya berdasarkan konteks data yang diberikan, dalam Bahasa Indonesia, singkat dan jelas.",
-        `Konteks data:\n${JSON.stringify({
+        "Kamu adalah asisten AI untuk sistem Adaptive Traffic Monitoring bernama ASTRAEA.",
+        "Jawab dalam Bahasa Indonesia, singkat, jelas, dan ramah.",
+        "Bila pengguna bertanya tentang cara menggunakan aplikasi/tutorial/panduan, jelaskan langkah-langkahnya dan sebutkan halaman yang relevan.",
+        "Daftar halaman aplikasi:",
+        pageList,
+        "Konteks data saat ini:",
+        JSON.stringify({
           summary: {
             overview: summary.overview,
             keyMetrics: summary.keyMetrics,
@@ -858,7 +918,7 @@ export async function getAiChatAnswer(
           },
           anomalies: anomalies.anomalies,
           forecast: forecast.hours,
-        })}`,
+        }),
       ].join("\n");
 
       const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -882,7 +942,11 @@ export async function getAiChatAnswer(
         const data = await response.json();
         const answer = data?.choices?.[0]?.message?.content?.trim();
         if (answer) {
-          return { answer, source: "ai" };
+          return {
+            answer,
+            source: "ai",
+            actions: getSuggestedActions(question, answer),
+          };
         }
       } else {
         const errorText = await response.text().catch(() => "");
@@ -894,7 +958,11 @@ export async function getAiChatAnswer(
     }
   }
 
-  return { answer: templateAnswer, source: "template" };
+  return {
+    answer: templateAnswer,
+    source: "template",
+    actions: getSuggestedActions(question, templateAnswer),
+  };
 }
 
 function buildTemplateAnswer(
@@ -1045,6 +1113,24 @@ function buildTemplateAnswer(
           `${h.label} → Utara ${h.north}, Selatan ${h.south}, Timur ${h.east} (avg ${h.average}, keyakinan ${h.confidence})`
       );
     return `Perkiraan level antrean beberapa jam ke depan:\n${next.join("\n")}`;
+  }
+
+  if (
+    intentMatch(normalized, [
+      "panduan",
+      "tutorial",
+      "cara pakai",
+      "cara menggunakan",
+      "cara memakai",
+      "bantuan",
+      "petunjuk",
+      "guide",
+      "how to use",
+      "manual",
+      "usage",
+    ])
+  ) {
+    return AI_GUIDE_TEXT;
   }
 
   if (

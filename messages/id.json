@@ -2165,7 +2165,8 @@
       "suggestCongested": "Jalur mana yang paling padat?",
       "suggestPeak": "Kapan jam sibuknya?",
       "suggestRecommend": "Apa rekomendasi durasi hijau?",
-      "suggestAnomaly": "Ada anomali tidak?"
+      "suggestAnomaly": "Ada anomali tidak?",
+      "suggestTutorial": "Bagaimana cara pakai aplikasi ini?"
     },
     "confidence": {
       "high": "Tinggi",
@@ -2181,6 +2182,16 @@
       "increase": "Naikkan",
       "decrease": "Turunkan",
       "keep": "Pertahankan"
+    },
+    "widget": {
+      "title": "Asisten AI",
+      "subtitle": "Tanya kondisi lalu lintas atau panduan",
+      "close": "Tutup",
+      "navDashboard": "Dashboard",
+      "navAnalytics": "Analitik",
+      "navIntersections": "Persimpangan",
+      "navIot": "IoT Config",
+      "navGuide": "Panduan"
     }
   }
 }

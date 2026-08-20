@@ -2164,7 +2164,8 @@
       "suggestCongested": "Which lane is most congested?",
       "suggestPeak": "When is peak hour?",
       "suggestRecommend": "What green duration do you recommend?",
-      "suggestAnomaly": "Are there any anomalies?"
+      "suggestAnomaly": "Are there any anomalies?",
+      "suggestTutorial": "How do I use this app?"
     },
     "confidence": {
       "high": "High",
@@ -2180,6 +2181,16 @@
       "increase": "Increase",
       "decrease": "Decrease",
       "keep": "Keep"
+    },
+    "widget": {
+      "title": "AI Assistant",
+      "subtitle": "Ask about traffic conditions or guidance",
+      "close": "Close",
+      "navDashboard": "Dashboard",
+      "navAnalytics": "Analytics",
+      "navIntersections": "Intersections",
+      "navIot": "IoT Config",
+      "navGuide": "Guide"
     }
   }
 }

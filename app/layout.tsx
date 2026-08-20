@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/Toast";
+import AiChatWidget from "@/components/AiChatWidget";
 import { Providers } from "./providers";
 import SessionProvider from "@/components/SessionProvider";
 import LoadingProvider from "@/components/LoadingProvider";
@@ -41,6 +42,7 @@ export default function RootLayout({
             <Providers>
               <LoadingProvider>
                 <ToastProvider />
+                <AiChatWidget />
                 {children}
               </LoadingProvider>
             </Providers>

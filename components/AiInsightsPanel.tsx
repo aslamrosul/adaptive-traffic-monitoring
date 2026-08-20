@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import AiChatBox from "@/components/AiChatBox";
 import { useT } from "@/lib/useT";
 
 type TabKey = "summary" | "forecast" | "anomaly" | "chat";
@@ -267,7 +268,11 @@ export default function AiInsightsPanel({
             severityLabel={severityLabel}
           />
         ) : (
-          <ChatTab t={t} intersectionId={intersectionId} startDate={startDate} endDate={endDate} />
+          <AiChatBox
+            intersectionId={intersectionId}
+            startDate={startDate}
+            endDate={endDate}
+          />
         )}
       </div>
     </section>
@@ -552,165 +557,3 @@ function AnomalyTab({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Chat tab
-// ---------------------------------------------------------------------------
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  text: string;
-  source?: "ai" | "template";
-}
-
-function ChatTab({
-  t,
-  intersectionId,
-  startDate,
-  endDate,
-}: {
-  t: (key: string) => string;
-  intersectionId?: string;
-  startDate?: string;
-  endDate?: string;
-}) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [thinking, setThinking] = useState(false);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, thinking]);
-
-  const send = async () => {
-    const question = input.trim();
-    if (!question || thinking) return;
-
-    setMessages((current) => [...current, { role: "user", text: question }]);
-    setInput("");
-    setThinking(true);
-
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          intersectionId: intersectionId || null,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-        }),
-      });
-      const json = await response.json();
-      if (!json.success) throw new Error(json.error);
-
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          text: json.data.answer,
-          source: json.data.source,
-        },
-      ]);
-    } catch (err: any) {
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          text: err?.message || t("ai.chat.error"),
-        },
-      ]);
-    } finally {
-      setThinking(false);
-    }
-  };
-
-  const suggestions = [
-    t("ai.chat.suggestCongested"),
-    t("ai.chat.suggestPeak"),
-    t("ai.chat.suggestRecommend"),
-    t("ai.chat.suggestAnomaly"),
-  ];
-
-  return (
-    <div className="flex h-80 flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-        {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <span className="material-symbols-outlined text-4xl text-blue-300">
-              smart_toy
-            </span>
-            <p className="text-sm text-slate-500">{t("ai.chat.welcome")}</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => setInput(suggestion)}
-                  className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                message.role === "user"
-                  ? "rounded-br-sm bg-blue-600 text-white"
-                  : "rounded-bl-sm border border-slate-200 bg-slate-50 text-slate-800"
-              }`}
-            >
-              <p className="whitespace-pre-line">{message.text}</p>
-              {message.source && (
-                <p className="mt-1 text-[10px] opacity-60">
-                  {message.source === "ai" ? "AI" : "Template"}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {thinking && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              <span className="material-symbols-outlined animate-spin text-sm align-middle">
-                progress_activity
-              </span>{" "}
-              {t("ai.chat.thinking")}
-            </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      <div className="mt-3 flex items-center gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void send();
-          }}
-          placeholder={t("ai.chat.placeholder")}
-          className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={() => void send()}
-          disabled={thinking || !input.trim()}
-          className="rounded-xl bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          <span className="material-symbols-outlined text-sm">send</span>
-        </button>
-      </div>
-    </div>
-  );
-}
