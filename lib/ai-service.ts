@@ -875,7 +875,7 @@ const AI_GUIDE_TEXT = [
 ].join("\n");
 
 /**
- * Ringkasan 4 bulan terakhir sebagai konteks tambahan untuk LLM,
+ * Ringkasan 5 bulan terakhir sebagai konteks tambahan untuk LLM,
  * sehingga AI tetap bisa menjawab walau rentang tanggal yang diminta
  * pengguna memiliki sedikit/0 sampel.
  */
@@ -891,7 +891,7 @@ async function getAiHistoryContext(
 } | null> {
   try {
     const today = getWibDateValue();
-    const start = ctx.startDate || addDaysToDateValue(today, -120);
+    const start = ctx.startDate || addDaysToDateValue(today, -150);
     const end = ctx.endDate || today;
     const { startUtc, endUtc } = wibDateRangeToUtc(start, end);
 
@@ -1020,7 +1020,7 @@ export async function getAiChatAnswer(
           anomalies: anomalies.anomalies,
           forecast: forecast.hours,
         }),
-        "Riwayat 4 bulan terakhir (konteks tambahan bila data pada rentang yang diminta terbatas):",
+        "Riwayat 5 bulan terakhir (konteks tambahan bila data pada rentang yang diminta terbatas):",
         JSON.stringify(history),
       ].join("\n");
 
@@ -1120,7 +1120,7 @@ function buildTemplateAnswer(
     const periodNote = useHistory && history
       ? ` (rata-rata ${history.period})`
       : "";
-    return `Jalur paling padat${rangeEmpty ? " berdasarkan data 4 bulan terakhir" : " saat ini"} adalah ${laneLabel} dengan rata-rata level antrean ${
+    return `Jalur paling padat${rangeEmpty ? " berdasarkan data 5 bulan terakhir" : " saat ini"} adalah ${laneLabel} dengan rata-rata level antrean ${
       laneStats?.averageQueueLevel ?? 0
     } (level 2 = padat).${periodNote}${
       anomalies.summary.total > 0
@@ -1147,7 +1147,7 @@ function buildTemplateAnswer(
       return `Kepadatan puncak terjadi sekitar pukul ${summary.keyMetrics.peakHourLabel} dengan ${summary.keyMetrics.peakHourLevel2Percentage}% sampel berada di level 2 (antrean panjang).`;
     }
     if (history?.peakHour) {
-      return `Data pada rentang yang diminta masih terbatas, namun berdasarkan 4 bulan terakhir, kepadatan puncak terjadi sekitar pukul ${history.peakHour} (${history.perLane.length} jalur terpantau, ${history.totalSamples} sampel).`;
+      return `Data pada rentang yang diminta masih terbatas, namun berdasarkan 5 bulan terakhir, kepadatan puncak terjadi sekitar pukul ${history.peakHour} (${history.perLane.length} jalur terpantau, ${history.totalSamples} sampel).`;
     }
     return "Data belum cukup untuk menentukan jam puncak pada periode ini.";
   }
