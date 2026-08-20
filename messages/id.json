@@ -2182,9 +2182,10 @@
       "low": "Rendah"
     },
     "action": {
-      "increase": "Naikkan",
-      "decrease": "Turunkan",
-      "keep": "Pertahankan"
+      "confirm": "Terapkan",
+      "cancel": "Batal",
+      "missingFields": "Mohon lengkapi semua field yang wajib diisi terlebih dahulu.",
+      "failed": "Gagal mengeksekusi aksi. Silakan coba lagi."
     },
     "widget": {
       "title": "Asisten AI",

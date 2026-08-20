@@ -1,4 +1,6 @@
 import { getAiChatAnswer } from "@/lib/ai-service";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -22,11 +24,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await getAiChatAnswer(question, {
-      intersectionId: body.intersectionId || null,
-      startDate: body.startDate || undefined,
-      endDate: body.endDate || undefined,
-    });
+    const session = await getServerSession(authOptions);
+    const sessionUser = session?.user as any;
+    const isAdmin = sessionUser?.role === "admin";
+
+    const result = await getAiChatAnswer(
+      question,
+      {
+        intersectionId: body.intersectionId || null,
+        startDate: body.startDate || undefined,
+        endDate: body.endDate || undefined,
+      },
+      {
+        isAdmin,
+        userName: sessionUser?.name || sessionUser?.email || "",
+      }
+    );
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {

@@ -2181,9 +2181,10 @@
       "low": "Low"
     },
     "action": {
-      "increase": "Increase",
-      "decrease": "Decrease",
-      "keep": "Keep"
+      "confirm": "Apply",
+      "cancel": "Cancel",
+      "missingFields": "Please fill in all required fields first.",
+      "failed": "Failed to execute action. Please try again."
     },
     "widget": {
       "title": "AI Assistant",

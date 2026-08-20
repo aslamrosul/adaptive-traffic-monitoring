@@ -20,6 +20,7 @@ import {
   getWibHour,
   wibDateRangeToUtc,
 } from "@/lib/timezone";
+import { detectAiActionIntent } from "@/lib/ai-actions";
 
 const LANE_NAMES: TrafficLane[] = [...TRAFFIC_LANES];
 
@@ -132,12 +133,20 @@ export interface AiChatResponse {
   answer: string;
   source: "ai" | "template";
   actions: AiChatAction[];
+  isAdmin: boolean;
+  role: string;
+  actionProposal?: import("@/lib/ai-actions").AiActionProposal | null;
 }
 
 export interface AiRequestContext {
   intersectionId?: string | null;
   startDate?: string;
   endDate?: string;
+}
+
+export interface AiChatOptions {
+  isAdmin?: boolean;
+  userName?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -973,7 +982,8 @@ async function getAiHistoryContext(
 
 export async function getAiChatAnswer(
   question: string,
-  ctx: AiRequestContext
+  ctx: AiRequestContext,
+  opts: AiChatOptions = {}
 ): Promise<AiChatResponse> {
   const [summary, anomalies, forecast, history] = await Promise.all([
     getAiSummary(ctx),
@@ -982,11 +992,17 @@ export async function getAiChatAnswer(
     getAiHistoryContext(ctx),
   ]);
 
+  const isAdmin = !!opts.isAdmin;
+  const userName = opts.userName || "";
+  const actionProposal = detectAiActionIntent(question, summary, ctx);
+
   const templateAnswer = buildTemplateAnswer(question, {
     summary,
     anomalies,
     forecast,
     history,
+    actionProposal,
+    isAdmin,
   });
 
   const pageList = AI_PAGE_MAP.map(
@@ -1001,11 +1017,22 @@ export async function getAiChatAnswer(
         process.env.AI_LLM_BASE_URL || "https://api.openai.com/v1";
       const model = process.env.AI_LLM_MODEL || "gpt-4o-mini";
 
+      const roleLine = isAdmin
+        ? `Pengguna saat ini adalah ADMIN (${userName || "pengguna"}). Ia memiliki izin penuh untuk mengubah konfigurasi sistem.`
+        : `Pengguna saat ini BUKAN admin (${userName || "pengguna"}). Ia hanya bisa membaca data dan rekomendasi, TIDAK boleh mengubah konfigurasi apa pun.`;
+
+      const actionLine = actionProposal
+        ? isAdmin
+          ? `Pengguna ingin melakukan aksi: "${actionProposal.label}" — ${actionProposal.description}. Jelaskan ringkas apa yang akan Anda lakukan, lalu akhiri dengan kalimat singkat menawarkan konfirmasi, misalnya: "Apakah Anda ingin saya terapkan?"`
+          : `Pengguna meminta mengubah konfigurasi, tetapi ia bukan admin. Tolak dengan ramah dan jelaskan bahwa hanya admin yang dapat melakukan perubahan konfigurasi.`
+        : "";
+
       const systemPrompt = [
         "Kamu adalah asisten AI untuk sistem Adaptive Traffic Monitoring bernama ASTRAEA.",
         "Jawab dalam Bahasa Indonesia, singkat, jelas, dan ramah.",
         "Bila pengguna bertanya tentang cara menggunakan aplikasi/tutorial/panduan, jelaskan langkah-langkahnya dan sebutkan halaman yang relevan.",
         "Jangan gunakan penulisan Markdown seperti **bold**, *italic*, atau [link](url) — gunakan teks biasa saja. Jika perlu menunjuk halaman, cukup tulis nama halaman dan path-nya, misal: Dashboard (/dashboard).",
+        roleLine,
         "Daftar halaman aplikasi:",
         pageList,
         "Konteks data pada rentang tanggal yang diminta pengguna:",
@@ -1022,7 +1049,10 @@ export async function getAiChatAnswer(
         }),
         "Riwayat 5 bulan terakhir (konteks tambahan bila data pada rentang yang diminta terbatas):",
         JSON.stringify(history),
-      ].join("\n");
+        actionLine,
+      ]
+        .filter((line) => line !== "")
+        .join("\n");
 
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
@@ -1049,6 +1079,9 @@ export async function getAiChatAnswer(
             answer,
             source: "ai",
             actions: getSuggestedActions(question, answer),
+            isAdmin,
+            role: isAdmin ? "admin" : "operator",
+            actionProposal: isAdmin ? actionProposal : null,
           };
         }
       } else {
@@ -1065,6 +1098,9 @@ export async function getAiChatAnswer(
     answer: templateAnswer,
     source: "template",
     actions: getSuggestedActions(question, templateAnswer),
+    isAdmin,
+    role: isAdmin ? "admin" : "operator",
+    actionProposal: isAdmin ? actionProposal : null,
   };
 }
 
@@ -1075,10 +1111,20 @@ function buildTemplateAnswer(
     anomalies: AiAnomalyResult;
     forecast: AiForecast;
     history?: Awaited<ReturnType<typeof getAiHistoryContext>>;
+    actionProposal?: import("@/lib/ai-actions").AiActionProposal | null;
+    isAdmin?: boolean;
   }
 ): string {
   const normalized = normalizeQuestion(question);
-  const { summary, anomalies, forecast, history } = data;
+  const { summary, anomalies, forecast, history, actionProposal, isAdmin } = data;
+
+  // Aksi konfigurasi: admin vs non-admin
+  if (actionProposal) {
+    if (isAdmin) {
+      return `${actionProposal.label}: ${actionProposal.description}\nApakah Anda ingin saya terapkan?`;
+    }
+    return `Perubahan konfigurasi (seperti ${actionProposal.label.toLowerCase()}) hanya dapat dilakukan oleh admin. Silakan hubungi admin atau gunakan menu terkait secara langsung.`;
+  }
 
   const rangeEmpty = summary.keyMetrics.totalSamples === 0;
 

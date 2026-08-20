@@ -10,11 +10,28 @@ export interface AiChatAction {
   href: string;
 }
 
+export interface AiActionField {
+  name: string;
+  label: string;
+  type: "text" | "number" | "select" | "password";
+  required: boolean;
+  options?: { value: string; label: string }[];
+  value?: string | number | boolean;
+}
+
+export interface AiActionProposal {
+  type: string;
+  label: string;
+  description: string;
+  fields: AiActionField[];
+}
+
 export interface AiChatMessage {
   role: "user" | "assistant";
   text: string;
   source?: "ai" | "template";
   actions?: AiChatAction[];
+  actionProposal?: AiActionProposal | null;
 }
 
 interface AiChatBoxProps {
@@ -170,6 +187,7 @@ export default function AiChatBox({
           text: json.data.answer,
           source: json.data.source,
           actions: json.data.actions,
+          actionProposal: json.data.actionProposal || null,
         },
       ]);
     } catch (err: any) {
@@ -185,6 +203,76 @@ export default function AiChatBox({
     }
   };
   sendRef.current = send;
+
+  const confirmAction = async (
+    proposal: AiActionProposal,
+    fieldValues: Record<string, string>
+  ) => {
+    const params: Record<string, string> = {};
+    let missing = false;
+    for (const field of proposal.fields) {
+      const value = (fieldValues[field.name] ?? "").toString().trim();
+      if (field.required && !value) {
+        missing = true;
+      }
+      params[field.name] = value;
+    }
+    if (missing) {
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: t("ai.action.missingFields"),
+        },
+      ]);
+      return;
+    }
+
+    setThinking(true);
+    try {
+      const response = await fetch("/api/ai/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: proposal.type, params }),
+      });
+      const json = await response.json();
+      if (!json.success) throw new Error(json.error);
+
+      if (proposal.type === "update_settings" && params.language) {
+        document.cookie = `NEXT_LOCALE=${encodeURIComponent(params.language)}; path=/; max-age=31536000`;
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: json.message,
+          source: "template",
+        },
+      ]);
+      setMessages((current) =>
+        current.map((msg) =>
+          msg.actionProposal && msg.actionProposal.type === proposal.type
+            ? { ...msg, actionProposal: null }
+            : msg
+        )
+      );
+
+      if (proposal.type === "update_settings" && params.language) {
+        setTimeout(() => window.location.reload(), 600);
+      }
+    } catch (err: any) {
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          text: err?.message || t("ai.action.failed"),
+        },
+      ]);
+    } finally {
+      setThinking(false);
+    }
+  };
 
   const suggestions = [
     t("ai.chat.suggestCongested"),
@@ -275,6 +363,21 @@ export default function AiChatBox({
                 ))}
               </div>
             )}
+
+            {message.actionProposal && (
+              <ActionCard
+                proposal={message.actionProposal}
+                onConfirm={confirmAction}
+                onDismiss={() => {
+                  setMessages((current) =>
+                    current.map((msg, i) =>
+                      i === index ? { ...msg, actionProposal: null } : msg
+                    )
+                  );
+                }}
+                t={t}
+              />
+            )}
           </div>
         ))}
 
@@ -337,6 +440,93 @@ export default function AiChatBox({
           className="rounded-xl bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <span className="material-symbols-outlined text-sm">send</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ActionCard({
+  proposal,
+  onConfirm,
+  onDismiss,
+  t,
+}: {
+  proposal: AiActionProposal;
+  onConfirm: (proposal: AiActionProposal, values: Record<string, string>) => void;
+  onDismiss: () => void;
+  t: (key: string) => string;
+}) {
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const field of proposal.fields) {
+      initial[field.name] = field.value === undefined ? "" : String(field.value);
+    }
+    return initial;
+  });
+
+  const setValue = (name: string, value: string) => {
+    setValues((current) => ({ ...current, [name]: value }));
+  };
+
+  return (
+    <div className="mt-2 w-full max-w-[85%] rounded-2xl border border-blue-200 bg-blue-50 p-3 shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="material-symbols-outlined text-blue-600">
+          build_circle
+        </span>
+        <p className="text-sm font-bold text-slate-800">{proposal.label}</p>
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-slate-600">
+        {proposal.description}
+      </p>
+
+      <div className="mt-3 space-y-2">
+        {proposal.fields.map((field) => (
+          <label key={field.name} className="block">
+            <span className="mb-1 block text-xs font-semibold text-slate-700">
+              {field.label}
+              {field.required && <span className="text-red-500"> *</span>}
+            </span>
+            {field.type === "select" ? (
+              <select
+                value={values[field.name] ?? ""}
+                onChange={(event) => setValue(field.name, event.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+              >
+                {(field.options || []).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type === "password" ? "password" : field.type}
+                value={values[field.name] ?? ""}
+                onChange={(event) => setValue(field.name, event.target.value)}
+                placeholder={field.label}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+              />
+            )}
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onConfirm(proposal, values)}
+          className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+        >
+          {t("ai.action.confirm")}
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+        >
+          {t("ai.action.cancel")}
         </button>
       </div>
     </div>

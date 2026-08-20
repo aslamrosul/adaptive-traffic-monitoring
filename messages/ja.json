@@ -2164,9 +2164,10 @@
       "low": "低"
     },
     "action": {
-      "increase": "増加",
-      "decrease": "減少",
-      "keep": "維持"
+      "confirm": "適用",
+      "cancel": "キャンセル",
+      "missingFields": "必須項目をすべて入力してください。",
+      "failed": "操作の実行に失敗しました。もう一度お試しください。"
     },
     "widget": {
       "title": "AIアシスタント",
