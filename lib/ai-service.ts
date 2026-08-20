@@ -884,8 +884,12 @@ export async function getAiChatAnswer(
         if (answer) {
           return { answer, source: "ai" };
         }
+      } else {
+        const errorText = await response.text().catch(() => "");
+        console.error("AI LLM HTTP error", response.status, errorText.slice(0, 300));
       }
-    } catch {
+    } catch (error) {
+      console.error("AI LLM call failed:", error);
       // fallback ke template
     }
   }
