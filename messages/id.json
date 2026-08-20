@@ -105,7 +105,8 @@
     "aboutUs": "Tentang Kami",
     "ourTeam": "Tim Kami",
     "guide": "Panduan Sistem",
-    "fullGuide": "Panduan Lengkap"
+    "fullGuide": "Panduan Lengkap",
+    "aiChat": "AI Chat"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2196,6 +2197,12 @@
       "navIntersections": "Persimpangan",
       "navIot": "IoT Config",
       "navGuide": "Panduan"
+    },
+    "page": {
+      "title": "Asisten AI",
+      "chat": "Chat",
+      "insight": "Insight",
+      "model": "ASTRAEA AI · gemini-3.1-flash-lite"
     }
   }
 }

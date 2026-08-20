@@ -1,6 +1,5 @@
 "use client";
 
-import AiInsightsPanel from "@/components/AiInsightsPanel";
 import DashboardStats from "@/components/DashboardStats";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
 import Header from "@/components/Header";
@@ -427,12 +426,6 @@ export default function DashboardPage() {
               intersectionId={selectedIntersection}
             />
 
-            <AiInsightsPanel
-              intersectionId={selectedIntersection || undefined}
-              startDate={customDates?.startDate}
-              endDate={customDates?.endDate}
-            />
-
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
               <div className="space-y-4 lg:space-y-6 xl:col-span-8">
                 <TrafficRoadSimulation
@@ -481,7 +474,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => setIsControlPanelOpen((current) => !current)}
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-2xl lg:hidden"
+        className="fixed bottom-5 left-5 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-2xl lg:hidden"
         aria-label="Buka panel kontrol"
       >
         <span className="material-symbols-outlined">

@@ -105,7 +105,8 @@
     "aboutUs": "私たちについて",
     "ourTeam": "チーム",
     "guide": "システムガイド",
-    "fullGuide": "完全ガイド"
+    "fullGuide": "完全ガイド",
+    "aiChat": "AIチャット"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -2178,6 +2179,12 @@
       "navIntersections": "交差点",
       "navIot": "IoT設定",
       "navGuide": "ガイド"
+    },
+    "page": {
+      "title": "AIアシスタント",
+      "chat": "チャット",
+      "insight": "インサイト",
+      "model": "ASTRAEA AI · gemini-3.1-flash-lite"
     }
   }
 }

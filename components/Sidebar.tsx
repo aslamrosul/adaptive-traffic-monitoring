@@ -25,6 +25,7 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
     { icon: "dashboard", label: t('navigation.dashboard'), href: "/dashboard" },
     { icon: "traffic", label: t('navigation.intersections'), href: "/persimpangan" },
     { icon: "analytics", label: t('navigation.analytics'), href: "/Analist" },
+    { icon: "smart_toy", label: t('navigation.aiChat'), href: "/ai-chat" },
     { icon: "settings_remote", label: t('navigation.iotConfig'), href: "/iot-config" },
     { icon: "group", label: t('navigation.users'), href: "/pengguna" },
     { icon: "menu_book", label: t('navigation.guide'), href: "/panduan" },

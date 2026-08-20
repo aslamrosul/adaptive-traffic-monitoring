@@ -39,7 +39,7 @@ export default function AiChatWidget() {
   return (
     <>
       {open && (
-        <div className="fixed bottom-24 left-4 z-[70] flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-[380px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed bottom-24 right-4 z-[70] flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-[380px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
           <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-white">
@@ -76,7 +76,7 @@ export default function AiChatWidget() {
         type="button"
         onClick={handleOpen}
         aria-label={t("ai.widget.title")}
-        className="fixed bottom-4 left-4 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-2xl transition-transform hover:scale-105 hover:bg-blue-700"
+        className="fixed bottom-4 right-4 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-2xl transition-transform hover:scale-105 hover:bg-blue-700"
       >
         <span className="material-symbols-outlined text-2xl">
           {open ? "close" : "smart_toy"}
