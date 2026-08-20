@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useT } from "@/lib/useT";
+import { useLocale, useT } from "@/lib/useT";
 
 export interface AiChatAction {
   label: string;
@@ -40,14 +40,99 @@ export default function AiChatBox({
   showQuickNav = true,
 }: AiChatBoxProps) {
   const t = useT();
+  const locale = useLocale();
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [micSupported, setMicSupported] = useState(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
+
+  const speechLanguage = locale === "ja" ? "ja-JP" : locale === "en" ? "en-US" : "id-ID";
+
+  const stopListening = useCallback(() => {
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      // ignore
+    }
+    setListening(false);
+    recognitionRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
+
+  const toggleMic = () => {
+    if (listening) {
+      stopListening();
+      return;
+    }
+
+    const SR =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setMicSupported(false);
+      return;
+    }
+
+    try {
+      const recognition = new SR();
+      recognition.lang = speechLanguage;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognitionRef.current = recognition;
+
+      let finalText = "";
+
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalText += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+        setInput((current) => {
+          const base = finalText || current;
+          return (interim ? base + interim : base).trim();
+        });
+      };
+
+      recognition.onerror = (event: any) => {
+        setListening(false);
+        recognitionRef.current = null;
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setInput((current) => current + t("ai.chat.micDenied"));
+        }
+      };
+
+      recognition.onend = () => {
+        setListening(false);
+        recognitionRef.current = null;
+      };
+
+      recognition.start();
+      setListening(true);
+    } catch {
+      setMicSupported(false);
+      setListening(false);
+    }
+  };
 
   const send = async (text?: string) => {
     const question = (text ?? input).trim();
@@ -195,6 +280,30 @@ export default function AiChatBox({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
+        {micSupported && (
+          <button
+            type="button"
+            onClick={toggleMic}
+            title={t("ai.chat.mic")}
+            aria-label={t("ai.chat.mic")}
+            className={`relative shrink-0 rounded-xl p-2 transition-colors ${
+              listening
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">
+              {listening ? "mic" : "mic_none"}
+            </span>
+            {listening && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+              </span>
+            )}
+          </button>
+        )}
+
         <input
           type="text"
           value={input}
@@ -202,7 +311,11 @@ export default function AiChatBox({
           onKeyDown={(event) => {
             if (event.key === "Enter") void send();
           }}
-          placeholder={t("ai.chat.placeholder")}
+          placeholder={
+            listening
+              ? t("ai.chat.listening")
+              : t("ai.chat.placeholder")
+          }
           className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
         />
         <button

@@ -120,7 +120,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isControlPanelOpen) {
-      document.body.style.overflow = "hidden";
+      if (window.innerWidth >= 1024) {
+        document.body.style.overflow = "hidden";
+      } else {
+        const el = document.getElementById("traffic-control-panel");
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        el?.classList.add("ring-4", "ring-blue-300");
+        const timer = setTimeout(
+          () => el?.classList.remove("ring-4", "ring-blue-300"),
+          2000,
+        );
+        return () => {
+          clearTimeout(timer);
+          document.body.style.overflow = "unset";
+        };
+      }
     } else {
       document.body.style.overflow = "unset";
     }
@@ -435,7 +449,10 @@ export default function DashboardPage() {
                 <IntersectionGrid />
               </div>
 
-              <aside className="space-y-4 lg:space-y-6 xl:col-span-4">
+              <aside
+                id="traffic-control-panel"
+                className="scroll-mt-20 space-y-4 lg:space-y-6 xl:col-span-4"
+              >
                 <TrafficControlPanel
                   key={realtimeData?.deviceId || selectedIntersection}
                   data={realtimeData}
@@ -460,15 +477,6 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
-
-      {isControlPanelOpen && (
-        <button
-          type="button"
-          aria-label="Tutup panel kontrol"
-          onClick={() => setIsControlPanelOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-        />
-      )}
 
       <button
         type="button"

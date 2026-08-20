@@ -2165,7 +2165,10 @@
       "suggestPeak": "When is peak hour?",
       "suggestRecommend": "What green duration do you recommend?",
       "suggestAnomaly": "Are there any anomalies?",
-      "suggestTutorial": "How do I use this app?"
+      "suggestTutorial": "How do I use this app?",
+      "mic": "Speak",
+      "listening": "Listening...",
+      "micDenied": " (microphone permission denied)"
     },
     "confidence": {
       "high": "High",

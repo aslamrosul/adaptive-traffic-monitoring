@@ -2166,7 +2166,10 @@
       "suggestPeak": "Kapan jam sibuknya?",
       "suggestRecommend": "Apa rekomendasi durasi hijau?",
       "suggestAnomaly": "Ada anomali tidak?",
-      "suggestTutorial": "Bagaimana cara pakai aplikasi ini?"
+      "suggestTutorial": "Bagaimana cara pakai aplikasi ini?",
+      "mic": "Bicara",
+      "listening": "Mendengarkan...",
+      "micDenied": " (izin mikrofon ditolak)"
     },
     "confidence": {
       "high": "Tinggi",

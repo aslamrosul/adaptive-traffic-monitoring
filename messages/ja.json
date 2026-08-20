@@ -2148,7 +2148,10 @@
       "suggestPeak": "ピーク時間はいつですか？",
       "suggestRecommend": "青信号時間の推奨は？",
       "suggestAnomaly": "異常はありますか？",
-      "suggestTutorial": "このアプリの使い方は？"
+      "suggestTutorial": "このアプリの使い方は？",
+      "mic": "話す",
+      "listening": "聞き取り中...",
+      "micDenied": " (マイクの許可が拒否されました)"
     },
     "confidence": {
       "high": "高い",
