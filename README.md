@@ -19,7 +19,7 @@
 - **Internet of Things** (ESP32, Sensors)
 
 ### Links
-- 🌐 [Live Demo](https://3.25.72.124.sslip.io/)
+- 🌐 [Live Demo](https://astraea.my.id/)
 - 📘 [Buku Panduan / Manual Book](https://docs.google.com/document/d/1YHXhrb4rk-D4MKL_dVgmLgajNsUZouzB/)
 - 🎥 [Video Promosi](https://drive.google.com/file/d/1MH9nWoFsBYj_sXhJz-r7evv5Q-POcPB3/)
 - 🖼️ [Poster Promosi](https://drive.google.com/file/d/1sTtQyreEn5zpJvsSYwYvUZdfBPqnmyB5/)
@@ -873,7 +873,7 @@ Next.js App
 
 3. **ESP32 publish via MQTT**
    ```
-   - Broker: 3.25.72.124:1883
+   - Broker: astraea.my.id:1883
    - Topic: traffic/ESP32_TRAFFIC_01/data
    - Auth: username/password
    - QoS: 0 (fire and forget)
@@ -1302,7 +1302,7 @@ S3_BUCKET=traffic-data-bucket
 S3_BASE_PREFIX=traffic/raw
 
 # MQTT Configuration (EC2)
-MQTT_HOST=3.25.72.124  # Your EC2 public IP
+MQTT_HOST=astraea.my.id  # Your EC2 public IP
 MQTT_PORT=1883
 MQTT_USER=jti
 MQTT_PASS=your-mqtt-password
@@ -1427,7 +1427,7 @@ Edit `iot/esp32/traffic_mqtt.ino`:
 const char *ssid = "YOUR_WIFI_SSID";
 const char *wifiPassword = "YOUR_WIFI_PASSWORD";
 
-#define MQTT_SERVER "3.25.72.124"  // Your EC2 IP
+#define MQTT_SERVER "astraea.my.id"  // Your EC2 IP
 #define MQTT_PORT 1883
 #define MQTT_USER "jti"
 #define MQTT_PASS "your-mqtt-password"
@@ -2331,7 +2331,7 @@ Made with ❤️ by Team PBL - Politeknik Negeri Malang
 [📘 Manual Book](https://docs.google.com/document/d/1YHXhrb4rk-D4MKL_dVgmLgajNsUZouzB/) · 
 [🎥 Video Promosi](https://drive.google.com/file/d/1MH9nWoFsBYj_sXhJz-r7evv5Q-POcPB3/) · 
 [🖼️ Poster](https://drive.google.com/file/d/1sTtQyreEn5zpJvsSYwYvUZdfBPqnmyB5/) · 
-[🌐 Live Demo](https://3.25.72.124.sslip.io/)
+[🌐 Live Demo](https://astraea.my.id/)
 
 [🐛 Report Bug](https://github.com/your-repo/issues) · 
 [✨ Request Feature](https://github.com/your-repo/issues) · 

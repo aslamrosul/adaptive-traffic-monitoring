@@ -1435,7 +1435,7 @@
       "title": "Kebutuhan Sistem",
       "subtitle": "Hardware dan Software yang diperlukan",
       "importantNote": "Catatan Penting",
-      "importantNoteDesc": "Untuk deployment production, pastikan AWS account memiliki kredit cukup (estimasi $10-20/bulan). MQTT Broker berjalan di AWS EC2 (3.25.72.124). Dokumentasi lengkap tersedia di PANDUAN_PENGGUNAAN.md",
+      "importantNoteDesc": "Untuk deployment production, pastikan AWS account memiliki kredit cukup (estimasi $10-20/bulan). MQTT Broker berjalan di AWS EC2 (astraea.my.id). Dokumentasi lengkap tersedia di PANDUAN_PENGGUNAAN.md",
       "frontend": "Dashboard (Frontend)",
       "backend": "Backend (Python)",
       "hardware": "Hardware (ESP32)",

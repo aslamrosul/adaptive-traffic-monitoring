@@ -1417,7 +1417,7 @@
       "title": "System Requirements",
       "subtitle": "Required Hardware and Software",
       "importantNote": "Important Note",
-      "importantNoteDesc": "For production deployment, ensure AWS account has sufficient credits (estimated $10-20/month). MQTT Broker runs on AWS EC2 (3.25.72.124). Complete documentation available in PANDUAN_PENGGUNAAN.md",
+      "importantNoteDesc": "For production deployment, ensure AWS account has sufficient credits (estimated $10-20/month). MQTT Broker runs on AWS EC2 (astraea.my.id). Complete documentation available in PANDUAN_PENGGUNAAN.md",
       "frontend": "Dashboard (Frontend)",
       "backend": "Backend (Python)",
       "hardware": "Hardware (ESP32)",

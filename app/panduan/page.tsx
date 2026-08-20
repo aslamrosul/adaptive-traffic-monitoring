@@ -374,7 +374,7 @@ function InstallationSection() {
             <div>
               <h4 className="font-semibold text-slate-800 text-sm mb-1">{t('guide.installation.configDotEnv')}</h4>
               <pre className="bg-slate-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto">
-                MQTT_HOST=3.25.72.124<br/>
+                MQTT_HOST=astraea.my.id<br/>
                 MQTT_PORT=1883<br/>
                 AWS_ACCESS_KEY_ID=your-key<br/>
                 AWS_SECRET_ACCESS_KEY=your-secret
@@ -1057,7 +1057,7 @@ function MQTTSection() {
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
         <h3 className="font-bold text-slate-900 mb-3">🌐 {t('guide.mqttConfig.mqttBroker')}</h3>
         <table className="w-full text-sm">
-          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.host')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">3.25.72.124</code></td></tr>
+          <tr><td className="font-semibold py-1">{t('guide.mqttConfig.host')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">astraea.my.id</code></td></tr>
           <tr><td className="font-semibold py-1">{t('guide.mqttConfig.port')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">1883</code> {t('guide.mqttConfig.portDesc')}</td></tr>
           <tr><td className="font-semibold py-1">{t('guide.mqttConfig.username')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">jti</code></td></tr>
           <tr><td className="font-semibold py-1">{t('guide.mqttConfig.password')}</td><td><code className="bg-slate-200 px-2 py-1 rounded">Azure-password123</code></td></tr>
@@ -1150,7 +1150,7 @@ function TroubleshootingSection() {
           <p className="text-sm text-slate-700 mb-2"><strong>{t('guide.troubleshootingGuide.mqttDisconnectedSolution')}</strong></p>
           <ul className="text-xs space-y-1 text-slate-600">
             <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution1')}</li>
-            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution2')} <code className="bg-slate-200 px-1 rounded">MQTT_BROKER_URL=ws://3.25.72.124:9001</code></li>
+            <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution2')} <code className="bg-slate-200 px-1 rounded">MQTT_BROKER_URL=ws://astraea.my.id:9001</code></li>
             <li>• {t('guide.troubleshootingGuide.mqttDisconnectedSolution3')}</li>
           </ul>
         </div>
