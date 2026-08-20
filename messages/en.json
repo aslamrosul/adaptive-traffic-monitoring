@@ -2121,5 +2121,65 @@
       },
       "noResults": "No results found for"
     }
+  },
+  "ai": {
+    "title": "AI Insights",
+    "subtitle": "Summary, prediction, and anomaly detection from traffic data",
+    "refresh": "Reload",
+    "loading": "Loading AI data...",
+    "tabs": {
+      "summary": "Summary",
+      "forecast": "Forecast",
+      "anomaly": "Anomalies",
+      "chat": "Assistant"
+    },
+    "summary": {
+      "samples": "Samples",
+      "avgQueue": "Avg level",
+      "peakHour": "Peak hour",
+      "devicesOnline": "Devices online",
+      "insights": "Insights",
+      "recommendations": "Green duration recommendations",
+      "colLane": "Lane",
+      "colLevel": "Level",
+      "colCurrent": "Current",
+      "colRecommended": "Recommended",
+      "colAction": "Action"
+    },
+    "forecast": {
+      "noData": "Not enough data for forecast yet.",
+      "colHour": "Hour",
+      "colAvg": "Average",
+      "colConfidence": "Confidence"
+    },
+    "anomaly": {
+      "none": "No anomalies",
+      "noneDesc": "All lanes and devices look normal in this period."
+    },
+    "chat": {
+      "welcome": "Ask anything about traffic conditions, e.g. most congested lane, peak hours, or green light duration recommendations.",
+      "placeholder": "Type a question...",
+      "thinking": "Analyzing...",
+      "error": "An error occurred. Please try again.",
+      "suggestCongested": "Which lane is most congested?",
+      "suggestPeak": "When is peak hour?",
+      "suggestRecommend": "What green duration do you recommend?",
+      "suggestAnomaly": "Are there any anomalies?"
+    },
+    "confidence": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "severity": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "action": {
+      "increase": "Increase",
+      "decrease": "Decrease",
+      "keep": "Keep"
+    }
   }
 }

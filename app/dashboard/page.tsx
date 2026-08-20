@@ -1,5 +1,6 @@
 "use client";
 
+import AiInsightsPanel from "@/components/AiInsightsPanel";
 import DashboardStats from "@/components/DashboardStats";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
 import Header from "@/components/Header";
@@ -410,6 +411,12 @@ export default function DashboardPage() {
               timeRange={timeRange}
               customDates={customDates}
               intersectionId={selectedIntersection}
+            />
+
+            <AiInsightsPanel
+              intersectionId={selectedIntersection || undefined}
+              startDate={customDates?.startDate}
+              endDate={customDates?.endDate}
             />
 
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">

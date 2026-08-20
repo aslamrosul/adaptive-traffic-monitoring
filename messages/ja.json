@@ -2104,5 +2104,65 @@
       },
       "noResults": "No results found for"
     }
+  },
+  "ai": {
+    "title": "AI インサイト",
+    "subtitle": "交通データの要約・予測・異常検知",
+    "refresh": "再読み込み",
+    "loading": "AIデータを読み込み中...",
+    "tabs": {
+      "summary": "要約",
+      "forecast": "予測",
+      "anomaly": "異常",
+      "chat": "アシスタント"
+    },
+    "summary": {
+      "samples": "サンプル",
+      "avgQueue": "平均レベル",
+      "peakHour": "ピーク時間",
+      "devicesOnline": "オンライン機器",
+      "insights": "インサイト",
+      "recommendations": "青信号時間の推奨",
+      "colLane": "車線",
+      "colLevel": "レベル",
+      "colCurrent": "現在",
+      "colRecommended": "推奨",
+      "colAction": "アクション"
+    },
+    "forecast": {
+      "noData": "予測に十分なデータがありません。",
+      "colHour": "時間",
+      "colAvg": "平均",
+      "colConfidence": "信頼度"
+    },
+    "anomaly": {
+      "none": "異常なし",
+      "noneDesc": "この期間は全ての車線と機器が正常です。"
+    },
+    "chat": {
+      "welcome": "交通状況について質問してください。例：一番混雑している車線、ピーク時間、青信号時間の推奨など。",
+      "placeholder": "質問を入力...",
+      "thinking": "分析中...",
+      "error": "エラーが発生しました。もう一度お試しください。",
+      "suggestCongested": "どの車線が一番混雑していますか？",
+      "suggestPeak": "ピーク時間はいつですか？",
+      "suggestRecommend": "青信号時間の推奨は？",
+      "suggestAnomaly": "異常はありますか？"
+    },
+    "confidence": {
+      "high": "高い",
+      "medium": "中",
+      "low": "低い"
+    },
+    "severity": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "action": {
+      "increase": "増加",
+      "decrease": "減少",
+      "keep": "維持"
+    }
   }
 }

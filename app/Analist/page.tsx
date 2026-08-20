@@ -4,6 +4,7 @@ import AnalyticsTimeFilter, {
   type DateRange,
   type TimeRange,
 } from "@/components/AnalyticsTimeFilter";
+import AiInsightsPanel from "@/components/AiInsightsPanel";
 import DashboardLayout from "@/components/DashboardLayout";
 import GreenDurationChart from "@/components/GreenDurationChart";
 import QueueDistributionChart from "@/components/QueueDistributionChart";
@@ -648,6 +649,12 @@ export default function AnalitikPage() {
             variant="emerald"
           />
         </section>
+
+        <AiInsightsPanel
+          intersectionId={intersectionId}
+          startDate={startDate}
+          endDate={endDate}
+        />
 
         <section className="grid grid-cols-12 gap-4 lg:gap-6">
           <div className="col-span-12 lg:col-span-8">

@@ -2122,5 +2122,65 @@
       },
       "noResults": "Tidak ada hasil yang ditemukan untuk"
     }
+  },
+  "ai": {
+    "title": "AI Insights",
+    "subtitle": "Ringkasan, prediksi, dan deteksi anomali dari data lalu lintas",
+    "refresh": "Muat ulang",
+    "loading": "Memuat data AI...",
+    "tabs": {
+      "summary": "Ringkasan",
+      "forecast": "Prediksi",
+      "anomaly": "Anomali",
+      "chat": "Asisten"
+    },
+    "summary": {
+      "samples": "Sampel",
+      "avgQueue": "Rata-rata level",
+      "peakHour": "Jam puncak",
+      "devicesOnline": "Perangkat online",
+      "insights": "Insight",
+      "recommendations": "Rekomendasi durasi hijau",
+      "colLane": "Jalur",
+      "colLevel": "Level",
+      "colCurrent": "Sekarang",
+      "colRecommended": "Rekomendasi",
+      "colAction": "Tindakan"
+    },
+    "forecast": {
+      "noData": "Belum cukup data untuk prediksi.",
+      "colHour": "Jam",
+      "colAvg": "Rata-rata",
+      "colConfidence": "Keyakinan"
+    },
+    "anomaly": {
+      "none": "Tidak ada anomali",
+      "noneDesc": "Semua jalur dan perangkat terpantau normal pada periode ini."
+    },
+    "chat": {
+      "welcome": "Tanya apa saja tentang kondisi lalu lintas, misalnya jalur paling padat, jam sibuk, atau rekomendasi durasi lampu.",
+      "placeholder": "Ketik pertanyaan...",
+      "thinking": "Menganalisis...",
+      "error": "Terjadi kesalahan saat menjawab. Coba lagi.",
+      "suggestCongested": "Jalur mana yang paling padat?",
+      "suggestPeak": "Kapan jam sibuknya?",
+      "suggestRecommend": "Apa rekomendasi durasi hijau?",
+      "suggestAnomaly": "Ada anomali tidak?"
+    },
+    "confidence": {
+      "high": "Tinggi",
+      "medium": "Sedang",
+      "low": "Rendah"
+    },
+    "severity": {
+      "high": "Tinggi",
+      "medium": "Sedang",
+      "low": "Rendah"
+    },
+    "action": {
+      "increase": "Naikkan",
+      "decrease": "Turunkan",
+      "keep": "Pertahankan"
+    }
   }
 }
