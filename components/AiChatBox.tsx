@@ -285,52 +285,152 @@ export default function AiChatBox({
 
   return (
     <div className={`flex ${heightClass} flex-col`}>
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+      <div className="flex-1 space-y-5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <span className="material-symbols-outlined text-4xl text-blue-300">
-              smart_toy
-            </span>
-            <p className="text-sm text-slate-500">{t("ai.chat.welcome")}</p>
+          chatgptStyle ? (
+            <div className="flex h-full flex-col items-center justify-center gap-6 text-center max-w-2xl mx-auto px-4 py-8">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-150 animate-pulse">
+                <span className="material-symbols-outlined text-2xl font-bold">
+                  auto_awesome
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="bg-gradient-to-r from-blue-600 via-purple-600 to-[#1e88e5] bg-clip-text text-2xl lg:text-3xl font-black text-transparent tracking-tight font-headline">
+                  Halo! Ada yang bisa saya bantu hari ini?
+                </h2>
+                <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                  Asisten AI AASTREA siap membantu memantau lalu lintas, merekomendasikan durasi lampu, mendeteksi anomali, atau memperbarui profil Anda secara instan.
+                </p>
+              </div>
 
-            {showQuickNav && (
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {QUICK_NAV.map((nav) => (
-                  <Link
-                    key={nav.href}
-                    href={nav.href}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 shadow-sm hover:border-blue-300 hover:text-blue-600"
+              {showQuickNav && (
+                <div className="space-y-2 w-full mt-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Navigasi Cepat
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {QUICK_NAV.map((nav) => (
+                      <Link
+                        key={nav.href}
+                        href={nav.href}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:border-blue-400 hover:text-blue-600 hover:shadow"
+                      >
+                        <span className="material-symbols-outlined text-[13px] font-semibold">
+                          arrow_forward
+                        </span>
+                        {t(nav.labelKey)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3 w-full mt-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Coba Tanya Sesuatu
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => void send(suggestion)}
+                      className="group text-left border border-slate-200/80 bg-white p-3 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:bg-gradient-to-tr hover:from-white hover:to-blue-50/20 shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2.5"
+                    >
+                      <span className="material-symbols-outlined text-blue-500 bg-blue-50 p-1 rounded-lg group-hover:bg-blue-100 transition-colors">
+                        chat_bubble
+                      </span>
+                      <span className="flex-1 leading-snug">
+                        {suggestion}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+              <span className="material-symbols-outlined text-4xl text-blue-300">
+                smart_toy
+              </span>
+              <p className="text-sm text-slate-500">{t("ai.chat.welcome")}</p>
+
+              {showQuickNav && (
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {QUICK_NAV.map((nav) => (
+                    <Link
+                      key={nav.href}
+                      href={nav.href}
+                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 shadow-sm hover:border-blue-300 hover:text-blue-600"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">
+                        arrow_forward
+                      </span>
+                      {t(nav.labelKey)}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-wrap justify-center gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => void send(suggestion)}
+                    className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100"
                   >
-                    <span className="material-symbols-outlined text-[13px]">
-                      arrow_forward
-                    </span>
-                    {t(nav.labelKey)}
-                  </Link>
+                    {suggestion}
+                  </button>
                 ))}
               </div>
-            )}
-
-            <div className="flex flex-wrap justify-center gap-2">
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => void send(suggestion)}
-                  className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100"
-                >
-                  {suggestion}
-                </button>
-              ))}
             </div>
-          </div>
+          )
         )}
 
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
+            className={`flex flex-col ${
+              chatgptStyle 
+                ? "w-full py-3 border-b border-slate-100/50 last:border-0" 
+                : message.role === "user" ? "items-end" : "items-start"
+            }`}
           >
-<div
+            {chatgptStyle ? (
+              message.role === "user" ? (
+                <div className="flex flex-col items-end max-w-[80%] self-end">
+                  <div className="rounded-2xl px-4 py-2.5 text-sm bg-slate-100 border border-slate-200/60 text-slate-800 shadow-sm font-semibold">
+                    <p className="whitespace-pre-line">{message.text}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-4 w-full max-w-full">
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow shadow-indigo-100">
+                    <span className="material-symbols-outlined text-[15px] font-semibold">
+                      auto_awesome
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs font-bold text-slate-700 tracking-wide">
+                        ASTRAEA AI
+                      </p>
+                      {message.source && (
+                        <span className="text-[9px] font-bold bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                          {message.source === "ai" ? "AI" : "Template"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-slate-800 text-sm leading-relaxed prose prose-slate max-w-none">
+                      <MarkdownText text={message.text} />
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div
                 className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                   message.role === "user"
                     ? "rounded-br-sm bg-blue-600 text-white"
@@ -343,21 +443,22 @@ export default function AiChatBox({
                   <p className="whitespace-pre-line">{message.text}</p>
                 )}
                 {message.source && (
-                <p className="mt-1 text-[10px] opacity-60">
-                  {message.source === "ai" ? "AI" : "Template"}
-                </p>
-              )}
-            </div>
+                  <p className="mt-1 text-[10px] opacity-60">
+                    {message.source === "ai" ? "AI" : "Template"}
+                  </p>
+                )}
+              </div>
+            )}
 
             {message.actions && message.actions.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <div className={`mt-2.5 flex flex-wrap gap-1.5 ${chatgptStyle ? "pl-12" : ""}`}>
                 {message.actions.map((action) => (
                   <Link
                     key={`${action.label}-${action.href}`}
                     href={action.href}
-                    className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                    className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-sm transition-all"
                   >
-                    <span className="material-symbols-outlined text-[13px]">
+                    <span className="material-symbols-outlined text-[13px] font-semibold">
                       arrow_forward
                     </span>
                     {action.label}
@@ -367,30 +468,56 @@ export default function AiChatBox({
             )}
 
             {message.actionProposal && (
-              <ActionCard
-                proposal={message.actionProposal}
-                onConfirm={confirmAction}
-                onDismiss={() => {
-                  setMessages((current) =>
-                    current.map((msg, i) =>
-                      i === index ? { ...msg, actionProposal: null } : msg
-                    )
-                  );
-                }}
-                t={t}
-              />
+              <div className={`w-full ${chatgptStyle ? "pl-12" : ""}`}>
+                <ActionCard
+                  proposal={message.actionProposal}
+                  onConfirm={confirmAction}
+                  onDismiss={() => {
+                    setMessages((current) =>
+                      current.map((msg, i) =>
+                        i === index ? { ...msg, actionProposal: null } : msg
+                      )
+                    );
+                  }}
+                  t={t}
+                />
+              </div>
             )}
           </div>
         ))}
 
         {thinking && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              <span className="material-symbols-outlined animate-spin text-sm align-middle">
-                progress_activity
-              </span>{" "}
-              {t("ai.chat.thinking")}
-            </div>
+          <div className="w-full py-2">
+            {chatgptStyle ? (
+              <div className="flex items-start gap-4 w-full max-w-full">
+                <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow shadow-indigo-100">
+                  <span className="material-symbols-outlined text-[15px] font-semibold animate-spin">
+                    progress_activity
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs font-bold text-slate-700 tracking-wide animate-pulse">
+                      ASTRAEA AI sedang mengetik...
+                    </p>
+                  </div>
+                  <div className="flex gap-1 items-center h-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/80 animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500/80 animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-start">
+                <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                  <span className="material-symbols-outlined animate-spin text-sm align-middle">
+                    progress_activity
+                  </span>{" "}
+                  {t("ai.chat.thinking")}
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div ref={bottomRef} />

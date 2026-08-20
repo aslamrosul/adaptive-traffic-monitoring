@@ -21,60 +21,71 @@ export default function AiChatPage() {
 
   return (
     <DashboardLayout title={t("ai.page.title") || "Asisten AI"}>
-      <div className="flex h-[calc(100vh-4rem)] flex-col bg-slate-50">
-        {/* Top bar - slim, seperti header ChatGPT */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2.5 lg:px-8">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600">
-              smart_toy
-            </span>
-            <h1 className="truncate text-sm font-bold text-slate-900 lg:text-base">
-              {t("ai.page.title")}
-            </h1>
-            <span className="hidden shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500 sm:inline">
-              gemini-3.1-flash-lite
-            </span>
+      <div className="flex h-[calc(100vh-4rem)] flex-col bg-gradient-to-tr from-[#f6f9fc] via-white to-[#f0f4f8]">
+        {/* Top bar - slim, super clean elegant style ala Gemini */}
+        <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 bg-white/70 backdrop-blur-md px-4 py-3 lg:px-8 shadow-sm">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 text-white shadow shadow-indigo-100">
+              <span className="material-symbols-outlined text-xl">
+                auto_awesome
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="truncate text-base font-extrabold text-slate-800 lg:text-lg tracking-tight">
+                  ASTRAEA AI
+                </h1>
+                <span className="hidden shrink-0 rounded-full bg-blue-50 border border-blue-100/50 px-2 py-0.5 text-[9px] font-bold text-blue-600 sm:inline tracking-wider uppercase">
+                  Gemini Flash 3.1
+                </span>
+              </div>
+              <p className="hidden text-[10px] font-medium text-slate-400 lg:block">
+                Asisten kecerdasan buatan untuk optimasi lalu lintas real-time
+              </p>
+            </div>
           </div>
 
-          <div className="flex shrink-0 rounded-xl bg-slate-100 p-1">
+          {/* Luxury Switch Mode Button */}
+          <div className="flex shrink-0 rounded-2xl bg-slate-100 p-1 border border-slate-200/50">
             <button
               type="button"
               onClick={() => setMode("chat")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
                 mode === "chat"
-                  ? "bg-white text-blue-600 shadow"
+                  ? "bg-white text-blue-600 shadow-sm shadow-blue-500/10 border border-slate-200/30"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              <span className="material-symbols-outlined text-sm">chat</span>
-              {t("ai.page.chat")}
+              <span className="material-symbols-outlined text-sm font-semibold">forum</span>
+              Chat AI
             </button>
             <button
               type="button"
               onClick={() => setMode("insight")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
                 mode === "insight"
-                  ? "bg-white text-blue-600 shadow"
+                  ? "bg-white text-blue-600 shadow-sm shadow-blue-500/10 border border-slate-200/30"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              <span className="material-symbols-outlined text-sm">
-                query_stats
+              <span className="material-symbols-outlined text-sm font-semibold">
+                insights
               </span>
-              {t("ai.page.insight")}
+              Insight AI
             </button>
           </div>
         </div>
 
+        {/* Content area */}
         {mode === "chat" ? (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-3 py-4 lg:px-4">
+          <div className="flex-1 overflow-hidden flex flex-col justify-between">
+            <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 py-4 md:py-6">
               <AiChatBox heightClass="h-full" showQuickNav chatgptStyle />
             </div>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-[1280px] p-3 lg:p-6">
+            <div className="mx-auto max-w-[1280px] p-4 lg:p-8">
               <AiInsightsPanel />
             </div>
           </div>
