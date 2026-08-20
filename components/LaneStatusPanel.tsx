@@ -10,7 +10,6 @@ import {
 import { useT, useLocale } from "@/lib/useT";
 
 interface LaneData {
-  name: string;
   direction: string;
   light: string;
   vehicleCount: number;
@@ -85,7 +84,6 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
           const laneData = latestData[direction] || {};
           
           return {
-            name: t(`traffic.${direction}`),
             direction,
             light: laneData.light || 'red',
             vehicleCount: laneData.vehicleCount || 0,
@@ -101,7 +99,6 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
         const laneDirections = ['north', 'south', 'east', 'west'];
 
         const emptyLanes: LaneData[] = laneDirections.slice(0, laneCount).map(direction => ({
-          name: t(`traffic.${direction}`),
           direction,
           light: 'unknown',
           vehicleCount: 0,
@@ -267,7 +264,7 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-slate-900 text-sm lg:text-base">
-                      {t('lanes.lane')} {lane.name}
+                      {t('lanes.lane')} {t(`traffic.${lane.direction}`)}
                     </h4>
                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${getLightColor(lane.light)}`}>
                       {getLightIcon(lane.light)} {lane.light.toUpperCase()}

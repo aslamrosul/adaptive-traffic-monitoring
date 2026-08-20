@@ -101,6 +101,9 @@
     "help": "Bantuan",
     "iotConfig": "Remote IoT",
     "home": "Beranda",
+    "features": "Fitur",
+    "aboutUs": "Tentang Kami",
+    "ourTeam": "Tim Kami",
     "guide": "Panduan Sistem",
     "fullGuide": "Panduan Lengkap"
   },

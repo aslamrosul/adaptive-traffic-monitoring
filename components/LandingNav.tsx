@@ -8,8 +8,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import LanguageSwitcherSimple from "./LanguageSwitcherSimple";
+import { useT } from "@/lib/useT";
 
 export default function LandingNav() {
+  const t = useT();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("beranda");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -64,10 +66,10 @@ export default function LandingNav() {
 
   const handleLogout = async () => {
     setIsProfileOpen(false);
-    toast.loading("Logging out...");
+    toast.loading(t('auth.logout') || "Logging out...");
     await signOut({ callbackUrl: "/" });
     toast.dismiss();
-    toast.success("Berhasil keluar dari sistem");
+    toast.success(t('auth.logoutSuccess') || "Berhasil keluar dari sistem");
   };
 
   const displayName = session?.user?.name || "User";
@@ -79,7 +81,7 @@ export default function LandingNav() {
   const profileMenuItems = [
     {
       icon: "home",
-      label: "Beranda",
+      label: t('navigation.home') || "Beranda",
       action: () => {
         router.push("/");
         setIsProfileOpen(false);
@@ -87,7 +89,7 @@ export default function LandingNav() {
     },
     {
       icon: "person",
-      label: "Profil Saya",
+      label: t('profile.myProfile') || "Profil Saya",
       action: () => {
         router.push("/profile");
         setIsProfileOpen(false);
@@ -95,7 +97,7 @@ export default function LandingNav() {
     },
     {
       icon: "settings",
-      label: "Pengaturan",
+      label: t('navigation.settings') || "Pengaturan",
       action: () => {
         router.push("/profile?tab=settings");
         setIsProfileOpen(false);
@@ -103,7 +105,7 @@ export default function LandingNav() {
     },
     {
       icon: "help",
-      label: "Bantuan",
+      label: t('navigation.help') || "Bantuan",
       action: () => {
         router.push("/profile?tab=help");
         setIsProfileOpen(false);
@@ -111,7 +113,7 @@ export default function LandingNav() {
     },
     {
       icon: "logout",
-      label: "Keluar",
+      label: t('auth.logout') || "Keluar",
       action: handleLogout,
       danger: true,
     },
@@ -138,7 +140,7 @@ export default function LandingNav() {
                 : "text-slate-600 hover:text-blue-500"
             }`}
           >
-            Beranda
+            {t('navigation.home')}
           </a>
           <a 
             href="#fitur" 
@@ -148,7 +150,7 @@ export default function LandingNav() {
                 : "text-slate-600 hover:text-blue-500"
             }`}
           >
-            Fitur
+            {t('navigation.features')}
           </a>
           <a 
             href="#tentang-kami" 
@@ -158,7 +160,7 @@ export default function LandingNav() {
                 : "text-slate-600 hover:text-blue-500"
             }`}
           >
-            Tentang Kami
+            {t('navigation.aboutUs')}
           </a>
           <a 
             href="#tim-kami" 
@@ -168,7 +170,7 @@ export default function LandingNav() {
                 : "text-slate-600 hover:text-blue-500"
             }`}
           >
-            Tim Kami
+            {t('navigation.ourTeam')}
           </a>
         </div>
 
@@ -184,7 +186,7 @@ export default function LandingNav() {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-semibold text-sm lg:text-base transition-all shadow-sm hover:shadow-md flex items-center gap-1 lg:gap-2"
               >
                 <span className="material-symbols-outlined text-sm">dashboard</span>
-                <span className="hidden lg:inline">Dashboard</span>
+                <span className="hidden lg:inline">{t('navigation.dashboard')}</span>
               </Link>
               
               {/* Profile Dropdown */}
@@ -194,11 +196,11 @@ export default function LandingNav() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
-                  title={session.user?.name || "Profile"}
+                  title={session.user?.name || t('navigation.profile')}
                 >
                   <div className="w-8 lg:w-9 h-8 lg:h-9 rounded-full overflow-hidden ring-2 ring-slate-200 relative">
                     <Image
-                      alt="Profile"
+                      alt={t('navigation.profile')}
                       src={displayAvatar}
                       fill
                       sizes="36px"
@@ -220,7 +222,7 @@ export default function LandingNav() {
                         <div className="flex items-center gap-2 lg:gap-3">
                           <div className="w-10 lg:w-12 h-10 lg:h-12 rounded-full overflow-hidden border-2 border-white relative flex-shrink-0">
                             <Image
-                              alt="Profil"
+                              alt={t('navigation.profile')}
                               src={displayAvatar}
                               fill
                               sizes="48px"
@@ -271,13 +273,13 @@ export default function LandingNav() {
                 href="/login"
                 className="text-blue-600 hover:text-blue-700 font-semibold px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg border border-blue-600 hover:bg-blue-50 transition-all text-sm lg:text-base"
               >
-                Login
+                {t('auth.login')}
               </Link>
               <Link
                 href="/register"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md text-sm lg:text-base"
               >
-                Daftar
+                {t('auth.register')}
               </Link>
             </>
           )}
@@ -312,7 +314,7 @@ export default function LandingNav() {
                     : "text-slate-600"
                 }`}
               >
-                Beranda
+                {t('navigation.home')}
               </a>
               <a 
                 href="#fitur" 
@@ -322,7 +324,7 @@ export default function LandingNav() {
                     : "text-slate-600"
                 }`}
               >
-                Fitur
+                {t('navigation.features')}
               </a>
               <a 
                 href="#tentang-kami" 
@@ -332,7 +334,7 @@ export default function LandingNav() {
                     : "text-slate-600"
                 }`}
               >
-                Tentang Kami
+                {t('navigation.aboutUs')}
               </a>
               <a 
                 href="#tim-kami" 
@@ -342,7 +344,7 @@ export default function LandingNav() {
                     : "text-slate-600"
                 }`}
               >
-                Tim Kami
+                {t('navigation.ourTeam')}
               </a>
               <div className="pt-2 space-y-1.5">
                 {status === "loading" ? (
@@ -353,7 +355,7 @@ export default function LandingNav() {
                       href="/dashboard"
                       className="block bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm"
                     >
-                      Dashboard
+                {t('navigation.dashboard')}
                     </Link>
                     
                     {/* Mobile Profile Menu */}
@@ -362,7 +364,7 @@ export default function LandingNav() {
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200 relative flex-shrink-0">
                             <Image
-                              alt="Profil"
+                              alt={t('navigation.profile')}
                               src={displayAvatar}
                               fill
                               sizes="32px"
@@ -398,13 +400,13 @@ export default function LandingNav() {
                       href="/login"
                       className="block text-center text-blue-600 border border-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-all text-sm"
                     >
-                      Login
+                      {t('auth.login')}
                     </Link>
                     <Link
                       href="/register"
                       className="block bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm"
                     >
-                      Daftar
+                      {t('auth.register')}
                     </Link>
                   </>
                 )}

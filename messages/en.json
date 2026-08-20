@@ -101,6 +101,9 @@
     "help": "Help",
     "iotConfig": "IoT Remote",
     "home": "Home",
+    "features": "Features",
+    "aboutUs": "About Us",
+    "ourTeam": "Our Team",
     "guide": "System Guide",
     "fullGuide": "Complete Guide"
   },

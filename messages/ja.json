@@ -101,6 +101,9 @@
     "help": "ヘルプ",
     "iotConfig": "IoTリモート",
     "home": "ホーム",
+    "features": "機能",
+    "aboutUs": "私たちについて",
+    "ourTeam": "チーム",
     "guide": "システムガイド",
     "fullGuide": "完全ガイド"
   },
