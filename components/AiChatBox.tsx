@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import MarkdownText from "@/components/MarkdownText";
 import { useLocale, useT } from "@/lib/useT";
 
 export interface AiChatAction {
@@ -48,6 +49,7 @@ export default function AiChatBox({
   const [micSupported, setMicSupported] = useState(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<any>(null);
+  const sendRef = useRef<(text?: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,9 +98,9 @@ export default function AiChatBox({
       recognitionRef.current = recognition;
 
       let finalText = "";
+      let interim = "";
 
       recognition.onresult = (event: any) => {
-        let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
@@ -124,6 +126,11 @@ export default function AiChatBox({
       recognition.onend = () => {
         setListening(false);
         recognitionRef.current = null;
+        const final = finalText.trim();
+        if (final) {
+          setInput("");
+          void sendRef.current(final);
+        }
       };
 
       recognition.start();
@@ -177,6 +184,7 @@ export default function AiChatBox({
       setThinking(false);
     }
   };
+  sendRef.current = send;
 
   const suggestions = [
     t("ai.chat.suggestCongested"),
@@ -232,15 +240,19 @@ export default function AiChatBox({
             key={index}
             className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
           >
-            <div
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                message.role === "user"
-                  ? "rounded-br-sm bg-blue-600 text-white"
-                  : "rounded-bl-sm border border-slate-200 bg-slate-50 text-slate-800"
-              }`}
-            >
-              <p className="whitespace-pre-line">{message.text}</p>
-              {message.source && (
+<div
+                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                  message.role === "user"
+                    ? "rounded-br-sm bg-blue-600 text-white"
+                    : "rounded-bl-sm border border-slate-200 bg-slate-50 text-slate-800"
+                }`}
+              >
+                {message.role === "assistant" ? (
+                  <MarkdownText text={message.text} />
+                ) : (
+                  <p className="whitespace-pre-line">{message.text}</p>
+                )}
+                {message.source && (
                 <p className="mt-1 text-[10px] opacity-60">
                   {message.source === "ai" ? "AI" : "Template"}
                 </p>

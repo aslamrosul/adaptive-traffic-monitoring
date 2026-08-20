@@ -15,6 +15,7 @@ import {
 } from "@/lib/traffic-adapter";
 import {
   APP_TIMEZONE,
+  addDaysToDateValue,
   getWibDateValue,
   getWibHour,
   wibDateRangeToUtc,
@@ -873,20 +874,119 @@ const AI_GUIDE_TEXT = [
   "Gunakan tombol navigasi di bawah untuk langsung membuka halaman yang dimaksud.",
 ].join("\n");
 
+/**
+ * Ringkasan 7 hari terakhir sebagai konteks tambahan untuk LLM,
+ * sehingga AI tetap bisa menjawab walau rentang tanggal yang diminta
+ * pengguna memiliki sedikit/0 sampel.
+ */
+async function getAiHistoryContext(
+  ctx: AiRequestContext
+): Promise<{
+  period: string;
+  totalSamples: number;
+  averageQueueLevel: number | null;
+  perLane: { lane: string; averageQueueLevel: number; level2Percentage: number; samples: number }[];
+  peakHour: string | null;
+  devicesOffline: number;
+} | null> {
+  try {
+    const today = getWibDateValue();
+    const start = ctx.startDate || addDaysToDateValue(today, -6);
+    const end = ctx.endDate || today;
+    const { startUtc, endUtc } = wibDateRangeToUtc(start, end);
+
+    const items = await scanTrafficByDateRange({
+      startDate: startUtc,
+      endDate: endUtc,
+      intersectionId: ctx.intersectionId || undefined,
+      limit: 50000,
+    });
+
+    const laneTotals: Record<TrafficLane, { level: number; level2: number }> = {
+      north: { level: 0, level2: 0 },
+      south: { level: 0, level2: 0 },
+      east: { level: 0, level2: 0 },
+    };
+    const laneSamples: Record<TrafficLane, number> = { north: 0, south: 0, east: 0 };
+    const hourLevel2 = new Array(24).fill(0) as number[];
+    const hourCounts = new Array(24).fill(0) as number[];
+
+    for (const item of items) {
+      const hour = getWibHour(getItemTimestamp(item));
+      hourCounts[hour] += 1;
+      let anyLevel2 = false;
+      for (const lane of LANE_NAMES) {
+        const level = Number(item[`${lane}_density_level`] ?? 0);
+        laneTotals[lane].level += level;
+        laneSamples[lane] += 1;
+        if (level >= 2) {
+          laneTotals[lane].level2 += 1;
+          anyLevel2 = true;
+        }
+      }
+      if (anyLevel2) hourLevel2[hour] += 1;
+    }
+
+    const totalSamples = laneSamples.north + laneSamples.south + laneSamples.east;
+    if (totalSamples === 0) return null;
+
+    const perLane = LANE_NAMES.map((lane) => ({
+      lane: lane.toUpperCase(),
+      averageQueueLevel: round2(
+        laneSamples[lane] > 0 ? laneTotals[lane].level / laneSamples[lane] : 0
+      ),
+      level2Percentage:
+        laneSamples[lane] > 0
+          ? Math.round((laneTotals[lane].level2 / laneSamples[lane]) * 1000) / 10
+          : 0,
+      samples: laneSamples[lane],
+    }));
+
+    let peakHour: number | null = null;
+    let peakPct = 0;
+    for (let hour = 0; hour < 24; hour += 1) {
+      const pct = hourCounts[hour] > 0 ? (hourLevel2[hour] / hourCounts[hour]) * 100 : 0;
+      if (pct > peakPct) {
+        peakPct = pct;
+        peakHour = hour;
+      }
+    }
+
+    const deviceStats = await getDeviceOnlineStats();
+    const laneSampleTotal = laneSamples.north + laneSamples.south + laneSamples.east;
+    const levelSum =
+      laneTotals.north.level + laneTotals.south.level + laneTotals.east.level;
+
+    return {
+      period: `${start} – ${end}`,
+      totalSamples: laneSampleTotal,
+      averageQueueLevel: round2(levelSum / laneSampleTotal),
+      perLane,
+      peakHour: peakHour !== null ? `${String(peakHour).padStart(2, "0")}:00 WIB` : null,
+      devicesOffline: deviceStats.offline,
+    };
+  } catch (error) {
+    console.error("AI history context failed:", error);
+    return null;
+  }
+}
+
 export async function getAiChatAnswer(
   question: string,
   ctx: AiRequestContext
 ): Promise<AiChatResponse> {
-  const [summary, anomalies, forecast] = await Promise.all([
+  const [summary, anomalies, forecast, history] = await Promise.all([
     getAiSummary(ctx),
     getAiAnomalies(ctx),
     getAiForecast({ ...ctx, hours: 6 }),
+    getAiHistoryContext(ctx),
   ]);
 
   const templateAnswer = buildTemplateAnswer(question, {
     summary,
     anomalies,
     forecast,
+    history,
   });
 
   const pageList = AI_PAGE_MAP.map(
@@ -905,9 +1005,10 @@ export async function getAiChatAnswer(
         "Kamu adalah asisten AI untuk sistem Adaptive Traffic Monitoring bernama ASTRAEA.",
         "Jawab dalam Bahasa Indonesia, singkat, jelas, dan ramah.",
         "Bila pengguna bertanya tentang cara menggunakan aplikasi/tutorial/panduan, jelaskan langkah-langkahnya dan sebutkan halaman yang relevan.",
+        "Jangan gunakan penulisan Markdown seperti **bold**, *italic*, atau [link](url) — gunakan teks biasa saja. Jika perlu menunjuk halaman, cukup tulis nama halaman dan path-nya, misal: Dashboard (/dashboard).",
         "Daftar halaman aplikasi:",
         pageList,
-        "Konteks data saat ini:",
+        "Konteks data pada rentang tanggal yang diminta pengguna:",
         JSON.stringify({
           summary: {
             overview: summary.overview,
@@ -919,6 +1020,8 @@ export async function getAiChatAnswer(
           anomalies: anomalies.anomalies,
           forecast: forecast.hours,
         }),
+        "Riwayat 7 hari terakhir (konteks tambahan bila data pada rentang yang diminta terbatas):",
+        JSON.stringify(history),
       ].join("\n");
 
       const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -971,10 +1074,13 @@ function buildTemplateAnswer(
     summary: AiSummary;
     anomalies: AiAnomalyResult;
     forecast: AiForecast;
+    history?: Awaited<ReturnType<typeof getAiHistoryContext>>;
   }
 ): string {
   const normalized = normalizeQuestion(question);
-  const { summary, anomalies, forecast } = data;
+  const { summary, anomalies, forecast, history } = data;
+
+  const rangeEmpty = summary.keyMetrics.totalSamples === 0;
 
   const congestedLane =
     LANE_NAMES.reduce((best, lane) => {
@@ -982,6 +1088,13 @@ function buildTemplateAnswer(
       const bestAvg = summary.lanes[best]?.averageQueueLevel ?? 0;
       return avg > bestAvg ? lane : best;
     }, LANE_NAMES[0]);
+
+  const congestedLaneFromHistory =
+    history && history.perLane.length > 0
+      ? history.perLane.reduce((best, lane) =>
+          lane.averageQueueLevel > best.averageQueueLevel ? lane : best
+        )
+      : null;
 
   if (
     intentMatch(normalized, [
@@ -997,9 +1110,19 @@ function buildTemplateAnswer(
     ])
   ) {
     const stats = summary.lanes[congestedLane];
-    return `Jalur paling padat saat ini adalah ${congestedLane.toUpperCase()} dengan rata-rata level antrean ${
-      stats?.averageQueueLevel ?? 0
-    } (level 2 = padat).${
+    const useHistory = rangeEmpty && history;
+    const laneLabel = useHistory && congestedLaneFromHistory
+      ? congestedLaneFromHistory.lane
+      : congestedLane.toUpperCase();
+    const laneStats = useHistory && congestedLaneFromHistory
+      ? congestedLaneFromHistory
+      : stats;
+    const periodNote = useHistory && history
+      ? ` (rata-rata ${history.period})`
+      : "";
+    return `Jalur paling padat${rangeEmpty ? " berdasarkan data 7 hari terakhir" : " saat ini"} adalah ${laneLabel} dengan rata-rata level antrean ${
+      laneStats?.averageQueueLevel ?? 0
+    } (level 2 = padat).${periodNote}${
       anomalies.summary.total > 0
         ? ` Terdapat ${anomalies.summary.total} anomali terdeteksi: ${anomalies.anomalies
             .slice(0, 2)
@@ -1022,6 +1145,9 @@ function buildTemplateAnswer(
   ) {
     if (summary.keyMetrics.peakHourLabel) {
       return `Kepadatan puncak terjadi sekitar pukul ${summary.keyMetrics.peakHourLabel} dengan ${summary.keyMetrics.peakHourLevel2Percentage}% sampel berada di level 2 (antrean panjang).`;
+    }
+    if (history?.peakHour) {
+      return `Data pada rentang yang diminta masih terbatas, namun berdasarkan 7 hari terakhir, kepadatan puncak terjadi sekitar pukul ${history.peakHour} (${history.perLane.length} jalur terpantau, ${history.totalSamples} sampel).`;
     }
     return "Data belum cukup untuk menentukan jam puncak pada periode ini.";
   }
