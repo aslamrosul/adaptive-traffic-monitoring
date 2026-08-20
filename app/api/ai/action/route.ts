@@ -1,7 +1,7 @@
 import { authOptions } from "@/lib/auth";
 import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { executeAiAction } from "@/lib/ai-actions";
+import { actionAllowedFor, executeAiAction } from "@/lib/ai-actions";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -19,14 +19,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const isAdmin = sessionUser.role === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Aksi konfigurasi hanya untuk admin" },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json().catch(() => ({}));
     const type = String(body.type || "").trim();
     const params = body.params || {};
@@ -35,6 +27,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Jenis aksi wajib diisi" },
         { status: 400 }
+      );
+    }
+
+    const role = sessionUser.role === "admin" ? "admin" : "operator";
+    if (!actionAllowedFor(type, role)) {
+      return NextResponse.json(
+        { success: false, error: "Anda tidak memiliki izin untuk aksi ini" },
+        { status: 403 }
       );
     }
 

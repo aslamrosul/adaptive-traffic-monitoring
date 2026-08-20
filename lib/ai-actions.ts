@@ -35,6 +35,32 @@ export interface AiActionExecutorContext {
 }
 
 // ---------------------------------------------------------------------------
+// Izin role per aksi
+// ---------------------------------------------------------------------------
+
+/**
+ * Operator boleh mengubah durasi lampu hijau dan profil sendiri.
+ * Aksi penambahan persimpangan/user dan pengaturan aplikasi khusus admin.
+ * update_profile (profil sendiri) boleh semua pengguna yang login.
+ */
+export function actionAllowedFor(type: string, role?: string): boolean {
+  const r = role === "admin" ? "admin" : "operator";
+  switch (type) {
+    case "update_profile":
+      return true;
+    case "set_green_duration":
+    case "apply_green_recommendations":
+      return r === "admin" || r === "operator";
+    case "add_intersection":
+    case "add_user":
+    case "update_settings":
+      return r === "admin";
+    default:
+      return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Deteksi intent aksi dari pertanyaan (rule-based)
 // ---------------------------------------------------------------------------
 
@@ -79,6 +105,58 @@ export function detectAiActionIntent(
 ): AiActionProposal | null {
   const normalized = question.toLowerCase();
   const intersectionId = ctx.intersectionId || null;
+
+  // 0. Ubah profil sendiri (nama, telepon, posisi, departemen, bio)
+  if (
+    /(ubah|ganti|edit|perbarui|update).*(nama|profil|profile|telepon|phone|posisi|jabatan|departemen|department|bio)|(nama|profil|profile).*(ubah|ganti|edit|perbarui|update)/i.test(
+      normalized
+    )
+  ) {
+    const fields: AiActionField[] = [
+      {
+        name: "name",
+        label: "Nama Lengkap",
+        type: "text",
+        required: false,
+        value: "",
+      },
+      {
+        name: "phone",
+        label: "No. Telepon",
+        type: "text",
+        required: false,
+        value: "",
+      },
+      {
+        name: "position",
+        label: "Posisi/Jabatan",
+        type: "text",
+        required: false,
+        value: "",
+      },
+      {
+        name: "department",
+        label: "Departemen",
+        type: "text",
+        required: false,
+        value: "",
+      },
+      {
+        name: "bio",
+        label: "Bio",
+        type: "text",
+        required: false,
+        value: "",
+      },
+    ];
+    return {
+      type: "update_profile",
+      label: "Ubah Profil Saya",
+      description:
+        "Memperbarui data profil Anda sendiri (nama, telepon, posisi, departemen, bio). Kolom yang dikosongkan tidak akan diubah.",
+      fields,
+    };
+  }
 
   // 1. Terapkan rekomendasi durasi hijau (level 0/1/2)
   if (
@@ -563,6 +641,69 @@ export async function executeAiAction(
       return {
         message: `Pengaturan berhasil disimpan: ${messages.join(", ")}.`,
         data: appSettings,
+      };
+    }
+
+    case "update_profile": {
+      const dbUser = await dynamo.send(
+        new GetCommand({
+          TableName: awsTables.users,
+          Key: { email: user.email.toLowerCase() },
+        })
+      );
+      if (!dbUser.Item) throw new Error("Akun tidak ditemukan");
+
+      const current = dbUser.Item;
+      const patch: Record<string, any> = {};
+      const setIfProvided = (key: string, raw: any) => {
+        if (raw !== undefined && raw !== null && String(raw).trim() !== "") {
+          patch[key] = String(raw).trim();
+        }
+      };
+
+      setIfProvided("name", params.name);
+      setIfProvided("phone", params.phone);
+      setIfProvided("position", params.position);
+      setIfProvided("department", params.department);
+      setIfProvided("bio", params.bio);
+
+      if (Object.keys(patch).length === 0) {
+        throw new Error("Tidak ada data profil yang diubah");
+      }
+
+      const updated = {
+        ...current,
+        ...patch,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await dynamo.send(
+        new PutCommand({
+          TableName: awsTables.users,
+          Item: updated,
+        })
+      );
+
+      await createActivityLog({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        type: "profile.update",
+        action: "AI memperbarui profil pengguna",
+        description: `Memperbarui profil sendiri: ${Object.keys(patch).join(", ")}`,
+        metadata: { changedFields: Object.keys(patch), source: "ai-assistant" },
+      }).catch(() => {});
+
+      const parts: string[] = [];
+      if (patch.name) parts.push(`nama diubah menjadi "${patch.name}"`);
+      if (patch.phone) parts.push(`telepon diubah menjadi ${patch.phone}`);
+      if (patch.position) parts.push(`posisi diubah menjadi ${patch.position}`);
+      if (patch.department) parts.push(`departemen diubah menjadi ${patch.department}`);
+      if (patch.bio) parts.push("biografi diperbarui");
+
+      return {
+        message: `Profil berhasil diperbarui: ${parts.join(", ")}.`,
+        data: updated,
       };
     }
 

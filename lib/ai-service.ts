@@ -20,7 +20,7 @@ import {
   getWibHour,
   wibDateRangeToUtc,
 } from "@/lib/timezone";
-import { detectAiActionIntent } from "@/lib/ai-actions";
+import { actionAllowedFor, detectAiActionIntent } from "@/lib/ai-actions";
 
 const LANE_NAMES: TrafficLane[] = [...TRAFFIC_LANES];
 
@@ -146,6 +146,7 @@ export interface AiRequestContext {
 
 export interface AiChatOptions {
   isAdmin?: boolean;
+  role?: string;
   userName?: string;
 }
 
@@ -993,8 +994,12 @@ export async function getAiChatAnswer(
   ]);
 
   const isAdmin = !!opts.isAdmin;
+  const role = opts.role === "admin" ? "admin" : "operator";
   const userName = opts.userName || "";
   const actionProposal = detectAiActionIntent(question, summary, ctx);
+  const canDoAction = actionProposal
+    ? actionAllowedFor(actionProposal.type, role)
+    : false;
 
   const templateAnswer = buildTemplateAnswer(question, {
     summary,
@@ -1003,6 +1008,8 @@ export async function getAiChatAnswer(
     history,
     actionProposal,
     isAdmin,
+    role,
+    canDoAction,
   });
 
   const pageList = AI_PAGE_MAP.map(
@@ -1017,14 +1024,15 @@ export async function getAiChatAnswer(
         process.env.AI_LLM_BASE_URL || "https://api.openai.com/v1";
       const model = process.env.AI_LLM_MODEL || "gpt-4o-mini";
 
-      const roleLine = isAdmin
-        ? `Pengguna saat ini adalah ADMIN (${userName || "pengguna"}). Ia memiliki izin penuh untuk mengubah konfigurasi sistem.`
-        : `Pengguna saat ini BUKAN admin (${userName || "pengguna"}). Ia hanya bisa membaca data dan rekomendasi, TIDAK boleh mengubah konfigurasi apa pun.`;
+      const roleLine =
+        role === "admin"
+          ? `Pengguna saat ini adalah ADMIN (${userName || "pengguna"}). Ia memiliki izin penuh untuk mengubah konfigurasi sistem.`
+          : `Pengguna saat ini adalah OPERATOR (${userName || "pengguna"}). Ia BOLEH mengubah durasi lampu hijau pada perangkat dan memperbarui profilnya sendiri, tetapi TIDAK boleh menambah persimpangan/user atau mengubah pengaturan aplikasi (khusus admin).`;
 
       const actionLine = actionProposal
-        ? isAdmin
+        ? canDoAction
           ? `Pengguna ingin melakukan aksi: "${actionProposal.label}" — ${actionProposal.description}. Jelaskan ringkas apa yang akan Anda lakukan, lalu akhiri dengan kalimat singkat menawarkan konfirmasi, misalnya: "Apakah Anda ingin saya terapkan?"`
-          : `Pengguna meminta mengubah konfigurasi, tetapi ia bukan admin. Tolak dengan ramah dan jelaskan bahwa hanya admin yang dapat melakukan perubahan konfigurasi.`
+          : `Pengguna meminta aksi "${actionProposal.label}", tetapi ia tidak diizinkan untuk itu (khusus admin). Tolak dengan ramah dan jelaskan alasannya.`
         : "";
 
       const systemPrompt = [
@@ -1080,8 +1088,8 @@ export async function getAiChatAnswer(
             source: "ai",
             actions: getSuggestedActions(question, answer),
             isAdmin,
-            role: isAdmin ? "admin" : "operator",
-            actionProposal: isAdmin ? actionProposal : null,
+            role,
+            actionProposal: canDoAction ? actionProposal : null,
           };
         }
       } else {
@@ -1099,8 +1107,8 @@ export async function getAiChatAnswer(
     source: "template",
     actions: getSuggestedActions(question, templateAnswer),
     isAdmin,
-    role: isAdmin ? "admin" : "operator",
-    actionProposal: isAdmin ? actionProposal : null,
+    role,
+    actionProposal: canDoAction ? actionProposal : null,
   };
 }
 
@@ -1113,17 +1121,19 @@ function buildTemplateAnswer(
     history?: Awaited<ReturnType<typeof getAiHistoryContext>>;
     actionProposal?: import("@/lib/ai-actions").AiActionProposal | null;
     isAdmin?: boolean;
+    role?: string;
+    canDoAction?: boolean;
   }
 ): string {
   const normalized = normalizeQuestion(question);
-  const { summary, anomalies, forecast, history, actionProposal, isAdmin } = data;
+  const { summary, anomalies, forecast, history, actionProposal, isAdmin, role, canDoAction } = data;
 
-  // Aksi konfigurasi: admin vs non-admin
+  // Aksi: cek izin role
   if (actionProposal) {
-    if (isAdmin) {
+    if (canDoAction) {
       return `${actionProposal.label}: ${actionProposal.description}\nApakah Anda ingin saya terapkan?`;
     }
-    return `Perubahan konfigurasi (seperti ${actionProposal.label.toLowerCase()}) hanya dapat dilakukan oleh admin. Silakan hubungi admin atau gunakan menu terkait secara langsung.`;
+    return `Aksi "${actionProposal.label}" hanya dapat dilakukan oleh admin. Sebagai ${role === "admin" ? "admin" : "operator"}, Anda tidak memiliki izin untuk aksi ini. Silakan hubungi admin atau gunakan menu terkait secara langsung.`;
   }
 
   const rangeEmpty = summary.keyMetrics.totalSamples === 0;

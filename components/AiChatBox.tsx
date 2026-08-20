@@ -40,6 +40,7 @@ interface AiChatBoxProps {
   endDate?: string;
   heightClass?: string;
   showQuickNav?: boolean;
+  chatgptStyle?: boolean;
 }
 
 const QUICK_NAV: { labelKey: string; href: string }[] = [
@@ -56,6 +57,7 @@ export default function AiChatBox({
   endDate,
   heightClass = "h-80",
   showQuickNav = true,
+  chatgptStyle = false,
 }: AiChatBoxProps) {
   const t = useT();
   const locale = useLocale();
@@ -394,17 +396,27 @@ export default function AiChatBox({
         <div ref={bottomRef} />
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div
+        className={
+          chatgptStyle
+            ? "mt-3 flex items-center gap-1.5 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm focus-within:border-blue-400 focus-within:shadow-md"
+            : "mt-3 flex items-center gap-2"
+        }
+      >
         {micSupported && (
           <button
             type="button"
             onClick={toggleMic}
             title={t("ai.chat.mic")}
             aria-label={t("ai.chat.mic")}
-            className={`relative shrink-0 rounded-xl p-2 transition-colors ${
+            className={`relative shrink-0 transition-colors ${
+              chatgptStyle
+                ? "flex h-9 w-9 items-center justify-center rounded-full hover:bg-slate-100"
+                : "rounded-xl p-2"
+            } ${
               listening
                 ? "bg-red-500 text-white hover:bg-red-600"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                : "text-slate-600"
             }`}
           >
             <span className="material-symbols-outlined text-sm">
@@ -431,13 +443,21 @@ export default function AiChatBox({
               ? t("ai.chat.listening")
               : t("ai.chat.placeholder")
           }
-          className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className={
+            chatgptStyle
+              ? "flex-1 border-none bg-transparent px-2 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+              : "flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          }
         />
         <button
           type="button"
           onClick={() => void send()}
           disabled={thinking || !input.trim()}
-          className="rounded-xl bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className={
+            chatgptStyle
+              ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:opacity-40"
+              : "rounded-xl bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          }
         >
           <span className="material-symbols-outlined text-sm">send</span>
         </button>

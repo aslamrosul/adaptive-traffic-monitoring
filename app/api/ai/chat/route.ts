@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       },
       {
         isAdmin,
+        role: sessionUser?.role || "operator",
         userName: sessionUser?.name || sessionUser?.email || "",
       }
     );
