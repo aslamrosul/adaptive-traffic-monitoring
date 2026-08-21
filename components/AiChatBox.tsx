@@ -291,7 +291,7 @@ export default function AiChatBox({
             <div className="flex h-full flex-col items-center justify-center gap-6 text-center max-w-2xl mx-auto px-4 py-8">
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-150 animate-pulse">
                 <span className="material-symbols-outlined text-2xl font-bold">
-                  auto_awesome
+                  smart_toy
                 </span>
               </div>
               
@@ -300,7 +300,7 @@ export default function AiChatBox({
                   Halo! Ada yang bisa saya bantu hari ini?
                 </h2>
                 <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                  Asisten AI AASTREA siap membantu memantau lalu lintas, merekomendasikan durasi lampu, mendeteksi anomali, atau memperbarui profil Anda secara instan.
+                  Asisten AI ASTRAEA siap membantu memantau lalu lintas, merekomendasikan durasi lampu, mendeteksi anomali, atau memperbarui profil Anda secara instan.
                 </p>
               </div>
 
@@ -409,7 +409,7 @@ export default function AiChatBox({
                 <div className="flex items-start gap-4 w-full max-w-full">
                   <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow shadow-indigo-100">
                     <span className="material-symbols-outlined text-[15px] font-semibold">
-                      auto_awesome
+                      smart_toy
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">

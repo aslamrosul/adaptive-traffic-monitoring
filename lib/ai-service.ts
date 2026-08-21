@@ -171,8 +171,8 @@ function toBool(value: any): boolean {
 
 function resolveRange(ctx: AiRequestContext) {
   const today = getWibDateValue();
-  const startDate = ctx.startDate || today;
-  const endDate = ctx.endDate || startDate;
+  const startDate = ctx.startDate || addDaysToDateValue(today, -150);
+  const endDate = ctx.endDate || today;
   const { startUtc, endUtc } = wibDateRangeToUtc(startDate, endDate);
   return { startDate, endDate, startUtc, endUtc };
 }
