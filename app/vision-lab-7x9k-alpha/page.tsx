@@ -53,6 +53,41 @@ export default function VisionLabPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const simRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sendCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const frameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Loop: capture frame dari video -> JPEG base64 -> kirim ke WS YOLOv8 (throttle 10 FPS)
+  const startFrameSender = useCallback(() => {
+    if (frameTimerRef.current) return;
+    if (!sendCanvasRef.current && typeof document !== "undefined") {
+      sendCanvasRef.current = document.createElement("canvas");
+    }
+    const canvas = sendCanvasRef.current;
+    frameTimerRef.current = setInterval(() => {
+      const video = videoRef.current;
+      const ws = wsRef.current;
+      if (!canvas || !video || !ws || ws.readyState !== WebSocket.OPEN) return;
+      if (video.readyState < 2 || !video.videoWidth) return;
+      const W = 640;
+      const H = Math.round((video.videoHeight / video.videoWidth) * W) || 480;
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, W, H);
+      try {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        ws.send(JSON.stringify({ type: "frame", data: dataUrl }));
+      } catch { /* ignore */ }
+    }, 100); // ~10 FPS
+  }, []);
+
+  const stopFrameSender = useCallback(() => {
+    if (frameTimerRef.current) {
+      clearInterval(frameTimerRef.current);
+      frameTimerRef.current = null;
+    }
+  }, []);
 
   const drawBoxes = useCallback((drawBoxes: DetectionBox[]) => {
     const canvas = canvasRef.current;
@@ -158,35 +193,133 @@ export default function VisionLabPage() {
       s.getTracks().forEach((t) => t.stop());
       videoRef.current.srcObject = null;
     }
+    const w = window as any;
+    if (w.hlsInstance) {
+      try { w.hlsInstance.destroy(); } catch { /* noop */ }
+      w.hlsInstance = null;
+    }
     if (videoRef.current) videoRef.current.src = "";
     if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
+    stopFrameSender();
     stopSimulated();
     setState("idle");
     setStreamLabel("Not connected");
     clearBoxes();
     setStats({ totalVehicles: 0, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, fps: 0, inferenceMs: 0 });
-  }, [stopSimulated, clearBoxes]);
+  }, [stopSimulated, clearBoxes, stopFrameSender]);
+
+  const destroyHls = useCallback(() => {
+    const w = window as any;
+    if (w.hlsInstance) {
+      try { w.hlsInstance.destroy(); } catch { /* noop */ }
+      w.hlsInstance = null;
+    }
+  }, []);
+
+  const loadHlsScript = useCallback((): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const w = window as any;
+      if (w.Hls) { resolve(); return; }
+      if (document.querySelector('script[data-hls]')) {
+        const check = setInterval(() => {
+          if ((window as any).Hls) { clearInterval(check); resolve(); }
+        }, 150);
+        setTimeout(() => { clearInterval(check); reject(new Error("hls.js gagal dimuat")); }, 10000);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js";
+      script.dataset.hls = "true";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("hls.js gagal dimuat (offline?)"));
+      document.head.appendChild(script);
+    });
+  }, []);
 
   const startRtsp = useCallback(() => {
     if (!rtspUrl) {
-      setErrorMsg("URL RTSP harus diisi");
+      setErrorMsg("URL stream harus diisi");
       return;
     }
     setErrorMsg(null);
+    destroyHls();
     setState("connecting");
-    setStreamLabel(`Menunggu stream dari ${rtspUrl}...`);
-    if (videoRef.current) {
-      videoRef.current.src = rtspUrl;
-      videoRef.current.play().then(() => {
-        setState("streaming");
-        setStreamLabel(`RTSP Stream`);
-        if (!wsUrl) startSimulated();
-      }).catch(() => {
-        setState("error");
-        setErrorMsg("Browser tidak bisa memutar RTSP langsung. Diperlukan server transcode (e.g. MediaMTX). Gunakan URL HLS/WebRTC yang sudah di-transcode.");
-      });
+    setStreamLabel(`Menyambungkan ke ${rtspUrl}...`);
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onPlaying = (label: string) => {
+      setState("streaming");
+      setStreamLabel(label);
+      if (!wsUrl) startSimulated();
+    };
+
+    // RTSP mentah tidak bisa diputar browser — wajib transcode dulu
+    if (/^rtsp:\/\//i.test(rtspUrl)) {
+      setState("error");
+      setStreamLabel("RTSP butuh transcode");
+      setErrorMsg(
+        "Browser tidak bisa memutar rtsp:// langsung. Jalankan MediaMTX + ffmpeg di server (lihat docs/YOLOV8_SETUP.md bagian 5), lalu gunakan URL HLS: http://<host>:8888/camera1/index.m3u8"
+      );
+      return;
     }
-  }, [rtspUrl, wsUrl, startSimulated]);
+
+    // HLS (.m3u8): pakai hls.js di Chrome/Firefox, native di Safari
+    if (/\.m3u8/i.test(rtspUrl)) {
+      loadHlsScript()
+        .then(() => {
+          const Hls = (window as any).Hls;
+          if (Hls && Hls.isSupported()) {
+            const hls = new Hls({
+              lowLatencyMode: true,
+              liveSyncDurationCount: 3,
+              maxBufferLength: 6,
+              backBufferLength: 10,
+            });
+            (window as any).hlsInstance = hls;
+            hls.loadSource(rtspUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              video.play().then(() => onPlaying("HLS Stream")).catch(() => {
+                setState("error");
+                setErrorMsg("Autoplay diblokir browser — klik tombol sekali lagi.");
+              });
+            });
+            hls.on(Hls.Events.ERROR, (_e: unknown, data: any) => {
+              if (data?.fatal) {
+                setState("error");
+                setErrorMsg(`HLS error (${data.details}). Pastikan ffmpeg/MediaMTX aktif & URL benar.`);
+              }
+            });
+          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+            video.src = rtspUrl;
+            video.play().then(() => onPlaying("HLS Stream (native)")).catch(() => {
+              setState("error");
+              setErrorMsg("Gagal memutar HLS native.");
+            });
+          } else {
+            setState("error");
+            setErrorMsg("Browser ini tidak mendukung HLS.");
+          }
+        })
+        .catch((e) => {
+          setState("error");
+          setErrorMsg(e.message || "Gagal memuat hls.js");
+        });
+      return;
+    }
+
+    // Direct play untuk mp4/webm/jpg mjpeg sederhana
+    video.src = rtspUrl;
+    video.play()
+      .then(() => onPlaying(/\.mjpg|\/stream/i.test(rtspUrl) ? "MJPEG/HTTP Stream" : "HTTP Video"))
+      .catch(() => {
+        setState("error");
+        setErrorMsg(
+          "Tidak dapat memutar URL tersebut. Untuk MJPEG ESP32-CAM gunakan http://<ip-cam>:81/stream; untuk CCTV gunakan HLS hasil transcode."
+        );
+      });
+  }, [rtspUrl, wsUrl, startSimulated, destroyHls, loadHlsScript]);
 
   const startUpload = useCallback(() => {
     const file = fileRef.current?.files?.[0];
@@ -208,7 +341,12 @@ export default function VisionLabPage() {
     try {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
-      ws.onopen = () => { stopSimulated(); setStreamLabel(s => s + " [YOLOv8 connected]"); };
+      ws.onopen = () => {
+        stopSimulated();
+        startFrameSender();
+        ws.send(JSON.stringify({ type: "config", confidence }));
+        setStreamLabel(s => s + " [YOLOv8 connected]");
+      };
       ws.onmessage = (ev) => {
         try {
           const data = JSON.parse(ev.data);
@@ -227,17 +365,21 @@ export default function VisionLabPage() {
           }
         } catch { /* ignore */ }
       };
-      ws.onclose = () => { setStreamLabel(s => s.replace(" [YOLOv8 connected]", "")); };
+      ws.onclose = () => {
+        stopFrameSender();
+        setStreamLabel(s => s.replace(" [YOLOv8 connected]", ""));
+      };
       ws.onerror = () => { setErrorMsg("WebSocket error — periksa URL server YOLOv8"); };
     } catch (err: any) {
       setErrorMsg("Gagal koneksi WebSocket: " + err.message);
     }
-  }, [wsUrl, confidence, detectionEnabled, drawBoxes, clearBoxes, stopSimulated]);
+  }, [wsUrl, confidence, detectionEnabled, drawBoxes, clearBoxes, stopSimulated, startFrameSender, stopFrameSender]);
 
   const disconnectWs = useCallback(() => {
+    stopFrameSender();
     if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
     setStreamLabel((s) => s.replace(" [YOLOv8 connected]", ""));
-  }, []);
+  }, [stopFrameSender]);
 
   useEffect(() => () => { stopStream(); disconnectWs(); }, [stopStream, disconnectWs]);
 
@@ -368,14 +510,14 @@ export default function VisionLabPage() {
                     type="text"
                     value={rtspUrl}
                     onChange={(e) => setRtspUrl(e.target.value)}
-                    placeholder="rtsp://... atau http://.../stream.m3u8"
+                    placeholder="http://host:8888/camera1/index.m3u8 (HLS)"
                     className="w-full rounded-lg bg-slate-900 border border-slate-600 px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
                   />
                   <div className="flex gap-2">
                     <button onClick={startRtsp} className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700">Connect</button>
                     <button onClick={stopStream} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700">Stop</button>
                   </div>
-                  <p className="text-[10px] text-slate-500">Browser tidak mendukung RTSP native. Gunakan MediaMTX untuk transcoding ke HLS/WebRTC.</p>
+                  <p className="text-[10px] text-slate-500">HLS (.m3u8) diputar via hls.js. RTSP mentah wajib di-transcode MediaMTX+ffmpeg dulu (docs/YOLOV8_SETUP.md §5). MJPEG ESP32-CAM: http://ip-cam:81/stream</p>
                 </div>
               )}
 
@@ -478,6 +620,10 @@ export default function VisionLabPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-400">Browser Webcam</span>
                   <span className="text-emerald-400 font-bold">Available</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">HLS (hls.js)</span>
+                  <span className="text-emerald-400 font-bold">Supported</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">RTSP Direct</span>

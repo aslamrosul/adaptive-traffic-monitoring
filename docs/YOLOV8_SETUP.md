@@ -307,11 +307,21 @@ tar xzf mediamtx_v1.9.0_linux_amd64.tar.gz
 # Default: RTSP port 8554, HLS port 8888, WebRTC port 8889
 ```
 
-Publish stream dari kamera RTSP:
+Publish stream dari kamera (ESP32-CAM MJPEG atau CCTV RTSP). **Penting: wajib re-encode ke H.264** — browser tidak bisa memutar HLS berisi MJPEG mentah:
 
 ```bash
-ffmpeg -i "rtsp://user:pass@camera-ip:554/stream" -c copy -f rtsp rtsp://localhost:8554/camera1
+# Dari ESP32-CAM (MJPEG HTTP):
+ffmpeg -f mjpeg -i "http://<ip-cam>:81/stream" \
+  -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p \
+  -an -f rtsp rtsp://localhost:8554/camera1
+
+# Dari CCTV RTSP:
+ffmpeg -rtsp_transport tcp -i "rtsp://user:pass@camera-ip:554/stream" \
+  -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p \
+  -an -f rtsp rtsp://localhost:8554/camera1
 ```
+
+> Jangan pakai `-c copy` untuk input MJPEG — hasil HLS-nya tidak akan bisa diputar di Chrome/Firefox.
 
 Akses di browser:
 - HLS: `http://<EC2-IP>:8888/camera1/index.m3u8`
