@@ -65,6 +65,7 @@ export interface AiLaneStats {
 export interface AiSummary {
   generatedAt: string;
   intersectionId: string | null;
+  deviceIds: string[];
   period: { startDate: string; endDate: string };
   dataStatus: { itemCount: number; hasEnoughData: boolean };
   overview: string;
@@ -279,6 +280,14 @@ export async function getAiSummary(
     east: 0,
   };
 
+  const deviceIdSet = new Set<string>();
+  const rawDeviceIdOf = (item: any): string =>
+    String(item?.device_id || item?.deviceId || "").trim();
+
+  if (newest) {
+    const id = String(newest.deviceId || "").trim();
+    if (id) deviceIdSet.add(id);
+  }
   for (const item of items) {
     for (const lane of LANE_NAMES) {
       const level = Number(item[`${lane}_density_level`] ?? 0);
@@ -291,7 +300,12 @@ export async function getAiSummary(
       if (level >= 2) laneTotals[lane].level2 += 1;
       laneSamples[lane] += 1;
     }
+
+    const rawId = rawDeviceIdOf(item);
+    if (rawId) deviceIdSet.add(rawId);
   }
+
+  const deviceIds = Array.from(deviceIdSet);
 
   const lanes: Partial<Record<TrafficLane, AiLaneStats>> = {};
   let totalQueueLevel = 0;
@@ -460,6 +474,7 @@ export async function getAiSummary(
   return {
     generatedAt: new Date().toISOString(),
     intersectionId,
+    deviceIds,
     period: { startDate, endDate },
     dataStatus: { itemCount: totalSamples, hasEnoughData },
     overview,

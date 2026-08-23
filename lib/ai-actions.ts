@@ -391,6 +391,32 @@ export function detectAiActionIntent(
 }
 
 function defaultDeviceId(summary: AiSummary): string | null {
+  const ids = Array.isArray(summary.deviceIds)
+    ? summary.deviceIds.filter(Boolean)
+    : [];
+
+  if (ids.length > 0) {
+    if (summary.intersectionId) {
+      const inter = summary.intersectionId;
+      const direct =
+        ids.find((id) => id.includes(inter)) ||
+        ids.find((id) => inter.includes(id));
+      if (direct) return direct;
+
+      // Cocokkan angka akhiran: SIMPANG_TALUN_01 -> ESP32_TRAFFIC_01
+      const tail = (s: string) => {
+        const m = s.match(/(\d+)[^0-9]*$/);
+        return m ? m[1].replace(/^0+(?=\d)/, "") : null;
+      };
+      const interTail = tail(inter);
+      if (interTail) {
+        const byTail = ids.find((id) => tail(id) === interTail);
+        if (byTail) return byTail;
+      }
+    }
+    return ids[0];
+  }
+
   return summary.intersectionId ? `ESP32_${summary.intersectionId}` : null;
 }
 
