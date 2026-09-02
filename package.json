@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "postbuild": "node scripts/copy-standalone-assets.mjs",
+    "deploy": "npm run build && pm2 restart adaptive-traffic-monitoring",
     "start": "next start",
     "lint": "eslint",
     "db:check": "npx tsx scripts/check-database.ts",

@@ -39,8 +39,10 @@ export default function VisionLabPage() {
   const [state, setState] = useState<DetectionState>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rtspUrl, setRtspUrl] = useState("");
-  const [wsUrl, setWsUrl] = useState("");
-  const [confidence, setConfidence] = useState(0.5);
+  const [wsUrl, setWsUrl] = useState(
+    process.env.NEXT_PUBLIC_YOLO_WS_URL || "ws://54.206.39.219:8080/ws"
+  );
+  const [confidence, setConfidence] = useState(0.3);
   const [detectionEnabled, setDetectionEnabled] = useState(true);
   const [boxes, setBoxes] = useState<DetectionBox[]>([]);
   const [stats, setStats] = useState<DetectionStats>({
@@ -68,7 +70,7 @@ export default function VisionLabPage() {
       const ws = wsRef.current;
       if (!canvas || !video || !ws || ws.readyState !== WebSocket.OPEN) return;
       if (video.readyState < 2 || !video.videoWidth) return;
-      const W = 640;
+      const W = 1280;
       const H = Math.round((video.videoHeight / video.videoWidth) * W) || 480;
       canvas.width = W;
       canvas.height = H;
@@ -545,7 +547,7 @@ export default function VisionLabPage() {
                 type="text"
                 value={wsUrl}
                 onChange={(e) => setWsUrl(e.target.value)}
-                placeholder="ws://ec2-host:8080/ws"
+                placeholder="ws://54.206.39.219:8080/ws"
                 className="w-full rounded-lg bg-slate-900 border border-slate-600 px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
               />
               <div className="flex gap-2">
