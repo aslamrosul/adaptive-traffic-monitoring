@@ -326,6 +326,7 @@ export default function DashboardPage() {
     west: "",
   });
   const [camView, setCamView] = useState<"all" | CamLane>("all");
+  const [isSimOpen, setIsSimOpen] = useState(true);
   const [camSource, setCamSource] = useState<Record<CamLane, "mjpeg" | "hls" | "webcam" | "upload">>({
     north: "mjpeg",
     south: "mjpeg",
@@ -365,8 +366,15 @@ export default function DashboardPage() {
       if (savedView) setCamView(savedView);
       const savedSource = localStorage.getItem("dashboard2_camSource");
       if (savedSource) setCamSource(JSON.parse(savedSource));
+      const savedSim = localStorage.getItem("dashboard_simOpen");
+      if (savedSim !== null) setIsSimOpen(savedSim === "true");
     } catch {}
   }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("dashboard_simOpen", String(isSimOpen));
+    } catch {}
+  }, [isSimOpen]);
   useEffect(() => {
     localStorage.setItem("dashboard2_camUrls", JSON.stringify(camUrls));
   }, [camUrls]);
@@ -619,12 +627,7 @@ export default function DashboardPage() {
 
             <section className="grid grid-cols-1 items-start gap-4 lg:gap-6 xl:grid-cols-12">
               <div className="space-y-4 lg:space-y-6 xl:col-span-8">
-                <TrafficRoadSimulation
-                  key={realtimeData?.deviceId || selectedIntersection}
-                  data={realtimeData}
-                />
-
-                {/* ===== CAMERA LIVE MULTI-JALUR - EKSPERIMEN DASHBOARD2 ===== */}
+                {/* ===== CAMERA LIVE MULTI-JALUR (di atas, biar langsung ke kamera) ===== */}
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -820,6 +823,39 @@ export default function DashboardPage() {
                           Selesai
                         </button>
                       </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* ===== SIMULASI JALAN (bisa tutup/buka, logika tidak diubah) ===== */}
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Simulasi Jalan
+                      </p>
+                      <h2 className="text-lg font-bold text-slate-900">
+                        {selectedIntersectionName} — Animasi Lalu Lintas
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSimOpen((v) => !v)}
+                      aria-expanded={isSimOpen}
+                      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {isSimOpen ? "expand_less" : "expand_more"}
+                      </span>
+                      {isSimOpen ? "Tutup" : "Buka"}
+                    </button>
+                  </div>
+                  {isSimOpen && (
+                    <div className="mt-3">
+                      <TrafficRoadSimulation
+                        key={realtimeData?.deviceId || selectedIntersection}
+                        data={realtimeData}
+                      />
                     </div>
                   )}
                 </section>
