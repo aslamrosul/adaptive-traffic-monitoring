@@ -1411,6 +1411,10 @@ void messageReceived(
 
   if (topicString == topicYolo() || topicString == topicCamYoloData())
   {
+    // Sensor mode murni: abaikan data YOLO agar count HC-SR04 tidak tertimpa
+    if (!useYoloMode) {
+      return;
+    }
     // YOLO AWS bisa kirim 2 format:
     // 1) {"totalVehicles":3} (dari server_detect_http_patched)
     // 2) {"north_vehicle_count":1,"south_vehicle_count":0,"east_vehicle_count":10, ...} (dari mqtt_bridge CAM_YOLO_01)

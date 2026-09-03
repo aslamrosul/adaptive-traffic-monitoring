@@ -249,6 +249,7 @@ bool adaptiveMode = true;
 bool useYoloMode = true;
 int yoloTotalVehicles = 0;
 unsigned long lastYoloAt = 0;
+bool yoloHasPerLane = false;
 
 // ============================================================
 // AUTOMATIC CYCLE STATE
@@ -753,17 +754,26 @@ void readRealSensorData()
   bool southCountDetected = isUltrasonicDetected(southDistanceCm);
   bool eastCountDetected = isUltrasonicDetected(eastDistanceCm);
 
+  int prevNorthCount = northCount;
+  int prevSouthCount = southCount;
+  int prevEastCount = eastCount;
   bool vehicleCountChanged = false;
   if (useYoloMode) {
-    // YOLO mode: count & density sudah diupdate dari MQTT yolo topic, jangan overwrite
-    // tapi tetap update northCount dari yoloTotalVehicles (bagi rata kalau perlu)
-    if (millis() - lastYoloAt < 15000) { // data YOLO masih fresh <15 detik
+    // YOLO mode: jika sudah ada data per-lane dari CAM_YOLO_01, JANGAN overwrite
+    // (handler sudah set north/south/east + density). Hanya fallback total bila
+    // belum ada per-lane (mis. format {"totalVehicles":3} saja).
+    if (!yoloHasPerLane && millis() - lastYoloAt < 15000) { // data YOLO masih fresh <15 detik
       northCount = yoloTotalVehicles;
+      southCount = 0;
+      eastCount = 0;
       // mapping sederhana total -> density (sesuaikan threshold jalan kamu)
       int yoloDensity = yoloTotalVehicles >= 8 ? 2 : yoloTotalVehicles >= 3 ? 1 : 0;
       northDensityLevel = yoloDensity;
       southDensityLevel = yoloDensity;
       eastDensityLevel = yoloDensity;
+    }
+    if (northCount != prevNorthCount || southCount != prevSouthCount || eastCount != prevEastCount) {
+      vehicleCountChanged = true;
     }
   } else {
     vehicleCountChanged = updateVehicleCount(
@@ -1330,7 +1340,7 @@ void sendTelemetry()
 
   doc["dummy_mode"] = false;
   doc["sensor_mode"] = true;
-  doc["vehicle_count_source"] = "hcsr04";
+  doc["vehicle_count_source"] = "yolo";
 
   doc["wifi_rssi"] = WiFi.RSSI();
   doc["uptime_s"] = millis() / 1000;
@@ -1421,6 +1431,7 @@ void messageReceived(
         int total = yoloDoc["totalVehicles"] | yoloDoc["stats"]["totalVehicles"] | -1;
         if (total >= 0) {
           yoloTotalVehicles = total;
+          yoloHasPerLane = false;
           lastYoloAt = millis();
           Serial.print("YOLO update totalVehicles=");
           Serial.print(total);
@@ -1439,6 +1450,7 @@ void messageReceived(
         southDensityLevel = yoloDoc["south_density_level"] | southDensityLevel;
         eastDensityLevel = yoloDoc["east_density_level"] | eastDensityLevel;
         yoloTotalVehicles = northCount + southCount + eastCount;
+        yoloHasPerLane = true;
         lastYoloAt = millis();
         Serial.print("CAM_YOLO update N=");
         Serial.print(northCount);
