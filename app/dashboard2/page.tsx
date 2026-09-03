@@ -428,6 +428,9 @@ export default function DashboardPage() {
   const yoloSendCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [yoloBoxes, setYoloBoxes] = useState<Record<CamLane, { label: string; confidence: number; x: number; y: number; w: number; h: number; color: string }[]>>({ north: [], south: [], east: [], west: [] });
   const [yoloStats, setYoloStats] = useState<Record<CamLane, { totalVehicles: number; fps: number }>>({ north: { totalVehicles: 0, fps: 0 }, south: { totalVehicles: 0, fps: 0 }, east: { totalVehicles: 0, fps: 0 }, west: { totalVehicles: 0, fps: 0 } });
+  const [yoloLastAt, setYoloLastAt] = useState<Record<CamLane, number>>({ north: 0, south: 0, east: 0, west: 0 });
+  // Sumber data simulasi jalan: sensor (MQTT/ESP32) atau kamera (YOLO browser)
+  const [simSource, setSimSource] = useState<"auto" | "sensor" | "camera">("auto");
 
   const drawYoloBoxes = (lane: CamLane, boxes: typeof yoloBoxes[CamLane]) => {
     const canvas = yoloCanvasRefs.current[lane];
@@ -502,7 +505,10 @@ export default function DashboardPage() {
           const colorMap: Record<string, string> = { car: "#3b82f6", bus: "#8b5cf6", truck: "#f59e0b", motorcycle: "#10b981", bicycle: "#ec4899" };
           const boxes = data.detections.map((d: any) => ({ label: d.label, confidence: d.confidence, x: d.x, y: d.y, w: d.w, h: d.h, color: colorMap[d.label] || "#3b82f6" }));
           setYoloBoxes((s) => ({ ...s, [lane]: boxes }));
-          if (data.stats) setYoloStats((s) => ({ ...s, [lane]: { totalVehicles: data.stats.totalVehicles || 0, fps: data.stats.fps || 0 } }));
+          if (data.stats) {
+            setYoloStats((s) => ({ ...s, [lane]: { totalVehicles: data.stats.totalVehicles || 0, fps: data.stats.fps || 0 } }));
+            setYoloLastAt((s) => ({ ...s, [lane]: Date.now() }));
+          }
           drawYoloBoxes(lane, boxes);
         }
       } catch {}
@@ -521,6 +527,49 @@ export default function DashboardPage() {
     setYoloBoxes((s) => ({ ...s, [lane]: [] }));
   };
   useEffect(() => () => { ALL_LANES.forEach((l) => disconnectYoloLane(l as CamLane)); }, []);
+
+  // Persist pilihan sumber simulasi
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dashboard_simSource") as "auto" | "sensor" | "camera" | null;
+      if (saved === "auto" || saved === "sensor" || saved === "camera") setSimSource(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("dashboard_simSource", simSource);
+    } catch {}
+  }, [simSource]);
+
+  // Data untuk simulasi jalan: fusion kamera (hitung YOLO) + sensor (lampu/level).
+  // - sensor: murni MQTT/ESP32 (IR + HC-SR04)
+  // - camera: vehicleCount per lane dari YOLO browser, lampu/level tetap sensor
+  // - auto: pakai YOLO bila fresh (<5 dtk), else fallback sensor per lane
+  const simData = useMemo(() => {
+    if (!realtimeData) return realtimeData;
+    if (simSource === "sensor") return realtimeData;
+    const now = Date.now();
+    const useLaneYolo = (lane: CamLane) => {
+      if (simSource === "camera") return (yoloLastAt[lane] || 0) > 0;
+      return now - (yoloLastAt[lane] || 0) < 5000;
+    };
+    let changed = false;
+    const next: any = { ...realtimeData };
+    for (const lane of ALL_LANES as readonly CamLane[]) {
+      if (!useLaneYolo(lane)) continue;
+      const count = Math.max(0, Math.floor(yoloStats[lane]?.totalVehicles ?? 0));
+      const prev = (realtimeData as any)?.[lane];
+      if (!prev) continue;
+      next[lane] = {
+        ...prev,
+        vehicleCount: count,
+        vehicleDetected: count > 0,
+      };
+      if (count !== prev.vehicleCount) changed = true;
+    }
+    void changed;
+    return next as typeof realtimeData;
+  }, [realtimeData, simSource, yoloStats, yoloLastAt]);
 
   const updateCamUrl = (lane: CamLane, url: string) =>
     setCamUrls((s) => ({ ...s, [lane]: url.replace(/\/$/, "") }));
@@ -862,34 +911,55 @@ export default function DashboardPage() {
                   )}
                 </section>
 
-                {/* ===== SIMULASI JALAN (bisa tutup/buka, logika tidak diubah) ===== */}
+                {/* ===== SIMULASI JALAN (bisa tutup/buka; count bisa dari kamera YOLO / sensor) ===== */}
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Simulasi Jalan
+                        Simulasi Jalan • {simSource === "camera" ? "Mode Kamera" : simSource === "sensor" ? "Mode Sensor" : "Mode Otomatis"}
                       </p>
                       <h2 className="text-lg font-bold text-slate-900">
                         {selectedIntersectionName} — Animasi Lalu Lintas
                       </h2>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsSimOpen((v) => !v)}
-                      aria-expanded={isSimOpen}
-                      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        {isSimOpen ? "expand_less" : "expand_more"}
-                      </span>
-                      {isSimOpen ? "Tutup" : "Buka"}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex gap-1 rounded-full border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Sumber data simulasi">
+                        {(["auto", "sensor", "camera"] as const).map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setSimSource(s)}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${simSource === s ? "bg-slate-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"}`}
+                          >
+                            {s === "auto" ? "Otomatis" : s === "sensor" ? "Sensor" : "Kamera"}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsSimOpen((v) => !v)}
+                        aria-expanded={isSimOpen}
+                        className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          {isSimOpen ? "expand_less" : "expand_more"}
+                        </span>
+                        {isSimOpen ? "Tutup" : "Buka"}
+                      </button>
+                    </div>
                   </div>
+                  <p className="mt-1 text-[10px] text-slate-400">
+                    {simSource === "sensor"
+                      ? "Hitungan murni ESP32 sensor (IR + HC-SR04) via MQTT."
+                      : simSource === "camera"
+                        ? "Hitungan dari deteksi YOLO kamera di browser; lampu/level tetap dari sensor."
+                        : "Otomatis: pakai hitungan YOLO bila ada & fresh (<5 dtk) per jalur, else fallback sensor."}
+                  </p>
                   {isSimOpen && (
                     <div className="mt-3">
                       <TrafficRoadSimulation
-                        key={realtimeData?.deviceId || selectedIntersection}
-                        data={realtimeData}
+                        key={`${simSource}-${simData?.deviceId || selectedIntersection}`}
+                        data={simData}
                       />
                     </div>
                   )}
