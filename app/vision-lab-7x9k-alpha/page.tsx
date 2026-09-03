@@ -78,10 +78,11 @@ export default function VisionLabPage() {
       if (!ctx) return;
       ctx.drawImage(video, 0, 0, W, H);
       try {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        if (ws.bufferedAmount > 1024 * 300) return; // jangan numpuk — fix freeze Vision Lab juga
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
         ws.send(JSON.stringify({ type: "frame", data: dataUrl }));
       } catch { /* ignore */ }
-    }, 100); // ~10 FPS
+    }, 200); // 5 FPS biar m7i-flex.large tidak overload (sebelumnya 10 FPS)
   }, []);
 
   const stopFrameSender = useCallback(() => {

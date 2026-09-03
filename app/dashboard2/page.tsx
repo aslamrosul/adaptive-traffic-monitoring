@@ -376,26 +376,40 @@ export default function DashboardPage() {
 
   const drawYoloBoxes = (lane: CamLane, boxes: typeof yoloBoxes[CamLane]) => {
     const canvas = yoloCanvasRefs.current[lane];
-    const video = camVideoRefs.current[lane] as any;
-    const img = document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement | null;
-    const el = video || img;
+    if (!canvas) return;
+    const container = document.getElementById(`cam-card-${lane}`);
+    const video = (container?.querySelector("video") as HTMLVideoElement) || (camVideoRefs.current[lane] as any);
+    const img = (container?.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (container?.querySelector("img") as HTMLImageElement);
+    const el: any = video && video.videoWidth ? video : img && (img as any).naturalWidth ? img : null;
     if (!canvas || !el) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const w = (el as HTMLVideoElement).videoWidth || (el as HTMLImageElement).naturalWidth || 640;
-    const h = (el as HTMLVideoElement).videoHeight || (el as HTMLImageElement).naturalHeight || 480;
+    const w = (el as HTMLVideoElement).videoWidth || (el as HTMLImageElement).naturalWidth || (el as any).width || 640;
+    const h = (el as HTMLVideoElement).videoHeight || (el as HTMLImageElement).naturalHeight || (el as any).height || 480;
     if (canvas.width !== w) canvas.width = w;
     if (canvas.height !== h) canvas.height = h;
     ctx.clearRect(0, 0, w, h);
     for (const b of boxes) {
       const rx = (b.x / 100) * w, ry = (b.y / 100) * h, rw = (b.w / 100) * w, rh = (b.h / 100) * h;
       ctx.strokeStyle = b.color; ctx.lineWidth = 2; ctx.strokeRect(rx, ry, rw, rh);
-      ctx.fillStyle = b.color; ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = b.color; ctx.font = "bold 11px sans-serif";
       const txt = `${b.label} ${(b.confidence * 100).toFixed(0)}%`;
       const tw = ctx.measureText(txt).width;
-      ctx.fillRect(rx, ry - 16, tw + 8, 16); ctx.fillStyle = "#fff"; ctx.fillText(txt, rx + 4, ry - 4);
+      ctx.fillRect(rx, ry - 14, tw + 8, 14); ctx.fillStyle = "#fff"; ctx.fillText(txt, rx + 4, ry - 3);
     }
   };
+
+  // redraw ketika boxes berubah (fix overlay tidak kelihatan)
+  useEffect(() => {
+    ALL_LANES.forEach((lane) => {
+      const boxes = yoloBoxes[lane as CamLane];
+      if (boxes?.length) drawYoloBoxes(lane as CamLane, boxes);
+      else {
+        const c = yoloCanvasRefs.current[lane as CamLane];
+        if (c) { const ctx = c.getContext("2d"); if (ctx) ctx.clearRect(0, 0, c.width, c.height); }
+      }
+    });
+  }, [yoloBoxes]);
 
   const connectYoloLane = (lane: CamLane) => {
     if (yoloWsRefs.current[lane]) yoloWsRefs.current[lane]?.close();
@@ -406,22 +420,25 @@ export default function DashboardPage() {
       if (!yoloSendCanvasRef.current) yoloSendCanvasRef.current = document.createElement("canvas");
       const canvas = yoloSendCanvasRef.current!;
       yoloTimerRefs.current[lane] = setInterval(() => {
-        const vid = camVideoRefs.current[lane];
-        const img = document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement | null;
-        const srcEl: any = vid && vid.srcObject ? vid : img;
-        if (!srcEl || ws.readyState !== WebSocket.OPEN) return;
+        if (ws.readyState !== WebSocket.OPEN) return;
+        const container = document.getElementById(`cam-card-${lane}`);
+        const vid = (container?.querySelector("video") as HTMLVideoElement) || camVideoRefs.current[lane];
+        const img = (container?.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (container?.querySelector("img") as HTMLImageElement);
+        let srcEl: any = null;
+        if (vid && vid.videoWidth && vid.readyState >= 2) srcEl = vid;
+        else if (img && (img as any).naturalWidth) srcEl = img;
+        if (!srcEl) return;
         const W = 640; const H = 480;
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         try {
-          if (vid && vid.videoWidth) ctx.drawImage(vid, 0, 0, W, H);
-          else if (img && img.naturalWidth) ctx.drawImage(img, 0, 0, W, H);
-          else return;
+          ctx.drawImage(srcEl, 0, 0, W, H);
           const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+          if (ws.bufferedAmount > 1024 * 500) return; // jangan numpuk jika YOLO lambat
           ws.send(JSON.stringify({ type: "frame", data: dataUrl }));
         } catch {}
-      }, 150);
+      }, 500); // 2 FPS biar tidak overload model (fix overlay stuck)
     };
     ws.onmessage = (ev) => {
       try {
@@ -435,11 +452,17 @@ export default function DashboardPage() {
         }
       } catch {}
     };
-    ws.onclose = () => { if (yoloTimerRefs.current[lane]) clearInterval(yoloTimerRefs.current[lane]!); };
+    ws.onclose = () => {
+      if (yoloTimerRefs.current[lane]) { clearInterval(yoloTimerRefs.current[lane]!); yoloTimerRefs.current[lane] = null; }
+      // auto-reconnect jika masih enabled (fix overlay stuck / keepalive timeout)
+      if (yoloEnabled[lane]) setTimeout(() => connectYoloLane(lane), 2000);
+    };
+    ws.onerror = () => { try { ws.close(); } catch {} };
   };
   const disconnectYoloLane = (lane: CamLane) => {
+    setYoloEnabled((s) => ({ ...s, [lane]: false }));
     yoloWsRefs.current[lane]?.close(); yoloWsRefs.current[lane] = null;
-    if (yoloTimerRefs.current[lane]) clearInterval(yoloTimerRefs.current[lane]!);
+    if (yoloTimerRefs.current[lane]) { clearInterval(yoloTimerRefs.current[lane]!); yoloTimerRefs.current[lane] = null; }
     setYoloBoxes((s) => ({ ...s, [lane]: [] }));
   };
   useEffect(() => () => { ALL_LANES.forEach((l) => disconnectYoloLane(l as CamLane)); }, []);
@@ -471,9 +494,12 @@ export default function DashboardPage() {
     setCamSource((s) => ({ ...s, [lane]: "upload" }));
   };
 
-  // HLS Player — 1 player stabil, tidak flicker (ganti attachHls yang destroy tiap URL)
-  function HlsPlayer({ src }: { src: string }) {
+  // HLS Player — 1 player stabil, share ref untuk YOLO capture
+  function HlsPlayer({ lane, src }: { lane: CamLane; src: string }) {
     const ref = useRef<HTMLVideoElement>(null);
+    useEffect(() => {
+      camVideoRefs.current[lane] = ref.current;
+    });
     useEffect(() => {
       const video = ref.current;
       if (!video || !src) return;
@@ -498,8 +524,8 @@ export default function DashboardPage() {
         document.head.appendChild(s);
       }
       return () => { if (hls) try { hls.destroy(); } catch {} };
-    }, [src]);
-    return <video ref={ref} controls crossOrigin="anonymous" className="h-full w-full object-contain" playsInline muted />;
+    }, [src, lane]);
+    return <video ref={ref} controls crossOrigin="anonymous" className="h-full w-full object-contain" playsInline muted data-lane-video={lane} />;
   }
 
   const filterIntersections = useMemo(
@@ -669,7 +695,7 @@ export default function DashboardPage() {
 
                   <div className={camView === "all" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2" : "grid grid-cols-1 gap-3"}>
                     {(camView === "all" ? ALL_LANES : ([camView] as const)).map((lane, idx, arr) => (
-                      <div key={lane} className={`rounded-xl border border-slate-200 bg-slate-50 p-3 ${camView === "all" && arr.length === 3 && idx === 2 ? "md:col-span-2" : ""}`}>
+                      <div key={lane} id={`cam-card-${lane}`} className={`rounded-xl border border-slate-200 bg-slate-50 p-3 ${camView === "all" && arr.length === 3 && idx === 2 ? "md:col-span-2" : ""}`}>
                         <div className="mb-2 flex items-center justify-between">
                           <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                             {lane}
@@ -746,13 +772,13 @@ export default function DashboardPage() {
                               muted
                             />
                           ) : camSource[lane] === "hls" && camUrls[lane]?.includes("m3u8") ? (
-                            <HlsPlayer src={camUrls[lane]} />
+                            <HlsPlayer lane={lane} src={camUrls[lane]} />
                           ) : camSource[lane] === "upload" && camUrls[lane]?.startsWith("blob:") ? (
                             camUrls[lane].endsWith(".jpg") || camUrls[lane].includes("image") ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={camUrls[lane]} alt={`Cam ${lane} upload`} className="h-full w-full object-contain" />
+                              <img data-lane={lane} crossOrigin="anonymous" src={camUrls[lane]} alt={`Cam ${lane} upload`} className="h-full w-full object-contain" />
                             ) : (
-                              <video src={camUrls[lane]} controls className="h-full w-full object-contain" playsInline />
+                              <video data-lane-video={lane} src={camUrls[lane]} controls crossOrigin="anonymous" className="h-full w-full object-contain" playsInline muted />
                             )
                           ) : camUrls[lane] ? (
                             // eslint-disable-next-line @next/next/no-img-element
