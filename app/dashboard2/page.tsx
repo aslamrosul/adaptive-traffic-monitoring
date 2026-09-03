@@ -48,50 +48,6 @@ function pickNewestTraffic(
   return tb > ta ? b : a;
 }
 
-// HLS Player top-level biar tidak remount tiap parent re-render
-// (sebelumnya nested di dalam page → tiap update YOLO stats player ke-reset/play ketimpa)
-function HlsPlayer({ lane, src, onVideo }: { lane: string; src: string; onVideo: (lane: string, el: HTMLVideoElement | null) => void }) {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    onVideo(lane, ref.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lane]);
-  useEffect(() => {
-    const video = ref.current;
-    if (!video || !src) return;
-    const w = window as any;
-    let hls: any = null;
-    let cancelled = false;
-    const setup = () => {
-      if (cancelled) return;
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        if (video.src !== src) video.src = src;
-      } else if (w.Hls?.isSupported()) {
-        hls = new w.Hls({ lowLatencyMode: true });
-        hls.loadSource(src);
-        hls.attachMedia(video);
-      } else {
-        if (video.src !== src) video.src = src;
-      }
-    };
-    if (w.Hls) setup();
-    else {
-      const existing = document.querySelector('script[data-hls-player]');
-      if (existing) {
-        (existing as HTMLScriptElement).addEventListener("load", setup, { once: true });
-        if (w.Hls) setup();
-      } else {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js";
-        s.dataset.hlsPlayer = "true";
-        s.onload = setup;
-        document.head.appendChild(s);
-      }
-    }
-    return () => { cancelled = true; if (hls) try { hls.destroy(); } catch {} };
-  }, [src]);
-  return <video ref={ref} controls crossOrigin="anonymous" className="h-full w-full object-contain" playsInline muted data-lane-video={lane} />;
-}
 
 export default function DashboardPage() {
   const t = useT();
@@ -773,7 +729,18 @@ export default function DashboardPage() {
                               muted
                             />
                           ) : camSource[lane] === "hls" && camUrls[lane]?.includes("m3u8") ? (
-                            <HlsPlayer lane={lane} src={camUrls[lane]} onVideo={(l, el) => { camVideoRefs.current[l as CamLane] = el; }} />
+                            <video
+                              ref={(el) => {
+                                camVideoRefs.current[lane] = el;
+                              }}
+                              src={camUrls[lane]}
+                              controls
+                              crossOrigin="anonymous"
+                              className="h-full w-full object-contain"
+                              playsInline
+                              muted
+                              data-lane-video={lane}
+                            />
                           ) : camSource[lane] === "upload" && camUrls[lane]?.startsWith("blob:") ? (
                             camUrls[lane].endsWith(".jpg") || camUrls[lane].includes("image") ? (
                               // eslint-disable-next-line @next/next/no-img-element
