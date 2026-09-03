@@ -336,7 +336,7 @@ export default function TrafficControlPanel({
             return (
               <article
                 key={lane}
-                className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
@@ -355,7 +355,7 @@ export default function TrafficControlPanel({
                   />
                 </div>
 
-                <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="mb-3 grid grid-cols-[repeat(4,minmax(0,1fr))] gap-1">
                   <MetricCard
                     label={t('trafficControl.metrics.vehicles')}
                     value={vehicleCount}
@@ -1044,14 +1044,14 @@ function MetricCard({
   return (
     <div
       className={[
-        "group rounded-xl border px-3 py-2.5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group w-full min-w-0 rounded-xl border px-1.5 py-2 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md",
         selected.card,
       ].join(" ")}
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-1.5 flex items-start justify-between gap-1">
         <p
           className={[
-            "text-[10px] font-black uppercase tracking-[0.14em]",
+            "flex-1 break-words text-[8px] font-black uppercase leading-tight tracking-wide [overflow-wrap:anywhere]",
             selected.label,
           ].join(" ")}
         >
@@ -1060,7 +1060,7 @@ function MetricCard({
 
         <span
           className={[
-            "grid h-7 w-7 place-items-center rounded-full text-sm shadow-sm transition group-hover:scale-105",
+            "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] shadow-sm transition group-hover:scale-105",
             selected.icon,
           ].join(" ")}
         >
@@ -1070,7 +1070,7 @@ function MetricCard({
 
       <p
         className={[
-          "text-lg font-extrabold leading-none",
+          "break-words text-[13px] font-extrabold leading-tight [overflow-wrap:anywhere]",
           selected.value,
         ].join(" ")}
       >
@@ -1080,7 +1080,7 @@ function MetricCard({
       {helper && (
         <p
           className={[
-            "mt-1 text-[11px] font-medium",
+            "mt-1 break-words text-[9px] font-medium leading-tight [overflow-wrap:anywhere]",
             selected.helper,
           ].join(" ")}
         >
