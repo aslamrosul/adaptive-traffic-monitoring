@@ -490,12 +490,37 @@ export default function DashboardPage() {
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        try {
-          ctx.drawImage(srcEl, 0, 0, W, H);
+        const sendDrawn = () => {
           const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
           if (ws.bufferedAmount > 1024 * 500) return; // jangan numpuk jika YOLO lambat
           ws.send(JSON.stringify({ type: "frame", data: dataUrl }));
-        } catch {}
+        };
+        try {
+          ctx.drawImage(srcEl, 0, 0, W, H);
+          sendDrawn();
+        } catch {
+          // Canvas ketainted (MJPEG tanpa CORS) → fallback ambil snapshot ber-CORS
+          try {
+            const src = (img as HTMLImageElement)?.currentSrc || (img as HTMLImageElement)?.src || "";
+            const snap = src.includes("/esp32-cam-stream")
+              ? src.replace("/esp32-cam-stream", "/esp32-cam-snapshot")
+              : src.includes(":81/stream")
+                ? src.replace(":81/stream", "/capture.jpg")
+                : null;
+            if (!snap) return;
+            fetch(snap, { mode: "cors" })
+              .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`snapshot ${r.status}`))))
+              .then((b) => createImageBitmap(b))
+              .then((bmp) => {
+                if (ws.readyState !== WebSocket.OPEN) return;
+                try {
+                  ctx.drawImage(bmp, 0, 0, W, H);
+                  sendDrawn();
+                } catch {}
+              })
+              .catch(() => {});
+          } catch {}
+        }
       }, 500); // 2 FPS biar tidak overload model (fix overlay stuck)
     };
     ws.onmessage = (ev) => {
@@ -837,9 +862,9 @@ export default function DashboardPage() {
                             )
                           ) : camUrls[lane] ? (
                             // eslint-disable-next-line @next/next/no-img-element
+                            // TANPA crossOrigin: Chrome menolak render MJPEG multipart bila diminta CORS
                             <img
                               data-lane={lane}
-                              crossOrigin="anonymous"
                               src={
                                 camUrls[lane].startsWith("blob:") || camUrls[lane].endsWith(".jpg") || camUrls[lane].endsWith(".jpeg") || camUrls[lane].includes("/stream") || camUrls[lane].includes("m3u8")
                                   ? camUrls[lane]
