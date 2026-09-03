@@ -388,6 +388,17 @@ export default function DashboardPage() {
     east: null,
     west: null,
   });
+  const [camSettingsLane, setCamSettingsLane] = useState<CamLane | null>(null);
+
+  const toggleCamFullscreen = (lane: CamLane) => {
+    const el = document.getElementById(`cam-card-${lane}`);
+    if (!el) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+      return;
+    }
+    void (el as HTMLElement).requestFullscreen?.();
+  };
 
   // Persist IP biar tidak hilang reload (rekomendasi)
   useEffect(() => {
@@ -706,14 +717,13 @@ export default function DashboardPage() {
 
                   <div className={camView === "all" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2" : "grid grid-cols-1 gap-3"}>
                     {(camView === "all" ? ALL_LANES : ([camView] as const)).map((lane, idx, arr) => (
-                      <div key={lane} id={`cam-card-${lane}`} className={`rounded-xl border border-slate-200 bg-slate-50 p-3 ${camView === "all" && arr.length === 3 && idx === 2 ? "md:col-span-2" : ""}`}>
-                        <div className="mb-2 flex items-center justify-between">
+                      <div key={lane} id={`cam-card-${lane}`} className={`rounded-xl border border-slate-200 bg-slate-50 p-2 fullscreen:bg-slate-900 fullscreen:p-4 ${camView === "all" && arr.length === 3 && idx === 2 ? "md:col-span-2" : ""}`}>
+                        <div className="mb-2 flex items-center justify-between gap-1">
                           <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                             {lane}
                           </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-mono text-slate-500">{camSource[lane]}</span>
-                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">{yoloStats[lane]?.totalVehicles ?? 0} kendaraan</span>
+                          <div className="flex items-center gap-1">
+                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">{yoloStats[lane]?.totalVehicles ?? 0}</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -723,55 +733,35 @@ export default function DashboardPage() {
                               }}
                               className={`rounded-full px-2 py-1 text-[9px] font-bold ${yoloWsRefs.current[lane] ? "bg-purple-600 text-white" : "bg-white text-slate-600 border"}`}
                             >
-                              {yoloWsRefs.current[lane] ? "YOLO ON" : "YOLO OFF"}
+                              {yoloWsRefs.current[lane] ? "YOLO" : "YOLO"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCamSettingsLane(lane)}
+                              aria-label={`Pengaturan kamera ${lane}`}
+                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                            >
+                              <span className="material-symbols-outlined text-base">tune</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleCamFullscreen(lane)}
+                              aria-label={`Fullscreen kamera ${lane}`}
+                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                            >
+                              <span className="material-symbols-outlined text-base">fullscreen</span>
                             </button>
                           </div>
                         </div>
                         <input
-                          value={camUrls[lane]}
-                          onChange={(e) => updateCamUrl(lane, e.target.value)}
-                          placeholder={lane === "north" ? "http://10.100.122.135" : lane === "south" ? "http://10.100.122.136" : "http://10.100.122.137"}
-                          className="mb-2 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
+                          ref={(el) => {
+                            camFileRefs.current[lane] = el;
+                          }}
+                          type="file"
+                          accept="video/*,image/*"
+                          className="hidden"
+                          onChange={(e) => handleCamUpload(lane, e.target.files?.[0] || null)}
                         />
-                        <div className="mb-2 flex flex-wrap gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setCamSource((s) => ({ ...s, [lane]: "mjpeg" }))}
-                            className={`rounded-md px-2 py-1 text-[10px] font-bold ${camSource[lane] === "mjpeg" ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
-                          >
-                            MJPEG
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCamSource((s) => ({ ...s, [lane]: "hls" }))}
-                            className={`rounded-md px-2 py-1 text-[10px] font-bold ${camSource[lane] === "hls" ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
-                          >
-                            HLS
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => startCamWebcam(lane)}
-                            className={`rounded-md px-2 py-1 text-[10px] font-bold ${camSource[lane] === "webcam" ? "bg-emerald-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
-                          >
-                            Webcam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => camFileRefs.current[lane]?.click()}
-                            className={`rounded-md px-2 py-1 text-[10px] font-bold ${camSource[lane] === "upload" ? "bg-blue-600 text-white border border-blue-600" : "bg-white text-slate-600 border border-slate-200"}`}
-                          >
-                            Upload
-                          </button>
-                          <input
-                            ref={(el) => {
-                              camFileRefs.current[lane] = el;
-                            }}
-                            type="file"
-                            accept="video/*,image/*"
-                            className="hidden"
-                            onChange={(e) => handleCamUpload(lane, e.target.files?.[0] || null)}
-                          />
-                        </div>
                         <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-video">
                           {camSource[lane] === "webcam" ? (
                             <video
@@ -824,11 +814,47 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
-                    <span>IP custom per jalur — beda kos/hotspot tinggal ganti. Support RLS (`m3u8`), MJPEG `:81/stream`, Webcam, Upload (mirip Vision Lab).</span>
+                    <span>Pengaturan per kamera via tombol <span className="material-symbols-outlined text-xs">tune</span> • Fullscreen per layar via <span className="material-symbols-outlined text-xs">fullscreen</span></span>
                     <a href="/vision-lab-7x9k-alpha" target="_blank" className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700">
                       Vision Lab ↗
                     </a>
                   </div>
+                  {camSettingsLane && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setCamSettingsLane(null)}>
+                      <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-bold capitalize text-slate-900">Pengaturan Kamera {camSettingsLane}</h3>
+                          <button type="button" onClick={() => setCamSettingsLane(null)} aria-label="Tutup" className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200">
+                            <span className="material-symbols-outlined text-base">close</span>
+                          </button>
+                        </div>
+                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">URL / IP Kamera</label>
+                        <input
+                          value={camUrls[camSettingsLane]}
+                          onChange={(e) => updateCamUrl(camSettingsLane, e.target.value)}
+                          placeholder="http://10.100.122.135 atau https://...m3u8"
+                          className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
+                        />
+                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>
+                        <div className="mb-3 flex flex-wrap gap-1">
+                          {(["mjpeg", "hls", "webcam", "upload"] as const).map((src) => (
+                            <button
+                              key={src}
+                              type="button"
+                              onClick={() => { if (src === "webcam") void startCamWebcam(camSettingsLane); else if (src === "upload") camFileRefs.current[camSettingsLane]?.click(); else setCamSource((s) => ({ ...s, [camSettingsLane]: src })); }}
+                              className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize ${camSource[camSettingsLane] === src ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                            >
+                              {src}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="mb-3 text-[10px] leading-relaxed text-slate-400">MJPEG = `http://IP:81/stream` (ESP32-CAM) • HLS = URL `m3u8` (mis. Bantul via `/bantul-stream/...`) • Webcam = kamera laptop • Upload = file video/gambar.</p>
+                        <button type="button" onClick={() => setCamSettingsLane(null)} className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white hover:bg-slate-700">
+                          Selesai
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </section>
 
                 <TrafficTrendChart
