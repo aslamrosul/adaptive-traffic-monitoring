@@ -320,7 +320,7 @@ export default function DashboardPage() {
   const ALL_LANES = ["north", "south", "east", "west"] as const;
   type CamLane = typeof ALL_LANES[number];
   const [camUrls, setCamUrls] = useState<Record<CamLane, string>>({
-    north: "http://10.100.122.135",
+    north: "https://astraea.my.id/esp32-cam-stream",
     south: "",
     east: "",
     west: "",
@@ -841,7 +841,7 @@ export default function DashboardPage() {
                               data-lane={lane}
                               crossOrigin="anonymous"
                               src={
-                                camUrls[lane].startsWith("blob:") || camUrls[lane].endsWith(".jpg") || camUrls[lane].includes(":81/stream") || camUrls[lane].includes("m3u8")
+                                camUrls[lane].startsWith("blob:") || camUrls[lane].endsWith(".jpg") || camUrls[lane].endsWith(".jpeg") || camUrls[lane].includes("/stream") || camUrls[lane].includes("m3u8")
                                   ? camUrls[lane]
                                   : `${camUrls[lane]}:81/stream`
                               }
@@ -886,7 +886,7 @@ export default function DashboardPage() {
                         <input
                           value={camUrls[camSettingsLane]}
                           onChange={(e) => updateCamUrl(camSettingsLane, e.target.value)}
-                          placeholder="http://10.100.122.135 atau https://...m3u8"
+                          placeholder="https://astraea.my.id/esp32-cam-stream atau http://10.100.122.135"
                           className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
                         />
                         <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>

@@ -841,7 +841,7 @@ export default function DashboardPage() {
                               data-lane={lane}
                               crossOrigin="anonymous"
                               src={
-                                camUrls[lane].startsWith("blob:") || camUrls[lane].endsWith(".jpg") || camUrls[lane].includes(":81/stream") || camUrls[lane].includes("m3u8")
+                                camUrls[lane].startsWith("blob:") || camUrls[lane].endsWith(".jpg") || camUrls[lane].endsWith(".jpeg") || camUrls[lane].includes("/stream") || camUrls[lane].includes("m3u8")
                                   ? camUrls[lane]
                                   : `${camUrls[lane]}:81/stream`
                               }
