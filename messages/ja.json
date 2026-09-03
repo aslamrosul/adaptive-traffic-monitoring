@@ -1145,7 +1145,7 @@
     "selectIntersectionToView": "Select intersection to view status",
     "lane": "車線",
     "greenLight": "Green light",
-    "vehicles": "Vehicles",
+    "vehicles": "車両",
     "queueDistance": "Queue distance",
     "level": "LEVEL",
     "smooth": "円滑",
@@ -1250,7 +1250,7 @@
     "vehicleVolumeTitle": "Daily Vehicle Volume",
     "vehicleVolumeSubtitle": "Number of vehicles passing through intersections daily.",
     "noVehicleData": "No vehicle volume data yet",
-    "vehicles": "Vehicles",
+    "vehicles": "車両",
     "date": "Date",
     "hour": "Hour",
     "percentage": "Percentage",
@@ -1278,7 +1278,24 @@
     "activeConfig": "Active Configuration",
     "autoModeDesc": "Lights switch automatically",
     "adaptiveModeDesc": "Green duration follows traffic density level",
-    "adaptiveMode": "Adaptive Mode"
+    "adaptiveMode": "Adaptive Mode",
+    "manualLightSummary": "センサーと信号の現在の状態の概要。",
+    "metrics": {
+      "vehicles": "車両",
+      "density": "混雑度",
+      "queueDistance": "待ち行列の長さ",
+      "currentDuration": "現在の時間"
+    },
+    "metricHelpers": {
+      "counted": "台",
+      "ultrasonic": "HC-SR04",
+      "waiting": "待機中"
+    },
+    "densityDescription": {
+      "smooth": "スムーズ",
+      "moderate": "普通",
+      "heavy": "混雑"
+    }
   },
   "roadSimulation": {
     "title": "Traffic Simulation",

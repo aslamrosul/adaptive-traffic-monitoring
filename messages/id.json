@@ -1169,7 +1169,7 @@
     "northLane": "Jalur Utara",
     "southLane": "Jalur Selatan",
     "eastLane": "Jalur Timur",
-    "vehicleCount": "Vehicle Count",
+    "vehicleCount": "Jumlah Kendaraan",
     "queueLevel": "Queue Level",
     "queueLevelSmooth": "Lancar",
     "queueLevelModerate": "Sedang",
