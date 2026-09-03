@@ -357,6 +357,41 @@ export default function DashboardPage() {
     void (el as HTMLElement).requestFullscreen?.();
   };
 
+  // Layar kamera ngikutin jumlah jalur persimpangan yang dipilih
+  // (mis. 3 jalur → 3 layar, 2 jalur → 2 layar)
+  const visibleCamLanes = useMemo(() => {
+    const normalize = (v: unknown): CamLane | null => {
+      const s = String(v ?? "").trim().toLowerCase();
+      return (ALL_LANES as readonly string[]).includes(s) ? (s as CamLane) : null;
+    };
+    if (selectedIntersection !== "all" && selectedIntersectionData) {
+      const d: any = selectedIntersectionData;
+      const dirs = d?.lanes?.directions ?? d?.lanesDirections ?? d?.lanes_directions ?? null;
+      if (Array.isArray(dirs)) {
+        const list = dirs.map(normalize).filter((x): x is CamLane => !!x);
+        if (list.length) return [...new Set(list)] as CamLane[];
+      }
+      const count = Number(d?.lanes?.count ?? d?.lanesCount ?? d?.lanes_count ?? NaN);
+      if (Number.isFinite(count) && count > 0) {
+        return (ALL_LANES as readonly CamLane[]).slice(0, Math.min(count, ALL_LANES.length)) as CamLane[];
+      }
+    } else if (selectedIntersection === "all") {
+      const set = new Set<CamLane>();
+      for (const item of intersections as any[]) {
+        const dirs = item?.lanes?.directions ?? item?.lanesDirections ?? null;
+        if (Array.isArray(dirs)) dirs.forEach((x) => { const n = normalize(x); if (n) set.add(n); });
+      }
+      if (set.size) return (ALL_LANES as readonly CamLane[]).filter((l) => set.has(l)) as CamLane[];
+    }
+    return [...ALL_LANES] as CamLane[];
+  }, [intersections, selectedIntersection, selectedIntersectionData]);
+
+  // Kalau pindah persimpangan dan lane yang dipilih tidak ada di sana → balik ke "all"
+  useEffect(() => {
+    if (camView !== "all" && !visibleCamLanes.includes(camView)) setCamView("all");
+    if (camSettingsLane && !visibleCamLanes.includes(camSettingsLane)) setCamSettingsLane(null);
+  }, [visibleCamLanes, camView, camSettingsLane]);
+
   // Persist IP biar tidak hilang reload (rekomendasi)
   useEffect(() => {
     try {
@@ -632,7 +667,7 @@ export default function DashboardPage() {
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Live Camera • 3 Jalur • Eksperimen
+                        Live Camera • {visibleCamLanes.length} Jalur
                       </p>
                       <h2 className="text-lg font-bold text-slate-900">
                         {selectedIntersectionName} — Kamera Persimpangan
@@ -647,9 +682,9 @@ export default function DashboardPage() {
                         onClick={() => setCamView("all")}
                         className={`rounded-full px-3 py-1 text-xs font-bold ${camView === "all" ? "bg-slate-900 text-white shadow" : "text-slate-600"}`}
                       >
-                        Semua {ALL_LANES.length} Layar
+                        Semua {visibleCamLanes.length} Layar
                       </button>
-                      {ALL_LANES.map((lane) => (
+                      {visibleCamLanes.map((lane) => (
                         <button
                           key={lane}
                           type="button"
@@ -675,7 +710,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className={camView === "all" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2" : "grid grid-cols-1 gap-3"}>
-                    {(camView === "all" ? ALL_LANES : ([camView] as const)).map((lane, idx, arr) => (
+                    {(camView === "all" ? visibleCamLanes : ([camView] as const)).map((lane, idx, arr) => (
                       <div key={lane} id={`cam-card-${lane}`} className={`rounded-xl border border-slate-200 bg-slate-50 p-2 fullscreen:bg-slate-900 fullscreen:p-4 ${camView === "all" && arr.length === 3 && idx === 2 ? "md:col-span-2" : ""}`}>
                         <div className="mb-2 flex items-center justify-between gap-1">
                           <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
