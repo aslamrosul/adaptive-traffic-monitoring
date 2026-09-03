@@ -40,7 +40,7 @@ export default function VisionLabPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rtspUrl, setRtspUrl] = useState("");
   const [wsUrl, setWsUrl] = useState(
-    process.env.NEXT_PUBLIC_YOLO_WS_URL || "ws://54.206.39.219:8080/ws"
+    process.env.NEXT_PUBLIC_YOLO_WS_URL || "wss://astraea.my.id/yolo-ws/ws"
   );
   const [confidence, setConfidence] = useState(0.3);
   const [detectionEnabled, setDetectionEnabled] = useState(true);
