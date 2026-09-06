@@ -20,4 +20,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 4. SERVICE TERKAIT: Mosquitto (MQTT 1883 + wss 8089), `traffic-aws-subscriber`
    (repo Thesambala/astraea-subscriber-mqtt), YOLOv8 inference di EC2 `yolov8-server`
    (repo Thesambala/yolov8-server), backup full di aslamrosul/backup-all (PRIVATE).
+5. AUTO-PUSH: server ini punya deploy key SSH (`~/.ssh/astraea-web`, remote `gh-web`).
+   Selesai mengubah file di `~/workspace/adaptive-traffic-monitoring`: commit lalu
+   `git push` langsung (tanpa token). Lalu sync ke deploy: copy file ke
+   `/var/www/adaptive-traffic-monitoring`, `npm run build` bila ubah `NEXT_PUBLIC_*`,
+   `systemctl restart adaptive-traffic`.
 <!-- END:astraea-project-rules -->
