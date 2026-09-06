@@ -28,6 +28,7 @@ export const awsTables = {
   iotConfigs: process.env.DYNAMODB_IOT_CONFIGS_TABLE || "IoTConfigs",
   notifications: process.env.DYNAMODB_NOTIFICATIONS_TABLE || "Notifications",
   userActivities: process.env.DYNAMODB_USER_ACTIVITIES_TABLE || "UserActivities",
+  cameras: process.env.DYNAMODB_CAMERAS_TABLE || "Cameras",
 };
 
 export async function getLatestTrafficByIntersection(

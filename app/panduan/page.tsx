@@ -20,6 +20,8 @@ export default function PanduanPage() {
     { id: "users", icon: "people" },
     { id: "notifications", icon: "notifications" },
     { id: "esp32", icon: "memory" },
+    { id: "esp32cam", icon: "videocam" },
+    { id: "aichat", icon: "smart_toy" },
     { id: "mqtt", icon: "cloud" },
     { id: "troubleshooting", icon: "build" },
   ];
@@ -121,6 +123,12 @@ function PanduanSections({ activeSection }: { activeSection: string }) {
   }
   if (activeSection === "esp32") {
     return <ESP32Section />;
+  }
+  if (activeSection === "esp32cam") {
+    return <ESP32CAMSection />;
+  }
+  if (activeSection === "aichat") {
+    return <AIChatSection />;
   }
   if (activeSection === "mqtt") {
     return <MQTTSection />;
@@ -1034,6 +1042,79 @@ Connected!<br/>
 Subscribed device-specific MQTT topics.<br/>
 Real Sensor System Ready!
         </pre>
+      </div>
+    </div>
+  );
+}
+
+function ESP32CAMSection() {
+  const t = useT();
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+          <span className="material-symbols-outlined text-violet-600 text-2xl">videocam</span>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.esp32camGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.esp32camGuide.subtitle')}</p>
+        </div>
+      </div>
+
+      <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 text-sm space-y-2">
+        <h3 className="font-bold text-slate-900">📷 {t('guide.esp32camGuide.concept')}</h3>
+        <p className="text-slate-600">{t('guide.esp32camGuide.conceptDesc')}</p>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm space-y-2">
+        <h3 className="font-bold text-slate-900 mb-2">🔌 {t('guide.esp32camGuide.provision')}</h3>
+        <ol className="list-decimal ml-5 space-y-1 text-slate-600">
+          <li>{t('guide.esp32camGuide.step1')}</li>
+          <li>{t('guide.esp32camGuide.step2')}</li>
+          <li>{t('guide.esp32camGuide.step3')}</li>
+          <li>{t('guide.esp32camGuide.step4')}</li>
+          <li>{t('guide.esp32camGuide.step5')}</li>
+        </ol>
+      </div>
+
+      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm space-y-2">
+        <h3 className="font-bold text-slate-900">🖥️ {t('guide.esp32camGuide.view')}</h3>
+        <p className="text-slate-600">{t('guide.esp32camGuide.viewDesc')}</p>
+      </div>
+    </div>
+  );
+}
+
+function AIChatSection() {
+  const t = useT();
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+          <span className="material-symbols-outlined text-indigo-600 text-2xl">smart_toy</span>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">{t('guide.aiChatGuide.title')}</h2>
+          <p className="text-sm text-slate-500">{t('guide.aiChatGuide.subtitle')}</p>
+        </div>
+      </div>
+
+      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-sm space-y-2">
+        <h3 className="font-bold text-slate-900">💬 {t('guide.aiChatGuide.ask')}</h3>
+        <p className="text-slate-600">{t('guide.aiChatGuide.askDesc')}</p>
+        <ul className="list-disc ml-5 space-y-1 text-slate-600">
+          <li><code className="bg-slate-200 px-1 rounded text-xs">{t('guide.aiChatGuide.example1')}</code></li>
+          <li><code className="bg-slate-200 px-1 rounded text-xs">{t('guide.aiChatGuide.example2')}</code></li>
+          <li><code className="bg-slate-200 px-1 rounded text-xs">{t('guide.aiChatGuide.example3')}</code></li>
+        </ul>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-2">
+        <h3 className="font-bold text-slate-900">⚙️ {t('guide.aiChatGuide.control')}</h3>
+        <p className="text-slate-600">{t('guide.aiChatGuide.controlDesc')}</p>
+        <p className="text-slate-600">{t('guide.aiChatGuide.roles')}</p>
       </div>
     </div>
   );

@@ -106,7 +106,8 @@
     "ourTeam": "チーム",
     "guide": "システムガイド",
     "fullGuide": "完全ガイド",
-    "aiChat": "AIチャット"
+    "aiChat": "AIチャット",
+    "cameras": "カメラ"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -1402,7 +1403,9 @@
       "allGuides": "All Guides",
       "gettingStarted": "Getting Started",
       "advanced": "Advanced",
-      "backToGuides": "Back to Guides"
+      "backToGuides": "Back to Guides",
+      "esp32cam": "ESP32-CAMカメラ",
+      "aichat": "AIチャット"
     },
     "overview": {
       "title": "System Overview",
@@ -1823,6 +1826,32 @@
       "phone": "電話",
       "documentation": "Complete Documentation",
       "documentationDesc": "For more detailed guide, please read the complete documentation files:"
+    },
+    "esp32camGuide": {
+      "title": "ESP32-CAMカメラ",
+      "subtitle": "カメラによる車両カウント",
+      "concept": "カメラファースト",
+      "conceptDesc": "アプローチごとに1台（北/南/東）。電源+WiFiだけでビジョンサーバーに自動接続しYOLOで計数します。IR+超音波は占有検知とバックアップ用です。",
+      "provision": "プロビジョニング",
+      "step1": "カメラページ（/cameras）で管理者として登録し、一度だけ表示されるトークンを控えます。",
+      "step2": "未設定ならASTRAEA-CAM-xxxxのSoftAPに接続し192.168.4.1で設定（SSID、ホスト、ID、トークン）。",
+      "step3": "USBを抜き5Vアダプタに。自動でWiFi・クラウドに接続します。",
+      "step4": "カメラページでONLINE（FPS・最終受信）を確認。",
+      "step5": "Vision Labで配信を視聴。現地にグローバルIPやポート開放は不要。",
+      "view": "配信の視聴",
+      "viewDesc": "Server 2経由のスナップショット・MJPEG。ダッシュボードはYOLOと同じデータを表示します。"
+    },
+    "aiChatGuide": {
+      "title": "AIチャット",
+      "subtitle": "チャットで質問・操作",
+      "ask": "質問する",
+      "askDesc": "AIチャット（/ai-chat）で質問します。要約・異常・予測をDynamoDBから読み回答します。LLMキーがあると自然な回答になります。",
+      "example1": "今夕いちばん混む方向と推奨は？",
+      "example2": "北方向の直近1時間の台数は？",
+      "example3": "交差点の追加方法は？",
+      "control": "直接操作",
+      "controlDesc": "青時間の変更や推奨の適用を提案できます。確認後に安全なMQTT経路で実行されます。",
+      "roles": "青時間と自身のプロフィールはオペレータ可。交差点・ユーザ追加や設定は管理者のみ。"
     }
   },
   "pages": {
@@ -2203,5 +2232,13 @@
       "insight": "インサイト",
       "model": "ASTRAEA AI · gemini-3.1-flash-lite"
     }
+  },
+  "cameras": {
+    "title": "カメラ",
+    "listTitle": "登録済みカメラ",
+    "listDesc": "アプローチごとに1台。トークンはプロビジョニング時に一度だけ表示されます。",
+    "provisionTitle": "新規カメラのプロビジョニング",
+    "provision": "カメラ+トークンを作成",
+    "tokenOnce": "トークン（一度だけ表示、SoftAP/シリアルでファームウェアに入力）:"
   }
 }

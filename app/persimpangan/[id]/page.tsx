@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import PedestrianPanel from "@/components/PedestrianPanel";
 import { useEvents, useIntersection, useRealtimeTraffic } from "@/lib/hooks";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -407,6 +408,11 @@ export default function DetailPersimpanganPage({
               className="flex flex-col gap-6"
             >
             </motion.div>
+            <PedestrianPanel
+              intersectionId={id}
+              initial={(intersection as any)?.pedestrian_crossings || []}
+              onSaved={() => mutate()}
+            />
           </div>
         </div>
     </DashboardLayout>

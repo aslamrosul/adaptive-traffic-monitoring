@@ -106,7 +106,8 @@
     "ourTeam": "Tim Kami",
     "guide": "Panduan Sistem",
     "fullGuide": "Panduan Lengkap",
-    "aiChat": "AI Chat"
+    "aiChat": "AI Chat",
+    "cameras": "Kamera"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1403,7 +1404,9 @@
       "allGuides": "Semua Panduan",
       "gettingStarted": "Memulai",
       "advanced": "Lanjutan",
-      "backToGuides": "Kembali ke Panduan"
+      "backToGuides": "Kembali ke Panduan",
+      "esp32cam": "Kamera ESP32-CAM",
+      "aichat": "AI Chat"
     },
     "overview": {
       "title": "Ringkasan Sistem",
@@ -1824,6 +1827,32 @@
       "phone": "Telepon",
       "documentation": "Dokumentasi Lengkap",
       "documentationDesc": "Untuk panduan lebih detail, silakan baca file dokumentasi lengkap:"
+    },
+    "esp32camGuide": {
+      "title": "Kamera ESP32-CAM",
+      "subtitle": "Sumber hitungan kendaraan dari visi cloud",
+      "concept": "Konsep camera-first",
+      "conceptDesc": "Satu kamera per pendekatan (utara/selatan/timur). Kamera hanya butuh listrik + WiFi, lalu otomatis tersambung ke server visi dan dihitung YOLO. IR + HC-SR04 tetap sebagai sensor hunian lokal dan cadangan.",
+      "provision": "Provisioning kamera",
+      "step1": "Halaman Kamera (/cameras): buat entri kamera (ID, persimpangan, pendekatan) sebagai admin, catat token sekali tampil.",
+      "step2": "Nyalakan ESP32-CAM: bila WiFi belum dikonfigurasi, hubungkan ke SoftAP ASTRAEA-CAM-xxxx dan isi form di 192.168.4.1 (SSID, host, ID kamera, token).",
+      "step3": "Cabut USB, colok adaptor 5V. Kamera otomatis konek WiFi lalu cloud.",
+      "step4": "Cek status ONLINE di halaman Kamera (FPS + terakhir terlihat).",
+      "step5": "Lihat stream di Vision Lab / halaman kamera. Tanpa IP publik & tanpa port forwarding di lokasi kamera.",
+      "view": "Melihat stream",
+      "viewDesc": "Stream global lewat Server 2 (snapshot & MJPEG per kamera). Tampilan dashboard memakai data yang sama dengan yang dihitung YOLO."
+    },
+    "aiChatGuide": {
+      "title": "AI Chat",
+      "subtitle": "Tanya data & kendalikan lewat obrolan",
+      "ask": "Bertanya",
+      "askDesc": "Buka AI Chat (/ai-chat), tulis pertanyaan bahasa Indonesia. Chatbot membaca data DynamoDB (ringkasan, anomali, prediksi) lalu menjawab; dengan API key LLM, jawaban luwes dan paham konteks.",
+      "example1": "jalur mana paling padat sore ini dan apa rekomendasinya?",
+      "example2": "berapa kendaraan di utara 1 jam terakhir?",
+      "example3": "cara menambah persimpangan baru?",
+      "control": "Mengatur langsung",
+      "controlDesc": "Chatbot dapat mengusulkan aksi (ubah durasi hijau, terapkan rekomendasi). Periksa usulannya lalu konfirmasi — perintah dikirim aman via MQTT dan tervalidasi.",
+      "roles": "Operator boleh ubah durasi hijau & profil sendiri. Tambah persimpangan/user dan pengaturan aplikasi khusus admin."
     }
   },
   "pages": {
@@ -2204,5 +2233,13 @@
       "insight": "Insight",
       "model": "ASTRAEA AI · gemini-3.1-flash-lite"
     }
+  },
+  "cameras": {
+    "title": "Kamera",
+    "listTitle": "Kamera terdaftar",
+    "listDesc": "Satu kamera per pendekatan. Token hanya tampil sekali saat provisioning.",
+    "provisionTitle": "Provisioning kamera baru",
+    "provision": "Buat kamera + token",
+    "tokenOnce": "Token (catat sekali, masukkan ke firmware via SoftAP/serial):"
   }
 }

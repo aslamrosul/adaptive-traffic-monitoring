@@ -106,7 +106,8 @@
     "ourTeam": "Our Team",
     "guide": "System Guide",
     "fullGuide": "Complete Guide",
-    "aiChat": "AI Chat"
+    "aiChat": "AI Chat",
+    "cameras": "Cameras"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1402,7 +1403,9 @@
       "allGuides": "All Guides",
       "gettingStarted": "Getting Started",
       "advanced": "Advanced",
-      "backToGuides": "Back to Guides"
+      "backToGuides": "Back to Guides",
+      "esp32cam": "ESP32-CAM Cameras",
+      "aichat": "AI Chat"
     },
     "overview": {
       "title": "System Overview",
@@ -1823,6 +1826,32 @@
       "phone": "Phone",
       "documentation": "Complete Documentation",
       "documentationDesc": "For more detailed guide, please read the complete documentation files:"
+    },
+    "esp32camGuide": {
+      "title": "ESP32-CAM Cameras",
+      "subtitle": "Camera-based vehicle counting source",
+      "concept": "Camera-first concept",
+      "conceptDesc": "One camera per approach (north/south/east). Each camera only needs power + WiFi, then auto-connects to the vision server for YOLO counting. IR + HC-SR04 remain as local occupancy sensors and fallback.",
+      "provision": "Camera provisioning",
+      "step1": "Cameras page (/cameras): create the camera entry (ID, intersection, approach) as admin and copy the once-shown token.",
+      "step2": "Power the ESP32-CAM: if WiFi is unconfigured, join the ASTRAEA-CAM-xxxx SoftAP and fill the form at 192.168.4.1 (SSID, host, camera ID, token).",
+      "step3": "Unplug USB, use a 5V adapter. The camera auto-connects to WiFi then cloud.",
+      "step4": "Check ONLINE status on the Cameras page (FPS + last seen).",
+      "step5": "View streams in Vision Lab / cameras page. No public IP or port forwarding at the camera site.",
+      "view": "Viewing streams",
+      "viewDesc": "Global streams via Server 2 (per-camera snapshot & MJPEG). The dashboard shows the same data YOLO computes."
+    },
+    "aiChatGuide": {
+      "title": "AI Chat",
+      "subtitle": "Ask data & control via chat",
+      "ask": "Asking",
+      "askDesc": "Open AI Chat (/ai-chat) and write in English/Indonesian. The chatbot reads DynamoDB data (summary, anomalies, forecast); with an LLM API key answers are natural and contextual.",
+      "example1": "which approach is busiest this afternoon and what do you recommend?",
+      "example2": "how many vehicles in north over the last hour?",
+      "example3": "how do I add a new intersection?",
+      "control": "Direct control",
+      "controlDesc": "The chatbot can propose actions (change green duration, apply recommendations). Review the proposal then confirm — commands go safely via validated MQTT.",
+      "roles": "Operators may change green durations & own profile. Adding intersections/users and app settings is admin-only."
     }
   },
   "pages": {
@@ -2203,5 +2232,13 @@
       "insight": "Insight",
       "model": "ASTRAEA AI · gemini-3.1-flash-lite"
     }
+  },
+  "cameras": {
+    "title": "Cameras",
+    "listTitle": "Registered cameras",
+    "listDesc": "One camera per approach. Token is shown only once at provisioning.",
+    "provisionTitle": "Provision new camera",
+    "provision": "Create camera + token",
+    "tokenOnce": "Token (copy once, enter into firmware via SoftAP/serial):"
   }
 }
