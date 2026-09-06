@@ -34,9 +34,9 @@ using namespace websockets;
 
 // ---------- NVS keys ----------
 #define NVS_NS "astcam"
-#define DEF_HOST "54.253.237.179" // ganti vision.<domain> saat DNS siap
-#define DEF_PORT 8082
-#define DEF_TLS 0
+#define DEF_HOST "vision.astraea.my.id" // WSS produksi (PRD CAM-FW-03)
+#define DEF_PORT 443
+#define DEF_TLS 1
 
 // ---------- AI-Thinker pins ----------
 #define PWDN_GPIO_NUM 32
