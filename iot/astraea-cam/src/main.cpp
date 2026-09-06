@@ -668,7 +668,7 @@ String htmlEscape(
     String v)
 {
   v.replace("&", "&amp;");
-  v.replace(""", "&quot;");
+  v.replace("\"", "&quot;");
   v.replace("<", "&lt;");
   v.replace(">", "&gt;");
 
