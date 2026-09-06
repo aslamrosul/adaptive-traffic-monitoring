@@ -90,14 +90,16 @@ const normalizeStats = (s: any, boxes: DetectionBox[]): DetectionStats => {
     return undefined;
   };
   const latS = pick("latency_s");
+  // Hitungan per-kelas selalu dari box yang tampil (otoritatif per frame);
+  // server hanya dipercaya untuk total/fps/inferenceMs.
   return {
     totalVehicles: pick("totalVehicles", "count", "vehicles") ?? counted.totalVehicles,
-    car: pick("car") ?? counted.car,
-    truck: pick("truck") ?? counted.truck,
-    bus: pick("bus") ?? counted.bus,
-    motorcycle: pick("motorcycle", "motor") ?? counted.motorcycle,
-    bicycle: pick("bicycle") ?? counted.bicycle,
-    pedestrian: pick("pedestrian", "person") ?? counted.pedestrian,
+    car: counted.car,
+    truck: counted.truck,
+    bus: counted.bus,
+    motorcycle: counted.motorcycle,
+    bicycle: counted.bicycle,
+    pedestrian: counted.pedestrian,
     fps: pick("fps") ?? counted.fps,
     inferenceMs: pick("inferenceMs", "latency_ms") ?? (latS !== undefined ? latS * 1000 : counted.inferenceMs),
   };
