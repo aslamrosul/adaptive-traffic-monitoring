@@ -79,3 +79,5 @@ next-env.d.ts
 # Database exports and reports (auto-generated)
 /exports/
 /database-structure/
+.pio/
+.pioenvs/
