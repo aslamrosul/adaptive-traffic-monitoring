@@ -10,8 +10,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. COMMIT + PUSH SETIAP PERUBAHAN: setiap file yang diubah/ditambah (kode, config, docs)
    WAJIB di-`git commit` dan `git push` ke branch yang sama sebelum sesi/pekerjaan selesai.
    Dilarang menumpuk perubahan tanpa push.
-2. JANGAN COMMIT SECRET: `.env*`, `*.pem`, `*.key`, `passwd`, token, password.
-   Hanya file template `.example` yang boleh masuk repo. (Repo ini PUBLIC.)
+2. SECRET & ENV: semua repo kini PRIVATE — file `.env*` WAJIB ikut di-commit+push
+   agar config tidak hilang (pengecualian dari aturan umum, berlaku selama repo private).
+   DILARANG menjadikan repo ini public. Jangan paste secret di issue/komentar.
 3. LOKASI DEPLOY: `/var/www/adaptive-traffic-monitoring` di EC2 `astraea-web-mqtt`
    (ap-southeast-2). Service systemd: `adaptive-traffic` (port 3000, nginx 80/443).
    Variabel `NEXT_PUBLIC_*` tertanam saat build → setiap mengubahnya wajib
