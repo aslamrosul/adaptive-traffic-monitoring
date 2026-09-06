@@ -420,7 +420,7 @@ export default function DashboardPage() {
     localStorage.setItem("dashboard2_camSource", JSON.stringify(camSource));
   }, [camSource]);
 
-  const [yoloUrl, setYoloUrl] = useState("wss://astraea.my.id/yolo-ws/ws");
+  const [yoloUrl, setYoloUrl] = useState("wss://vision.astraea.my.id/yolo-ws/ws");
   const [yoloEnabled, setYoloEnabled] = useState<Record<CamLane, boolean>>({ north: true, south: true, east: true, west: false });
   const yoloWsRefs = useRef<Record<CamLane, WebSocket | null>>({ north: null, south: null, east: null, west: null });
   const yoloCanvasRefs = useRef<Record<CamLane, HTMLCanvasElement | null>>({ north: null, south: null, east: null, west: null });
@@ -527,8 +527,8 @@ export default function DashboardPage() {
       try {
         const data = JSON.parse(ev.data);
         if (data.detections) {
-          const colorMap: Record<string, string> = { car: "#3b82f6", bus: "#8b5cf6", truck: "#f59e0b", motorcycle: "#10b981", bicycle: "#ec4899" };
-          const boxes = data.detections.map((d: any) => ({ label: d.label, confidence: d.confidence, x: d.x, y: d.y, w: d.w, h: d.h, color: colorMap[d.label] || "#3b82f6" }));
+          const colorMap: Record<string, string> = { car: "#3b82f6", "mobil penumpang": "#3b82f6", bus: "#8b5cf6", truck: "#f59e0b", truk: "#f59e0b", motorcycle: "#10b981", motor: "#10b981", "sepeda motor": "#10b981", bicycle: "#ec4899", unmotorized: "#ec4899", pedestrian: "#fb7185", "pejalan kaki": "#fb7185", person: "#fb7185" };
+          const boxes = data.detections.map((d: any) => ({ label: d.label, confidence: d.confidence, x: d.x, y: d.y, w: d.w, h: d.h, color: colorMap[String(d.label || "").toLowerCase()] || "#3b82f6" }));
           setYoloBoxes((s) => ({ ...s, [lane]: boxes }));
           if (data.stats) {
             setYoloStats((s) => ({ ...s, [lane]: { totalVehicles: data.stats.totalVehicles || 0, fps: data.stats.fps || 0 } }));
@@ -777,7 +777,7 @@ export default function DashboardPage() {
                     <input
                       value={yoloUrl}
                       onChange={(e) => setYoloUrl(e.target.value)}
-                      placeholder="wss://astraea.my.id/yolo-ws/"
+                      placeholder="wss://vision.astraea.my.id/yolo-ws/ws"
                       className="min-w-[220px] flex-1 rounded-lg border border-purple-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-purple-500 focus:outline-none"
                     />
                     <span className="text-[10px] text-purple-600">Model YOLO sama kayak Vision Lab — kotak deteksi muncul di CCTV</span>

@@ -22,6 +22,7 @@ interface DetectionStats {
   bus: number;
   motorcycle: number;
   bicycle: number;
+  pedestrian: number;
   fps: number;
   inferenceMs: number;
 }
@@ -32,7 +33,75 @@ const VEHICLE_CLASSES = [
   { label: "Truck", color: "#f59e0b" },
   { label: "Motorcycle", color: "#10b981" },
   { label: "Bicycle", color: "#ec4899" },
+  { label: "Pedestrian", color: "#fb7185" },
 ];
+
+// Model produksi (yolov8s_indotraffic_best.pt) berlabel Indonesia -> kanon Inggris.
+const LABEL_ALIASES: Record<string, string> = {
+  "mobil penumpang": "Car", car: "Car", mobil: "Car",
+  bus: "Bus",
+  truck: "Truck", truk: "Truck",
+  "sepeda motor": "Motorcycle", motorcycle: "Motorcycle", motor: "Motorcycle",
+  "pejalan kaki": "Pedestrian", pedestrian: "Pedestrian", person: "Pedestrian", orang: "Pedestrian",
+  unmotorized: "Bicycle", bicycle: "Bicycle", sepeda: "Bicycle",
+};
+
+const canonicalLabel = (raw: unknown): string =>
+  LABEL_ALIASES[String(raw ?? "").toLowerCase()] ?? "Car";
+
+const colorFor = (canon: string): string =>
+  VEHICLE_CLASSES.find((v) => v.label === canon)?.color ?? "#3b82f6";
+
+// Terima format lama {x,y,w,h} maupun format baru {box:[x1,y1,x2,y2]} (0-100).
+const normalizeBox = (d: any): { x: number; y: number; w: number; h: number } => {
+  if (Array.isArray(d?.box) && d.box.length >= 4) {
+    const [x1, y1, x2, y2] = d.box.map(Number);
+    return { x: x1 || 0, y: y1 || 0, w: Math.max(0, (x2 || 0) - (x1 || 0)), h: Math.max(0, (y2 || 0) - (y1 || 0)) };
+  }
+  return { x: Number(d?.x) || 0, y: Number(d?.y) || 0, w: Number(d?.w) || 0, h: Number(d?.h) || 0 };
+};
+
+const countFromBoxes = (boxes: DetectionBox[]): DetectionStats => {
+  const c: DetectionStats = {
+    totalVehicles: boxes.length, car: 0, truck: 0, bus: 0, motorcycle: 0,
+    bicycle: 0, pedestrian: 0, fps: 0, inferenceMs: 0,
+  };
+  for (const b of boxes) {
+    const k = b.label.toLowerCase();
+    if (k === "car") c.car += 1;
+    else if (k === "truck") c.truck += 1;
+    else if (k === "bus") c.bus += 1;
+    else if (k === "motorcycle") c.motorcycle += 1;
+    else if (k === "bicycle") c.bicycle += 1;
+    else if (k === "pedestrian") c.pedestrian += 1;
+  }
+  return c;
+};
+
+// Terima stats lama {totalVehicles,car,...,fps,inferenceMs} maupun baru {count,latency_s,...}.
+const normalizeStats = (s: any, boxes: DetectionBox[]): DetectionStats => {
+  const counted = countFromBoxes(boxes);
+  if (!s || typeof s !== "object") return counted;
+  const pick = (...keys: string[]): number | undefined => {
+    for (const k of keys) {
+      const v = Number(s[k]);
+      if (Number.isFinite(v)) return v;
+    }
+    return undefined;
+  };
+  const latS = pick("latency_s");
+  return {
+    totalVehicles: pick("totalVehicles", "count", "vehicles") ?? counted.totalVehicles,
+    car: pick("car") ?? counted.car,
+    truck: pick("truck") ?? counted.truck,
+    bus: pick("bus") ?? counted.bus,
+    motorcycle: pick("motorcycle", "motor") ?? counted.motorcycle,
+    bicycle: pick("bicycle") ?? counted.bicycle,
+    pedestrian: pick("pedestrian", "person") ?? counted.pedestrian,
+    fps: pick("fps") ?? counted.fps,
+    inferenceMs: pick("inferenceMs", "latency_ms") ?? (latS !== undefined ? latS * 1000 : counted.inferenceMs),
+  };
+};
 
 export default function VisionLabPage() {
   const [source, setSource] = useState<Source>("webcam");
@@ -40,13 +109,14 @@ export default function VisionLabPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rtspUrl, setRtspUrl] = useState("");
   const [wsUrl, setWsUrl] = useState(
-    process.env.NEXT_PUBLIC_YOLO_WS_URL || "wss://astraea.my.id/yolo-ws/ws"
+    process.env.NEXT_PUBLIC_YOLO_WS_URL || "wss://vision.astraea.my.id/yolo-ws/ws"
   );
   const [confidence, setConfidence] = useState(0.3);
   const [detectionEnabled, setDetectionEnabled] = useState(true);
+  const [wsConnected, setWsConnected] = useState(false);
   const [boxes, setBoxes] = useState<DetectionBox[]>([]);
   const [stats, setStats] = useState<DetectionStats>({
-    totalVehicles: 0, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, fps: 0, inferenceMs: 0,
+    totalVehicles: 0, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, pedestrian: 0, fps: 0, inferenceMs: 0,
   });
   const [streamLabel, setStreamLabel] = useState("Not connected");
 
@@ -57,6 +127,7 @@ export default function VisionLabPage() {
   const simRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sendCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const connectWsRef = useRef<() => void>(() => {});
 
   // Loop: capture frame dari video -> JPEG base64 -> kirim ke WS YOLOv8 (throttle 10 FPS)
   const startFrameSender = useCallback(() => {
@@ -140,7 +211,7 @@ export default function VisionLabPage() {
       const num = 1 + Math.floor(Math.random() * 5);
       const simBoxes: DetectionBox[] = [];
       const newStats: DetectionStats = {
-        totalVehicles: counter * num, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0,
+        totalVehicles: counter * num, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, pedestrian: 0,
         fps: 25 + Math.random() * 10, inferenceMs: 15 + Math.random() * 20,
       };
       for (let i = 0; i < num; i++) {
@@ -184,6 +255,7 @@ export default function VisionLabPage() {
       setState("streaming");
       setStreamLabel(`Webcam ${videoRef.current?.videoWidth || 0}x${videoRef.current?.videoHeight || 0}`);
       if (!wsUrl) startSimulated();
+      else connectWsRef.current();
     } catch (err: any) {
       setState("error");
       setErrorMsg(err?.message || "Tidak dapat mengakses webcam. Periksa izin browser.");
@@ -208,7 +280,8 @@ export default function VisionLabPage() {
     setState("idle");
     setStreamLabel("Not connected");
     clearBoxes();
-    setStats({ totalVehicles: 0, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, fps: 0, inferenceMs: 0 });
+    setStats({ totalVehicles: 0, car: 0, truck: 0, bus: 0, motorcycle: 0, bicycle: 0, pedestrian: 0, fps: 0, inferenceMs: 0 });
+    setWsConnected(false);
   }, [stopSimulated, clearBoxes, stopFrameSender]);
 
   const destroyHls = useCallback(() => {
@@ -255,6 +328,7 @@ export default function VisionLabPage() {
       setState("streaming");
       setStreamLabel(label);
       if (!wsUrl) startSimulated();
+      else connectWsRef.current();
     };
 
     // RTSP mentah tidak bisa diputar browser — wajib transcode dulu
@@ -335,6 +409,7 @@ export default function VisionLabPage() {
       void videoRef.current.play();
       setStreamLabel(`File: ${file.name}`);
       if (!wsUrl) startSimulated();
+      else connectWsRef.current();
     }
   }, [wsUrl, startSimulated]);
 
@@ -346,6 +421,8 @@ export default function VisionLabPage() {
       wsRef.current = ws;
       ws.onopen = () => {
         stopSimulated();
+        setWsConnected(true);
+        setErrorMsg(null);
         startFrameSender();
         ws.send(JSON.stringify({ type: "config", confidence }));
         setStreamLabel(s => s + " [YOLOv8 connected]");
@@ -355,24 +432,29 @@ export default function VisionLabPage() {
           const data = JSON.parse(ev.data);
           if (data.detections && Array.isArray(data.detections)) {
             const incoming: DetectionBox[] = data.detections
-              .filter((d: any) => d.confidence >= confidence)
-              .map((d: any) => ({
-                label: d.label || d.class || "vehicle",
-                confidence: d.confidence,
-                x: d.x, y: d.y, w: d.w, h: d.h,
-                color: VEHICLE_CLASSES.find((v) => v.label.toLowerCase() === String(d.label || d.class).toLowerCase())?.color || "#3b82f6",
-              }));
+              .map((d: any) => {
+                const label = canonicalLabel(d.label ?? d.class);
+                return {
+                  label,
+                  confidence: Number(d.confidence) || 0,
+                  ...normalizeBox(d),
+                  color: colorFor(label),
+                };
+              })
+              .filter((b: DetectionBox) => b.confidence >= confidence);
             setBoxes(incoming);
             if (detectionEnabled) drawBoxes(incoming); else clearBoxes();
-            if (data.stats) setStats(data.stats);
+            if (data.stats) setStats(normalizeStats(data.stats, incoming));
+            else setStats((s) => ({ ...s, ...countFromBoxes(incoming) }));
           }
         } catch { /* ignore */ }
       };
       ws.onclose = () => {
         stopFrameSender();
+        setWsConnected(false);
         setStreamLabel(s => s.replace(" [YOLOv8 connected]", ""));
       };
-      ws.onerror = () => { setErrorMsg("WebSocket error — periksa URL server YOLOv8"); };
+      ws.onerror = () => { setWsConnected(false); setErrorMsg("WebSocket error — periksa URL server YOLOv8"); };
     } catch (err: any) {
       setErrorMsg("Gagal koneksi WebSocket: " + err.message);
     }
@@ -380,9 +462,12 @@ export default function VisionLabPage() {
 
   const disconnectWs = useCallback(() => {
     stopFrameSender();
+    setWsConnected(false);
     if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
     setStreamLabel((s) => s.replace(" [YOLOv8 connected]", ""));
   }, [stopFrameSender]);
+
+  useEffect(() => { connectWsRef.current = connectWs; });
 
   useEffect(() => () => { stopStream(); disconnectWs(); }, [stopStream, disconnectWs]);
 
@@ -457,7 +542,7 @@ export default function VisionLabPage() {
               {(state === "streaming" || state === "simulated") && (
                 <div className="absolute left-3 top-3 flex flex-col gap-1">
                   <span className="rounded bg-black/60 px-2 py-0.5 text-[10px] font-mono text-emerald-400">{streamLabel}</span>
-                  {wsUrl && wsRef.current && (
+                  {wsUrl && wsConnected && (
                     <span className="rounded bg-purple-600/60 px-2 py-0.5 text-[10px] font-mono text-white">YOLOv8 LIVE</span>
                   )}
                   {!wsUrl && (state === "streaming" || state === "simulated") && (
@@ -548,18 +633,18 @@ export default function VisionLabPage() {
                 type="text"
                 value={wsUrl}
                 onChange={(e) => setWsUrl(e.target.value)}
-                placeholder="ws://54.206.39.219:8080/ws"
+                placeholder="wss://vision.astraea.my.id/yolo-ws/ws"
                 className="w-full rounded-lg bg-slate-900 border border-slate-600 px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
               />
               <div className="flex gap-2">
                 <button
-                  onClick={wsRef.current ? disconnectWs : connectWs}
+                  onClick={wsConnected ? disconnectWs : connectWs}
                   disabled={!wsUrl}
                   className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all disabled:opacity-40 ${
-                    wsRef.current ? "bg-red-600 text-white hover:bg-red-700" : "bg-purple-600 text-white hover:bg-purple-700"
+                    wsConnected ? "bg-red-600 text-white hover:bg-red-700" : "bg-purple-600 text-white hover:bg-purple-700"
                   }`}
                 >
-                  {wsRef.current ? "Disconnect" : "Connect WS"}
+                  {wsConnected ? "Disconnect" : "Connect WS"}
                 </button>
               </div>
               <p className="text-[10px] text-slate-500">Hubungkan ke server YOLOv8 inference untuk deteksi real-time. Tanpa koneksi, simulasi aktif.</p>
@@ -603,6 +688,8 @@ export default function VisionLabPage() {
                 <StatCard label="Truck" value={stats.truck} color="#f59e0b" />
                 <StatCard label="Bus" value={stats.bus} color="#8b5cf6" />
                 <StatCard label="Motor" value={stats.motorcycle} color="#10b981" />
+                <StatCard label="Pedestrian" value={stats.pedestrian} color="#fb7185" />
+                <StatCard label="Bicycle" value={stats.bicycle} color="#ec4899" />
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div className="rounded-lg bg-slate-900 p-2">
@@ -634,8 +721,8 @@ export default function VisionLabPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">YOLOv8 Server</span>
-                  <span className={wsRef.current ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
-                    {wsRef.current ? "Connected" : "Not Connected"}
+                  <span className={wsConnected ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>
+                    {wsConnected ? "Connected" : "Not Connected"}
                   </span>
                 </div>
                 <div className="flex justify-between">
