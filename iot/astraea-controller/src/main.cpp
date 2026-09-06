@@ -59,7 +59,7 @@
 #define DEF_MQTT_HOST "astraea.my.id"
 #define DEF_MQTT_PORT 1883
 #define DEF_MQTT_USER "jti"
-#define DEF_MQTT_PASS "Azure-password123"
+#define DEF_MQTT_PASS "" // WAJIB via NVS (serial: set mqtt ...); jangan hardcode produksi
 
 #define FW_VERSION "2.1.0"
 
