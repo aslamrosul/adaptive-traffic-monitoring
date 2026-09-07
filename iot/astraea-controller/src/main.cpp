@@ -2340,7 +2340,10 @@ void sendTelemetry()
   if (!client.connected())
     return;
 
-  StaticJsonDocument<3072> doc;
+  // Buffer besar sebagai static (.bss), BUKAN stack loopTask (~8 KB):
+  // mencegah "Stack canary watchpoint triggered" setelah MQTT connect.
+  static StaticJsonDocument<3072> doc;
+  doc.clear();
 
   doc["schema_version"] = 1;
   doc["intersection_id"] = cfgIntersection;
@@ -2440,7 +2443,7 @@ void sendTelemetry()
   doc["active_lane"] =
       activeLane;
 
-  char payload[3072];
+  static char payload[3072];
 
   size_t payloadSize =
       serializeJson(
@@ -2458,7 +2461,8 @@ void sendTelemetry()
   // LEGACY payload untuk dashboard/subscriber lama.
   // ----------------------------------------------------------
 
-  StaticJsonDocument<3072> legacy;
+  static StaticJsonDocument<3072> legacy;
+  legacy.clear();
 
   legacy["intersection_id"] =
       cfgIntersection;
@@ -2606,7 +2610,7 @@ void sendTelemetry()
   legacy["dummy_mode"] =
       false;
 
-  char legacyPayload[3072];
+  static char legacyPayload[3072];
 
   size_t legacySize =
       serializeJson(
@@ -2631,7 +2635,8 @@ void sendTelemetry()
 void handleVisionMetrics(
     const String &raw)
 {
-  StaticJsonDocument<3072> doc;
+  static StaticJsonDocument<3072> doc;
+  doc.clear();
 
   DeserializationError err =
       deserializeJson(
@@ -2728,7 +2733,8 @@ void handleVisionMetrics(
 void handleRecommendation(
     const String &raw)
 {
-  StaticJsonDocument<3072> doc;
+  static StaticJsonDocument<3072> doc;
+  doc.clear();
 
   DeserializationError err =
       deserializeJson(
@@ -3030,7 +3036,8 @@ bool applyConfigCommand(
 void handleCommand(
     const String &raw)
 {
-  StaticJsonDocument<2048> doc;
+  static StaticJsonDocument<2048> doc;
+  doc.clear();
 
   DeserializationError err =
       deserializeJson(
@@ -3194,7 +3201,8 @@ void handleCommand(
 void handleLegacyConfig(
     const String &raw)
 {
-  StaticJsonDocument<1024> oldDoc;
+  static StaticJsonDocument<1024> oldDoc;
+  oldDoc.clear();
 
   if (deserializeJson(
           oldDoc,
@@ -3231,7 +3239,8 @@ void handleLegacyConfig(
     saveConfig();
   }
 
-  StaticJsonDocument<1024> cmd;
+  static StaticJsonDocument<1024> cmd;
+  cmd.clear();
 
   cmd["type"] =
       "set_config";

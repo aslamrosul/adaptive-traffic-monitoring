@@ -32,7 +32,8 @@
     "test:api": "npx tsx scripts/test-api.ts",
     "migrate:backup": "npx tsx scripts/backup-cosmos-before-migration.ts",
     "migrate:run": "npx tsx scripts/migrate-cosmos-schema.ts",
-    "migrate:full": "npm run migrate:backup && npm run migrate:run"
+    "migrate:full": "npm run migrate:backup && npm run migrate:run",
+    "test:live": "tsx --test lib/camera-live.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1061.0",
