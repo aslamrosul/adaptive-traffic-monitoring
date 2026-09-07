@@ -2138,8 +2138,7 @@ void handleSerialProvisioning()
     }
   }
 
-  if (line == "show") {
-    Serial.print(
+  if (line == "show") {    Serial.print(
         "intersection=");
 
     Serial.println(
@@ -2184,6 +2183,14 @@ void handleSerialProvisioning()
             : "offline");
 
     return;
+  }
+
+  if (line == "reboot") {
+    Serial.println(
+        "Reboot...");
+
+    delay(300);
+    ESP.restart();
   }
 
   Serial.println(
