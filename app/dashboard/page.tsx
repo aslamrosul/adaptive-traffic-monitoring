@@ -2,6 +2,7 @@
 
 import DashboardStats from "@/components/DashboardStats";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
+import CanonicalCameraStrip from "@/components/CanonicalCameraStrip";
 import Header from "@/components/Header";
 import IntersectionGrid from "@/components/IntersectionGrid";
 import LaneStatusPanel from "@/components/LaneStatusPanel";
@@ -746,6 +747,23 @@ export default function DashboardPage() {
               <VisionStateBadge state={visionInfo.state} freshLanes={visionInfo.lanes} />
             </div>
 
+            <details className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+              <summary className="cursor-pointer font-bold">
+                Cara kerja adaptif (klik untuk detail)
+              </summary>
+              <p className="mt-1">
+                NORMAL: Kamera/YOLO + Level sensor → Fuzzy → rekomendasi hijau →
+                Controller → lampu fisik. FALLBACK: bila fuzzy basi, Level sensor lokal
+                → durasi bounded → lampu tetap jalan aman.
+              </p>
+            </details>
+
+            {selectedIntersection !== "all" && (
+              <div className="mt-4">
+                <CanonicalCameraStrip intersectionId={selectedIntersection} />
+              </div>
+            )}
+
             <DashboardStats
               timeRange={timeRange}
               customDates={customDates}
@@ -959,7 +977,7 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Simulasi Jalan • {simSource === "camera" ? "Mode Kamera" : simSource === "sensor" ? "Mode Sensor" : "Mode Otomatis"}
+                        Simulasi Jalan (Lab/Eksperimental) • {simSource === "camera" ? "Mode Kamera" : simSource === "sensor" ? "Mode Sensor" : "Mode Otomatis"}
                       </p>
                       <h2 className="text-lg font-bold text-slate-900">
                         {selectedIntersectionName} — Animasi Lalu Lintas

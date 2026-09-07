@@ -25,6 +25,15 @@ export interface LaneData {
   queueLength: number;
   queueLevel: 0 | 1 | 2;
   greenDuration: number;
+  // Field kanonis opsional (backward-compatible; dari telemetri v2.1 / DynamoDB).
+  cameraQueueVehicles?: number;
+  countValid?: boolean;
+  countSource?: string;
+  visionFresh?: boolean;
+  distanceCm?: number;
+  ultrasonicDetected?: boolean;
+  recommendedGreenS?: number;
+  effectiveGreenS?: number;
 }
 
 export interface TrafficUpdate {
@@ -52,6 +61,15 @@ export interface TrafficUpdate {
 
   wifiRssi: number;
   uptimeS: number;
+  // Field kanonis top-level opsional (v2.1).
+  visionState?: string;
+  visionFreshLanes?: number;
+  visionFresh?: boolean;
+  firmwareVersion?: string;
+  activeLane?: string;
+  sigState?: string | number;
+  configVersion?: number;
+  modeDegraded?: boolean;
 }
 
 export type MqttConnectionState =
@@ -262,6 +280,49 @@ function laneFromFlat(
       0,
     ),
 
+    // Kanonis: queue kendaraan (BUKAN cm) + validitas + sumber terpisah.
+    cameraQueueVehicles: toNumber(
+      raw?.[`${lane}_queue_vehicles`],
+      0,
+    ),
+
+    countValid:
+      raw?.[`${lane}_count_valid`] === undefined
+        ? true
+        : toBool(raw?.[`${lane}_count_valid`], true),
+
+    countSource:
+      typeof raw?.[`${lane}_count_source`] === "string"
+        ? raw[`${lane}_count_source`]
+        : "",
+
+    visionFresh: toBool(
+      raw?.[`${lane}_vision_fresh`],
+      false,
+    ),
+
+    distanceCm: toNumber(
+      raw?.[`${lane}_distance_cm`],
+      0,
+    ),
+
+    ultrasonicDetected: toBool(
+      raw?.[`${lane}_ultrasonic_detected`],
+      false,
+    ),
+
+    recommendedGreenS:
+      raw?.[`${lane}_recommended_green_s`] === undefined ||
+      raw?.[`${lane}_recommended_green_s`] === null
+        ? undefined
+        : Number(raw[`${lane}_recommended_green_s`]),
+
+    effectiveGreenS:
+      raw?.[`${lane}_effective_green_s`] === undefined ||
+      raw?.[`${lane}_effective_green_s`] === null
+        ? undefined
+        : Number(raw[`${lane}_effective_green_s`]),
+
     vehicleDetected,
 
     irState:
@@ -387,6 +448,37 @@ export function normalizeMqttTraffic(
     uptimeS: toNumber(
       raw?.uptime_s ?? raw?.uptimeS,
       0,
+    ),
+
+    visionState:
+      typeof raw?.vision_state === "string" ? raw.vision_state : undefined,
+
+    visionFreshLanes: toNumber(
+      raw?.vision_fresh_lanes,
+      0,
+    ),
+
+    visionFresh: toBool(
+      raw?.vision_fresh,
+      false,
+    ),
+
+    firmwareVersion:
+      typeof raw?.firmware_version === "string" ? raw.firmware_version : undefined,
+
+    activeLane:
+      typeof raw?.active_lane === "string" ? raw.active_lane : undefined,
+
+    sigState: raw?.sig_state ?? undefined,
+
+    configVersion: toNumber(
+      raw?.config_version,
+      0,
+    ),
+
+    modeDegraded: toBool(
+      raw?.mode_degraded,
+      false,
     ),
   };
 }

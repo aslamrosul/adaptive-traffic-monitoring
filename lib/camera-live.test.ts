@@ -49,6 +49,20 @@ describe("deriveStatus", () => {
 });
 
 describe("mergeCamera", () => {
+  it("inference_fresh dipetakan bila ada (M)", () => {
+    const on: any = mergeCamera(REG, {
+      ...LIVE_ON,
+      metrics: { ...LIVE_ON.metrics, inference_fresh: true },
+    });
+    assert.equal(on.inference_fresh, true);
+    const off: any = mergeCamera(REG, {
+      ...LIVE_ON,
+      metrics: { ...LIVE_ON.metrics, inference_fresh: false },
+    });
+    assert.equal(off.inference_fresh, false);
+    const missing: any = mergeCamera(REG, LIVE_ON);
+    assert.equal(missing.inference_fresh, null);
+  });
   it("tidak membocorkan secret (AU)", () => {
     const merged: any = mergeCamera(REG, {
       ...LIVE_ON,

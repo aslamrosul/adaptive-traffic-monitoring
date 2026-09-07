@@ -17,6 +17,7 @@ export interface LiveStatus {
     fresh?: boolean;
     connected?: boolean;
     frame_age_s?: number | null;
+    inference_fresh?: boolean | null;
     active_vehicle_count?: number;
     queue_vehicle_count?: number;
     stopped_vehicle_count?: number;
@@ -81,6 +82,8 @@ export function deriveStatus(live: LiveStatus | null): {
 export function mergeCamera(reg: RegistryCamera, live: LiveStatus | null): MergedCamera {
   const d = deriveStatus(live);
   const m = live?.metrics;
+  const inferenceFresh =
+    typeof m?.inference_fresh === "boolean" ? m.inference_fresh : null;
   const frameAge =
     typeof live?.frame_age_s === "number"
       ? live.frame_age_s
@@ -97,7 +100,7 @@ export function mergeCamera(reg: RegistryCamera, live: LiveStatus | null): Merge
     fresh: d.fresh,
     online: d.online,
     frame_age_s: frameAge,
-    inference_fresh: null,
+    inference_fresh: inferenceFresh,
     fps_ingest: typeof live?.fps_ingest === "number" ? live.fps_ingest : null,
     last_seen: live?.last_seen ?? null,
     metrics: m
