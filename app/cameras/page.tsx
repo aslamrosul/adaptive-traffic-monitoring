@@ -11,7 +11,10 @@ interface Camera {
   approach_id: string;
   enabled: boolean;
   firmware_version?: string;
-  health_state?: string;
+  status?: "ONLINE" | "STALE" | "OFFLINE" | "UNKNOWN";
+  connected?: boolean | null;
+  fresh?: boolean | null;
+  frame_age_s?: number | null;
   last_seen?: string;
   fps_ingest?: number;
 }
@@ -26,22 +29,28 @@ export default function CamerasPage() {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
-      const res = await fetch("/api/cameras");
+      // Live status server-side (registry + Server 2); bukan health_state basi.
+      const res = await fetch("/api/cameras/live");
       const json = await res.json();
-      if (json.success) setCameras(json.data);
-      else setError(json.error || "Gagal memuat");
+      if (json.success) {
+        setCameras(json.data);
+        setError("");
+      } else setError(json.error || "Gagal memuat");
     } catch {
       setError("Gagal memuat");
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     load();
+    // Polling live 4 detik (L); tanpa spinner agar tidak kedip.
+    const timer = setInterval(() => load(false), 4000);
+    return () => clearInterval(timer);
   }, [load]);
 
   const provision = async () => {
@@ -87,6 +96,7 @@ export default function CamerasPage() {
                     <th className="py-2">Persimpangan</th>
                     <th className="py-2">Pendekatan</th>
                     <th className="py-2">Status</th>
+                    <th className="py-2">Frame age</th>
                     <th className="py-2">FPS</th>
                     <th className="py-2">Terakhir terlihat</th>
                   </tr>
@@ -100,13 +110,22 @@ export default function CamerasPage() {
                       <td className="py-2">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            c.health_state === "ONLINE"
+                            c.status === "ONLINE"
                               ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-200 text-slate-600"
+                              : c.status === "STALE"
+                                ? "bg-amber-100 text-amber-700"
+                                : c.status === "OFFLINE"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-slate-200 text-slate-600"
                           }`}
                         >
-                          {c.health_state || "OFFLINE"}
+                          {c.status || "UNKNOWN"}
                         </span>
+                      </td>
+                      <td className="py-2 text-xs tabular-nums">
+                        {c.frame_age_s === null || c.frame_age_s === undefined
+                          ? "-"
+                          : `${Number(c.frame_age_s).toFixed(1)}s`}
                       </td>
                       <td className="py-2">{c.fps_ingest ?? "-"}</td>
                       <td className="py-2 text-xs text-slate-500">{c.last_seen || "-"}</td>
@@ -114,7 +133,7 @@ export default function CamerasPage() {
                   ))}
                   {cameras.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-4 text-center text-slate-400">
+                      <td colSpan={7} className="py-4 text-center text-slate-400">
                         Belum ada kamera
                       </td>
                     </tr>
