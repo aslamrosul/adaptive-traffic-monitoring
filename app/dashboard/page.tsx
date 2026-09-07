@@ -9,6 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
+import VisionStateBadge from "@/components/VisionStateBadge";
 import { useT } from "@/lib/useT";
 
 import type {
@@ -74,6 +75,12 @@ export default function DashboardPage() {
    */
   const [selectedLatestFromApi, setSelectedLatestFromApi] =
     useState<TrafficUpdate | null>(null);
+
+  // Status vision mentah (NORMAL/DEGRADED/FALLBACK) dari item API terbaru.
+  const [visionInfo, setVisionInfo] = useState<{
+    state: string | null;
+    lanes: number | null;
+  }>({ state: null, lanes: null });
 
   const { intersections } = useIntersections();
 
@@ -228,6 +235,7 @@ export default function DashboardPage() {
         ) {
           if (!cancelled) {
             setSelectedLatestFromApi(null);
+            setVisionInfo({ state: null, lanes: null });
           }
 
           return;
@@ -242,12 +250,17 @@ export default function DashboardPage() {
         ) {
           if (!cancelled) {
             setSelectedLatestFromApi(null);
+            setVisionInfo({ state: null, lanes: null });
           }
 
           return;
         }
 
         setSelectedLatestFromApi(normalized);
+        setVisionInfo({
+          state: (json.data[0] as any)?.vision_state ?? null,
+          lanes: (json.data[0] as any)?.vision_fresh_lanes ?? null,
+        });
         setLastUpdate(new Date());
       } catch (fetchError) {
         console.error(
@@ -257,6 +270,7 @@ export default function DashboardPage() {
 
         if (!cancelled) {
           setSelectedLatestFromApi(null);
+          setVisionInfo({ state: null, lanes: null });
         }
       }
     }
@@ -727,6 +741,10 @@ export default function DashboardPage() {
               selectedIntersection={selectedIntersection}
               intersections={filterIntersections}
             />
+
+            <div className="mt-2">
+              <VisionStateBadge state={visionInfo.state} freshLanes={visionInfo.lanes} />
+            </div>
 
             <DashboardStats
               timeRange={timeRange}

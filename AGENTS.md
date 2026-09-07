@@ -25,4 +25,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
    `git push` langsung (tanpa token). Lalu sync ke deploy: copy file ke
    `/var/www/adaptive-traffic-monitoring`, `npm run build` bila ubah `NEXT_PUBLIC_*`,
    `systemctl restart adaptive-traffic`.
+   SYNC AMAN (PENTING): JANGAN rsync --delete tanpa exclude env — `/var/www/.env.local`
+   produksi tidak ada di repo. Selalu: `--exclude .git --exclude node_modules
+   --exclude .next --exclude .env*.local`, lalu verifikasi `.env.local` masih ada
+   sebelum restart service.
 <!-- END:astraea-project-rules -->
