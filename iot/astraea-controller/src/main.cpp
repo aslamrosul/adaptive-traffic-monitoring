@@ -53,15 +53,15 @@
 #define DEF_INTERSECTION_ID "SIMPANG_TALUN_01"
 #define DEF_CONTROLLER_ID   "ESP32_TRAFFIC_01"
 
-#define DEF_WIFI_SSID ""
-#define DEF_WIFI_PASS ""
+#define DEF_WIFI_SSID "Hai"
+#define DEF_WIFI_PASS "zillan02"
 
 #define DEF_MQTT_HOST "astraea.my.id"
 #define DEF_MQTT_PORT 1883
 #define DEF_MQTT_USER "jti"
-#define DEF_MQTT_PASS "" // WAJIB via NVS (serial: set mqtt ...); jangan hardcode produksi
+#define DEF_MQTT_PASS "Azure-password123"
 
-#define FW_VERSION "2.1.0"
+#define FW_VERSION "2.1.2"
 
 // ============================================================
 // SENSOR / VISION / NETWORK TIMING
@@ -1984,6 +1984,7 @@ void maintainMQTT()
 //   set mqtt <host> <port> <user> <pass>
 //   set id <intersection> <controller>
 //   show
+//   reboot
 // ============================================================
 
 void handleSerialProvisioning()
@@ -2138,7 +2139,8 @@ void handleSerialProvisioning()
     }
   }
 
-  if (line == "show") {    Serial.print(
+  if (line == "show") {
+    Serial.print(
         "intersection=");
 
     Serial.println(
@@ -2191,6 +2193,7 @@ void handleSerialProvisioning()
 
     delay(300);
     ESP.restart();
+    return;
   }
 
   Serial.println(
@@ -2340,10 +2343,25 @@ void sendTelemetry()
   if (!client.connected())
     return;
 
-  // Buffer besar sebagai static (.bss), BUKAN stack loopTask (~8 KB):
-  // mencegah "Stack canary watchpoint triggered" setelah MQTT connect.
-  static StaticJsonDocument<3072> doc;
+  /*
+   * IMPORTANT:
+   * Jangan taruh 2x StaticJsonDocument<3072> + 2x char[3072]
+   * di loopTask stack. Kombinasi lama memakai >12 KB stack dan
+   * memicu "Stack canary watchpoint triggered (loopTask)".
+   *
+   * Document + String di bawah dialokasikan di HEAP dan direuse.
+   * Ini sengaja static agar tidak malloc/free terus-menerus.
+   */
+  static DynamicJsonDocument doc(3072);
+  static String payload;
+
+  // Arduino-ESP32 3.3.x membuat String::capacity() protected.
+  // reserve() aman dipanggil langsung; bila kapasitas sudah cukup,
+  // implementasi String tidak perlu melakukan realloc besar lagi.
+  payload.reserve(4096);
+
   doc.clear();
+  payload = "";
 
   doc["schema_version"] = 1;
   doc["intersection_id"] = cfgIntersection;
@@ -2354,7 +2372,6 @@ void sendTelemetry()
 
   if (ts.length() > 0)
     doc["timestamp"] = ts;
-
   else
     doc["timestamp"] = nullptr;
 
@@ -2443,38 +2460,44 @@ void sendTelemetry()
   doc["active_lane"] =
       activeLane;
 
-  static char payload[3072];
-
-  size_t payloadSize =
+  size_t canonicalSize =
       serializeJson(
           doc,
           payload);
 
-  client.publish(
-      topicTelemetry().c_str(),
-      reinterpret_cast<uint8_t *>(
-          payload),
-      payloadSize,
-      false);
+  bool canonicalOk =
+      client.publish(
+          topicTelemetry().c_str(),
+          reinterpret_cast<const uint8_t *>(
+              payload.c_str()),
+          canonicalSize,
+          false);
+
+  if (!canonicalOk) {
+    Serial.println(
+        "[MQTT] canonical telemetry publish gagal");
+  }
 
   // ----------------------------------------------------------
   // LEGACY payload untuk dashboard/subscriber lama.
+  //
+  // Reuse document + payload yang sama supaya stack/heap tetap kecil.
   // ----------------------------------------------------------
 
-  static StaticJsonDocument<3072> legacy;
-  legacy.clear();
+  doc.clear();
+  payload = "";
 
-  legacy["intersection_id"] =
+  doc["intersection_id"] =
       cfgIntersection;
 
-  legacy["device_id"] =
+  doc["device_id"] =
       cfgController;
 
-  legacy["device"] =
+  doc["device"] =
       cfgController;
 
   if (ts.length() > 0)
-    legacy["timestamp"] = ts;
+    doc["timestamp"] = ts;
 
   for (int i = 0; i < 3; i++) {
     String lane(LANES[i]);
@@ -2494,40 +2517,40 @@ void sendTelemetry()
     // Legacy consumer biasanya mengharapkan angka.
     // 0 tetap dikirim bila stale, tetapi valid=false dan source
     // menjelaskan bahwa 0 itu bukan hasil count kamera yang valid.
-    legacy[prefix + "vehicle_count"] =
+    doc[prefix + "vehicle_count"] =
         vf && v != nullptr
             ? v->vehicleCount
             : 0;
 
-    legacy[prefix + "vehicle_count_valid"] =
+    doc[prefix + "vehicle_count_valid"] =
         vf;
 
-    legacy[prefix + "vehicle_count_source"] =
+    doc[prefix + "vehicle_count_source"] =
         vf
             ? "camera"
             : "vision_stale";
 
-    legacy[prefix + "vehicle_detected"] =
+    doc[prefix + "vehicle_detected"] =
         o != nullptr
             ? o->irNow
             : false;
 
-    legacy[prefix + "distance_cm"] =
+    doc[prefix + "distance_cm"] =
         o != nullptr
             ? o->distanceCm
             : 0;
 
-    legacy[prefix + "density_level"] =
+    doc[prefix + "density_level"] =
         o != nullptr
             ? o->level
             : 0;
 
-    legacy[prefix + "queue_detected"] =
+    doc[prefix + "queue_detected"] =
         o != nullptr
             ? (o->level == 2)
             : false;
 
-    legacy[prefix + "queue_estimate_cm"] =
+    doc[prefix + "queue_estimate_cm"] =
         o != nullptr
             ? (o->level == 2
                 ? QUEUE_LEVEL_2_CM
@@ -2536,7 +2559,7 @@ void sendTelemetry()
                     : QUEUE_LEVEL_0_CM)
             : 0;
 
-    legacy[prefix + "ultrasonic_detected"] =
+    doc[prefix + "ultrasonic_detected"] =
         o != nullptr
             ? o->usNow
             : false;
@@ -2544,85 +2567,89 @@ void sendTelemetry()
     String *light =
         lightOf(lane);
 
-    legacy[prefix + "light"] =
+    doc[prefix + "light"] =
         light != nullptr
             ? *light
             : "red";
 
-    legacy[prefix + "green_duration_s"] =
+    doc[prefix + "green_duration_s"] =
         greenForLane(lane) /
         1000UL;
   }
 
-  legacy["legacy_ultrasonic_count_north"] =
+  doc["legacy_ultrasonic_count_north"] =
       legacyCountNorth;
 
-  legacy["legacy_ultrasonic_count_south"] =
+  doc["legacy_ultrasonic_count_south"] =
       legacyCountSouth;
 
-  legacy["legacy_ultrasonic_count_east"] =
+  doc["legacy_ultrasonic_count_east"] =
       legacyCountEast;
 
   int fresh =
       freshVisionLaneCount();
 
-  legacy["vehicle_count_source"] =
+  doc["vehicle_count_source"] =
       fresh == 3
           ? "camera"
           : fresh > 0
               ? "mixed"
               : "vision_stale";
 
-  legacy["vision_state"] =
+  doc["vision_state"] =
       visionStateName();
 
-  legacy["wifi_rssi"] =
+  doc["wifi_rssi"] =
       WiFi.status() ==
               WL_CONNECTED
           ? WiFi.RSSI()
           : 0;
 
-  legacy["uptime_s"] =
+  doc["uptime_s"] =
       millis() /
       1000UL;
 
-  legacy["green_time_s"] =
+  doc["green_time_s"] =
       greenTimeMs /
       1000UL;
 
-  legacy["yellow_time_s"] =
+  doc["yellow_time_s"] =
       yellowTimeMs /
       1000UL;
 
-  legacy["all_red_s"] =
+  doc["all_red_s"] =
       allRedTimeMs /
       1000UL;
 
-  legacy["auto_mode"] =
+  doc["auto_mode"] =
       autoMode;
 
-  legacy["adaptive_mode"] =
+  doc["adaptive_mode"] =
       adaptiveMode;
 
-  legacy["sensor_mode"] =
+  doc["sensor_mode"] =
       true;
 
-  legacy["dummy_mode"] =
+  doc["dummy_mode"] =
       false;
-
-  static char legacyPayload[3072];
 
   size_t legacySize =
       serializeJson(
-          legacy,
-          legacyPayload);
+          doc,
+          payload);
 
-  client.publish(
-      topicLegacyData().c_str(),
-      reinterpret_cast<uint8_t *>(
-          legacyPayload),
-      legacySize,
-      false);
+  bool legacyOk =
+      client.publish(
+          topicLegacyData().c_str(),
+          reinterpret_cast<const uint8_t *>(
+              payload.c_str()),
+          legacySize,
+          false);
+
+  if (!legacyOk) {
+    Serial.println(
+        "[MQTT] legacy telemetry publish gagal");
+  }
 
   telemetryDirty  = false;
   lastTelemetryAt = millis();
@@ -2635,8 +2662,7 @@ void sendTelemetry()
 void handleVisionMetrics(
     const String &raw)
 {
-  static StaticJsonDocument<3072> doc;
-  doc.clear();
+  DynamicJsonDocument doc(3072);
 
   DeserializationError err =
       deserializeJson(
@@ -2733,8 +2759,7 @@ void handleVisionMetrics(
 void handleRecommendation(
     const String &raw)
 {
-  static StaticJsonDocument<3072> doc;
-  doc.clear();
+  DynamicJsonDocument doc(3072);
 
   DeserializationError err =
       deserializeJson(
@@ -3036,8 +3061,7 @@ bool applyConfigCommand(
 void handleCommand(
     const String &raw)
 {
-  static StaticJsonDocument<2048> doc;
-  doc.clear();
+  DynamicJsonDocument doc(2048);
 
   DeserializationError err =
       deserializeJson(
@@ -3201,8 +3225,7 @@ void handleCommand(
 void handleLegacyConfig(
     const String &raw)
 {
-  static StaticJsonDocument<1024> oldDoc;
-  oldDoc.clear();
+  StaticJsonDocument<1024> oldDoc;
 
   if (deserializeJson(
           oldDoc,
@@ -3239,8 +3262,7 @@ void handleLegacyConfig(
     saveConfig();
   }
 
-  static StaticJsonDocument<1024> cmd;
-  cmd.clear();
+  StaticJsonDocument<1024> cmd;
 
   cmd["type"] =
       "set_config";
@@ -3621,6 +3643,11 @@ void setup()
   // Tidak menunggu WiFi/MQTT.
   // Phase engine lokal tetap berjalan.
   beginWiFiAttempt();
+
+  Serial.printf(
+      "[MEM] free_heap=%u stack_hwm=%u\n",
+      static_cast<unsigned int>(ESP.getFreeHeap()),
+      static_cast<unsigned int>(uxTaskGetStackHighWaterMark(nullptr)));
 
   Serial.println(
       "Controller ready. Local signal engine active.");
