@@ -1004,7 +1004,7 @@ export default function DashboardPage() {
                           className="hidden"
                           onChange={(e) => handleCamUpload(lane, e.target.files?.[0] || null)}
                         />
-                        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-video">
+                        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-[4/3] fullscreen:aspect-auto fullscreen:h-full">
                           {camSource[lane] === "canonical" ? (
                             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-slate-900 p-3 text-center">
                               <span className="material-symbols-outlined text-2xl text-emerald-400">videocam</span>
