@@ -7,6 +7,7 @@ import IntersectionGrid from "@/components/IntersectionGrid";
 import LaneStatusPanel from "@/components/LaneStatusPanel";
 import Sidebar from "@/components/Sidebar";
 import AiStatusBadge from "@/components/AiStatusBadge";
+import { useCameraDisplay, resolveLaneSource } from "@/lib/hooks/useCameraDisplay";
 import { useCameraLiveMap } from "@/lib/hooks/useCameraLive";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
@@ -330,7 +331,7 @@ export default function DashboardPage() {
   const [camView, setCamView] = useState<"all" | CamLane>("all");
   const camLiveMap = useCameraLiveMap(selectedIntersection);
   const [isSimOpen, setIsSimOpen] = useState(true);
-  const [camSource, setCamSource] = useState<Record<CamLane, "mjpeg" | "hls" | "webcam" | "upload">>({
+  const [camSource, setCamSource] = useState<Record<CamLane, "canonical" | "mjpeg" | "hls" | "webcam" | "upload">>({
     north: "mjpeg",
     south: "mjpeg",
     east: "mjpeg",
@@ -349,6 +350,30 @@ export default function DashboardPage() {
     west: null,
   });
   const [camSettingsLane, setCamSettingsLane] = useState<CamLane | null>(null);
+  const { byApproach: dispCfg, reload: reloadDisp } = useCameraDisplay(
+    selectedIntersection === "all" ? null : selectedIntersection
+  );
+  const [laneCamId, setLaneCamId] = useState<Record<CamLane, string>>({
+    north: "", south: "", east: "", west: "",
+  });
+  const [snapTick, setSnapTick] = useState(0);
+  const [cfgSaveState, setCfgSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [cfgSaveError, setCfgSaveError] = useState("");
+  const [cfgMigrated, setCfgMigrated] = useState(false);
+  const [formSource, setFormSource] = useState<"canonical" | "mjpeg" | "hls">("canonical");
+  const [formMjpeg, setFormMjpeg] = useState("");
+  const [formHls, setFormHls] = useState("");
+  const [syncedKey, setSyncedKey] = useState("");
+  const migratedRef = useState(() => ({ done: false }))[0];
+  useEffect(() => {
+    if (!camSettingsLane) return;
+    const e = dispCfg[camSettingsLane];
+    setFormSource(e?.active_source === "mjpeg" || e?.active_source === "hls" ? e.active_source : "canonical");
+    setFormMjpeg(e?.manual_mjpeg_url || "");
+    setFormHls(e?.manual_hls_url || "");
+    setCfgSaveState("idle");
+    setCfgSaveError("");
+  }, [camSettingsLane, dispCfg]);
 
   const toggleCamFullscreen = (lane: CamLane) => {
     const el = document.getElementById(`cam-card-${lane}`);
@@ -395,18 +420,78 @@ export default function DashboardPage() {
     if (camSettingsLane && !visibleCamLanes.includes(camSettingsLane)) setCamSettingsLane(null);
   }, [visibleCamLanes, camView, camSettingsLane]);
 
-  // Persist IP biar tidak hilang reload (rekomendasi)
+  // Preferensi UI lokal (bukan source of truth kamera).
   useEffect(() => {
     try {
-      const savedUrls = localStorage.getItem("dashboard2_camUrls");
-      if (savedUrls) setCamUrls(JSON.parse(savedUrls));
       const savedView = localStorage.getItem("dashboard2_camView") as "all" | CamLane | null;
       if (savedView) setCamView(savedView);
-      const savedSource = localStorage.getItem("dashboard2_camSource");
-      if (savedSource) setCamSource(JSON.parse(savedSource));
       const savedSim = localStorage.getItem("dashboard_simOpen");
       if (savedSim !== null) setIsSimOpen(savedSim === "true");
     } catch {}
+  }, []);
+  // Default intersection operasional (STEP 16).
+  useEffect(() => {
+    if (selectedIntersection !== "all") return;
+    const list = (intersections || []) as Array<{ id?: string; intersection_id?: string; status?: string }>;
+    if (!list.length) return;
+    const talun = list.find((x) => (x.id || x.intersection_id) === "SIMPANG_TALUN_01");
+    const firstActive = list.find((x) => (x.status || "active") === "active") || list[0];
+    const pick = talun || firstActive;
+    const pid = String(pick.id || pick.intersection_id || "");
+    if (pid) setSelectedIntersection(pid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intersections]);
+  // Sinkronisasi sumber efektif SEKALI per kombinasi (server > registry > lokal).
+  useEffect(() => {
+    const liveKeys = Object.keys(camLiveMap).sort().join(",");
+    const dispKeys = Object.keys(dispCfg).sort().join(",");
+    const key = `${selectedIntersection}|${dispKeys}|${liveKeys}`;
+    if (key === syncedKey) return;
+    setSyncedKey(key);
+    const nextSource: Partial<Record<CamLane, "canonical" | "mjpeg" | "hls" | "webcam" | "upload">> = {};
+    const nextUrls: Partial<Record<CamLane, string>> = {};
+    const nextIds: Partial<Record<CamLane, string>> = {};
+    for (const lane of ALL_LANES) {
+      const e = dispCfg[lane];
+      const live = camLiveMap[lane];
+      const r = resolveLaneSource({
+        serverEntry: e || null,
+        registered: !!live?.camera_id,
+      });
+      if (r.kind === "canonical" || r.kind === "mjpeg" || r.kind === "hls") {
+        nextSource[lane] = r.kind;
+        nextUrls[lane] = r.url;
+        nextIds[lane] = e?.camera_id || live?.camera_id || "";
+      }
+    }
+    if (!migratedRef.done) {
+      migratedRef.done = true;
+      try {
+        const lu = JSON.parse(localStorage.getItem("dashboard2_camUrls") || "{}");
+        const ls = JSON.parse(localStorage.getItem("dashboard2_camSource") || "{}");
+        let moved = false;
+        for (const lane of ALL_LANES) {
+          if (nextSource[lane] || dispCfg[lane] || camLiveMap[lane]) continue;
+          const u = typeof lu[lane] === "string" ? lu[lane] : "";
+          const t = ls[lane];
+          if ((t === "mjpeg" || t === "hls") && u && !u.startsWith("blob:")) {
+            nextSource[lane] = t;
+            nextUrls[lane] = u;
+            moved = true;
+          }
+        }
+        if (moved) setCfgMigrated(true);
+      } catch {}
+    }
+    if (Object.keys(nextSource).length) {
+      setCamSource((st) => ({ ...st, ...nextSource }));
+      setCamUrls((st) => ({ ...st, ...nextUrls }));
+      setLaneCamId((st) => ({ ...st, ...nextIds }));
+    }
+  }, [selectedIntersection, dispCfg, camLiveMap, syncedKey, migratedRef]);
+  useEffect(() => {
+    const t = setInterval(() => setSnapTick((v) => v + 1), 5000);
+    return () => clearInterval(t);
   }, []);
   useEffect(() => {
     try {
@@ -414,14 +499,8 @@ export default function DashboardPage() {
     } catch {}
   }, [isSimOpen]);
   useEffect(() => {
-    localStorage.setItem("dashboard2_camUrls", JSON.stringify(camUrls));
-  }, [camUrls]);
-  useEffect(() => {
     localStorage.setItem("dashboard2_camView", camView);
   }, [camView]);
-  useEffect(() => {
-    localStorage.setItem("dashboard2_camSource", JSON.stringify(camSource));
-  }, [camSource]);
 
   const [yoloUrl, setYoloUrl] = useState("wss://vision.astraea.my.id/yolo-ws/ws");
   const [yoloEnabled, setYoloEnabled] = useState<Record<CamLane, boolean>>({ north: false, south: false, east: false, west: false });
@@ -602,6 +681,62 @@ export default function DashboardPage() {
 
   const updateCamUrl = (lane: CamLane, url: string) =>
     setCamUrls((s) => ({ ...s, [lane]: url.replace(/\/$/, "") }));
+
+  const saveCamConfig = async (lane: CamLane) => {
+    if (selectedIntersection === "all") {
+      setCfgSaveState("failed");
+      setCfgSaveError("Pilih satu persimpangan untuk mengatur kamera.");
+      return;
+    }
+    if (formSource !== "canonical" && formSource !== "mjpeg" && formSource !== "hls") {
+      setCfgSaveState("failed");
+      setCfgSaveError("webcam/upload hanya lokal — tidak disimpan ke server.");
+      return;
+    }
+    const entry = dispCfg[lane];
+    const live = camLiveMap[lane];
+    const cameraId = entry?.camera_id || live?.camera_id || laneCamId[lane] || "";
+    if (!cameraId) {
+      setCfgSaveState("failed");
+      setCfgSaveError("Kamera belum terdaftar untuk jalur ini.");
+      return;
+    }
+    const mjpeg = formSource === "mjpeg" ? formMjpeg.trim() : "";
+    const hls = formSource === "hls" ? formHls.trim() : "";
+    const url = formSource === "mjpeg" ? mjpeg : formSource === "hls" ? hls : "";
+    if ((formSource === "mjpeg" || formSource === "hls") && !url) {
+      setCfgSaveState("failed");
+      setCfgSaveError("Isi URL dulu untuk sumber mjpeg/hls.");
+      return;
+    }
+    if (typeof window !== "undefined" && window.location.protocol === "https:" && url.toLowerCase().startsWith("http://")) {
+      setCfgSaveState("failed");
+      setCfgSaveError("URL http:// akan diblokir browser (mixed content) — pakai https://.");
+      return;
+    }
+    setCfgSaveState("saving");
+    setCfgSaveError("");
+    try {
+      const body: Record<string, unknown> = { active_source: formSource };
+      if (formSource === "mjpeg") body.manual_mjpeg_url = mjpeg;
+      if (formSource === "hls") body.manual_hls_url = hls;
+      const res = await fetch(
+        `/api/cameras/${encodeURIComponent(cameraId)}/display-config`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Gagal menyimpan");
+      setCfgSaveState("saved");
+      reloadDisp();
+    } catch (e: unknown) {
+      setCfgSaveState("failed");
+      setCfgSaveError(e instanceof Error ? e.message : "Gagal menyimpan");
+    }
+  };
 
   const startCamWebcam = async (lane: CamLane) => {
     setCamSource((s) => ({ ...s, [lane]: "webcam" }));
@@ -814,8 +949,10 @@ export default function DashboardPage() {
                             <button
                               type="button"
                               onClick={() => setCamSettingsLane(lane)}
+                              disabled={selectedIntersection === "all"}
+                              title={selectedIntersection === "all" ? "Pilih satu persimpangan untuk mengatur kamera." : `Pengaturan kamera ${lane}`}
                               aria-label={`Pengaturan kamera ${lane}`}
-                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                             >
                               <span className="material-symbols-outlined text-base">tune</span>
                             </button>
@@ -839,7 +976,22 @@ export default function DashboardPage() {
                           onChange={(e) => handleCamUpload(lane, e.target.files?.[0] || null)}
                         />
                         <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-[4/3] fullscreen:aspect-auto fullscreen:h-full">
-                          {camSource[lane] === "webcam" ? (
+                          {camSource[lane] === "canonical" && laneCamId[lane] ? (
+                            <img
+                              key={snapTick}
+                              src={`/api/cameras/${encodeURIComponent(laneCamId[lane])}/snapshot?t=${snapTick}`}
+                              alt={`Kamera ${lane}`}
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : camSource[lane] === "canonical" ? (
+                            <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-slate-900 p-3 text-center">
+                              <span className="material-symbols-outlined text-2xl text-slate-400">videocam_off</span>
+                              <p className="text-[11px] font-bold text-white">Kamera belum terdaftar</p>
+                            </div>
+                          ) : camSource[lane] === "webcam" ? (
                             <video
                               ref={(el) => {
                                 camVideoRefs.current[lane] = el;
@@ -915,30 +1067,67 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-base">close</span>
                           </button>
                         </div>
-                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">URL / IP Kamera</label>
-                        <input
-                          value={camUrls[camSettingsLane]}
-                          onChange={(e) => updateCamUrl(camSettingsLane, e.target.value)}
-                          placeholder="http://10.100.122.135 atau https://...m3u8"
-                          className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
-                        />
-                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>
-                        <div className="mb-3 flex flex-wrap gap-1">
-                          {(["mjpeg", "hls", "webcam", "upload"] as const).map((src) => (
-                            <button
-                              key={src}
-                              type="button"
-                              onClick={() => { if (src === "webcam") void startCamWebcam(camSettingsLane); else if (src === "upload") camFileRefs.current[camSettingsLane]?.click(); else setCamSource((s) => ({ ...s, [camSettingsLane]: src })); }}
-                              className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize ${camSource[camSettingsLane] === src ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              {src}
-                            </button>
-                          ))}
-                        </div>
-                        <p className="mb-3 text-[10px] leading-relaxed text-slate-400">MJPEG = `http://IP:81/stream` (ESP32-CAM) • HLS = URL `m3u8` (mis. Bantul via `/bantul-stream/...`) • Webcam = kamera laptop • Upload = file video/gambar.</p>
-                        <button type="button" onClick={() => setCamSettingsLane(null)} className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white hover:bg-slate-700">
-                          Selesai
-                        </button>
+                        {selectedIntersection === "all" ? (
+                          <p className="mb-3 rounded-lg bg-amber-50 border border-amber-200 p-2 text-[11px] text-amber-700">
+                            Pilih satu persimpangan untuk mengatur kamera.
+                          </p>
+                        ) : (
+                          <>
+                            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>
+                            <div className="mb-3 flex flex-wrap gap-1">
+                              {(["canonical", "mjpeg", "hls"] as const).map((src) => (
+                                <button
+                                  key={src}
+                                  type="button"
+                                  onClick={() => setFormSource(src)}
+                                  className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize ${formSource === src ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                >
+                                  {src === "canonical" ? "Canonical ASTRAEA" : src.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                            {formSource === "canonical" ? (
+                              <p className="mb-3 text-[11px] text-slate-500">
+                                Sumber otomatis dari Camera Registry. URL manual tidak diperlukan.
+                              </p>
+                            ) : (
+                              <>
+                                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  URL {formSource === "mjpeg" ? "MJPEG" : "HLS"}
+                                </label>
+                                <input
+                                  value={formSource === "mjpeg" ? formMjpeg : formHls}
+                                  onChange={(e) => {
+                                    if (formSource === "mjpeg") setFormMjpeg(e.target.value);
+                                    else setFormHls(e.target.value);
+                                  }}
+                                  placeholder={formSource === "mjpeg" ? "https://.../stream" : "https://.../index.m3u8"}
+                                  className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                                />
+                              </>
+                            )}
+                            <p className="mb-3 text-[10px] leading-relaxed text-slate-400">Webcam & Upload hanya lokal (tidak tersimpan ke server).</p>
+                            {cfgSaveState === "failed" && cfgSaveError && (
+                              <p className="mb-3 text-xs font-bold text-red-600">{cfgSaveError}</p>
+                            )}
+                            {cfgSaveState === "saved" && (
+                              <p className="mb-3 text-xs font-bold text-emerald-600">Tersimpan di server.</p>
+                            )}
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => void saveCamConfig(camSettingsLane)}
+                                disabled={cfgSaveState === "saving"}
+                                className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                {cfgSaveState === "saving" ? "Menyimpan..." : "Simpan ke Server"}
+                              </button>
+                              <button type="button" onClick={() => setCamSettingsLane(null)} className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white hover:bg-slate-700">
+                                Selesai
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

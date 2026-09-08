@@ -2,7 +2,6 @@
 
 import DashboardStats from "@/components/DashboardStats";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
-import CanonicalCameraStrip from "@/components/CanonicalCameraStrip";
 import Header from "@/components/Header";
 import IntersectionGrid from "@/components/IntersectionGrid";
 import LaneStatusPanel from "@/components/LaneStatusPanel";
@@ -12,6 +11,7 @@ import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
 import VisionStateBadge from "@/components/VisionStateBadge";
 import AiStatusBadge from "@/components/AiStatusBadge";
+import { useCameraDisplay, resolveLaneSource } from "@/lib/hooks/useCameraDisplay";
 import { useCameraLiveMap } from "@/lib/hooks/useCameraLive";
 import { useT } from "@/lib/useT";
 
@@ -369,15 +369,32 @@ export default function DashboardPage() {
     setCfgSaveError("");
   }, [camSettingsLane]);
 
-  // Konfigurasi display dari SERVER (source of truth lintas browser).
-  // dipetakan per approach; null = belum ada config server untuk lane itu.
-  const [serverCamCfg, setServerCamCfg] = useState<Record<
-    CamLane,
-    { camera_id: string; source_type: string; url: string } | null
-  >>({ north: null, south: null, east: null, west: null });
+  // Konfigurasi display SERVER per approach (model preset V6.5).
+  const { byApproach: dispCfg, reload: reloadDisp } = useCameraDisplay(
+    selectedIntersection === "all" ? null : selectedIntersection
+  );
+  const [laneCamId, setLaneCamId] = useState<Record<CamLane, string>>({
+    north: "", south: "", east: "", west: "",
+  });
+  const [snapTick, setSnapTick] = useState(0);
   const [cfgSaveState, setCfgSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [cfgSaveError, setCfgSaveError] = useState("");
   const [cfgMigrated, setCfgMigrated] = useState(false);
+  const [formSource, setFormSource] = useState<"canonical" | "mjpeg" | "hls">("canonical");
+  const [formMjpeg, setFormMjpeg] = useState("");
+  const [formHls, setFormHls] = useState("");
+  // Init form dari preset server tiap modal dibuka.
+  useEffect(() => {
+    if (!camSettingsLane) return;
+    const e = dispCfg[camSettingsLane];
+    setFormSource(e?.active_source === "mjpeg" || e?.active_source === "hls" ? e.active_source : "canonical");
+    setFormMjpeg(e?.manual_mjpeg_url || "");
+    setFormHls(e?.manual_hls_url || "");
+    setCfgSaveState("idle");
+    setCfgSaveError("");
+  }, [camSettingsLane, dispCfg]);
+  const [syncedKey, setSyncedKey] = useState("");
+  const migratedRef = useState(() => ({ done: false }))[0];
   const [camPlayBlocked, setCamPlayBlocked] = useState<Record<CamLane, boolean>>({
     north: false,
     south: false,
@@ -439,84 +456,71 @@ export default function DashboardPage() {
       if (savedSim !== null) setIsSimOpen(savedSim === "true");
     } catch {}
   }, []);
-  // localStorage hanya dibaca sekali untuk migrasi prefill eksplisit,
-  // tidak pernah ditulis balik otomatis ke server.
+  // Sinkronisasi sumber efektif SEKALI per kombinasi (server > registry > lokal).
+  // Default intersection: SIMPANG_TALUN_01 bila ada, else aktif pertama (STEP 16).
   useEffect(() => {
-    let cancelled = false;
-    async function loadServerCfg() {
+    if (selectedIntersection !== "all") return;
+    const list = (intersections || []) as Array<{ id?: string; intersection_id?: string; status?: string }>;
+    if (!list.length) return;
+    const talun = list.find((x) => (x.id || x.intersection_id) === "SIMPANG_TALUN_01");
+    const firstActive = list.find((x) => (x.status || "active") === "active") || list[0];
+    const pick = talun || firstActive;
+    const pid = String(pick.id || pick.intersection_id || "");
+    if (pid) setSelectedIntersection(pid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intersections]);
+  useEffect(() => {
+    const liveKeys = Object.keys(camLiveMap).sort().join(",");
+    const dispKeys = Object.keys(dispCfg).sort().join(",");
+    const key = `${selectedIntersection}|${dispKeys}|${liveKeys}`;
+    if (key === syncedKey) return;
+    setSyncedKey(key);
+    const nextSource: Partial<Record<CamLane, "canonical" | "mjpeg" | "hls" | "webcam" | "upload">> = {};
+    const nextUrls: Partial<Record<CamLane, string>> = {};
+    const nextIds: Partial<Record<CamLane, string>> = {};
+    for (const lane of ALL_LANES) {
+      const e = dispCfg[lane];
+      const live = camLiveMap[lane];
+      const r = resolveLaneSource({
+        serverEntry: e || null,
+        registered: !!live?.camera_id,
+      });
+      if (r.kind === "canonical" || r.kind === "mjpeg" || r.kind === "hls") {
+        nextSource[lane] = r.kind;
+        nextUrls[lane] = r.url;
+        nextIds[lane] = e?.camera_id || live?.camera_id || "";
+      }
+    }
+    // Migrasi satu-kali localStorage lama (hanya lane tanpa server & tanpa registry).
+    if (!migratedRef.done) {
+      migratedRef.done = true;
       try {
-        const q =
-          selectedIntersection && selectedIntersection !== "all"
-            ? `?intersectionId=${encodeURIComponent(selectedIntersection)}`
-            : "";
-        const res = await fetch(`/api/cameras/display-config${q}`, { cache: "no-store" });
-        const json = await res.json();
-        if (cancelled || !json.success || !Array.isArray(json.data)) return;
-        const next: Record<CamLane, { camera_id: string; source_type: string; url: string } | null> = {
-          north: null,
-          south: null,
-          east: null,
-          west: null,
-        };
-        const newUrls: Partial<Record<CamLane, string>> = {};
-        const newSources: Partial<Record<CamLane, "mjpeg" | "hls">> = {};
-        for (const item of json.data) {
-          const lane = String(item.approach_id || "").toLowerCase() as CamLane;
-          if (!(ALL_LANES as readonly string[]).includes(lane)) continue;
-          next[lane] = {
-            camera_id: String(item.camera_id),
-            source_type: String(item.source_type || "canonical"),
-            url: String(item.url || ""),
-          };
-          // canonical = strip kanonis (tanpa URL manual); mjpeg/hls = prefill URL server.
-          if (item.source_type === "mjpeg" || item.source_type === "hls") {
-            if (item.url) {
-              newUrls[lane] = String(item.url);
-              newSources[lane] = item.source_type;
-            }
-          } else {
-            newUrls[lane] = "";
+        const lu = JSON.parse(localStorage.getItem("dashboard2_camUrls") || "{}");
+        const ls = JSON.parse(localStorage.getItem("dashboard2_camSource") || "{}");
+        let moved = false;
+        for (const lane of ALL_LANES) {
+          if (nextSource[lane] || dispCfg[lane] || camLiveMap[lane]) continue;
+          const u = typeof lu[lane] === "string" ? lu[lane] : "";
+          const t = ls[lane];
+          if ((t === "mjpeg" || t === "hls") && u && !u.startsWith("blob:")) {
+            nextSource[lane] = t;
+            nextUrls[lane] = u;
+            moved = true;
           }
         }
-        setServerCamCfg(next);
-        if (Object.keys(newUrls).length) {
-          setCamUrls((s) => ({ ...s, ...newUrls }));
-          setCamSource((s) => ({ ...s, ...newSources }));
-        }
-        // Migrasi satu-kali: localStorage lama hanya jadi prefill bila server kosong.
-        try {
-          const rawUrls = localStorage.getItem("dashboard2_camUrls");
-          const rawSrc = localStorage.getItem("dashboard2_camSource");
-          if (rawUrls || rawSrc) {
-            const lu = rawUrls ? JSON.parse(rawUrls) : {};
-            const ls = rawSrc ? JSON.parse(rawSrc) : {};
-            let migrated = false;
-            const fillUrls: Partial<Record<CamLane, string>> = {};
-            const fillSrc: Partial<Record<CamLane, "mjpeg" | "hls">> = {};
-            for (const lane of ALL_LANES) {
-              if (next[lane]) continue; // server menang
-              const u = typeof lu[lane] === "string" ? lu[lane] : "";
-              const s = ls[lane];
-              if ((s === "mjpeg" || s === "hls") && u && !u.startsWith("blob:")) {
-                fillUrls[lane] = u;
-                fillSrc[lane] = s;
-                migrated = true;
-              }
-            }
-            if (migrated) {
-              setCamUrls((prev) => ({ ...prev, ...fillUrls }));
-              setCamSource((prev) => ({ ...prev, ...fillSrc }));
-              setCfgMigrated(true);
-            }
-          }
-        } catch {}
+        if (moved) setCfgMigrated(true);
       } catch {}
     }
-    loadServerCfg();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedIntersection]);
+    if (Object.keys(nextSource).length) {
+      setCamSource((s) => ({ ...s, ...nextSource }));
+      setCamUrls((s) => ({ ...s, ...nextUrls }));
+      setLaneCamId((s) => ({ ...s, ...nextIds }));
+    }
+  }, [selectedIntersection, dispCfg, camLiveMap, syncedKey, migratedRef]);
+  useEffect(() => {
+    const t = setInterval(() => setSnapTick((v) => v + 1), 5000);
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => {
     try {
       localStorage.setItem("dashboard_simOpen", String(isSimOpen));
@@ -706,23 +710,31 @@ export default function DashboardPage() {
   const updateCamUrl = (lane: CamLane, url: string) =>
     setCamUrls((s) => ({ ...s, [lane]: url.replace(/\/$/, "") }));
 
-  // Simpan konfigurasi display ke SERVER (eksplisit). webcam/upload/blob
-  // tidak pernah dipersist global (STEP 3).
+  // Simpan konfigurasi display ke SERVER (eksplisit). Mengirim active_source +
+  // preset yang diedit; preset lain dipertahankan server (STEP 15).
   const saveCamConfig = async (lane: CamLane) => {
-    const src = camSource[lane];
-    if (src === "webcam" || src === "upload") {
+    if (selectedIntersection === "all") {
+      setCfgSaveState("failed");
+      setCfgSaveError("Pilih satu persimpangan untuk mengatur kamera.");
+      return;
+    }
+    if (formSource !== "canonical" && formSource !== "mjpeg" && formSource !== "hls") {
       setCfgSaveState("failed");
       setCfgSaveError("webcam/upload hanya lokal — tidak disimpan ke server.");
       return;
     }
-    const reg = serverCamCfg[lane];
-    if (!reg) {
+    const entry = dispCfg[lane];
+    const live = camLiveMap[lane];
+    const cameraId = entry?.camera_id || live?.camera_id || laneCamId[lane] || "";
+    if (!cameraId) {
       setCfgSaveState("failed");
-      setCfgSaveError("Kamera belum terdaftar untuk jalur ini — URL hanya lokal.");
+      setCfgSaveError("Kamera belum terdaftar untuk jalur ini.");
       return;
     }
-    const url = (camUrls[lane] || "").trim();
-    if ((src === "mjpeg" || src === "hls") && !url) {
+    const mjpeg = formSource === "mjpeg" ? formMjpeg.trim() : "";
+    const hls = formSource === "hls" ? formHls.trim() : "";
+    const url = formSource === "mjpeg" ? mjpeg : formSource === "hls" ? hls : "";
+    if ((formSource === "mjpeg" || formSource === "hls") && !url) {
       setCfgSaveState("failed");
       setCfgSaveError("Isi URL dulu untuk sumber mjpeg/hls.");
       return;
@@ -735,24 +747,24 @@ export default function DashboardPage() {
     setCfgSaveState("saving");
     setCfgSaveError("");
     try {
+      const body: Record<string, unknown> = { active_source: formSource };
+      if (formSource === "mjpeg") body.manual_mjpeg_url = mjpeg;
+      if (formSource === "hls") body.manual_hls_url = hls;
       const res = await fetch(
-        `/api/cameras/${encodeURIComponent(reg.camera_id)}/display-config`,
+        `/api/cameras/${encodeURIComponent(cameraId)}/display-config`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ source_type: src, url }),
+          body: JSON.stringify(body),
         }
       );
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Gagal menyimpan");
-      setServerCamCfg((s) => ({
-        ...s,
-        [lane]: { camera_id: reg.camera_id, source_type: src, url: src === "canonical" ? "" : url },
-      }));
       setCfgSaveState("saved");
-    } catch (e: any) {
+      reloadDisp();
+    } catch (e: unknown) {
       setCfgSaveState("failed");
-      setCfgSaveError(e?.message || "Gagal menyimpan");
+      setCfgSaveError(e instanceof Error ? e.message : "Gagal menyimpan");
     }
   };
 
@@ -900,12 +912,6 @@ export default function DashboardPage() {
               </p>
             </details>
 
-            {selectedIntersection !== "all" && (
-              <div className="mt-4">
-                <CanonicalCameraStrip intersectionId={selectedIntersection} />
-              </div>
-            )}
-
             <DashboardStats
               timeRange={timeRange}
               customDates={customDates}
@@ -988,8 +994,10 @@ export default function DashboardPage() {
                             <button
                               type="button"
                               onClick={() => setCamSettingsLane(lane)}
+                              disabled={selectedIntersection === "all"}
+                              title={selectedIntersection === "all" ? "Pilih satu persimpangan untuk mengatur kamera." : `Pengaturan kamera ${lane}`}
                               aria-label={`Pengaturan kamera ${lane}`}
-                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                              className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                             >
                               <span className="material-symbols-outlined text-base">tune</span>
                             </button>
@@ -1013,11 +1021,20 @@ export default function DashboardPage() {
                           onChange={(e) => handleCamUpload(lane, e.target.files?.[0] || null)}
                         />
                         <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-[4/3] fullscreen:aspect-auto fullscreen:h-full">
-                          {camSource[lane] === "canonical" ? (
+                          {camSource[lane] === "canonical" && laneCamId[lane] ? (
+                            <img
+                              key={snapTick}
+                              src={`/api/cameras/${encodeURIComponent(laneCamId[lane])}/snapshot?t=${snapTick}`}
+                              alt={`Kamera ${lane}`}
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : camSource[lane] === "canonical" ? (
                             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-slate-900 p-3 text-center">
-                              <span className="material-symbols-outlined text-2xl text-emerald-400">videocam</span>
-                              <p className="text-[11px] font-bold text-white">Stream kanonis aktif di strip Kamera</p>
-                              <p className="text-[10px] text-slate-400">Registry → proxy aman Server 2</p>
+                              <span className="material-symbols-outlined text-2xl text-slate-400">videocam_off</span>
+                              <p className="text-[11px] font-bold text-white">Kamera belum terdaftar</p>
                             </div>
                           ) : camSource[lane] === "webcam" ? (
                             <video
@@ -1115,27 +1132,46 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-base">close</span>
                           </button>
                         </div>
-                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">URL / IP Kamera</label>
-                        <input
-                          value={camUrls[camSettingsLane]}
-                          onChange={(e) => updateCamUrl(camSettingsLane, e.target.value)}
-                          placeholder="https://astraea.my.id/esp32-cam-stream atau http://10.100.122.135"
-                          className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none"
-                        />
-                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>
-                        <div className="mb-3 flex flex-wrap gap-1">
-                          {(["canonical", "mjpeg", "hls", "webcam", "upload"] as const).map((src) => (
-                            <button
-                              key={src}
-                              type="button"
-                              onClick={() => { if (src === "webcam") void startCamWebcam(camSettingsLane); else if (src === "upload") camFileRefs.current[camSettingsLane]?.click(); else setCamSource((s) => ({ ...s, [camSettingsLane]: src })); }}
-                              className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize ${camSource[camSettingsLane] === src ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                            >
-                              {src}
-                            </button>
-                          ))}
-                        </div>
-                        <p className="mb-3 text-[10px] leading-relaxed text-slate-400">Kanonis = stream registry via proxy aman (disarankan) • MJPEG = `http://IP:81/stream` • HLS = URL `m3u8` • Webcam = kamera laptop (lokal saja) • Upload = file (lokal saja).</p>
+                        {selectedIntersection === "all" ? (
+                          <p className="mb-3 rounded-lg bg-amber-50 border border-amber-200 p-2 text-[11px] text-amber-700">
+                            Pilih satu persimpangan untuk mengatur kamera.
+                          </p>
+                        ) : (
+                          <>
+                            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Sumber</label>
+                            <div className="mb-3 flex flex-wrap gap-1">
+                              {(["canonical", "mjpeg", "hls"] as const).map((src) => (
+                                <button
+                                  key={src}
+                                  type="button"
+                                  onClick={() => setFormSource(src)}
+                                  className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize ${formSource === src ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                                >
+                                  {src === "canonical" ? "Canonical ASTRAEA" : src.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                            {formSource === "canonical" ? (
+                              <p className="mb-3 text-[11px] text-slate-500">
+                                Sumber otomatis dari Camera Registry. URL manual tidak diperlukan.
+                              </p>
+                            ) : (
+                              <>
+                                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  URL {formSource === "mjpeg" ? "MJPEG" : "HLS"}
+                                </label>
+                                <input
+                                  value={formSource === "mjpeg" ? formMjpeg : formHls}
+                                  onChange={(e) => {
+                                    if (formSource === "mjpeg") setFormMjpeg(e.target.value);
+                                    else setFormHls(e.target.value);
+                                  }}
+                                  placeholder={formSource === "mjpeg" ? "https://.../stream" : "https://.../index.m3u8"}
+                                  className="mb-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                                />
+                              </>
+                            )}
+                            <p className="mb-3 text-[10px] leading-relaxed text-slate-400">Webcam & Upload hanya lokal (tidak tersimpan ke server).</p>
                         {cfgMigrated && (
                           <p className="mb-3 rounded-lg bg-blue-50 border border-blue-200 p-2 text-[10px] text-blue-700">
                             Konfigurasi lama dari browser ini dimuat sebagai draf — tekan Simpan ke Server untuk dipakai semua laptop.
@@ -1160,6 +1196,8 @@ export default function DashboardPage() {
                             Selesai
                           </button>
                         </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

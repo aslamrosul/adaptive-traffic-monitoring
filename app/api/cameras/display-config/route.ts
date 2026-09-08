@@ -10,6 +10,9 @@ interface RegistryRow {
   camera_id: string;
   intersection_id?: string;
   approach_id?: string;
+  active_source?: string;
+  manual_mjpeg_url?: string;
+  manual_hls_url?: string;
   display_source_type?: string;
   display_url?: string;
   display_enabled?: boolean;
@@ -19,12 +22,25 @@ interface RegistryRow {
 }
 
 function safeView(item: RegistryRow) {
+  // Model baru + fallback baca lama (migrasi malas, non-destruktif).
+  const legacyType =
+    item.display_source_type === "mjpeg" || item.display_source_type === "hls"
+      ? item.display_source_type
+      : "canonical";
+  const legacyUrl = item.display_url || "";
+  const active = item.active_source || legacyType;
+  const mjpeg = item.manual_mjpeg_url || (legacyType === "mjpeg" ? legacyUrl : "") || "";
+  const hls = item.manual_hls_url || (legacyType === "hls" ? legacyUrl : "") || "";
   return {
     camera_id: item.camera_id,
     intersection_id: item.intersection_id || "",
     approach_id: item.approach_id || "",
-    source_type: item.display_source_type || "canonical",
-    url: item.display_source_type === "canonical" ? "" : item.display_url || "",
+    active_source: active,
+    manual_mjpeg_url: mjpeg,
+    manual_hls_url: hls,
+    // Kompat baca lama:
+    source_type: active,
+    url: active === "mjpeg" ? mjpeg : active === "hls" ? hls : "",
     enabled: item.display_enabled !== false,
     autoplay: item.autoplay !== false,
     updated_at: item.display_updated_at || null,

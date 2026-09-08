@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 export interface LiveLane {
+  camera_id?: string;
   status: "ONLINE" | "STALE" | "OFFLINE" | "UNKNOWN";
   online: boolean | null;
   fresh: boolean | null;
@@ -34,6 +35,7 @@ export function useCameraLiveMap(intersectionId: string | null) {
         const approach = String(c.approach_id || "").toLowerCase();
         if (!approach) continue;
         next[approach] = {
+          camera_id: String(c.camera_id || ""),
           status: c.status || "UNKNOWN",
           online: c.online ?? null,
           fresh: c.fresh ?? null,

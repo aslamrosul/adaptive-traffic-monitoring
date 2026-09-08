@@ -29,8 +29,23 @@ interface CamLive {
 interface DisplayCfg {
   camera_id: string;
   approach_id: string;
-  source_type: string;
-  url: string;
+  active_source: string;
+  manual_mjpeg_url: string;
+  manual_hls_url: string;
+  // Kompat baca lama:
+  source_type?: string;
+  url?: string;
+}
+
+function cfgActive(c: DisplayCfg): string {
+  if (c.active_source === "mjpeg" || c.active_source === "hls") return c.active_source;
+  if (c.source_type === "mjpeg" || c.source_type === "hls") return c.source_type;
+  return "canonical";
+}
+
+function cfgPreset(c: DisplayCfg, kind: "mjpeg" | "hls"): string {
+  if (kind === "mjpeg") return c.manual_mjpeg_url || (c.source_type === "mjpeg" ? c.url || "" : "");
+  return c.manual_hls_url || (c.source_type === "hls" ? c.url || "" : "");
 }
 
 // Grid kamera kontekstual satu persimpangan: registry + live + metrik + preview + config.
@@ -47,7 +62,8 @@ export default function IntersectionCameraGrid({
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<string | null>(null);
   const [formSource, setFormSource] = useState("canonical");
-  const [formUrl, setFormUrl] = useState("");
+  const [formMjpeg, setFormMjpeg] = useState("");
+  const [formHls, setFormHls] = useState("");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [saveError, setSaveError] = useState("");
 
@@ -95,8 +111,10 @@ export default function IntersectionCameraGrid({
 
   const openEditor = (camera_id: string) => {
     const current = cfg[camera_id];
-    setFormSource(current?.source_type || "canonical");
-    setFormUrl(current?.url || "");
+    const cur = current ? cfgActive(current) : "canonical";
+    setFormSource(cur === "mjpeg" || cur === "hls" ? cur : "canonical");
+    setFormMjpeg(current?.manual_mjpeg_url || (current?.source_type === "mjpeg" ? current?.url || "" : ""));
+    setFormHls(current?.manual_hls_url || (current?.source_type === "hls" ? current?.url || "" : ""));
     setSaveState("idle");
     setSaveError("");
     setEditing(camera_id);
@@ -112,7 +130,11 @@ export default function IntersectionCameraGrid({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ source_type: formSource, url: formUrl }),
+          body: JSON.stringify({
+            active_source: formSource,
+            ...(formSource === "mjpeg" ? { manual_mjpeg_url: formMjpeg.trim() } : {}),
+            ...(formSource === "hls" ? { manual_hls_url: formHls.trim() } : {}),
+          }),
         }
       );
       const json = await res.json();
@@ -223,7 +245,7 @@ export default function IntersectionCameraGrid({
             <p className="mt-1 text-[10px] tabular-nums text-slate-500">
               Age {c.frame_age_s === null || c.frame_age_s === undefined ? "-" : `${Number(c.frame_age_s).toFixed(1)}s`}
               {" • Sumber: "}
-              {disp ? disp.source_type : "canonical"}
+              {disp ? cfgActive(disp) : "canonical"}
             </p>
             {isAdmin && (
               <button
@@ -261,15 +283,22 @@ export default function IntersectionCameraGrid({
               <option value="mjpeg">MJPEG Manual</option>
               <option value="hls">HLS Manual</option>
             </select>
-            {(formSource === "mjpeg" || formSource === "hls") && (
+            {formSource === "canonical" ? (
+              <p className="mb-3 text-[11px] text-slate-500">
+                Sumber otomatis dari Camera Registry. URL manual tidak diperlukan.
+              </p>
+            ) : (
               <>
                 <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">
-                  URL
+                  URL {formSource === "mjpeg" ? "MJPEG" : "HLS"}
                 </label>
                 <input
-                  value={formUrl}
-                  onChange={(e) => setFormUrl(e.target.value)}
-                  placeholder="https://..."
+                  value={formSource === "mjpeg" ? formMjpeg : formHls}
+                  onChange={(e) => {
+                    if (formSource === "mjpeg") setFormMjpeg(e.target.value);
+                    else setFormHls(e.target.value);
+                  }}
+                  placeholder={formSource === "mjpeg" ? "https://.../stream" : "https://.../index.m3u8"}
                   className="mb-3 w-full rounded-lg border px-3 py-2 text-sm"
                 />
               </>
