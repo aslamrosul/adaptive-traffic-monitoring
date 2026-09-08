@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/Toast";
@@ -23,13 +23,16 @@ export const metadata: Metadata = {
   title: "ASTRAEA - Adaptive Smart Traffic System",
   description: "Adaptive Traffic Light Monitoring System",
   applicationName: "ASTRAEA",
-  themeColor: "#0056d2",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "ASTRAEA",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0056d2",
 };
 
 export default function RootLayout({

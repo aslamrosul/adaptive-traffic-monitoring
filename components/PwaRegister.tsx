@@ -14,9 +14,7 @@ export default function PwaRegister() {
     }
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[pwa] registrasi service worker gagal");
-        }
+        // Gagal diam-diam (hanya jalan di production).
       });
     };
     if (document.readyState === "complete") {
