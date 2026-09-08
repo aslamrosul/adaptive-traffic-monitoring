@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/Toast";
+import PwaRegister from "@/components/PwaRegister";
 import AiChatWidget from "@/components/AiChatWidget";
 import { Providers } from "./providers";
 import SessionProvider from "@/components/SessionProvider";
@@ -21,6 +22,14 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "ASTRAEA - Adaptive Smart Traffic System",
   description: "Adaptive Traffic Light Monitoring System",
+  applicationName: "ASTRAEA",
+  themeColor: "#0056d2",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ASTRAEA",
+  },
 };
 
 export default function RootLayout({
@@ -41,6 +50,7 @@ export default function RootLayout({
           <SessionProvider>
             <Providers>
               <LoadingProvider>
+                <PwaRegister />
                 <ToastProvider />
                 <AiChatWidget />
                 {children}
