@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface LiveCam {
   camera_id: string;
@@ -21,24 +21,25 @@ export default function CanonicalCameraStrip({
   const [cams, setCams] = useState<LiveCam[]>([]);
   const [tick, setTick] = useState(0);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/cameras/live?intersectionId=${encodeURIComponent(intersectionId)}`,
-        { cache: "no-store" }
-      );
-      const json = await res.json();
-      if (json.success) setCams(json.data);
-    } catch {
-      /* biarkan tampilan terakhir; polling berikutnya mencoba lagi */
-    }
-  }, [intersectionId]);
-
   useEffect(() => {
-    load();
-    const t = setInterval(load, 4000);
-    return () => clearInterval(t);
-  }, [load]);
+    let cancelled = false;
+    const poll = () => {
+      fetch(`/api/cameras/live?intersectionId=${encodeURIComponent(intersectionId)}`, {
+        cache: "no-store",
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (!cancelled && json.success) setCams(json.data);
+        })
+        .catch(() => {});
+    };
+    poll();
+    const t = setInterval(poll, 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [intersectionId]);
 
   useEffect(() => {
     const t = setInterval(() => setTick((v) => v + 1), 5000);
