@@ -6,6 +6,8 @@ import Header from "@/components/Header";
 import IntersectionGrid from "@/components/IntersectionGrid";
 import LaneStatusPanel from "@/components/LaneStatusPanel";
 import Sidebar from "@/components/Sidebar";
+import AiStatusBadge from "@/components/AiStatusBadge";
+import { useCameraLiveMap } from "@/lib/hooks/useCameraLive";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
@@ -326,6 +328,7 @@ export default function DashboardPage() {
     west: "",
   });
   const [camView, setCamView] = useState<"all" | CamLane>("all");
+  const camLiveMap = useCameraLiveMap(selectedIntersection);
   const [isSimOpen, setIsSimOpen] = useState(true);
   const [camSource, setCamSource] = useState<Record<CamLane, "mjpeg" | "hls" | "webcam" | "upload">>({
     north: "mjpeg",
@@ -421,7 +424,8 @@ export default function DashboardPage() {
   }, [camSource]);
 
   const [yoloUrl, setYoloUrl] = useState("wss://vision.astraea.my.id/yolo-ws/ws");
-  const [yoloEnabled, setYoloEnabled] = useState<Record<CamLane, boolean>>({ north: true, south: true, east: true, west: false });
+  const [yoloEnabled, setYoloEnabled] = useState<Record<CamLane, boolean>>({ north: false, south: false, east: false, west: false });
+  const [yoloLab, setYoloLab] = useState(false);
   const yoloWsRefs = useRef<Record<CamLane, WebSocket | null>>({ north: null, south: null, east: null, west: null });
   const yoloCanvasRefs = useRef<Record<CamLane, HTMLCanvasElement | null>>({ north: null, south: null, east: null, west: null });
   const yoloTimerRefs = useRef<Record<CamLane, ReturnType<typeof setInterval> | null>>({ north: null, south: null, east: null, west: null });
@@ -780,7 +784,21 @@ export default function DashboardPage() {
                       placeholder="wss://vision.astraea.my.id/yolo-ws/ws"
                       className="min-w-[220px] flex-1 rounded-lg border border-purple-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-purple-500 focus:outline-none"
                     />
-                    <span className="text-[10px] text-purple-600">Model YOLO sama kayak Vision Lab — kotak deteksi muncul di CCTV</span>
+                    <span className="text-[10px] text-purple-600">Overlay AI (Lab) — visualisasi eksperimental, bukan sumber inferensi kontrol lampu</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !yoloLab;
+                        setYoloLab(next);
+                        for (const lane of visibleCamLanes) {
+                          if (next) { setYoloEnabled((prev) => ({ ...prev, [lane]: true })); connectYoloLane(lane); }
+                          else { disconnectYoloLane(lane); setYoloEnabled((prev) => ({ ...prev, [lane]: false })); }
+                        }
+                      }}
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${yoloLab ? "bg-purple-600 text-white" : "bg-white text-purple-700 border border-purple-300"}`}
+                    >
+                      {yoloLab ? "Lab ON" : "Lab OFF"}
+                    </button>
                   </div>
 
                   <div className={camView === "all" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2" : "grid grid-cols-1 gap-3"}>
@@ -791,18 +809,8 @@ export default function DashboardPage() {
                             {lane}
                           </span>
                           <div className="flex items-center gap-1">
-                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">{yoloStats[lane]?.totalVehicles ?? 0}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const isOn = !!yoloWsRefs.current[lane];
-                                if (isOn) { disconnectYoloLane(lane); setYoloEnabled((s) => ({ ...s, [lane]: false })); }
-                                else { setYoloEnabled((s) => ({ ...s, [lane]: true })); connectYoloLane(lane); }
-                              }}
-                              className={`rounded-full px-2 py-1 text-[9px] font-bold ${yoloWsRefs.current[lane] ? "bg-purple-600 text-white" : "bg-white text-slate-600 border"}`}
-                            >
-                              {yoloWsRefs.current[lane] ? "YOLO" : "YOLO"}
-                            </button>
+                            <AiStatusBadge live={camLiveMap[lane]} />
+                            
                             <button
                               type="button"
                               onClick={() => setCamSettingsLane(lane)}
