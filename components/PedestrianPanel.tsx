@@ -3,7 +3,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-interface Crossing {
+export interface Crossing {
   crossing_id: string;
   name?: string;
   conflicting_movement_groups: string[];

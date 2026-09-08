@@ -47,6 +47,16 @@ function laneFromFlat(item: any, lane: LaneName) {
     queueLength: toNumber(item[`${lane}_queue_estimate_cm`], 0),
     queueLevel: densityLevel,
     greenDuration: toNumber(item[`${lane}_green_duration_s`], 0),
+    // Kanonis opsional (undefined = belum tersedia -> UI tampil "-").
+    cameraQueueVehicles: item[`${lane}_queue_vehicles`] ?? undefined,
+    countValid: item[`${lane}_count_valid`] ?? undefined,
+    countSource: item[`${lane}_count_source`] ?? undefined,
+    visionFresh: item[`${lane}_vision_fresh`] ?? undefined,
+    distanceCm: item[`${lane}_distance_cm`] ?? undefined,
+    ultrasonicDetected: item[`${lane}_ultrasonic_detected`] ?? undefined,
+    recommendedGreenS: item[`${lane}_recommended_green_s`] ?? undefined,
+    effectiveGreenS: item[`${lane}_effective_green_s`] ?? undefined,
+    maxWaitingS: item[`${lane}_waiting_s`] ?? undefined,
   };
 }
 
