@@ -36,6 +36,21 @@ export async function PUT(
     if (!checked.ok || !checked.config) {
       return NextResponse.json({ success: false, error: checked.reason }, { status: 400 });
     }
+    // Merge: preset yang tidak dikirim dipertahankan (tak pernah dihapus saat ganti sumber).
+    const prev = existing.Item as Record<string, unknown>;
+    const prevMjpeg = typeof prev.manual_mjpeg_url === "string" ? prev.manual_mjpeg_url : "";
+    const prevHls = typeof prev.manual_hls_url === "string" ? prev.manual_hls_url : "";
+    // Migrasi sekali dari model lama bila preset baru masih kosong.
+    const legacyMjpeg =
+      !prevMjpeg && prev.display_source_type === "mjpeg" && typeof prev.display_url === "string"
+        ? prev.display_url
+        : "";
+    const legacyHls =
+      !prevHls && prev.display_source_type === "hls" && typeof prev.display_url === "string"
+        ? prev.display_url
+        : "";
+    const finalMjpeg = checked.config.manual_mjpeg_url || prevMjpeg || legacyMjpeg;
+    const finalHls = checked.config.manual_hls_url || prevHls || legacyHls;
     const now = new Date().toISOString();
     const email = String(
       (session.user as { email?: string } | null)?.email || "unknown"
@@ -45,14 +60,22 @@ export async function PUT(
         TableName: awsTables.cameras,
         Key: { camera_id: cameraId },
         UpdateExpression:
-          "SET display_source_type = :s, display_url = :u, display_enabled = :e, autoplay = :a, display_updated_at = :t, display_updated_by = :b",
+          "SET active_source = :s, manual_mjpeg_url = :m, manual_hls_url = :h, display_enabled = :e, autoplay = :a, display_updated_at = :t, display_updated_by = :b, display_source_type = :s, display_url = :u",
         ExpressionAttributeValues: {
-          ":s": checked.config.source_type,
-          ":u": checked.config.url,
+          ":s": checked.config.active_source,
+          ":m": finalMjpeg,
+          ":h": finalHls,
           ":e": checked.config.enabled,
           ":a": checked.config.autoplay,
           ":t": now,
           ":b": email,
+          // Kompat baca lama: display_url = preset aktif (canonical -> kosong).
+          ":u":
+            checked.config.active_source === "mjpeg"
+              ? finalMjpeg
+              : checked.config.active_source === "hls"
+                ? finalHls
+                : "",
         },
       })
     );
@@ -60,7 +83,11 @@ export async function PUT(
       success: true,
       data: {
         camera_id: cameraId,
-        ...checked.config,
+        active_source: checked.config.active_source,
+        manual_mjpeg_url: finalMjpeg,
+        manual_hls_url: finalHls,
+        enabled: checked.config.enabled,
+        autoplay: checked.config.autoplay,
         updated_at: now,
         updated_by: email,
       },
