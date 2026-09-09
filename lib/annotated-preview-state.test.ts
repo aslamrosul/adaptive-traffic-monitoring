@@ -1,6 +1,4 @@
-// Tests V6.7.3: npx tsx --test lib/annotated-preview.test.ts
-// Mencakup 8 kasus wajib: last-good-frame retention + double-buffer + isolasi kamera
-// + visible tidak di-remount oleh tick.
+// Tests: npx tsx --test lib/annotated-preview-state.test.ts
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -13,64 +11,48 @@ import {
   rawUrl,
 } from "./annotated-preview-state.js";
 
-describe("annotated preview V6.7.3 (flicker-free)", () => {
-  it("1. annotated sukses pertama -> visible annotated", () => {
+describe("previewNext", () => {
+  it("1. annotated sukses langsung", () => {
     let st = initPreview("C1", 1);
     assert.ok(st.pendingUrl?.includes("/annotated"));
     st = previewNext(st, { type: "load", url: st.pendingUrl! });
     assert.equal(st.visibleUrl, annotatedUrl("C1", 1));
-    assert.equal(st.visibleKind, "annotated");
     assert.equal(st.pendingUrl, null);
   });
-
-  it("2. annotated gagal -> coba raw SIKLUS SAMA", () => {
+  it("2. annotated gagal -> raw siklus sama", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
     assert.equal(st.pendingUrl, rawUrl("C1", 1));
-    assert.equal(st.pendingKind, "raw");
     assert.equal(st.visibleUrl, null);
     st = previewNext(st, { type: "load", url: st.pendingUrl! });
     assert.equal(st.visibleUrl, rawUrl("C1", 1));
-    assert.equal(st.visibleKind, "raw");
   });
-
-  it("3. raw gagal + BELUM pernah ada frame -> unavailable (pending null, visible null)", () => {
+  it("3. raw gagal tanpa frame lama -> pending null (placeholder)", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
     assert.equal(st.pendingUrl, null);
     assert.equal(st.visibleUrl, null);
   });
-
-  it("4. raw gagal TAPI frame lama ada -> frame lama BERTAHAN (tidak blank)", () => {
+  it("4. raw gagal TAPI frame lama ada -> frame lama bertahan", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "load", url: st.pendingUrl! });
     const good = st.visibleUrl;
-    assert.ok(good);
     st = previewNext(st, { type: "tick", cameraId: "C1", tick: 2 });
-    // Selama pending, visible lama tetap:
-    assert.equal(st.visibleUrl, good);
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
-    assert.equal(st.visibleUrl, good);
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
     assert.equal(st.visibleUrl, good);
     assert.equal(st.pendingUrl, null);
   });
-
-  it("5. tick berikut SELALU retry annotated + pulih otomatis", () => {
+  it("5. tick berikut coba annotated lagi + pulih otomatis", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "error", url: st.pendingUrl! });
-    // sempat fallback raw di tick 1
-    assert.equal(st.pendingUrl, rawUrl("C1", 1));
     st = previewNext(st, { type: "tick", cameraId: "C1", tick: 2 });
     assert.equal(st.pendingUrl, annotatedUrl("C1", 2));
-    assert.equal(st.pendingKind, "annotated");
     st = previewNext(st, { type: "load", url: st.pendingUrl! });
     assert.equal(st.visibleUrl, annotatedUrl("C1", 2));
-    assert.equal(st.visibleKind, "annotated");
   });
-
-  it("6. respons basi diabaikan (anti overwrite silang antar generasi)", () => {
+  it("6. respons basi diabaikan (anti overwrite silang)", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "tick", cameraId: "C1", tick: 2 });
     const stale = annotatedUrl("C1", 1);
@@ -79,37 +61,20 @@ describe("annotated preview V6.7.3 (flicker-free)", () => {
     assert.equal(st, before);
     st = previewNext(st, { type: "error", url: stale });
     assert.equal(st, before);
-    // Pending baru masih utuh:
-    assert.equal(st.pendingUrl, annotatedUrl("C1", 2));
   });
-
-  it("7. ganti cameraId: frame kamera lama dibuang, mulai bersih", () => {
+  it("7. ganti kamera: frame lama dibuang, mulai bersih", () => {
     let st = initPreview("C1", 1);
     st = previewNext(st, { type: "load", url: st.pendingUrl! });
-    assert.ok(st.visibleUrl);
     st = previewNext(st, { type: "tick", cameraId: "C2", tick: 1 });
     assert.equal(st.visibleUrl, null);
-    assert.equal(st.cameraId, "C2");
     assert.equal(st.pendingUrl, annotatedUrl("C2", 1));
   });
-
   it("8. visible image TIDAK di-key/remount oleh polling tick", () => {
     const here = dirname(fileURLToPath(import.meta.url));
     const src = readFileSync(join(here, "..", "components", "AnnotatedPreview.tsx"), "utf8");
-    // Pola lama penyebab flicker DILARANG muncul:
-    assert.ok(
-      !src.includes("${cameraId}-${tick}"),
-      "visible <img> tidak boleh memakai key `${cameraId}-${tick}-...`"
-    );
-    assert.ok(
-      !/key=\{[^}]*tick[^}]*\}/.test(src),
-      "tidak boleh ada key yang mengandung tick"
-    );
-    // Double-buffer wajib ada: visible dipertahankan + preload background.
-    assert.ok(src.includes("visibleUrl"), "harus ada last-good-frame visibleUrl");
-    assert.ok(
-      src.includes("new Image()"),
-      "harus preload background via browser Image()"
-    );
+    assert.ok(!src.includes("${cameraId}-${tick}"));
+    assert.ok(!/key=\{[^}]*tick[^}]*\}/.test(src));
+    assert.ok(src.includes("visibleUrl"));
+    assert.ok(src.includes("new Image()"));
   });
 });

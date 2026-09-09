@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  initPreview,
+  previewNext,
+  type PreviewState,
+} from "@/lib/annotated-preview-state";
 
-export type PreviewStage = "annotated" | "raw" | "unavailable";
-
-// Aturan transisi stage (murni, testable):
-// - error annotated -> raw; error raw -> unavailable
-// - tick/cameraId baru -> SELALU coba annotated lagi (tanpa refresh halaman)
-export function nextStageOnError(stage: PreviewStage): PreviewStage {
-  if (stage === "annotated") return "raw";
-  return "unavailable";
-}
-
-// Preview kanonis: annotated Server 2 dulu, fallback jujur ke snapshot mentah.
+// Preview kanonis double-buffered: frame valid TAK PERNAH dicabut sebelum
+// pengganti berhasil load. Tiap tick coba annotated lagi (tanpa refresh).
 // Keduanya via proxy aman (tanpa token ke browser). 4:3 + object-contain.
 // AI status operasional TIDAK diturunkan dari komponen ini.
+//
+// Lifecycle: visibleUrl hanya diganti saat pendingUrl onLoad sukses (atomic
+// swap). Gagal annotated -> coba raw SIKLUS SAMA (setelah load). Gagal
+// keduanya -> visible lama TETAP; placeholder hanya bila belum pernah ada
+// frame valid. Visible <img> SENGAJA tidak memakai tick di key (anti-flicker).
 export default function AnnotatedPreview({
   cameraId,
   tick,
@@ -26,17 +27,41 @@ export default function AnnotatedPreview({
   alt: string;
   className?: string;
 }) {
-  const [stage, setStage] = useState<PreviewStage>("annotated");
-  const [cycle, setCycle] = useState(`${cameraId}-${tick}`);
-  // Pola penyesuaian state saat render (render-adjust): reset ke annotated
-  // hanya bila siklus berubah, BUKAN saat stage berubah (anti-loop).
-  const here = `${cameraId}-${tick}`;
-  if (cycle !== here) {
-    setCycle(here);
-    setStage("annotated");
-  }
+  const [st, setSt] = useState<PreviewState>(() => initPreview(cameraId, tick));
 
-  if (stage === "unavailable") {
+  // Tick/camera baru -> mulai annotated baru, visible lama TETAP (atau
+  // dibersihkan bila kamera berganti, lihat previewNext).
+  useEffect(() => {
+    setSt((prev) => {
+      if (prev.cameraId === cameraId && prev.tick === tick) return prev;
+      return previewNext(prev, { type: "tick", cameraId, tick });
+    });
+  }, [cameraId, tick]);
+
+  // Preload pendingUrl di background via browser Image(). Cleanup membatalkan
+  // hasil basi bila tick berikutnya datang sebelum load selesai, sehingga
+  // tidak ada backlog request dan frame basi tak bisa overwrite frame baru
+  // (ditambah guard ev.url !== pendingUrl di previewNext).
+  useEffect(() => {
+    const url = st.pendingUrl;
+    if (!url) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (!cancelled) setSt((prev) => previewNext(prev, { type: "load", url }));
+    };
+    img.onerror = () => {
+      if (!cancelled) setSt((prev) => previewNext(prev, { type: "error", url }));
+    };
+    img.src = url;
+    return () => {
+      cancelled = true;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [st.pendingUrl]);
+
+  if (!st.visibleUrl) {
     return (
       <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-100 text-slate-400">
         <span className="material-symbols-outlined text-2xl">videocam_off</span>
@@ -44,18 +69,17 @@ export default function AnnotatedPreview({
       </div>
     );
   }
-  const src =
-    stage === "annotated"
-      ? `/api/cameras/${encodeURIComponent(cameraId)}/annotated?t=${tick}`
-      : `/api/cameras/${encodeURIComponent(cameraId)}/snapshot?t=${tick}`;
+
   return (
+    // Visible TIDAK memakai tick di key: tidak pernah remount tiap polling.
+    // key hanya cameraId agar ganti kamera me-reset elemen secara bersih.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      key={`${cameraId}-${tick}-${stage}`}
-      src={src}
+      key={cameraId}
+      src={st.visibleUrl}
       alt={alt}
       className={className}
-      onError={() => setStage((s) => nextStageOnError(s))}
+      draggable={false}
     />
   );
 }
