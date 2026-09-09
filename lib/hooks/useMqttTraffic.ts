@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { useAppSettings } from "@/lib/hooks/useAppSettings";
+import { getTelemetryKind } from "@/lib/controller-telemetry";
 import {
   formatWithTimezone,
   getTimezoneLabel,
@@ -42,6 +43,10 @@ export interface TrafficUpdate {
   deviceId: string;
   device?: string;
   timestamp: string;
+  // V6.7.4 — kepemilikan sumber: controller (ESP32) vs vision (CAM_YOLO).
+  // Vision TIDAK BOLEH menggantikan lampu/mode fisik controller.
+  telemetryKind?: "controller" | "vision" | "unknown";
+  isControllerTelemetry?: boolean;
 
   north: LaneData;
   south: LaneData;
@@ -354,6 +359,16 @@ export function normalizeMqttTraffic(
     raw?.received_at_utc ??
     new Date().toISOString();
 
+  const deviceId: string =
+    raw?.device_id ??
+    raw?.deviceId ??
+    raw?.device ??
+    "ESP32_TRAFFIC_01";
+
+  // V6.7.4: tandai kepemilikan sumber dari device id final (legacy tanpa
+  // device tetap default ESP32 = controller, perilaku lama dipertahankan).
+  const telemetryKind = getTelemetryKind(deviceId);
+
   return {
     id: raw?.id,
 
@@ -362,11 +377,10 @@ export function normalizeMqttTraffic(
       raw?.intersectionId ??
       "SIMPANG_TALUN_01",
 
-    deviceId:
-      raw?.device_id ??
-      raw?.deviceId ??
-      raw?.device ??
-      "ESP32_TRAFFIC_01",
+    deviceId,
+
+    telemetryKind,
+    isControllerTelemetry: telemetryKind === "controller",
 
     device:
       raw?.device ??

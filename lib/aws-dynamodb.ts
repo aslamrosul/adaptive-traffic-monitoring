@@ -6,6 +6,7 @@ import {
   GetCommand,
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { selectFirstMatchingDevice } from "./controller-telemetry";
 
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
@@ -48,6 +49,26 @@ export async function getLatestTrafficByIntersection(
   );
 
   return result.Items || [];
+}
+
+// V6.7.4 — fallback controller: ambil terbaru milik device yang diminta saja.
+// JANGAN ambil latest intersection lalu mengasumsikannya milik controller
+// (bisa jadi record CAM_YOLO/vision). Tanpa GSI device: query jendela lebih
+// besar lalu saring device di memori.
+export async function getLatestTrafficByDevice(
+  intersectionId: string,
+  deviceId: string,
+  limit = 1
+) {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 1, 1), 100);
+  const fetchLimit = Math.min(Math.max(safeLimit * 10, 25), 100);
+
+  const items = await getLatestTrafficByIntersection(
+    intersectionId,
+    fetchLimit
+  );
+
+  return selectFirstMatchingDevice(items, deviceId, safeLimit);
 }
 
 export async function getRecentTraffic(limit = 100) {

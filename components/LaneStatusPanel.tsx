@@ -57,25 +57,53 @@ export default function LaneStatusPanel({ intersectionId = "all" }: LaneStatusPa
 
     try {
       // Fetch intersection details if specific intersection selected
+      // V6.7.4: ambil controller device registry agar query traffic bisa
+      // difilter ke device yang sama (bukan record CAM_YOLO/vision).
+      let controllerDeviceId: string | null = null;
       if (intersectionId !== "all") {
         const intRes = await fetch(`/api/intersections/${intersectionId}`);
         const intData = await intRes.json();
-        
+
         if (intData.success) {
           setIntersectionNameFromApi(intData.data.name);
           setLaneCount(intData.data.lanes?.count || 4);
+          controllerDeviceId =
+            String(
+              intData.data.deviceId ?? intData.data.device_id ?? "",
+            ).trim() || null;
         }
       } else {
         setIntersectionNameFromApi(null);
         setLaneCount(4); // Default 4 lanes for "all"
       }
 
-      // Fetch latest traffic data
-      const trafficRes = await fetch(`/api/traffic/latest?intersectionId=${intersectionId}&limit=1`);
+      // Fetch latest traffic data (V6.7.4: filter controller bila diketahui)
+      const deviceQuery = controllerDeviceId
+        ? `&deviceId=${encodeURIComponent(controllerDeviceId)}`
+        : "";
+      const trafficRes = await fetch(`/api/traffic/latest?intersectionId=${intersectionId}&limit=1${deviceQuery}`);
       const trafficData = await trafficRes.json();
 
-      if (trafficData.success && trafficData.data.length > 0) {
-        const latestData = trafficData.data[0];
+      const latestItem =
+        trafficData.success && trafficData.data.length > 0
+          ? trafficData.data[0]
+          : null;
+      // V6.7.4: record vision tanpa field lampu tidak boleh menjadi all-red;
+      // perlakukan sebagai tidak ada data (unknown).
+      const latestDeviceId = String(
+        latestItem?.device_id ?? latestItem?.deviceId ?? latestItem?.device ?? "",
+      ).trim();
+      const isVisionItem =
+        !!latestItem &&
+        (latestItem.isControllerTelemetry === false ||
+          /yolo|vision|\bcam\b|cam_|camera/i.test(latestDeviceId));
+      const deviceMismatch =
+        !!latestItem &&
+        !!controllerDeviceId &&
+        latestDeviceId.toLowerCase() !== controllerDeviceId.toLowerCase();
+
+      if (latestItem && !isVisionItem && !deviceMismatch) {
+        const latestData = latestItem;
         
         // Map lanes based on available data
         const laneDirections = ['north', 'south', 'east', 'west'];

@@ -1,7 +1,9 @@
 import {
+  getLatestTrafficByDevice,
   getLatestTrafficByIntersection,
   getRecentTraffic,
 } from "@/lib/aws-dynamodb";
+import { selectFirstMatchingDevice } from "@/lib/controller-telemetry";
 import { normalizeTrafficItems } from "@/lib/traffic-adapter";
 import { NextResponse } from "next/server";
 
@@ -11,12 +13,31 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const intersectionId = searchParams.get("intersectionId");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    // V6.7.4: fallback controller WAJIB milik device yang sama.
+    const deviceId = searchParams.get("deviceId")?.trim() || null;
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || "10") || 10, 1),
+      100,
+    );
 
     let items: any[] = [];
 
     if (intersectionId && intersectionId !== "all") {
-      items = await getLatestTrafficByIntersection(intersectionId, limit);
+      if (deviceId) {
+        items = await getLatestTrafficByDevice(
+          intersectionId,
+          deviceId,
+          limit,
+        );
+      } else {
+        items = await getLatestTrafficByIntersection(intersectionId, limit);
+      }
+    } else if (deviceId) {
+      items = selectFirstMatchingDevice(
+        await getRecentTraffic(100),
+        deviceId,
+        limit,
+      );
     } else {
       items = await getRecentTraffic(limit);
     }

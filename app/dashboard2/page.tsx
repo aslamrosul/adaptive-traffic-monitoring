@@ -38,21 +38,16 @@ import {
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-function pickNewestTraffic(
-  a?: TrafficUpdate | null,
-  b?: TrafficUpdate | null,
-): TrafficUpdate | null {
-  if (!a) return b ?? null;
-  if (!b) return a;
-
-  const ta = new Date(a.timestamp).getTime();
-  const tb = new Date(b.timestamp).getTime();
-
-  if (Number.isNaN(ta)) return b;
-  if (Number.isNaN(tb)) return a;
-
-  return tb > ta ? b : a;
-}
+// V6.7.4: telemetri controller (ESP32) dipisahkan ketat dari vision
+// (CAM_YOLO). pickNewestControllerTraffic hanya membandingkan
+// controller-vs-controller; timestamp vision yang lebih baru tidak boleh
+// menggeser fase lampu fisik.
+import {
+  isControllerTelemetryRecord,
+  isSameDeviceId,
+  pickNewestControllerTraffic,
+  resolveControllerDeviceId,
+} from "@/lib/controller-telemetry";
 
 
 export default function DashboardPage() {
@@ -205,21 +200,34 @@ export default function DashboardPage() {
     selectedIntersectionData?.device_id ||
     null;
 
+  // V6.7.4: controller device dari registry (Talun -> ESP32_TRAFFIC_01).
+  const selectedControllerDeviceId = resolveControllerDeviceId(
+    selectedIntersection,
+    intersections,
+  ) || selectedDeviceId;
+
   /**
-   * Ambil latest data dari API berdasarkan intersection yang dipilih.
-   * Ini mencegah UI fallback ke latestData global milik device lain.
+   * Ambil latest CONTROLLER dari API berdasarkan intersection + device.
+   * Filter deviceId mencegah fallback mengambil record CAM_YOLO/vision yang
+   * kebetulan newest. Hasil non-controller ditolak (unavailable, bukan red).
    */
   useEffect(() => {
     let cancelled = false;
 
     async function loadSelectedLatest() {
       try {
+        // V6.7.4: minta telemetri controller yang sama (deviceId), bukan
+        // sekadar newest intersection (bisa milik CAM_YOLO).
+        const deviceQuery =
+          selectedIntersection !== "all" && selectedControllerDeviceId
+            ? `&deviceId=${encodeURIComponent(selectedControllerDeviceId)}`
+            : "";
         const endpoint =
           selectedIntersection === "all"
             ? "/api/traffic/latest?limit=1"
             : `/api/traffic/latest?intersectionId=${encodeURIComponent(
                 selectedIntersection,
-              )}&limit=1`;
+              )}&limit=1${deviceQuery}`;
 
         const response = await fetch(endpoint, {
           cache: "no-store",
@@ -255,6 +263,31 @@ export default function DashboardPage() {
           return;
         }
 
+        // V6.7.4: fallback API WAJIB milik controller yang sama. Tolak record
+        // vision (CAM_YOLO tanpa field lampu -> all-red palsu) dan device lain.
+        if (
+          selectedIntersection !== "all" &&
+          selectedControllerDeviceId &&
+          !isSameDeviceId(
+            normalized.deviceId,
+            selectedControllerDeviceId,
+          )
+        ) {
+          if (!cancelled) {
+            setSelectedLatestFromApi(null);
+          }
+
+          return;
+        }
+
+        if (!isControllerTelemetryRecord(normalized)) {
+          if (!cancelled) {
+            setSelectedLatestFromApi(null);
+          }
+
+          return;
+        }
+
         setSelectedLatestFromApi(normalized);
         setLastUpdate(new Date());
       } catch (fetchError) {
@@ -278,31 +311,38 @@ export default function DashboardPage() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [selectedIntersection]);
+  }, [selectedIntersection, selectedControllerDeviceId]);
 
   /**
-   * Data final untuk Road Simulation dan TrafficControlPanel.
+   * Data final untuk Road Simulation dan TrafficControlPanel: HANYA telemetri
+   * controller (V6.7.4).
    *
    * Aturan:
-   * - Semua Persimpangan  -> latestData global.
-   * - Persimpangan khusus -> latestByDevice[deviceId].
-   * - Kalau MQTT belum ada -> selectedLatestFromApi.
+   * - Semua Persimpangan  -> newest controller (MQTT global/API), vision
+   *   diabaikan.
+   * - Persimpangan khusus -> latestByDevice[controllerDeviceId].
+   * - Kalau MQTT belum ada -> selectedLatestFromApi (sudah controller-only).
    * - Jangan fallback ke latestData global saat pilih persimpangan khusus.
+   * - Tanpa data controller -> null (unavailable/stale), BUKAN all-red palsu.
    */
   const realtimeData = useMemo(() => {
     if (selectedIntersection === "all") {
-      return pickNewestTraffic(latestData, selectedLatestFromApi);
+      return pickNewestControllerTraffic(latestData, selectedLatestFromApi);
     }
 
     const mqttDeviceData =
-      selectedDeviceId && latestByDevice[selectedDeviceId]
-        ? latestByDevice[selectedDeviceId]
+      selectedControllerDeviceId &&
+      latestByDevice[selectedControllerDeviceId]
+        ? latestByDevice[selectedControllerDeviceId]
         : null;
 
-    return pickNewestTraffic(mqttDeviceData, selectedLatestFromApi);
+    return pickNewestControllerTraffic(
+      mqttDeviceData,
+      selectedLatestFromApi,
+    );
   }, [
     selectedIntersection,
-    selectedDeviceId,
+    selectedControllerDeviceId,
     latestByDevice,
     latestData,
     selectedLatestFromApi,

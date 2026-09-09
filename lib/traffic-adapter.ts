@@ -1,6 +1,8 @@
 export type LaneName = "north" | "south" | "east" | "west";
 export type LightStatus = "red" | "yellow" | "green";
 
+import { getTelemetryKind } from "./controller-telemetry";
+
 function toNumber(value: any, fallback = 0): number {
   if (value === undefined || value === null || value === "") return fallback;
   const n = Number(value);
@@ -69,13 +71,22 @@ export function normalizeTrafficItem(item: any) {
   const timestamp =
     item.timestamp || item.received_at_utc || new Date().toISOString();
 
+  const deviceId: string =
+    item.device_id || item.deviceId || item.device || "ESP32_TRAFFIC_01";
+
+  // V6.7.4: tandai kepemilikan sumber (lihat lib/controller-telemetry).
+  const telemetryKind = getTelemetryKind(deviceId);
+
   return {
     ...item,
 
     id: item.id,
     intersectionId:
       item.intersection_id || item.intersectionId || "SIMPANG_TALUN_01",
-    deviceId: item.device_id || item.deviceId || item.device || "ESP32_TRAFFIC_01",
+    deviceId,
+
+    telemetryKind,
+    isControllerTelemetry: telemetryKind === "controller",
 
     timestamp,
     processedAt: item.received_at_utc || timestamp,

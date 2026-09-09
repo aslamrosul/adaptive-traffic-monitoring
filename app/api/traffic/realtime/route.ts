@@ -1,8 +1,10 @@
 import {
+  getLatestTrafficByDevice,
   getLatestTrafficByIntersection,
   getRecentTraffic,
   scanTrafficByDateRange,
 } from "@/lib/aws-dynamodb";
+import { selectFirstMatchingDevice } from "@/lib/controller-telemetry";
 import { normalizeTrafficItems } from "@/lib/traffic-adapter";
 import { resolveWibAnalyticsRange } from "@/lib/timezone";
 import { NextResponse } from "next/server";
@@ -15,6 +17,8 @@ export async function GET(request: Request) {
 
     const limit = Number(searchParams.get("limit") || "100");
     const intersectionId = searchParams.get("intersectionId");
+    // V6.7.4: filter device opsional (konsisten dengan /api/traffic/latest).
+    const deviceId = searchParams.get("deviceId")?.trim() || null;
 
     const hasDateFilter =
       searchParams.has("date") ||
@@ -33,9 +37,27 @@ export async function GET(request: Request) {
         intersectionId,
         limit,
       });
+
+      if (deviceId) {
+        items = selectFirstMatchingDevice(items, deviceId, limit);
+      }
     } else if (intersectionId && intersectionId !== "all") {
-      items = await getLatestTrafficByIntersection(
-        intersectionId,
+      if (deviceId) {
+        items = await getLatestTrafficByDevice(
+          intersectionId,
+          deviceId,
+          limit,
+        );
+      } else {
+        items = await getLatestTrafficByIntersection(
+          intersectionId,
+          limit,
+        );
+      }
+    } else if (deviceId) {
+      items = selectFirstMatchingDevice(
+        await getRecentTraffic(100),
+        deviceId,
         limit,
       );
     } else {
