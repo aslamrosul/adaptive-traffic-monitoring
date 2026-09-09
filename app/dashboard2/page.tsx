@@ -8,11 +8,13 @@ import LaneStatusPanel from "@/components/LaneStatusPanel";
 import Sidebar from "@/components/Sidebar";
 import AiStatusBadge from "@/components/AiStatusBadge";
 import { useCameraDisplay, resolveLaneSource } from "@/lib/hooks/useCameraDisplay";
+import { resolveInitialIntersection } from "@/lib/intersection-select";
 import { useCameraLiveMap } from "@/lib/hooks/useCameraLive";
 import TrafficTrendChart from "@/components/TrafficTrendChart";
 import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
 import { useT } from "@/lib/useT";
+import { useSession } from "next-auth/react";
 
 import type {
   DateRange,
@@ -66,6 +68,8 @@ export default function DashboardPage() {
   const [customDates, setCustomDates] = useState<DateRange | undefined>();
   const [selectedIntersection, setSelectedIntersection] =
     useState<string>("all");
+  const { data: sessData } = useSession();
+  const isCamAdmin = ((sessData?.user as { role?: string } | undefined)?.role || "") === "admin";
 
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -323,7 +327,7 @@ export default function DashboardPage() {
   const ALL_LANES = ["north", "south", "east", "west"] as const;
   type CamLane = typeof ALL_LANES[number];
   const [camUrls, setCamUrls] = useState<Record<CamLane, string>>({
-    north: "http://10.100.122.135",
+    north: "",
     south: "",
     east: "",
     west: "",
@@ -332,10 +336,10 @@ export default function DashboardPage() {
   const camLiveMap = useCameraLiveMap(selectedIntersection);
   const [isSimOpen, setIsSimOpen] = useState(true);
   const [camSource, setCamSource] = useState<Record<CamLane, "canonical" | "mjpeg" | "hls" | "webcam" | "upload">>({
-    north: "mjpeg",
-    south: "mjpeg",
-    east: "mjpeg",
-    west: "mjpeg",
+    north: "canonical",
+    south: "canonical",
+    east: "canonical",
+    west: "canonical",
   });
   const camVideoRefs = useRef<Record<CamLane, HTMLVideoElement | null>>({
     north: null,
@@ -430,17 +434,24 @@ export default function DashboardPage() {
     } catch {}
   }, []);
   // Default intersection operasional (STEP 16).
+  // Default intersection SEKALI per sesi halaman (STEP 2): pilihan user selalu menang.
+  const didResolveIntersection = useRef(false);
   useEffect(() => {
-    if (selectedIntersection !== "all") return;
+    if (didResolveInitialRef()) return;
+    if (selectedIntersection !== "all") {
+      didResolveIntersection.current = true;
+      return;
+    }
     const list = (intersections || []) as Array<{ id?: string; intersection_id?: string; status?: string }>;
     if (!list.length) return;
-    const talun = list.find((x) => (x.id || x.intersection_id) === "SIMPANG_TALUN_01");
-    const firstActive = list.find((x) => (x.status || "active") === "active") || list[0];
-    const pick = talun || firstActive;
-    const pid = String(pick.id || pick.intersection_id || "");
-    if (pid) setSelectedIntersection(pid);
+    const pid = resolveInitialIntersection(list);
+    didResolveIntersection.current = true;
+    if (pid && pid !== "all") setSelectedIntersection(pid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intersections]);
+  }, [intersections, selectedIntersection]);
+  function didResolveInitialRef() {
+    return didResolveIntersection.current;
+  }
   // Sinkronisasi sumber efektif SEKALI per kombinasi (server > registry > lokal).
   useEffect(() => {
     const liveKeys = Object.keys(camLiveMap).sort().join(",");
@@ -1113,7 +1124,13 @@ export default function DashboardPage() {
                             {cfgSaveState === "saved" && (
                               <p className="mb-3 text-xs font-bold text-emerald-600">Tersimpan di server.</p>
                             )}
+                            {!isCamAdmin && (
+                              <p className="mb-2 text-[11px] text-slate-500">
+                                Konfigurasi hanya dapat disimpan oleh admin.
+                              </p>
+                            )}
                             <div className="flex gap-2">
+                              {isCamAdmin && (
                               <button
                                 type="button"
                                 onClick={() => void saveCamConfig(camSettingsLane)}
@@ -1122,6 +1139,7 @@ export default function DashboardPage() {
                               >
                                 {cfgSaveState === "saving" ? "Menyimpan..." : "Simpan ke Server"}
                               </button>
+                              )}
                               <button type="button" onClick={() => setCamSettingsLane(null)} className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white hover:bg-slate-700">
                                 Selesai
                               </button>

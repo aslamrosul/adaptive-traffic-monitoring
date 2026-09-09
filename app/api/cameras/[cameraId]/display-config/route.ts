@@ -1,4 +1,5 @@
 import { authOptions } from "@/lib/auth";
+import { authWriteError } from "@/lib/authz";
 import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { validateDisplayConfig } from "@/lib/camera-display-config";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
@@ -14,8 +15,11 @@ export async function PUT(
   context: { params: Promise<{ cameraId: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const denied = authWriteError(
+    session ? { user: session.user as { role?: string; email?: string } | null } : null
+  );
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
   }
   const { cameraId } = await context.params;
   if (!/^[A-Z0-9_]{3,64}$/.test(cameraId || "")) {
@@ -53,7 +57,7 @@ export async function PUT(
     const finalHls = checked.config.manual_hls_url || prevHls || legacyHls;
     const now = new Date().toISOString();
     const email = String(
-      (session.user as { email?: string } | null)?.email || "unknown"
+      (session?.user as { email?: string } | null)?.email || "unknown"
     );
     await dynamo.send(
       new UpdateCommand({

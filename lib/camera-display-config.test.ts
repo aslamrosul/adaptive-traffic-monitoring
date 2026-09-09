@@ -151,3 +151,23 @@ describe3("resolveLaneSource", () => {
     );
   });
 });
+
+import { authWriteError } from "./authz.js";
+import { describe as describe4, it as it4 } from "node:test";
+import assert4 from "node:assert/strict";
+
+describe4("authWriteError", () => {
+  it4("unauthenticated -> 401", () => {
+    assert4.deepEqual(authWriteError(null), { status: 401, error: "Unauthorized" });
+    assert4.deepEqual(authWriteError({}), { status: 401, error: "Unauthorized" });
+  });
+  it4("non-admin -> 403", () => {
+    assert4.deepEqual(authWriteError({ user: { role: "operator" } }), {
+      status: 403,
+      error: "Khusus admin",
+    });
+  });
+  it4("admin -> allowed", () => {
+    assert4.equal(authWriteError({ user: { role: "admin", email: "a@b" } }), null);
+  });
+});
