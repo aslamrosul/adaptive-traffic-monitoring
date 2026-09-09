@@ -21,6 +21,18 @@ import {
   wibDateRangeToUtc,
 } from "@/lib/timezone";
 import { actionAllowedFor, detectAiActionIntent } from "@/lib/ai-actions";
+import {
+  detectIntent,
+  isFollowUp,
+  parseTimeframe,
+  peakHourByVolume,
+  resolveConversation,
+  sanitizeHistory,
+  type ChatTurn,
+  type ResolvedTimeframe,
+  type TrafficIntent,
+  type VolumeSample,
+} from "@/lib/ai-conversation";
 
 const LANE_NAMES: TrafficLane[] = [...TRAFFIC_LANES];
 
@@ -69,6 +81,12 @@ export interface AiSummary {
   period: { startDate: string; endDate: string };
   dataStatus: { itemCount: number; hasEnoughData: boolean };
   overview: string;
+  volumePeak: {
+    hour: number | null;
+    label: string | null;
+    metric: "volume" | "queue-level";
+    totalFlow: number;
+  };
   keyMetrics: {
     totalSamples: number;
     averageQueueLevel: number;
@@ -137,6 +155,7 @@ export interface AiChatResponse {
   isAdmin: boolean;
   role: string;
   actionProposal?: import("@/lib/ai-actions").AiActionProposal | null;
+  llm?: { configured: boolean; ok: boolean };
 }
 
 export interface AiRequestContext {
@@ -149,6 +168,36 @@ export interface AiChatOptions {
   isAdmin?: boolean;
   role?: string;
   userName?: string;
+  history?: ChatTurn[];
+}
+
+// Diagnostik LLM aman (tanpa secret). Dibaca untuk badge/diagnostics.
+let llmLast: { ok: boolean; status?: number; at: string } | null = null;
+
+export function getLlmDiagnostics(): {
+  configured: boolean;
+  model: string;
+  baseHost: string;
+  lastOk: boolean | null;
+  lastErrorStatus: number | null;
+  at: string | null;
+} {
+  const apiKey = process.env.AI_LLM_API_KEY || "";
+  const baseUrl = process.env.AI_LLM_BASE_URL || "https://api.openai.com/v1";
+  let baseHost = "";
+  try {
+    baseHost = new URL(baseUrl).host;
+  } catch {
+    baseHost = "";
+  }
+  return {
+    configured: apiKey.length > 0,
+    model: process.env.AI_LLM_MODEL || "gpt-4o-mini",
+    baseHost,
+    lastOk: llmLast ? llmLast.ok : null,
+    lastErrorStatus: llmLast && !llmLast.ok ? (llmLast.status ?? null) : null,
+    at: llmLast ? llmLast.at : null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -445,6 +494,35 @@ export async function getAiSummary(
   }
 
   const hasEnoughData = totalSamples >= 30;
+
+  // Peak berbasis VOLUME kendaraan (delta counter), fallback level antrean.
+  const volumeSamples: VolumeSample[] = [];
+  let hasVolumeField = false;
+  for (const item of items) {
+    const ts =
+      typeof item.timestamp === "string"
+        ? item.timestamp
+        : typeof item.received_at_utc === "string"
+          ? item.received_at_utc
+          : null;
+    if (!ts) continue;
+    const dev = rawDeviceIdOf(item) || "unknown";
+    for (const lane of LANE_NAMES) {
+      const rawCount = item[`${lane}_vehicle_count`];
+      if (rawCount === undefined || rawCount === null) continue;
+      hasVolumeField = true;
+      volumeSamples.push({
+        deviceId: dev,
+        lane,
+        timestamp: ts,
+        count: Number(rawCount),
+      });
+    }
+  }
+  const volumePeak = peakHourByVolume(volumeSamples);
+  if (!hasVolumeField || volumePeak.totalFlow <= 0) {
+    volumePeak.metric = "queue-level";
+  }
   const mostCongested =
     congested.length > 0
       ? congested[0]
@@ -478,6 +556,7 @@ export async function getAiSummary(
     period: { startDate, endDate },
     dataStatus: { itemCount: totalSamples, hasEnoughData },
     overview,
+    volumePeak,
     keyMetrics: {
       totalSamples,
       averageQueueLevel,
@@ -826,10 +905,36 @@ export async function getAiAnomalies(
     low: anomalies.filter((a) => a.severity === "low").length,
   };
 
+  // V: gabungkan N device-offline menjadi 1 item ringkas (anti duplikasi judul).
+  const offlineItems = anomalies.filter((a) => a.type === "device-offline");
+  let finalAnomalies = anomalies;
+  if (offlineItems.length > 1) {
+    const ids = offlineItems
+      .map((a) => a.deviceId || "")
+      .filter(Boolean)
+      .slice(0, 5);
+    const merged: AiAnomaly = {
+      type: "device-offline",
+      severity: "high",
+      title: "Perangkat offline",
+      description: `${offlineItems.length} perangkat tidak mengirim data${
+        ids.length ? `: ${ids.join(", ")}` : ""
+      }. Kemungkinan mati atau kehilangan koneksi.`,
+    };
+    finalAnomalies = [
+      merged,
+      ...anomalies.filter((a) => a.type !== "device-offline"),
+    ];
+    summary.total = finalAnomalies.length;
+    summary.high = finalAnomalies.filter((a) => a.severity === "high").length;
+    summary.medium = finalAnomalies.filter((a) => a.severity === "medium").length;
+    summary.low = finalAnomalies.filter((a) => a.severity === "low").length;
+  }
+
   return {
     generatedAt: new Date().toISOString(),
     intersectionId,
-    anomalies,
+    anomalies: finalAnomalies,
     summary,
   };
 }
@@ -1001,30 +1106,51 @@ export async function getAiChatAnswer(
   ctx: AiRequestContext,
   opts: AiChatOptions = {}
 ): Promise<AiChatResponse> {
-  const [summary, anomalies, forecast, history] = await Promise.all([
-    getAiSummary(ctx),
-    getAiAnomalies(ctx),
-    getAiForecast({ ...ctx, hours: 6 }),
-    getAiHistoryContext(ctx),
+  const history = Array.isArray(opts.history) ? opts.history : [];
+  const resolved = resolveConversation(question, history);
+  // Timeframe eksplisit dari date-picker menang atas tebakan dari teks.
+  const tf: ResolvedTimeframe | null =
+    ctx.startDate || ctx.endDate
+      ? {
+          startDate: ctx.startDate || ctx.endDate || "",
+          endDate: ctx.endDate || ctx.startDate || "",
+          label: "pilihan",
+          current: false,
+        }
+      : resolved.timeframe;
+  const effCtx: AiRequestContext = {
+    intersectionId: ctx.intersectionId,
+    startDate: tf && !tf.current ? tf.startDate : ctx.startDate,
+    endDate: tf && !tf.current ? tf.endDate : ctx.endDate,
+  };
+  const [summary, anomalies, forecast, historyCtx] = await Promise.all([
+    getAiSummary(effCtx),
+    getAiAnomalies(effCtx),
+    getAiForecast({ ...effCtx, hours: 6 }),
+    getAiHistoryContext(effCtx),
   ]);
 
   const isAdmin = !!opts.isAdmin;
   const role = opts.role === "admin" ? "admin" : "operator";
   const userName = opts.userName || "";
-  const actionProposal = detectAiActionIntent(question, summary, ctx);
+  const actionProposal = detectAiActionIntent(resolved.effectiveQuestion, summary, effCtx);
   const canDoAction = actionProposal
     ? actionAllowedFor(actionProposal.type, role)
     : false;
 
-  const templateAnswer = buildTemplateAnswer(question, {
+  const templateAnswer = buildTemplateAnswer(resolved.effectiveQuestion, {
     summary,
     anomalies,
     forecast,
-    history,
+    history: historyCtx,
     actionProposal,
     isAdmin,
     role,
     canDoAction,
+    intent: resolved.intent,
+    timeframe: tf,
+    inherited: resolved.inherited,
+    current: tf?.current ?? false,
   });
 
   const pageList = AI_PAGE_MAP.map(
@@ -1050,28 +1176,37 @@ export async function getAiChatAnswer(
           : `Pengguna meminta aksi "${actionProposal.label}", tetapi ia tidak diizinkan untuk itu (khusus admin). Tolak dengan ramah dan jelaskan alasannya.`
         : "";
 
+      const groundedFacts = {
+        questionType: resolved.intent,
+        timeframe: tf
+          ? { label: tf.label, startDate: tf.startDate, endDate: tf.endDate, current: tf.current }
+          : { label: "default", startDate: summary.period.startDate, endDate: summary.period.endDate, current: false },
+        intersection: summary.intersectionId,
+        samples: summary.keyMetrics.totalSamples,
+        dataSufficient: summary.dataStatus.hasEnoughData,
+        peakVolume: summary.volumePeak,
+        lanes: summary.lanes,
+        visionFreshness: summary.keyMetrics.devicesOnline,
+        anomalies: anomalies.anomalies.slice(0, 5),
+      };
+      const historyMessages = history
+        .slice(-8)
+        .map((t) => ({ role: t.role, content: t.content }));
+
       const systemPrompt = [
         "Kamu adalah asisten AI untuk sistem Adaptive Traffic Monitoring bernama ASTRAEA.",
-        "Jawab dalam Bahasa Indonesia, singkat, jelas, dan ramah.",
+        "Jawab dalam Bahasa Indonesia, singkat, jelas, dan ramah. Jawab TEPAT pertanyaan terakhir; jangan mengulang laporan panjang kecuali diminta.",
+        "ATURAN GROUNDING (wajib): jawab HANYA dari Fakta Telemetri di bawah. Jangan mengarang angka/jam yang tidak ada di fakta. Bila data tidak cukup, katakan terus terang. Bedakan data saat ini vs historis sesuai flag timeframe.",
+        "Pertanyaan lanjutan yang pendek merujuk konteks percakapan di atas; gunakan itu, jangan mulai analisis baru yang tak berkaitan.",
         "Bila pengguna bertanya tentang cara menggunakan aplikasi/tutorial/panduan, jelaskan langkah-langkahnya dan sebutkan halaman yang relevan.",
         "Jangan gunakan penulisan Markdown seperti **bold**, *italic*, atau [link](url) — gunakan teks biasa saja. Jika perlu menunjuk halaman, cukup tulis nama halaman dan path-nya, misal: Dashboard (/dashboard).",
         roleLine,
         "Daftar halaman aplikasi:",
         pageList,
-        "Konteks data pada rentang tanggal yang diminta pengguna:",
-        JSON.stringify({
-          summary: {
-            overview: summary.overview,
-            keyMetrics: summary.keyMetrics,
-            lanes: summary.lanes,
-            insights: summary.insights,
-            recommendations: summary.recommendations,
-          },
-          anomalies: anomalies.anomalies,
-          forecast: forecast.hours,
-        }),
+        "Fakta Telemetri (sumber kebenaran):",
+        JSON.stringify(groundedFacts),
         "Riwayat 5 bulan terakhir (konteks tambahan bila data pada rentang yang diminta terbatas):",
-        JSON.stringify(history),
+        JSON.stringify(historyCtx),
         actionLine,
       ]
         .filter((line) => line !== "")
@@ -1088,6 +1223,7 @@ export async function getAiChatAnswer(
           temperature: 0.3,
           messages: [
             { role: "system", content: systemPrompt },
+            ...historyMessages,
             { role: "user", content: question },
           ],
         }),
@@ -1098,6 +1234,7 @@ export async function getAiChatAnswer(
         const data = await response.json();
         const answer = data?.choices?.[0]?.message?.content?.trim();
         if (answer) {
+          llmLast = { ok: true, at: new Date().toISOString() };
           return {
             answer,
             source: "ai",
@@ -1105,14 +1242,20 @@ export async function getAiChatAnswer(
             isAdmin,
             role,
             actionProposal: canDoAction ? actionProposal : null,
+            llm: { configured: true, ok: true },
           };
         }
+        llmLast = { ok: false, status: 200, at: new Date().toISOString() };
       } else {
         const errorText = await response.text().catch(() => "");
         console.error("AI LLM HTTP error", response.status, errorText.slice(0, 300));
+        llmLast = { ok: false, status: response.status, at: new Date().toISOString() };
       }
     } catch (error) {
       console.error("AI LLM call failed:", error);
+      if (!llmLast || Date.now() - new Date(llmLast.at).getTime() > 60000) {
+        llmLast = { ok: false, at: new Date().toISOString() };
+      }
       // fallback ke template
     }
   }
@@ -1124,6 +1267,7 @@ export async function getAiChatAnswer(
     isAdmin,
     role,
     actionProposal: canDoAction ? actionProposal : null,
+    llm: { configured: (process.env.AI_LLM_API_KEY || "").length > 0, ok: false },
   };
 }
 
@@ -1138,10 +1282,18 @@ function buildTemplateAnswer(
     isAdmin?: boolean;
     role?: string;
     canDoAction?: boolean;
+    intent?: TrafficIntent;
+    timeframe?: ResolvedTimeframe | null;
+    inherited?: boolean;
+    current?: boolean;
   }
 ): string {
   const normalized = normalizeQuestion(question);
   const { summary, anomalies, forecast, history, actionProposal, isAdmin, role, canDoAction } = data;
+  const intent: TrafficIntent = data.intent || detectIntent(question);
+  const tf = data.timeframe || null;
+  const inherited = !!data.inherited;
+  const isCurrent = !!data.current;
 
   // Aksi: cek izin role
   if (actionProposal) {
@@ -1167,19 +1319,26 @@ function buildTemplateAnswer(
         )
       : null;
 
-  if (
-    intentMatch(normalized, [
-      "paling padat",
-      "termacet",
-      "macet",
-      "congested",
-      "padat",
-      "ramai",
-      "sibuk",
-      "paling ramai",
-      "most congested",
-    ])
-  ) {
+  // PEAK HOUR — selalu didahulukan dari congestion generik.
+  if (intent === "peak_hour") {
+    const vp = summary.volumePeak;
+    if (vp.hour !== null && vp.metric === "volume") {
+      const label = tf && !isCurrent ? ` ${tf.label}` : "";
+      if (inherited) return `${vp.label}.`;
+      return `Jam tersibuk${label} adalah sekitar pukul ${vp.label} (arus ${vp.totalFlow} kendaraan terhitung per jam).`;
+    }
+    if (summary.keyMetrics.peakHourLabel) {
+      if (inherited) return `${summary.keyMetrics.peakHourLabel}.`;
+      return `Kepadatan puncak terjadi sekitar pukul ${summary.keyMetrics.peakHourLabel} dengan ${summary.keyMetrics.peakHourLevel2Percentage}% sampel berada di level 2 (berdasarkan tingkat antrean, bukan volume kendaraan).`;
+    }
+    if (history?.peakHour) {
+      if (inherited) return `${history.peakHour}.`;
+      return `Data pada rentang yang diminta masih terbatas, namun berdasarkan 5 bulan terakhir, kepadatan puncak terjadi sekitar pukul ${history.peakHour}.`;
+    }
+    return "Data belum cukup untuk menentukan jam puncak pada periode ini.";
+  }
+
+  if (intent === "congestion" || intent === "unknown") {
     const stats = summary.lanes[congestedLane];
     const useHistory = rangeEmpty && history;
     const laneLabel = useHistory && congestedLaneFromHistory
@@ -1191,7 +1350,13 @@ function buildTemplateAnswer(
     const periodNote = useHistory && history
       ? ` (rata-rata ${history.period})`
       : "";
-    return `Jalur paling padat${rangeEmpty ? " berdasarkan data 5 bulan terakhir" : " saat ini"} adalah ${laneLabel} dengan rata-rata level antrean ${
+    const whenNote =
+      tf && !isCurrent
+        ? ` pada ${tf.label}`
+        : rangeEmpty
+          ? " berdasarkan data 5 bulan terakhir"
+          : " saat ini";
+    return `Jalur paling padat${whenNote} adalah ${laneLabel} dengan rata-rata level antrean ${
       laneStats?.averageQueueLevel ?? 0
     } (level 2 = padat).${periodNote}${
       anomalies.summary.total > 0
@@ -1201,26 +1366,6 @@ function buildTemplateAnswer(
             .join(", ")}.`
         : ""
     }`;
-  }
-
-  if (
-    intentMatch(normalized, [
-      "jam sibuk",
-      "jam berapa",
-      "peak",
-      "rush",
-      "puncak",
-      "tertinggi",
-      "jam paling",
-    ])
-  ) {
-    if (summary.keyMetrics.peakHourLabel) {
-      return `Kepadatan puncak terjadi sekitar pukul ${summary.keyMetrics.peakHourLabel} dengan ${summary.keyMetrics.peakHourLevel2Percentage}% sampel berada di level 2 (antrean panjang).`;
-    }
-    if (history?.peakHour) {
-      return `Data pada rentang yang diminta masih terbatas, namun berdasarkan 5 bulan terakhir, kepadatan puncak terjadi sekitar pukul ${history.peakHour} (${history.perLane.length} jalur terpantau, ${history.totalSamples} sampel).`;
-    }
-    return "Data belum cukup untuk menentukan jam puncak pada periode ini.";
   }
 
   if (

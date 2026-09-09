@@ -1,4 +1,5 @@
 import { getAiChatAnswer } from "@/lib/ai-service";
+import { sanitizeHistory } from "@/lib/ai-conversation";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
         isAdmin,
         role: sessionUser?.role || "operator",
         userName: sessionUser?.name || sessionUser?.email || "",
+        history: sanitizeHistory(body.history),
       }
     );
 

@@ -177,6 +177,10 @@ export default function AiChatBox({
           intersectionId: intersectionId || null,
           startDate: startDate || undefined,
           endDate: endDate || undefined,
+          history: messages.slice(-8).map((m) => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: String(m.text || "").slice(0, 500),
+          })),
         }),
       });
       const json = await response.json();
@@ -419,7 +423,7 @@ export default function AiChatBox({
                       </p>
                       {message.source && (
                         <span className="text-[9px] font-bold bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                          {message.source === "ai" ? "AI" : "Template"}
+                          {message.source === "ai" ? "AI" : "Fallback"}
                         </span>
                       )}
                     </div>
@@ -444,7 +448,7 @@ export default function AiChatBox({
                 )}
                 {message.source && (
                   <p className="mt-1 text-[10px] opacity-60">
-                    {message.source === "ai" ? "AI" : "Template"}
+                    {message.source === "ai" ? "AI" : "Fallback"}
                   </p>
                 )}
               </div>
