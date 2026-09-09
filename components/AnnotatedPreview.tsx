@@ -7,15 +7,19 @@ import {
   type PreviewState,
 } from "@/lib/annotated-preview-state";
 
-// Preview kanonis double-buffered: frame valid TAK PERNAH dicabut sebelum
-// pengganti berhasil load. Tiap tick coba annotated lagi (tanpa refresh).
+// Preview kanonis double-buffered + single-flight (V6.7.3.1):
+// frame valid TAK PERNAH dicabut sebelum pengganti berhasil load.
+// Tick polling 1500ms TIDAK membatalkan preload yang sedang berjalan:
+// request pending dipertahankan hidup, tick terbaru di-coalesce ke queuedTick
+// dan diproses setelah siklus annotated/raw selesai. Tanpa backlog.
 // Keduanya via proxy aman (tanpa token ke browser). 4:3 + object-contain.
 // AI status operasional TIDAK diturunkan dari komponen ini.
 //
 // Lifecycle: visibleUrl hanya diganti saat pendingUrl onLoad sukses (atomic
-// swap). Gagal annotated -> coba raw SIKLUS SAMA (setelah load). Gagal
-// keduanya -> visible lama TETAP; placeholder hanya bila belum pernah ada
-// frame valid. Visible <img> SENGAJA tidak memakai tick di key (anti-flicker).
+// swap A->B). Gagal annotated -> coba raw TICK SAMA (queued dipertahankan).
+// Gagal keduanya -> visible lama TETAP + mulai queued terbaru bila ada;
+// placeholder hanya bila belum pernah ada frame valid.
+// Visible <img> SENGAJA tidak memakai tick di key (anti-flicker).
 export default function AnnotatedPreview({
   cameraId,
   tick,
@@ -29,19 +33,28 @@ export default function AnnotatedPreview({
 }) {
   const [st, setSt] = useState<PreviewState>(() => initPreview(cameraId, tick));
 
-  // Tick/camera baru -> mulai annotated baru, visible lama TETAP (atau
-  // dibersihkan bila kamera berganti, lihat previewNext).
+  // Single-flight: tick baru saat sibuk TIDAK mengganti pendingUrl,
+  // hanya di-coalesce ke queuedTick (lihat previewNext). Visible lama TETAP;
+  // dibersihkan hanya bila kamera berganti.
   useEffect(() => {
     setSt((prev) => {
-      if (prev.cameraId === cameraId && prev.tick === tick) return prev;
+      if (prev.cameraId !== cameraId) {
+        return previewNext(prev, { type: "tick", cameraId, tick });
+      }
+      if (String(prev.tick) === String(tick)) return prev;
+      if (prev.queuedTick != null && String(prev.queuedTick) === String(tick)) {
+        return prev;
+      }
       return previewNext(prev, { type: "tick", cameraId, tick });
     });
   }, [cameraId, tick]);
 
-  // Preload pendingUrl di background via browser Image(). Cleanup membatalkan
-  // hasil basi bila tick berikutnya datang sebelum load selesai, sehingga
-  // tidak ada backlog request dan frame basi tak bisa overwrite frame baru
-  // (ditambah guard ev.url !== pendingUrl di previewNext).
+  // Preload single-flight pendingUrl di background via browser Image().
+  // pendingUrl STABIL saat tick datang bertubi-tubi (tidak diganti), sehingga
+  // effect ini TIDAK re-run dan request berjalan TETAP hidup (tidak di-cancel).
+  // Cleanup hanya berjalan bila siklus selesai (pendingUrl -> queued/next/null)
+  // atau kamera berganti -> request lama dibatalkan + hasil basi diabaikan
+  // (guard ev.url !== pendingUrl di previewNext + flag cancelled).
   useEffect(() => {
     const url = st.pendingUrl;
     if (!url) return;
