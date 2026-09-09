@@ -742,7 +742,7 @@ export default function DashboardPage() {
                         {selectedIntersectionName} — Kamera Persimpangan
                       </h2>
                       <p className="text-xs text-slate-500">
-                        IP custom per jalur — bisa MJPEG/HLS/Webcam/Upload (mirip Vision Lab)
+                        IP custom per jalur — bisa MJPEG/HLS/Webcam/Upload
                       </p>
                     </div>
                     <div className="flex gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
@@ -879,9 +879,6 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                     <span>Pengaturan per kamera via tombol <span className="material-symbols-outlined text-xs">tune</span> • Fullscreen per layar via <span className="material-symbols-outlined text-xs">fullscreen</span></span>
-                    <a href="/vision-lab-7x9k-alpha" target="_blank" className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700">
-                      Vision Lab ↗
-                    </a>
                   </div>
                   {camSettingsLane && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setCamSettingsLane(null)}>
