@@ -171,3 +171,31 @@ describe4("authWriteError", () => {
     assert4.equal(authWriteError({ user: { role: "admin", email: "a@b" } }), null);
   });
 });
+
+import { requireAdmin, requireAuthenticated } from "./authz.js";
+
+describe4("authz helpers", () => {
+  it4("unauthenticated -> 401", () => {
+    assert4.deepEqual(requireAuthenticated(null), { status: 401, error: "Unauthorized" });
+    assert4.deepEqual(requireAdmin(null)?.status, 401);
+    assert4.deepEqual(authWriteError(null)?.status, 401);
+  });
+  it4("operator read ok, write 403", () => {
+    const op = { user: { role: "operator", email: "o@x" } };
+    assert4.equal(requireAuthenticated(op), null);
+    assert4.deepEqual(requireAdmin(op), { status: 403, error: "Khusus admin" });
+  });
+  it4("admin allowed", () => {
+    const ad = { user: { role: "admin", email: "a@x" } };
+    assert4.equal(requireAuthenticated(ad), null);
+    assert4.equal(requireAdmin(ad), null);
+  });
+  it4("inactive ditolak walau admin", () => {
+    const ad = { user: { role: "admin", email: "a@x", userStatus: "inactive" } };
+    assert4.deepEqual(requireAuthenticated(ad), { status: 403, error: "Akun tidak aktif" });
+    assert4.deepEqual(requireAdmin(ad)?.status, 403);
+  });
+  it4("role selain admin/operator -> 403 tulis", () => {
+    assert4.deepEqual(requireAdmin({ user: { role: "superadmin" } })?.status, 403);
+  });
+});

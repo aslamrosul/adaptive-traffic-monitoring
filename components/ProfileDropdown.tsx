@@ -78,7 +78,7 @@ export default function ProfileDropdown() {
   const displayName = session?.user?.name || "User";
   const displayEmail = session?.user?.email || "user@example.com";
   const displayAvatar = (session?.user as any)?.avatar || session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0040a1&color=fff`;
-  const displayRole = (session?.user as any)?.role || "operator";
+  const displayRole = (session?.user as any)?.role === "admin" ? "admin" : "operator";
   const displayId = (session?.user as any)?.id ? `#${(session?.user as any).id.split("-")[1]?.toUpperCase() || "USER"}` : "#USER";
 
   return (

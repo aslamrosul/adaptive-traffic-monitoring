@@ -189,59 +189,86 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user, account }) {
-      if (user) {
-        if (account?.provider === "google") {
-          try {
-            if (user.email) {
-              const dbUser = await getUserByEmail(user.email);
+      if (user?.email) {
+        token.email = String(user.email).trim().toLowerCase();
+      }
 
-              if (dbUser) {
-                // Update login info for Google login
-                const updatedUser = {
-                  ...dbUser,
-                  lastLoginAt: new Date().toISOString(),
-                  totalLogin: Number(dbUser.totalLogin || 0) + 1,
-                  updatedAt: new Date().toISOString(),
-                };
+      const email =
+        typeof token.email === "string" ? token.email.trim().toLowerCase() : "";
 
-                await dynamo.send(
+      if (email) {
+        try {
+          const dbUser = await getUserByEmail(email);
+
+          if (dbUser) {
+            const isGoogle = account?.provider === "google" || !user;
+            if (isGoogle && user?.email) {
+              // Update info login untuk Google (abaikan kegagalan tulis).
+              const updatedUser = {
+                ...dbUser,
+                lastLoginAt: new Date().toISOString(),
+                totalLogin: Number(dbUser.totalLogin || 0) + 1,
+                updatedAt: new Date().toISOString(),
+              };
+
+              await dynamo
+                .send(
                   new PutCommand({
                     TableName: awsTables.users,
                     Item: updatedUser,
                   })
-                );
-
-                await createActivityLog({
-                  userId: String(dbUser.id),
-                  email: String(dbUser.email),
-                  name: String(dbUser.name),
-                  type: "auth.login",
-                  action: "Login ke sistem",
-                  description: "Pengguna berhasil masuk menggunakan Google",
-                  metadata: {
-                    provider: "google",
-                  },
-                }).catch((error) => {
-                  console.error("Failed to log Google login:", error);
+                )
+                .catch((error) => {
+                  console.error("Failed to update login info:", error);
                 });
 
-                token.id = dbUser.id;
-                token.email = dbUser.email;
-                token.name = dbUser.name;
-                token.role = dbUser.role;
-                token.avatar = dbUser.avatar;
+              if (user.image && !dbUser.avatar) {
+                try {
+                  await createActivityLog({
+                    userId: String(dbUser.id),
+                    email: String(dbUser.email),
+                    name: String(dbUser.name),
+                    type: "auth.login",
+                    action: "Login ke sistem",
+                    description: "Pengguna berhasil masuk menggunakan Google",
+                    metadata: { provider: "google" },
+                  });
+                } catch (error) {
+                  console.error("Failed to log Google login:", error);
+                }
               }
             }
-          } catch (error) {
-            console.error("Error fetching user in JWT callback:", error);
+
+            if (dbUser.status && dbUser.status !== "active") {
+              // Nonaktif: cabut hak, jangan pernah naikkan.
+              token.id = dbUser.id;
+              token.email = dbUser.email;
+              token.name = dbUser.name;
+              token.role = "operator";
+              token.avatar = dbUser.avatar;
+              token.userStatus = "inactive";
+            } else {
+              token.id = dbUser.id;
+              token.email = dbUser.email;
+              token.name = dbUser.name;
+              token.role = dbUser.role === "admin" ? "admin" : "operator";
+              token.avatar = dbUser.avatar || dbUser.photoURL || token.picture;
+              token.userStatus = "active";
+            }
+          } else if (!token.role) {
+            // Tanpa record DB dan tanpa role: least-privilege.
+            token.role = "operator";
           }
-        } else {
-          token.id = (user as any).id;
-          token.email = user.email;
-          token.name = user.name;
-          token.role = (user as any).role;
-          token.avatar = (user as any).avatar;
+        } catch (error) {
+          console.error("Error refreshing user in JWT callback:", error);
+          // Gagal lookup: pertahankan role valid yang ada, else operator.
+          // TIDAK PERNAH naikkan hak karena error.
+          if (token.role !== "admin" && token.role !== "operator") {
+            token.role = "operator";
+          }
         }
+      } else if (!token.role) {
+        token.role = "operator";
       }
 
       return token;
@@ -250,8 +277,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
+        (session.user as any).role = token.role === "admin" ? "admin" : "operator";
         (session.user as any).avatar = token.avatar;
+        (session.user as any).userStatus = (token as any).userStatus || "active";
       }
 
       return session;

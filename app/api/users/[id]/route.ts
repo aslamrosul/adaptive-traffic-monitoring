@@ -4,6 +4,7 @@ import {
   PutCommand,
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { requireAdmin } from "@/lib/authz";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { createActivityLog } from "@/lib/activity-log-service";
@@ -12,16 +13,24 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+type SessionLike = {
+  user?: { role?: string; email?: string; id?: string } | null;
+} | null;
+
+async function currentSession(): Promise<SessionLike> {
+  return (await getServerSession(authOptions)) as SessionLike;
+}
+
 function removePassword(user: any) {
   const { password, ...safeUser } = user;
   return safeUser;
 }
 
-function normalizeRole(role: any) {
-  const value = String(role || "operator").toLowerCase();
-
-  if (value.includes("admin")) return "admin";
-  return "operator";
+function normalizeRole(role: any): "admin" | "operator" {
+  const value = String(role || "").trim().toLowerCase();
+  if (value === "admin" || value === "admin pusat") return "admin";
+  if (value === "operator" || value === "operator lapangan" || value === "") return "operator";
+  throw new Error("Role tidak valid (admin/operator)");
 }
 
 function normalizeStatus(status: any) {
@@ -35,8 +44,26 @@ function normalizeStatus(status: any) {
   return "active";
 }
 
-async function findUserById(id: string) {
+async function countActiveAdmins(): Promise<number> {
+  let count = 0;
   let exclusiveStartKey: Record<string, any> | undefined;
+  do {
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: awsTables.users,
+        FilterExpression: "#r = :admin AND #s = :active",
+        ExpressionAttributeNames: { "#r": "role", "#s": "status" },
+        ExpressionAttributeValues: { ":admin": "admin", ":active": "active" },
+        ExclusiveStartKey: exclusiveStartKey,
+      })
+    );
+    count += (result.Items || []).length;
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+  return count;
+}
+
+async function findUserById(id: string) {  let exclusiveStartKey: Record<string, any> | undefined;
 
   do {
     const result = await dynamo.send(
@@ -67,6 +94,10 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(await currentSession());
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
+  }
   try {
     const { id } = await context.params;
 
@@ -103,6 +134,10 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(await currentSession());
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
+  }
   try {
     const { id } = await context.params;
     const data = await request.json();
@@ -119,6 +154,35 @@ export async function PUT(
       );
     }
 
+    let role: "admin" | "operator";
+    try {
+      role = normalizeRole(data.role ?? existingUser.role);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Role tidak valid (admin/operator)" },
+        { status: 400 }
+      );
+    }
+
+    // Cegah demosi admin aktif terakhir + ubah role diri sendiri.
+    const actor = await currentSession();
+    const actorEmail = String(actor?.user?.email || "").toLowerCase();
+    if (String(existingUser.email || "").toLowerCase() === actorEmail && role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Tidak dapat mencabut role admin diri sendiri" },
+        { status: 400 }
+      );
+    }
+    if (existingUser.role === "admin" && role !== "admin") {
+      const admins = await countActiveAdmins();
+      if (admins <= 1) {
+        return NextResponse.json(
+          { success: false, error: "Tidak dapat menonaktifkan admin aktif terakhir" },
+          { status: 409 }
+        );
+      }
+    }
+
     const name = data.name ? String(data.name).trim() : existingUser.name;
     const now = new Date().toISOString();
 
@@ -132,7 +196,7 @@ export async function PUT(
       name,
       phone: data.phone ?? existingUser.phone ?? "",
       location: data.location ?? existingUser.location ?? "",
-      role: normalizeRole(data.role ?? existingUser.role),
+      role,
       status: normalizeStatus(data.status ?? existingUser.status),
       avatar:
         data.avatar ||
@@ -221,15 +285,16 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(await currentSession());
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
+  }
   try {
     const { id } = await context.params;
-    
-    console.log('🗑️ DELETE user request:', { id });
 
     const existingUser = await findUserById(id);
 
     if (!existingUser) {
-      console.log('❌ User not found:', { id });
       return NextResponse.json(
         {
           success: false,
@@ -239,11 +304,23 @@ export async function DELETE(
       );
     }
 
-    console.log('🔍 Found user to delete:', { 
-      id: existingUser.id, 
-      email: existingUser.email,
-      name: existingUser.name 
-    });
+    const actor = await currentSession();
+    const actorEmail = String(actor?.user?.email || "").toLowerCase();
+    if (String(existingUser.email || "").toLowerCase() === actorEmail) {
+      return NextResponse.json(
+        { success: false, error: "Tidak dapat menghapus akun sendiri" },
+        { status: 400 }
+      );
+    }
+    if (existingUser.role === "admin") {
+      const admins = await countActiveAdmins();
+      if (admins <= 1) {
+        return NextResponse.json(
+          { success: false, error: "Tidak dapat menghapus admin aktif terakhir" },
+          { status: 409 }
+        );
+      }
+    }
 
     await dynamo.send(
       new DeleteCommand({

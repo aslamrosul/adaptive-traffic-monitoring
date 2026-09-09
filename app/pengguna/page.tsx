@@ -4,12 +4,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ModalTambahUser from "@/components/ModalTambahUser";
 import ModalEditUser from "@/components/ModalEditUser";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useT } from "@/lib/useT";
 
 export default function PenggunaPage() {
   const t = useT();
+  const router = useRouter();
+  const { data: session, status: sessStatus } = useSession();
+  const role = ((session?.user as { role?: string } | undefined)?.role || "");
   const [users, setUsers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -163,6 +168,33 @@ export default function PenggunaPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  if (sessStatus === "loading") {
+    return (
+      <DashboardLayout title="Memuat...">
+        <div className="p-8 text-center text-slate-500">Memuat...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (role !== "admin") {
+    return (
+      <DashboardLayout title="Akses ditolak">
+        <div className="p-8 text-center">
+          <p className="text-lg font-extrabold text-slate-800">403 — Khusus admin</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Halaman manajemen pengguna hanya untuk admin.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+          >
+            Kembali ke Dashboard
+          </button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <>

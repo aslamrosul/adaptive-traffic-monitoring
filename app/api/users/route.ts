@@ -1,5 +1,6 @@
 import { awsTables, dynamo } from "@/lib/aws-dynamodb";
 import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { requireAdmin } from "@/lib/authz";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { createActivityLog } from "@/lib/activity-log-service";
@@ -13,11 +14,13 @@ function removePassword(user: any) {
   return safeUser;
 }
 
-function normalizeRole(role: any) {
-  const value = String(role || "operator").toLowerCase();
-
-  if (value.includes("admin")) return "admin";
-  return "operator";
+// Strict: hanya nilai eksak yang diterima (plus 2 label UI lama).
+// Tolak string arbitrer yang "mengandung" admin.
+function normalizeRole(role: any): "admin" | "operator" {
+  const value = String(role || "").trim().toLowerCase();
+  if (value === "admin" || value === "admin pusat") return "admin";
+  if (value === "operator" || value === "operator lapangan" || value === "") return "operator";
+  throw new Error("Role tidak valid (admin/operator)");
 }
 
 function normalizeStatus(status: any) {
@@ -32,6 +35,14 @@ function normalizeStatus(status: any) {
 }
 
 export async function GET(request: Request) {
+  const denied = requireAdmin(
+    (await getServerSession(authOptions)) as {
+      user?: { role?: string; email?: string } | null;
+    } | null
+  );
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get("role");
@@ -79,6 +90,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(
+    (await getServerSession(authOptions)) as {
+      user?: { role?: string; email?: string } | null;
+    } | null
+  );
+  if (denied) {
+    return NextResponse.json({ success: false, error: denied.error }, { status: denied.status });
+  }
   try {
     const data = await request.json();
 
@@ -88,6 +107,16 @@ export async function POST(request: Request) {
           success: false,
           error: "Nama, email, role, dan password wajib diisi",
         },
+        { status: 400 }
+      );
+    }
+
+    let role: "admin" | "operator";
+    try {
+      role = normalizeRole(data.role);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Role tidak valid (admin/operator)" },
         { status: 400 }
       );
     }
@@ -113,7 +142,7 @@ export async function POST(request: Request) {
       id: data.id || `user-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       name: normalizedName,
       password: hashedPassword,
-      role: normalizeRole(data.role),
+      role,
       phone: data.phone || "",
       photoURL: data.photoURL || "",
       avatar:
@@ -161,7 +190,7 @@ export async function POST(request: Request) {
           name: String(admin.name),
           type: "user.create",
           action: "Menambah pengguna baru",
-          description: `Menambahkan pengguna ${normalizedName} dengan role ${normalizeRole(data.role)}`,
+          description: `Menambahkan pengguna ${normalizedName} dengan role ${role}`,
           metadata: {
             targetUserId: item.id,
             targetUserEmail: item.email,

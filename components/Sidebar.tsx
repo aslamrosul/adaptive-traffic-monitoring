@@ -4,6 +4,7 @@ import { useProfileStore } from "@/lib/store";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/useT";
 
@@ -15,6 +16,9 @@ interface SidebarProps {
 export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarProps = {}) {
   const pathname = usePathname();
   const t = useT();
+  const { data: session } = useSession();
+  const isAdmin =
+    ((session?.user as { role?: string } | undefined)?.role || "") === "admin";
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { fetchProfile } = useProfileStore();
 
@@ -28,9 +32,12 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
     { icon: "smart_toy", label: t('navigation.aiChat'), href: "/ai-chat" },
     { icon: "videocam", label: t('navigation.cameras'), href: "/cameras" },
     { icon: "settings_remote", label: t('navigation.iotConfig'), href: "/iot-config" },
-    { icon: "group", label: t('navigation.users'), href: "/pengguna" },
+    { icon: "group", label: t('navigation.users'), href: "/pengguna", adminOnly: true as const },
     { icon: "menu_book", label: t('navigation.guide'), href: "/panduan" },
   ];
+  const visibleItems = menuItems.filter(
+    (item) => !("adminOnly" in item && item.adminOnly) || isAdmin
+  );
   const setIsSidebarOpen = (open: boolean) => {
     if (onToggle) {
       onToggle(open);
@@ -123,7 +130,7 @@ export default function Sidebar({ isOpen: externalIsOpen, onToggle }: SidebarPro
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden">
-          {menuItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));
