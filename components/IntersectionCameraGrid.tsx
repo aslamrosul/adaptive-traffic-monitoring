@@ -1,6 +1,7 @@
 "use client";
 
 import AiStatusBadge from "@/components/AiStatusBadge";
+import AnnotatedPreview from "@/components/AnnotatedPreview";
 import { formatVehicleCount } from "@/lib/camera-ai-status";
 import { useCallback, useEffect, useState } from "react";
 
@@ -105,7 +106,7 @@ export default function IntersectionCameraGrid({
   }, [load]);
 
   useEffect(() => {
-    const t = setInterval(() => setTick((v) => v + 1), 5000);
+    const t = setInterval(() => setTick((v) => v + 1), 1500);
     return () => clearInterval(t);
   }, []);
 
@@ -250,14 +251,11 @@ export default function IntersectionCameraGrid({
       );
     }
     return (
-      <img
-        key={tick}
-        src={`/api/cameras/${encodeURIComponent(c.camera_id)}/snapshot?t=${tick}`}
+      <AnnotatedPreview
+        cameraId={c.camera_id}
+        tick={tick}
         alt={c.camera_id}
         className="aspect-[4/3] w-full rounded-lg bg-slate-900 object-contain"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
       />
     );
   };

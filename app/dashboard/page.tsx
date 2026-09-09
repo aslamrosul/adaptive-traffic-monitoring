@@ -11,6 +11,7 @@ import TrafficControlPanel from "@/components/traffic/TrafficControlPanel";
 import TrafficRoadSimulation from "@/components/traffic/TrafficRoadSimulation";
 import VisionStateBadge from "@/components/VisionStateBadge";
 import AiStatusBadge from "@/components/AiStatusBadge";
+import AnnotatedPreview from "@/components/AnnotatedPreview";
 import { useCameraDisplay, resolveLaneSource } from "@/lib/hooks/useCameraDisplay";
 import { resolveInitialIntersection } from "@/lib/intersection-select";
 import { useCameraLiveMap } from "@/lib/hooks/useCameraLive";
@@ -529,7 +530,7 @@ export default function DashboardPage() {
     }
   }, [selectedIntersection, dispCfg, camLiveMap, syncedKey, migratedRef]);
   useEffect(() => {
-    const t = setInterval(() => setSnapTick((v) => v + 1), 5000);
+    const t = setInterval(() => setSnapTick((v) => v + 1), 1500);
     return () => clearInterval(t);
   }, []);
   useEffect(() => {
@@ -1033,14 +1034,11 @@ export default function DashboardPage() {
                         />
                         <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-black aspect-[4/3] fullscreen:aspect-auto fullscreen:h-full">
                           {camSource[lane] === "canonical" && laneCamId[lane] ? (
-                            <img
-                              key={snapTick}
-                              src={`/api/cameras/${encodeURIComponent(laneCamId[lane])}/snapshot?t=${snapTick}`}
+                            <AnnotatedPreview
+                              cameraId={laneCamId[lane]}
+                              tick={snapTick}
                               alt={`Kamera ${lane}`}
                               className="h-full w-full object-contain"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
-                              }}
                             />
                           ) : camSource[lane] === "canonical" ? (
                             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-slate-900 p-3 text-center">
