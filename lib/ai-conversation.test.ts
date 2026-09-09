@@ -37,6 +37,19 @@ describe("parseTimeframe", () => {
   it("tanpa waktu -> null", () => {
     assert.equal(parseTimeframe("jalur paling padat mana?", MON), null);
   });
+  it("7 hari terakhir = rolling today-6 (2026-09-09)", () => {
+    const WED = new Date("2026-09-09T03:00:00Z");
+    const tf = parseTimeframe("7 hari terakhir jam paling sibuk kapan?", WED)!;
+    assert.equal(tf.startDate, "2026-09-03");
+    assert.equal(tf.endDate, "2026-09-09");
+    assert.equal(tf.label, "7 hari terakhir");
+  });
+  it("seminggu terakhir = rolling juga", () => {
+    const WED = new Date("2026-09-09T03:00:00Z");
+    const tf = parseTimeframe("seminggu terakhir", WED)!;
+    assert.equal(tf.startDate, "2026-09-03");
+    assert.equal(tf.label, "7 hari terakhir");
+  });
 });
 
 describe("detectIntent", () => {
@@ -97,6 +110,40 @@ describe("peakHourByVolume", () => {
   });
   it("kosong -> null", () => {
     assert.equal(peakHourByVolume([]).hour, null);
+  });
+  it("multi-day: tanpa delta lintas hari", () => {
+    const mkd = (day: string, h: number, c: number) => ({
+      deviceId: "D1", lane: "north",
+      timestamp: `${day}T${String(h).padStart(2, "0")}:10:00+07:00`, count: c,
+    });
+    const r = peakHourByVolume([
+      mkd("2026-09-07", 8, 100), mkd("2026-09-07", 8, 110),
+      mkd("2026-09-08", 8, 500), mkd("2026-09-08", 8, 505),
+    ]);
+    assert.equal(r.hourlyFlow[8], 15);
+    assert.equal(r.hour, 8);
+  });
+  it("reset aman dalam hari sama", () => {
+    const mkd = (h: number, m: string, c: number) => ({
+      deviceId: "D1", lane: "north",
+      timestamp: `2026-09-07T${String(h).padStart(2, "0")}:${m}:00+07:00`, count: c,
+    });
+    const r = peakHourByVolume([
+      mkd(8, "00", 100), mkd(8, "10", 110), mkd(8, "20", 3), mkd(8, "30", 8),
+    ]);
+    assert.equal(r.hourlyFlow[8], 10 + 3 + 8 - 3);
+  });
+  it("peakFlow != totalFlow bila multi-jam aktif", () => {
+    const mkd = (h: number, c: number) => ({
+      deviceId: "D1", lane: "north",
+      timestamp: `2026-09-07T${String(h).padStart(2, "0")}:10:00+07:00`, count: c,
+    });
+    const r = peakHourByVolume([
+      mkd(8, 0), mkd(8, 30), mkd(9, 30), mkd(9, 100),
+    ]);
+    assert.equal(r.hour, 9);
+    assert.equal(r.peakFlow, 70);
+    assert.equal(r.totalFlow, 100);
   });
 });
 

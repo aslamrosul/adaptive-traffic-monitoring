@@ -96,14 +96,24 @@ export function parseTimeframe(
   }
   if (
     q.includes("minggu ini") ||
-    q.includes("pekan ini") ||
-    q.includes("seminggu terakhir") ||
-    q.includes("7 hari terakhir")
+    q.includes("pekan ini")
   ) {
     return {
       startDate: mondayOfThisWeek(today, dowMon0),
       endDate: today,
       label: "minggu ini",
+      current: false,
+    };
+  }
+  if (
+    q.includes("seminggu terakhir") ||
+    q.includes("7 hari terakhir") ||
+    q.includes("tujuh hari terakhir")
+  ) {
+    return {
+      startDate: addDaysToDateValue(today, -6),
+      endDate: today,
+      label: "7 hari terakhir",
       current: false,
     };
   }
@@ -291,6 +301,7 @@ export interface VolumeSample {
 export interface PeakHourResult {
   hour: number | null;
   label: string | null;
+  peakFlow: number;
   hourlyFlow: number[];
   metric: "volume" | "queue-level";
   totalFlow: number;
@@ -307,32 +318,42 @@ function hourOf(ts: string): number {
   return Number.isFinite(h) && h >= 0 && h < 24 ? h : -1;
 }
 
+function wibDateOf(ts: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ts));
+}
+
 export function peakHourByVolume(samples: VolumeSample[]): PeakHourResult {
   const hourlyFlow = new Array(24).fill(0) as number[];
-  // Kelompokkan per device+lane+jam, urutkan waktu, jumlahkan delta positif.
-  // Delta negatif = counter reboot -> pakai nilai saat itu (bukan max-min).
+  // Kelompokkan per device+lane+TANGGAL WIB; delta kronologis di dalam grup.
+  // Tiap delta diatribusikan ke jam WIB sampel AKHIR. Tak ada delta lintas hari.
   const groups = new Map<string, { t: number; c: number }[]>();
   for (const s of samples) {
     const h = hourOf(s.timestamp);
     if (h < 0 || !Number.isFinite(s.count) || s.count < 0) continue;
     const t = new Date(s.timestamp).getTime();
     if (!Number.isFinite(t)) continue;
-    const key = `${s.deviceId}|${s.lane}|${h}`;
+    const key = `${s.deviceId}|${s.lane}|${wibDateOf(s.timestamp)}`;
     const arr = groups.get(key) || [];
     arr.push({ t, c: s.count });
     groups.set(key, arr);
   }
   let totalFlow = 0;
-  for (const [key, arr] of groups) {
+  for (const arr of groups.values()) {
     arr.sort((a, b) => a.t - b.t);
-    let flow = 0;
     for (let i = 1; i < arr.length; i += 1) {
       const d = arr[i].c - arr[i - 1].c;
-      flow += d >= 0 ? d : arr[i].c;
+      const add = d >= 0 ? d : arr[i].c;
+      if (add <= 0) continue;
+      const hh = hourOf(new Date(arr[i].t).toISOString());
+      if (hh < 0) continue;
+      hourlyFlow[hh] += add;
+      totalFlow += add;
     }
-    const h = Number(key.split("|").pop());
-    hourlyFlow[h] += flow;
-    totalFlow += flow;
   }
   let peak: number | null = null;
   let best = 0;
@@ -343,11 +364,12 @@ export function peakHourByVolume(samples: VolumeSample[]): PeakHourResult {
     }
   }
   if (peak === null || totalFlow <= 0) {
-    return { hour: null, label: null, hourlyFlow, metric: "volume", totalFlow };
+    return { hour: null, label: null, peakFlow: 0, hourlyFlow, metric: "volume", totalFlow };
   }
   return {
     hour: peak,
     label: `${String(peak).padStart(2, "0")}:00 WIB`,
+    peakFlow: best,
     hourlyFlow,
     metric: "volume",
     totalFlow,

@@ -84,6 +84,7 @@ export interface AiSummary {
   volumePeak: {
     hour: number | null;
     label: string | null;
+    peakFlow: number;
     metric: "volume" | "queue-level";
     totalFlow: number;
   };
@@ -1325,7 +1326,7 @@ function buildTemplateAnswer(
     if (vp.hour !== null && vp.metric === "volume") {
       const label = tf && !isCurrent ? ` ${tf.label}` : "";
       if (inherited) return `${vp.label}.`;
-      return `Jam tersibuk${label} adalah sekitar pukul ${vp.label} (arus ${vp.totalFlow} kendaraan terhitung per jam).`;
+      return `Jam tersibuk${label} adalah sekitar pukul ${vp.label} dengan arus tertinggi ${vp.peakFlow} kendaraan pada jam tersebut.`;
     }
     if (summary.keyMetrics.peakHourLabel) {
       if (inherited) return `${summary.keyMetrics.peakHourLabel}.`;
