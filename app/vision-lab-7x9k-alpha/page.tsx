@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 
 type Source = "webcam" | "rtsp" | "upload";
 type DetectionState = "idle" | "connecting" | "streaming" | "error" | "simulated";
@@ -106,6 +107,8 @@ const normalizeStats = (s: any, boxes: DetectionBox[]): DetectionStats => {
 };
 
 export default function VisionLabPage() {
+  const { data: session, status: sessStatus } = useSession();
+  const isAdmin = ((session?.user as { role?: string } | undefined)?.role || "") === "admin";
   const [source, setSource] = useState<Source>("webcam");
   const [state, setState] = useState<DetectionState>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -488,6 +491,27 @@ export default function VisionLabPage() {
     </div>
   );
 
+  if (sessStatus === "loading") {
+    return (
+      <div className="min-h-screen grid place-items-center bg-slate-900 text-slate-300 text-sm">
+        Memuat...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-slate-900 p-6 text-center">
+        <div className="max-w-sm space-y-2">
+          <p className="text-lg font-extrabold text-white">403 — Khusus Admin</p>
+          <p className="text-sm text-slate-400">
+            Vision Lab adalah perangkat eksperimental / development. Silakan login sebagai admin.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
       {/* Top Bar */}
@@ -505,6 +529,7 @@ export default function VisionLabPage() {
               <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[9px] font-mono text-slate-400">v0.1-alpha</span>
             </div>
             <p className="text-[10px] text-slate-400">Computer Vision Playground — YOLOv8 Vehicle Detection</p>
+            <p className="text-[10px] text-amber-400/80">Eksperimental — bukan sumber inferensi kontrol lampu.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

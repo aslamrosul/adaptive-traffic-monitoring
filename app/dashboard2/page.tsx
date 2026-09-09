@@ -514,145 +514,16 @@ export default function DashboardPage() {
     localStorage.setItem("dashboard2_camView", camView);
   }, [camView]);
 
-  const [yoloUrl, setYoloUrl] = useState("wss://vision.astraea.my.id/yolo-ws/ws");
-  const [yoloEnabled, setYoloEnabled] = useState<Record<CamLane, boolean>>({ north: false, south: false, east: false, west: false });
-  const [yoloLab, setYoloLab] = useState(false);
-  const yoloWsRefs = useRef<Record<CamLane, WebSocket | null>>({ north: null, south: null, east: null, west: null });
-  const yoloCanvasRefs = useRef<Record<CamLane, HTMLCanvasElement | null>>({ north: null, south: null, east: null, west: null });
-  const yoloTimerRefs = useRef<Record<CamLane, ReturnType<typeof setInterval> | null>>({ north: null, south: null, east: null, west: null });
-  const yoloSendCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [yoloBoxes, setYoloBoxes] = useState<Record<CamLane, { label: string; confidence: number; x: number; y: number; w: number; h: number; color: string }[]>>({ north: [], south: [], east: [], west: [] });
-  const [yoloStats, setYoloStats] = useState<Record<CamLane, { totalVehicles: number; fps: number }>>({ north: { totalVehicles: 0, fps: 0 }, south: { totalVehicles: 0, fps: 0 }, east: { totalVehicles: 0, fps: 0 }, west: { totalVehicles: 0, fps: 0 } });
-  const [yoloLastAt, setYoloLastAt] = useState<Record<CamLane, number>>({ north: 0, south: 0, east: 0, west: 0 });
-  // Sumber data simulasi jalan: sensor (MQTT/ESP32) atau kamera (YOLO browser)
-  const [simSource, setSimSource] = useState<"auto" | "sensor" | "camera">("auto");
+  // Mode tampilan simulasi jalan (data selalu telemetri kanonis).
+  const [simSource, setSimSource] = useState<"auto" | "sensor">("auto");
 
-  const drawYoloBoxes = (lane: CamLane, boxes: typeof yoloBoxes[CamLane]) => {
-    const canvas = yoloCanvasRefs.current[lane];
-    if (!canvas) return;
-    const container = document.getElementById(`cam-card-${lane}`);
-    const video = (container?.querySelector("video") as HTMLVideoElement) || (camVideoRefs.current[lane] as any);
-    const img = (container?.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (container?.querySelector("img") as HTMLImageElement);
-    const el: any = video && video.videoWidth ? video : img && (img as any).naturalWidth ? img : null;
-    if (!canvas || !el) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const w = (el as HTMLVideoElement).videoWidth || (el as HTMLImageElement).naturalWidth || (el as any).width || 640;
-    const h = (el as HTMLVideoElement).videoHeight || (el as HTMLImageElement).naturalHeight || (el as any).height || 480;
-    if (canvas.width !== w) canvas.width = w;
-    if (canvas.height !== h) canvas.height = h;
-    ctx.clearRect(0, 0, w, h);
-    for (const b of boxes) {
-      const rx = (b.x / 100) * w, ry = (b.y / 100) * h, rw = (b.w / 100) * w, rh = (b.h / 100) * h;
-      ctx.strokeStyle = b.color; ctx.lineWidth = 2; ctx.strokeRect(rx, ry, rw, rh);
-      ctx.fillStyle = b.color; ctx.font = "bold 11px sans-serif";
-      const txt = `${b.label} ${(b.confidence * 100).toFixed(0)}%`;
-      const tw = ctx.measureText(txt).width;
-      ctx.fillRect(rx, ry - 14, tw + 8, 14); ctx.fillStyle = "#fff"; ctx.fillText(txt, rx + 4, ry - 3);
-    }
-  };
 
-  // redraw ketika boxes berubah (fix overlay tidak kelihatan)
-  useEffect(() => {
-    ALL_LANES.forEach((lane) => {
-      const boxes = yoloBoxes[lane as CamLane];
-      if (boxes?.length) drawYoloBoxes(lane as CamLane, boxes);
-      else {
-        const c = yoloCanvasRefs.current[lane as CamLane];
-        if (c) { const ctx = c.getContext("2d"); if (ctx) ctx.clearRect(0, 0, c.width, c.height); }
-      }
-    });
-  }, [yoloBoxes]);
-
-  const connectYoloLane = (lane: CamLane) => {
-    if (yoloWsRefs.current[lane]) yoloWsRefs.current[lane]?.close();
-    const ws = new WebSocket(yoloUrl);
-    yoloWsRefs.current[lane] = ws;
-    ws.onopen = () => {
-      // kirim frame tiap 100ms
-      if (!yoloSendCanvasRef.current) yoloSendCanvasRef.current = document.createElement("canvas");
-      const canvas = yoloSendCanvasRef.current!;
-      yoloTimerRefs.current[lane] = setInterval(() => {
-        if (ws.readyState !== WebSocket.OPEN) return;
-        const container = document.getElementById(`cam-card-${lane}`);
-        const vid = (container?.querySelector("video") as HTMLVideoElement) || camVideoRefs.current[lane];
-        const img = (container?.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (document.querySelector(`img[data-lane="${lane}"]`) as HTMLImageElement) || (container?.querySelector("img") as HTMLImageElement);
-        let srcEl: any = null;
-        if (vid && vid.videoWidth && vid.readyState >= 2) srcEl = vid;
-        else if (img && (img as any).naturalWidth) srcEl = img;
-        if (!srcEl) return;
-        const W = 640; const H = 480;
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const sendDrawn = () => {
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-          if (ws.bufferedAmount > 1024 * 500) return; // jangan numpuk jika YOLO lambat
-          ws.send(JSON.stringify({ type: "frame", data: dataUrl }));
-        };
-        try {
-          ctx.drawImage(srcEl, 0, 0, W, H);
-          sendDrawn();
-        } catch {
-          // Canvas ketainted (MJPEG tanpa CORS) → fallback ambil snapshot ber-CORS
-          try {
-            const src = (img as HTMLImageElement)?.currentSrc || (img as HTMLImageElement)?.src || "";
-            const snap = src.includes("/esp32-cam-stream")
-              ? src.replace("/esp32-cam-stream", "/esp32-cam-snapshot")
-              : src.includes(":81/stream")
-                ? src.replace(":81/stream", "/capture.jpg")
-                : null;
-            if (!snap) return;
-            fetch(snap, { mode: "cors" })
-              .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`snapshot ${r.status}`))))
-              .then((b) => createImageBitmap(b))
-              .then((bmp) => {
-                if (ws.readyState !== WebSocket.OPEN) return;
-                try {
-                  ctx.drawImage(bmp, 0, 0, W, H);
-                  sendDrawn();
-                } catch {}
-              })
-              .catch(() => {});
-          } catch {}
-        }
-      }, 500); // 2 FPS biar tidak overload model (fix overlay stuck)
-    };
-    ws.onmessage = (ev) => {
-      try {
-        const data = JSON.parse(ev.data);
-        if (data.detections) {
-          const colorMap: Record<string, string> = { car: "#3b82f6", "mobil penumpang": "#3b82f6", bus: "#8b5cf6", truck: "#f59e0b", truk: "#f59e0b", motorcycle: "#10b981", motor: "#10b981", "sepeda motor": "#10b981", bicycle: "#ec4899", unmotorized: "#ec4899", pedestrian: "#fb7185", "pejalan kaki": "#fb7185", person: "#fb7185" };
-          const boxes = data.detections.map((d: any) => ({ label: d.label, confidence: d.confidence, x: d.x, y: d.y, w: d.w, h: d.h, color: colorMap[String(d.label || "").toLowerCase()] || "#3b82f6" }));
-          setYoloBoxes((s) => ({ ...s, [lane]: boxes }));
-          if (data.stats) {
-            setYoloStats((s) => ({ ...s, [lane]: { totalVehicles: data.stats.totalVehicles || 0, fps: data.stats.fps || 0 } }));
-            setYoloLastAt((s) => ({ ...s, [lane]: Date.now() }));
-          }
-          drawYoloBoxes(lane, boxes);
-        }
-      } catch {}
-    };
-    ws.onclose = () => {
-      if (yoloTimerRefs.current[lane]) { clearInterval(yoloTimerRefs.current[lane]!); yoloTimerRefs.current[lane] = null; }
-      // auto-reconnect jika masih enabled (fix overlay stuck / keepalive timeout)
-      if (yoloEnabled[lane]) setTimeout(() => connectYoloLane(lane), 2000);
-    };
-    ws.onerror = () => { try { ws.close(); } catch {} };
-  };
-  const disconnectYoloLane = (lane: CamLane) => {
-    setYoloEnabled((s) => ({ ...s, [lane]: false }));
-    yoloWsRefs.current[lane]?.close(); yoloWsRefs.current[lane] = null;
-    if (yoloTimerRefs.current[lane]) { clearInterval(yoloTimerRefs.current[lane]!); yoloTimerRefs.current[lane] = null; }
-    setYoloBoxes((s) => ({ ...s, [lane]: [] }));
-  };
-  useEffect(() => () => { ALL_LANES.forEach((l) => disconnectYoloLane(l as CamLane)); }, []);
 
   // Persist pilihan sumber simulasi
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("dashboard_simSource") as "auto" | "sensor" | "camera" | null;
-      if (saved === "auto" || saved === "sensor" || saved === "camera") setSimSource(saved);
+      const saved = localStorage.getItem("dashboard_simSource") as "auto" | "sensor" | null;
+      if (saved === "auto" || saved === "sensor") setSimSource(saved);
     } catch {}
   }, []);
   useEffect(() => {
@@ -661,35 +532,8 @@ export default function DashboardPage() {
     } catch {}
   }, [simSource]);
 
-  // Data untuk simulasi jalan: fusion kamera (hitung YOLO) + sensor (lampu/level).
-  // - sensor: murni MQTT/ESP32 (IR + HC-SR04)
-  // - camera: vehicleCount per lane dari YOLO browser, lampu/level tetap sensor
-  // - auto: pakai YOLO bila fresh (<5 dtk), else fallback sensor per lane
-  const simData = useMemo(() => {
-    if (!realtimeData) return realtimeData;
-    if (simSource === "sensor") return realtimeData;
-    const now = Date.now();
-    const useLaneYolo = (lane: CamLane) => {
-      if (simSource === "camera") return (yoloLastAt[lane] || 0) > 0;
-      return now - (yoloLastAt[lane] || 0) < 5000;
-    };
-    let changed = false;
-    const next: any = { ...realtimeData };
-    for (const lane of ALL_LANES as readonly CamLane[]) {
-      if (!useLaneYolo(lane)) continue;
-      const count = Math.max(0, Math.floor(yoloStats[lane]?.totalVehicles ?? 0));
-      const prev = (realtimeData as any)?.[lane];
-      if (!prev) continue;
-      next[lane] = {
-        ...prev,
-        vehicleCount: count,
-        vehicleDetected: count > 0,
-      };
-      if (count !== prev.vehicleCount) changed = true;
-    }
-    void changed;
-    return next as typeof realtimeData;
-  }, [realtimeData, simSource, yoloStats, yoloLastAt]);
+  // Data simulasi = telemetri kanonis realtime (tanpa YOLO browser).
+  const simData = realtimeData;
 
   const updateCamUrl = (lane: CamLane, url: string) =>
     setCamUrls((s) => ({ ...s, [lane]: url.replace(/\/$/, "") }));
@@ -922,31 +766,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* YOLO WS untuk deteksi seperti Vision Lab */}
-                  <div className="flex flex-wrap items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 p-2">
-                    <span className="material-symbols-outlined text-sm text-purple-600">smart_toy</span>
-                    <input
-                      value={yoloUrl}
-                      onChange={(e) => setYoloUrl(e.target.value)}
-                      placeholder="wss://vision.astraea.my.id/yolo-ws/ws"
-                      className="min-w-[220px] flex-1 rounded-lg border border-purple-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-purple-500 focus:outline-none"
-                    />
-                    <span className="text-[10px] text-purple-600">Overlay AI (Lab) — visualisasi eksperimental, bukan sumber inferensi kontrol lampu</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !yoloLab;
-                        setYoloLab(next);
-                        for (const lane of visibleCamLanes) {
-                          if (next) { setYoloEnabled((prev) => ({ ...prev, [lane]: true })); connectYoloLane(lane); }
-                          else { disconnectYoloLane(lane); setYoloEnabled((prev) => ({ ...prev, [lane]: false })); }
-                        }
-                      }}
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${yoloLab ? "bg-purple-600 text-white" : "bg-white text-purple-700 border border-purple-300"}`}
-                    >
-                      {yoloLab ? "Lab ON" : "Lab OFF"}
-                    </button>
-                  </div>
 
                   <div className={camView === "all" ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-2" : "grid grid-cols-1 gap-3"}>
                     {(camView === "all" ? visibleCamLanes : ([camView] as const)).map((lane, idx, arr) => (
@@ -1049,13 +868,10 @@ export default function DashboardPage() {
                             <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-500">Isi URL / Webcam / Upload</div>
                           )}
                           <canvas
-                            ref={(el) => {
-                              yoloCanvasRefs.current[lane] = el;
-                            }}
                             className="pointer-events-none absolute inset-0 h-full w-full"
                           />
                           <div className="pointer-events-none absolute bottom-1 left-1 max-w-[90%] truncate rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-mono text-white">
-                            {camUrls[lane] || "-"} {yoloStats[lane]?.totalVehicles ? `• ${yoloStats[lane].totalVehicles} kendaraan` : ""}
+                            {camUrls[lane] || "-"}
                           </div>
                         </div>
                       </div>
@@ -1149,12 +965,12 @@ export default function DashboardPage() {
                   )}
                 </section>
 
-                {/* ===== SIMULASI JALAN (bisa tutup/buka; count bisa dari kamera YOLO / sensor) ===== */}
+                {/* ===== SIMULASI JALAN (animasi dari telemetri kanonis) ===== */}
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Simulasi Jalan • {simSource === "camera" ? "Mode Kamera" : simSource === "sensor" ? "Mode Sensor" : "Mode Otomatis"}
+                        Simulasi Jalan (Lab/Eksperimental) • {simSource === "sensor" ? "Mode Sensor" : "Mode Otomatis"}
                       </p>
                       <h2 className="text-lg font-bold text-slate-900">
                         {selectedIntersectionName} — Animasi Lalu Lintas
@@ -1162,14 +978,14 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="flex gap-1 rounded-full border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Sumber data simulasi">
-                        {(["auto", "sensor", "camera"] as const).map((s) => (
+                        {(["auto", "sensor"] as const).map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setSimSource(s)}
                             className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${simSource === s ? "bg-slate-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"}`}
                           >
-                            {s === "auto" ? "Otomatis" : s === "sensor" ? "Sensor" : "Kamera"}
+                            {s === "auto" ? "Otomatis" : "Sensor"}
                           </button>
                         ))}
                       </div>
@@ -1189,9 +1005,8 @@ export default function DashboardPage() {
                   <p className="mt-1 text-[10px] text-slate-400">
                     {simSource === "sensor"
                       ? "Hitungan murni ESP32 sensor (IR + HC-SR04) via MQTT."
-                      : simSource === "camera"
-                        ? "Hitungan dari deteksi YOLO kamera di browser; lampu/level tetap dari sensor."
-                        : "Otomatis: pakai hitungan YOLO bila ada & fresh (<5 dtk) per jalur, else fallback sensor."}
+                      : "Otomatis: telemetri kanonis terbaru per jalur (Server 2 + sensor)."
+                  }
                   </p>
                   {isSimOpen && (
                     <div className="mt-3">
